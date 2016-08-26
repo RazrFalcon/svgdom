@@ -101,7 +101,7 @@ It's still not as as fast as I want, but here is some examples using *resave* ex
 
 \* At least I don't know.
 
-\*\* It's not a direct download links.
+\*\* It's not a direct downloads links.
 
 Tested on i5-3570k@4.2GHz.
 
@@ -111,17 +111,17 @@ V0.1.0
  - [ ] Increase performance:
    - [ ] `f64` to string conversion takes about 75% off all DOM to String conversion time.
          Specifically: `core::fmt::float_to_decimal_common`.
- - Improve grammar of the documentation.
+ - [ ] Improve grammar of the documentation.
    English is not my native language, so there is probably a lot of errors.
 
 V0.2.0
- - Parsing and writing as a feature.
- - Add support for custom writer.
- - Memory pool for nodes.
- - Implement DOM with less `Rc`.
+ - [ ] Parsing and writing as a feature.
+ - [ ] Add support for custom writer.
+ - [ ] Memory pool for nodes.
+ - [ ] Implement DOM with less `Rc`.
 
 V0.N.0
- - Complete CSS support using external CSS parser.
+ - [ ] Complete CSS support using external CSS parser.
 
 \* this roadmap is not final and will be complemented.
 
