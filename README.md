@@ -1,15 +1,15 @@
 ## libsvgdom
 
-**libsvgdom** is a [SVG Full 1.1](https://www.w3.org/TR/SVG/) processing library,
+*libsvgdom* is a [SVG Full 1.1](https://www.w3.org/TR/SVG/) processing library,
 which allows you to parse, manipulate and generate SVG content.
 
 ### Purpose
 
-**libsvgdom** is designed to simplify generic SVG processing and manipulations.
+*libsvgdom* is designed to simplify generic SVG processing and manipulations.
 Unfortunately, SVG is very complex format (PDF spec is 826 pages long),
 with lots of features and implementing all of them will lead to a enormous library.
 
-That's why libsvgdom supports only static subset of SVG. No scripts, external resources and complex
+That's why *libsvgdom* supports only static subset of SVG. No scripts, external resources and complex
 CSS styling.
 Parser will convert as much as possible data to simple doc->elements->attributes structure.
 
@@ -19,7 +19,7 @@ using the JS code and probably with a lots of other methods.
 
 Not to mention, that the `fill` attribute supports a 4 different types of data.
 
-With libsvgdom you can just use `node.has_attribute(AttributeId::Fill)` and don't worry were this
+With *libsvgdom* you can just use `node.has_attribute(AttributeId::Fill)` and don't worry were this
 attribute was defined in original file.
 
 Same goes to the transforms, paths and other SVG types.
@@ -60,7 +60,7 @@ Main downside of this approach is that you can't save original formatting and so
  - See [libsvgparser](https://github.com/RazrFalcon/libsvgparser)'s README for parsing limitations.
 
 ### Non-goal
- - Implementation of full SVG spec.
+ - Implementation of the full SVG spec.
  - Animation support.
  - Scripting support (meaning via `script` element).
 
@@ -92,17 +92,12 @@ Note that most of the time is spend in string to number and number to string con
 
 It's still not as as fast as I want, but here is some examples using *resave* example:
 
-[Some huge image](https://openclipart.org/detail/259586/cyberscooty-floral-border-extended-22)\*\*
-(17.3MiB): ~700ms/~5500M instructions.
-
-[Big image](https://en.wikipedia.org/wiki/File:Jupiter_diagram.svg)
-(1.7MiB): ~70ms/~500M instructions.
-
-[Average image](https://commons.wikimedia.org/wiki/File:Electromagnetic_Radiation_Spectrum_Infographic.svg)
-(324.4KiB): ~20ms/~89M instructions.
-
-Small image, like [SVG Logo](https://commons.wikimedia.org/wiki/File:SVG_logo.svg)
-(8.8KiB): ~0.4ms/~2M instructions.
+| Image | Result |
+| ------------- | ------------- |
+| [Some huge image](https://openclipart.org/detail/259586/cyberscooty-floral-border-extended-22)\*\* (17.3MiB) | ~700ms/~5500M instructions. |
+| [Big image](https://en.wikipedia.org/wiki/File:Jupiter_diagram.svg) (1.7MiB) | ~70ms/~500M instructions. |
+| [Average image](https://commons.wikimedia.org/wiki/File:Electromagnetic_Radiation_Spectrum_Infographic.svg) (324.4KiB) | ~20ms/~89M instructions. |
+| Small image, like [SVG Logo](https://commons.wikimedia.org/wiki/File:SVG_logo.svg) (8.8KiB) | ~0.4ms/~2M instructions. |
 
 \* At least I don't know.
 
@@ -137,4 +132,4 @@ v0.1.0.
 
 ### License
 
-libsvgdom is licensed under the [MPLv2.0](https://www.mozilla.org/en-US/MPL/).
+*libsvgdom* is licensed under the [MPLv2.0](https://www.mozilla.org/en-US/MPL/).
