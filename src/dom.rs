@@ -165,10 +165,13 @@ pub struct Node(Rc<RefCell<NodeData>>);
 impl Node {
     /// Returns a parent node, unless this node is the root of the tree.
     ///
+    /// This method also returns `NodeType::Root`.
+    ///
     /// # Panics
     ///
     /// Panics if the node is currently mutability borrowed.
     pub fn parent(&self) -> Option<Node> {
+        // TODO: we actually always have a parent - Root node
         Some(Node(try_opt!(try_opt!(self.0.borrow().parent.as_ref()).upgrade())))
     }
 
@@ -189,6 +192,40 @@ impl Node {
             parent = p.parent();
         }
         None
+    }
+
+    /// Returns `true` if node has parent node.
+    ///
+    /// This method ignores root node.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the node is currently mutability borrowed.
+    ///
+    /// # Examples
+    /// ```
+    /// use svgdom::Document;
+    ///
+    /// let doc = Document::from_data(
+    /// b"<svg>
+    ///     <rect/>
+    /// </svg>").unwrap();
+    ///
+    /// let svg = doc.first_child().unwrap();
+    /// let rect = svg.first_child().unwrap();
+    /// assert_eq!(svg.has_parent(), false);
+    /// assert_eq!(rect.has_parent(), true);
+    /// ```
+    pub fn has_parent(&self) -> bool {
+        match self.parent() {
+            Some(node) => {
+                match node.node_type() {
+                    NodeType::Root => false,
+                    _ => true,
+                }
+            }
+            None => false,
+        }
     }
 
     /// Returns an iterator to this node’s children.
@@ -425,6 +462,45 @@ impl Node {
     }
 
     // TODO: set_text
+
+    /// Returns `true` if there are any children text nodes.
+    ///
+    /// This method is recursive.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the node or any descendants nodes are currently mutability borrowed.
+    ///
+    /// # Examples
+    /// ```
+    /// use svgdom::Document;
+    ///
+    /// let doc = Document::from_data(
+    /// b"<svg>
+    ///     <g>
+    ///         <text>Some text</text>
+    ///     </g>
+    ///     <rect/>
+    /// </svg>").unwrap();
+    ///
+    /// let svg = doc.first_child().unwrap();
+    /// let g = svg.first_child().unwrap();
+    /// assert_eq!(g.has_text_children(), true);
+    ///
+    /// let text = g.first_child().unwrap();
+    /// assert_eq!(text.has_text_children(), true);
+    ///
+    /// let rect = g.next_sibling().unwrap();
+    /// assert_eq!(rect.has_text_children(), false);
+    /// ```
+    pub fn has_text_children(&self) -> bool {
+        for node in self.descendants_all() {
+            if node.node_type() == NodeType::Text {
+                return true;
+            }
+        }
+        false
+    }
 
     /// Sets an ID of the element.
     ///

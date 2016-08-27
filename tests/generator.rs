@@ -9,12 +9,26 @@ use svgdom::AttributeId as AId;
 use svgdom::ElementId as EId;
 use svgdom::types::{Transform, Length, LengthUnit, Color};
 
+macro_rules! assert_eq_text {
+    ($left:expr, $right:expr) => ({
+        match (&$left, &$right) {
+            (left_val, right_val) => {
+                if !(*left_val == *right_val) {
+                    panic!("assertion failed: `(left == right)` \
+                           \nleft:  `{}`\nright: `{}`",
+                           left_val, right_val)
+                }
+            }
+        }
+    })
+}
+
 macro_rules! test_resave {
     ($name:ident, $in_text:expr, $out_text:expr) => (
         #[test]
         fn $name() {
             let doc = Document::from_data($in_text).unwrap();
-            assert_eq!(doc.to_string(), $out_text);
+            assert_eq_text!(doc.to_string(), $out_text);
         }
     )
 }
@@ -204,6 +218,21 @@ b"<svg>
     <p>
         text
     </p>
+</svg>
+");
+
+// 'text' element has different behavior
+test_resave!(text_3,
+b"<svg>
+    <text>
+        text
+    </text>
+</svg>
+",
+"<svg>
+    <text>
+        text
+    </text>
 </svg>
 ");
 

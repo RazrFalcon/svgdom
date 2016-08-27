@@ -220,13 +220,18 @@ fn write_element_end(node: &Node, out: &mut Vec<u8>) {
     }
 }
 
-fn process_text(iter: &mut Traverse, opt: &WriteOptions, root: &Node, depth: &Depth, out: &mut Vec<u8>) {
+fn process_text(iter: &mut Traverse, opt: &WriteOptions, root: &Node, depth: &Depth,
+                out: &mut Vec<u8>) {
     let is_root_preserve = root.has_attribute_with_value(AttributeId::XmlSpace, "preserve");
 
     if !is_root_preserve {
         write_newline(opt.indent, out);
         depth.write_indent_with_step(1, out);
     }
+
+    // Check that 'text' element contains only one text node.
+    // We use 2, since 'descendants_all' includes current node.
+    let is_simple_text = root.descendants_all().count() == 2;
 
     let mut is_first_text = true;
 
@@ -242,6 +247,8 @@ fn process_text(iter: &mut Traverse, opt: &WriteOptions, root: &Node, depth: &De
                             NodeType::Text => {
                                 if is_root_preserve {
                                     out.extend_from_slice(node.text().unwrap().as_bytes());
+                                } else if is_simple_text {
+                                    out.extend_from_slice(node.text().unwrap().trim().as_bytes());
                                 } else if is_first_text {
                                     out.extend_from_slice(node.text().unwrap().trim_left().as_bytes());
                                 } else if root.last_child().unwrap() == node {

@@ -10,7 +10,10 @@ documentation = "https://razrfalcon.github.io/libsvgdom/svgdom/index.html"
 readme = "README.md"
 
 [dependencies]
-svgparser = "0.0.1"
+# latest public svgparser
+svgparser = { git = "https://github.com/RazrFalcon/libsvgparser.git" }
+# local copy
+# svgparser = { path = "../svgparser" }
 vec_map = "0.6.0"
 
 [dev-dependencies]

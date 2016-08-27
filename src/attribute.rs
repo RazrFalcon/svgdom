@@ -245,7 +245,7 @@ impl AttributeValue {
             AttributeId::StrokeDashoffset =>            some!((0.0, LengthUnit::None)),
             AttributeId::StrokeLinecap =>               some!(ValueId::Butt),
             AttributeId::StrokeLinejoin =>              some!(ValueId::Miter),
-            AttributeId::StrokeMiterlimit =>            some!(4.0),
+            AttributeId::StrokeMiterlimit =>            some!((4.0, LengthUnit::None)),
             AttributeId::StrokeOpacity =>               some!(1.0),
             AttributeId::StrokeWidth =>                 some!((1.0, LengthUnit::None)),
             AttributeId::TextAnchor =>                  some!(ValueId::Start),

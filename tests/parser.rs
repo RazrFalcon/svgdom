@@ -326,14 +326,14 @@ b"<svg>
 test_resave!(parse_style_3,
 b"<svg>
     <text style=\"font-size:24px;font-style:normal;font-variant:normal;font-weight:normal;\
-                  font-stretch:normal;text-align:center;line-height:125%;writing-mode:lr-tb;\
+                  font-stretch:normal;line-height:125%;writing-mode:lr-tb;\
                   text-anchor:middle;font-family:'Arial Bold'\"/>
 </svg>
 ",
 "<svg>
     <text font-family=\"Arial Bold\" font-size=\"24px\" font-stretch=\"normal\" \
                    font-style=\"normal\" font-variant=\"normal\" font-weight=\"normal\" \
-                   line-height=\"125%\" text-align=\"center\" text-anchor=\"middle\" \
+                   line-height=\"125%\" text-anchor=\"middle\" \
                    writing-mode=\"lr-tb\"/>
 </svg>
 ");
