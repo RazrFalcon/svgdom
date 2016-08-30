@@ -1,15 +1,38 @@
-use std::io::Write;
+use dtoa;
 
 use {WriteOptions, WriteBuffer};
 
 // TODO: add method to compare with specific precision
 
+static POW_VEC: &'static [f64] = &[
+    0.0,
+    10.0,
+    100.0,
+    1000.0,
+    10000.0,
+    100000.0,
+    1000000.0,
+    10000000.0,
+    100000000.0,
+];
+
+static THRESHOLD_VEC: &'static [f64] = &[
+    0.0,
+    0.01,
+    0.001,
+    0.0001,
+    0.00001,
+    0.000001,
+    0.0000001,
+    0.00000001,
+    0.000000001,
+];
+
 pub fn write_num(num: f64, precision: u8, rm_leading_zero: bool, buf: &mut Vec<u8>) {
     debug_assert!(precision <= 8 && precision != 0);
 
     let multiplier = POW_VEC[precision as usize];
-    let threshold = 0.1 / multiplier;
-    let tmp_value: u64 = (num * multiplier).round().abs() as u64;
+    let tmp_value = (num * multiplier).round().abs() as u64;
 
     if tmp_value == 0 {
         buf.push(b'0');
@@ -18,6 +41,7 @@ pub fn write_num(num: f64, precision: u8, rm_leading_zero: bool, buf: &mut Vec<u
 
     let mut new_value = (tmp_value as f64) / multiplier;
 
+    let threshold = THRESHOLD_VEC[precision as usize];
     if (new_value - new_value.floor()) / new_value < threshold {
         new_value = new_value.floor();
     }
@@ -25,8 +49,17 @@ pub fn write_num(num: f64, precision: u8, rm_leading_zero: bool, buf: &mut Vec<u
     new_value = new_value * num.signum();
 
     let start_pos = buf.len();
-    // TODO: very slow
-    write!(buf, "{}", new_value).unwrap();
+
+    dtoa::write(buf, new_value).unwrap();
+
+    // dtoa is always adds '.0', so we have to remove it
+    // yes, it's ugly, but fast
+    if buf[buf.len() - 1] == b'0' {
+        if buf[buf.len() - 2] == b'.' {
+            let new_len = buf.len() - 2;
+            buf.truncate(new_len);
+        }
+    }
 
     if rm_leading_zero {
         let mut has_dot = false;
@@ -50,18 +83,6 @@ pub fn write_num(num: f64, precision: u8, rm_leading_zero: bool, buf: &mut Vec<u
         }
     }
 }
-
-static POW_VEC: &'static [f64] = &[
-    0.0,
-    10.0,
-    100.0,
-    1000.0,
-    10000.0,
-    100000.0,
-    1000000.0,
-    10000000.0,
-    100000000.0,
-];
 
 impl WriteBuffer for f64 {
     fn write_buf_opt(&self, opt: &WriteOptions, buf: &mut Vec<u8>) {

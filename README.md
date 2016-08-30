@@ -109,8 +109,9 @@ Tested on i5-3570k@4.2GHz.
 
 V0.1.0
  - [ ] Increase performance:
-   - [ ] `f64` to string conversion takes about 75% off all DOM to String conversion time.
+   - [x] `f64` to string conversion takes about 75% off all DOM to String conversion time.
          Specifically: `core::fmt::float_to_decimal_common`.
+   - [ ] `VecMap::insert` is very expensive for some reasons.
  - [ ] Improve grammar of the documentation.
    English is not my native language, so there is probably a lot of errors.
 

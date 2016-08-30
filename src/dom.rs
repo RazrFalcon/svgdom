@@ -163,6 +163,16 @@ macro_rules! try_opt {
 pub struct Node(Rc<RefCell<NodeData>>);
 
 impl Node {
+    /// Returns a `Document` that owns this node.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the node is currently mutability borrowed.
+    pub fn document(&self) -> Document {
+        // TODO: will fail on root node
+        Document { root: Node(self.0.borrow().doc.as_ref().unwrap().clone()) }
+    }
+
     /// Returns a parent node, unless this node is the root of the tree.
     ///
     /// This method also returns `NodeType::Root`.

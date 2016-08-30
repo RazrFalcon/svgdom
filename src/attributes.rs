@@ -42,7 +42,7 @@ impl Attributes {
     /// **Warning:** this method did not perform any checks for linked attributes.
     /// If you want to insert an linked attribute - use `Node::set_link_attribute()`.
     pub fn insert(&mut self, attr: Attribute) {
-        self.0.insert(attr.id.clone() as usize, attr);
+        self.0.insert(attr.id as usize, attr);
     }
 
     /// Removes an existing attribute.

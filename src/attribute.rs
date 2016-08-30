@@ -115,6 +115,12 @@ impl From<String> for AttributeValue {
     }
 }
 
+impl From<i32> for AttributeValue {
+    fn from(value: i32) -> AttributeValue {
+        AttributeValue::Number(value as f64)
+    }
+}
+
 impl From<f64> for AttributeValue {
     fn from(value: f64) -> AttributeValue {
         AttributeValue::Number(value)
@@ -130,6 +136,12 @@ impl From<NumberList> for AttributeValue {
 impl From<Length> for AttributeValue {
     fn from(value: Length) -> AttributeValue {
         AttributeValue::Length(value)
+    }
+}
+
+impl From<(i32, LengthUnit)> for AttributeValue {
+    fn from(value: (i32, LengthUnit)) -> AttributeValue {
+        AttributeValue::Length(Length::new(value.0 as f64, value.1))
     }
 }
 

@@ -15,6 +15,7 @@ svgparser = { git = "https://github.com/RazrFalcon/libsvgparser.git" }
 # local copy
 # svgparser = { path = "../svgparser" }
 vec_map = "0.6.0"
+dtoa = "0.2"
 
 [dev-dependencies]
 time = "0.1"
