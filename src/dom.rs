@@ -62,6 +62,15 @@ impl Document {
         Document::new_node(Some(self.root.0.clone()), NodeType::Element, Some(t), None)
     }
 
+    /// Constructs a new `Node` with `Element` type and appends it to the document.
+    pub fn append_new_element<T>(&self, tag_name: T) -> Node
+        where TagName: From<T>
+    {
+        let elem = self.create_element(tag_name);
+        self.append(&elem);
+        elem
+    }
+
     /// Constructs a new `Node` using supplied `NodeType`.
     ///
     /// Constructed node do belong to this document, but not added to it tree structure.
@@ -70,6 +79,32 @@ impl Document {
     pub fn create_node(&self, node_type: NodeType, text: &str) -> Node {
         debug_assert!(node_type != NodeType::Element && node_type != NodeType::Root);
         Document::new_node(Some(self.root.0.clone()), node_type, None, Some(text.to_owned()))
+    }
+
+    /// Constructs a new `Node` using supplied `NodeType` and appends it to the document.
+    pub fn append_new_node(&self, node_type: NodeType, text: &str) -> Node {
+        let node = self.create_node(node_type, text);
+        self.append(&node);
+        node
+    }
+
+    /// Constructs a new element with text node.
+    pub fn create_element_with_text<T>(&self, tag_name: T, text: &str) -> Node
+        where TagName: From<T>
+    {
+        let elem = self.create_element(tag_name);
+        let text_node = self.create_node(NodeType::Text, text);
+        elem.append(&text_node);
+        elem
+    }
+
+    /// Constructs a new element with text node and appends it to the document.
+    pub fn append_element_with_text<T>(&self, tag_name: T, text: &str) -> Node
+        where TagName: From<T>
+    {
+        let elem = self.create_element_with_text(tag_name, text);
+        self.append(&elem);
+        elem
     }
 
     /// Returns root `Node`.
