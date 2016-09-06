@@ -121,6 +121,58 @@ impl Document {
         self.root().first_child()
     }
 
+    /// Returns first child with `NodeType::Element` of the root `Node`.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the root node is currently mutability borrowed.
+    ///
+    /// # Examples
+    /// ```
+    /// use svgdom::Document;
+    ///
+    /// let doc = Document::from_data(b"<!--comment--><svg/>").unwrap();
+    ///
+    /// assert_eq!(doc.first_child().unwrap().is_element(), false);
+    /// assert_eq!(doc.first_element_child().unwrap().is_element(), true);
+    /// ```
+    pub fn first_element_child(&self) -> Option<Node> {
+        for n in self.root.children() {
+            if n.is_element() {
+                return Some(n.clone());
+            }
+        }
+
+        None
+    }
+
+    /// Returns first child with `svg` tag name of the root `Node`.
+    ///
+    /// In most of the cases result of this method and `first_element_child()` will be the same,
+    /// but an additional check may be helpful.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the root node is currently mutability borrowed.
+    ///
+    /// # Examples
+    /// ```
+    /// use svgdom::{Document, ElementId};
+    ///
+    /// let doc = Document::from_data(b"<!--comment--><svg/>").unwrap();
+    ///
+    /// assert_eq!(doc.svg_element().unwrap().is_tag_id(ElementId::Svg), true);
+    /// ```
+    pub fn svg_element(&self) -> Option<Node> {
+        for n in self.root.children() {
+            if n.is_element() && n.is_tag_id(ElementId::Svg) {
+                return Some(n.clone());
+            }
+        }
+
+        None
+    }
+
     /// Append a new child to root node, after existing children.
     ///
     /// # Panics
@@ -539,6 +591,8 @@ impl Node {
     /// assert_eq!(rect.has_text_children(), false);
     /// ```
     pub fn has_text_children(&self) -> bool {
+        // TODO: to has_text_child and check only first child
+
         for node in self.descendants_all() {
             if node.node_type() == NodeType::Text {
                 return true;
