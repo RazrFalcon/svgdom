@@ -79,7 +79,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-svgdom = "0.0.1"
+svgdom = "0.0.2"
 ```
 
 See documentation and [examples](examples/) for details.

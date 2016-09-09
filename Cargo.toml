@@ -1,19 +1,21 @@
 [package]
 name = "svgdom"
-version = "0.0.1"
+version = "0.0.2"
 authors = ["Evgeniy Reizner <razrfalcon@gmail.com>"]
 keywords = ["svg", "dom"]
 license = "MPL-2.0"
 description = "Library to represent a SVG as a DOM."
 repository = "https://github.com/RazrFalcon/libsvgdom"
-documentation = "https://razrfalcon.github.io/libsvgdom/svgdom/index.html"
+documentation = "https://docs.rs/svgdom/"
 readme = "README.md"
 
 [dependencies]
 # latest public svgparser
-svgparser = { git = "https://github.com/RazrFalcon/libsvgparser.git" }
+# svgparser = { git = "https://github.com/RazrFalcon/libsvgparser.git" }
 # local copy
 # svgparser = { path = "../svgparser" }
+# from crates
+svgparser = "0.0.2"
 vec_map = "0.6.0"
 dtoa = "0.2"
 
