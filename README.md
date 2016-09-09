@@ -26,6 +26,8 @@ Same goes to the transforms, paths and other SVG types.
 
 Main downside of this approach is that you can't save original formatting and some data.
 
+### [Documentation](https://docs.rs/svgdom/)
+
 ### Benefits
  - Element link(IRI, FuncIRI) not just text, but actual link to another node.
  - At any time you can check which element linked to selected element. See `Node` doc for details.
@@ -80,8 +82,7 @@ Add this to your `Cargo.toml`:
 svgdom = "0.0.1"
 ```
 
-See [documentation](https://razrfalcon.github.io/libsvgdom/svgdom/index.html)
-and [examples](examples/) for details.
+See documentation and [examples](examples/) for details.
 
 ### Performance
 
