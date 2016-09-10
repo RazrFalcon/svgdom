@@ -37,14 +37,6 @@ pub enum Error {
     /// <rect fill="url(#lg1) red"/>
     /// ```
     UnsupportedPaintFallback(String), // FuncIRI name
-    /// Broken FuncIRI inside a 'filter' attribute is not supported.
-    ///
-    /// If an element has 'filter' attribute with broken FuncIRI,
-    /// then it shouldn't be rendered. But we can't express such behavior
-    /// in the svgdom now.
-    /// Returning an error is not the best way, but it's better than storing
-    /// an invalid FuncIRI as string, which will break whole svgdom logic.
-    InvalidFuncIriInsideFilterAttribute(String), // FuncIRI name
 }
 
 impl fmt::Display for Error {
@@ -60,8 +52,6 @@ impl fmt::Display for Error {
             Error::UnsupportedEntity(ref pos) => write!(f, "Unsupported ENTITY data at: {:?}", pos),
             Error::UnsupportedPaintFallback(ref iri) =>
                 write!(f, "Valid FuncIRI(#{}) with fallback value is not supported", iri),
-            Error::InvalidFuncIriInsideFilterAttribute(ref iri) =>
-                write!(f, "Broken FuncIRI(#{}) inside a 'filter' attribute is not supported", iri),
         }
     }
 }

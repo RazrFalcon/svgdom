@@ -470,15 +470,27 @@ b"<svg>
     assert_eq!(doc.err().unwrap(), Error::UnsupportedPaintFallback("rg1".to_string()));
 }
 
-#[test]
-fn parse_filter_iri_1() {
-    let doc = Document::from_data(
+test_resave!(parse_filter_iri_1,
 b"<svg>
     <rect filter=\"url(#rg1)\"/>
-</svg>");
+</svg>",
+"<svg>
+    <rect visibility=\"hidden\"/>
+</svg>
+");
 
-    assert_eq!(doc.err().unwrap(), Error::InvalidFuncIriInsideFilterAttribute("rg1".to_string()));
-}
+test_resave!(parse_filter_iri_2,
+b"<svg>
+    <mask>
+        <rect filter=\"url(#rg1)\"/>
+    </mask>
+</svg>",
+"<svg>
+    <mask>
+        <rect/>
+    </mask>
+</svg>
+");
 
 test_resave!(parse_entity_1,
 b"<!DOCTYPE svg [

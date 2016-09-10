@@ -281,10 +281,13 @@ impl Node {
     /// # Panics
     ///
     /// Panics if any of the parent nodes is currently mutability borrowed.
-    pub fn parent_element(&self, tag_name: &TagName) -> Option<Node> {
+    pub fn parent_element<T>(&self, tag_name: T) -> Option<Node>
+        where TagName: From<T>
+    {
+        let tg = TagName::from(tag_name);
         let mut parent = self.parent();
         while let Some(p) = parent {
-            if p.is_tag_name(tag_name) {
+            if p.is_tag_name(&tg) {
                 return Some(p.clone());
             }
             parent = p.parent();

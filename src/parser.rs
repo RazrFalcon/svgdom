@@ -19,6 +19,7 @@ use super::{
     NodeType,
     ParseOptions,
     TagName,
+    ValueId,
 };
 use types::{Color, Transform, Length, LengthUnit};
 use types::path;
@@ -680,8 +681,21 @@ fn resolve_links(post_link_data: &PostLinkData) -> Result<(), Error> {
                     }
                     None => {
                         if d.attr_id == AttributeId::Filter {
-                            let s = u8_to_string!(d.iri).to_string();
-                            return Err(Error::InvalidFuncIriInsideFilterAttribute(s));
+                            // If an element has a 'filter' attribute with broken FuncIRI,
+                            // then it shouldn't be rendered. But we can't express such behavior
+                            // in the svgdom now.
+                            // It's not the best solution, but it works.
+                            if    d.node.parent_element(ElementId::Mask).is_some()
+                               || d.node.parent_element(ElementId::ClipPath).is_some()
+                               || d.node.parent_element(ElementId::Marker).is_some() {
+                                // If our element is inside one of this elements - then do nothing.
+                                // I can't find explanation of this in the SVG spec, but it works.
+                                // Probably because this element only care about a shape,
+                                // not a style.
+                            } else {
+                                // Imitate invisible element.
+                                d.node.set_attribute(AttributeId::Visibility, ValueId::Hidden);
+                            }
                         }
 
                         println!("Warning: Could not resolve IRI reference: {}.",
