@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/) 
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [Unreleased]
+### Added
+- A fallback value processing from the \<paint\> type.
+
 ## [0.0.2] - 2016-09-09
 ### Added
 - `first_element_child`, `svg_element`, `create_element_with_text` methods to `Document`.

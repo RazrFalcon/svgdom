@@ -230,7 +230,7 @@ macro_rules! try_opt {
     }
 }
 
-/// Representation of SVG node.
+/// Representation of an SVG node.
 ///
 /// This is main block of the library.
 ///
@@ -247,7 +247,7 @@ macro_rules! try_opt {
 ///  - Optional text data, which is used by non-element nodes.
 ///
 /// Most of the API are designed to work with SVG elements and attributes.
-/// Processing of non-SVG data is pretty hard/verbose, since it's a SVG DOM, not XML.
+/// Processing of non-SVG data is pretty hard/verbose, since it's an SVG DOM, not an XML.
 pub struct Node(Rc<RefCell<NodeData>>);
 
 impl Node {

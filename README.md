@@ -1,15 +1,15 @@
 ## libsvgdom
 
-*libsvgdom* is a [SVG Full 1.1](https://www.w3.org/TR/SVG/) processing library,
+*libsvgdom* is an [SVG Full 1.1](https://www.w3.org/TR/SVG/) processing library,
 which allows you to parse, manipulate and generate SVG content.
 
 ### Purpose
 
 *libsvgdom* is designed to simplify generic SVG processing and manipulations.
-Unfortunately, SVG is very complex format (PDF spec is 826 pages long),
+Unfortunately, an SVG is very complex format (PDF spec is 826 pages long),
 with lots of features and implementing all of them will lead to a enormous library.
 
-That's why *libsvgdom* supports only static subset of SVG. No scripts, external resources and complex
+That's why *libsvgdom* supports only static subset of an SVG. No scripts, external resources and complex
 CSS styling.
 Parser will convert as much as possible data to simple doc->elements->attributes structure.
 

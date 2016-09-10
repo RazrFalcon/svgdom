@@ -25,6 +25,7 @@ use types::path;
 
 use svgparser::{
     AttributeValue as ParserAttributeValue,
+    PaintFallback,
     Stream,
 };
 use svgparser::svg;
@@ -56,6 +57,7 @@ struct PostAttributes<'a> {
 struct LinkData<'a> {
     attr_id: AttributeId,
     iri: &'a [u8],
+    fallback: Option<PaintFallback>,
     node: Node,
 }
 
@@ -318,7 +320,7 @@ pub fn parse_svg(data: &[u8], opt: &ParseOptions) -> Result<Document, Error> {
                     try!(parse_style_attribute(&d.node, stream.clone(), &mut post_link_data, &entitis, &opt));
                 }
                 None => {
-                    println!("Warning: could resolve unknown class: {}.",
+                    println!("Warning: Could resolve unknown class: {}.",
                              u8_to_str!(class));
                 }
             }
@@ -384,7 +386,7 @@ fn parse_attribute<'a>(node: &Node,
                 | AttributeId::GradientTransform
                 | AttributeId::PatternTransform => {
                     let ts = try!(Transform::from_stream(stream.clone()));
-                    node.set_attribute(id.clone(), AttributeValue::Transform(ts));
+                    node.set_attribute(id, AttributeValue::Transform(ts));
                 }
                 AttributeId::D => {
                     let p = try!(path::Path::from_stream(stream.clone()));
@@ -415,7 +417,7 @@ fn parse_attribute<'a>(node: &Node,
                 match entitis.get(link) {
                     Some(link_value) => value2 = Some(*link_value),
                     None => {
-                        println!("Warning: could not resolve ENTITY: '{}'.", u8_to_str!(link));
+                        println!("Warning: Could not resolve ENTITY: '{}'.", u8_to_str!(link));
                         value2 = None;
                     }
                 }
@@ -453,7 +455,11 @@ fn parse_svg_attribute<'a>(node: &Node,
         ParserAttributeValue::String(v) => Some(AttributeValue::String(u8_to_str!(v).to_string())),
           ParserAttributeValue::IRI(link)
         | ParserAttributeValue::FuncIRI(link) => {
-            try!(process_link(link, id, node, post_link_data));
+            try!(process_link(link, None, id, node, post_link_data));
+            None
+        }
+        ParserAttributeValue::FuncIRIWithFallback(link, ref fallback) => {
+            try!(process_link(link, Some(fallback.clone()), id, node, post_link_data));
             None
         }
         ParserAttributeValue::Number(v) => Some(AttributeValue::Number(v)),
@@ -515,7 +521,7 @@ fn parse_svg_attribute<'a>(node: &Node,
     };
 
     match val2 {
-        Some(v) => node.set_attribute(id.clone(), v),
+        Some(v) => node.set_attribute(id, v),
         None => {},
     }
 
@@ -523,19 +529,24 @@ fn parse_svg_attribute<'a>(node: &Node,
 }
 
 fn process_link<'a>(iri: &'a [u8],
-                    id: AttributeId,
+                    fallback: Option<PaintFallback>,
+                    aid: AttributeId,
                     node: &Node,
                     post_link_data: &mut PostLinkData<'a>)
                     -> Result<(), Error> {
-
     match post_link_data.elems_with_id.get(iri) {
         Some(link_node) => {
-            try!(node.set_link_attribute(id.clone(), link_node.clone()));
+            try!(resolve_link(node, link_node, aid, iri, &fallback));
         }
         None => {
+            // If linked element is not found, keep this IRI until we finish
+            // parsing of the whole doc. Since IRI can reference elements in any order
+            // and we just not parsed this element yet.
+            // Then we can check again.
             post_link_data.links.push(LinkData {
-                attr_id: id.clone(),
+                attr_id: aid,
                 iri: iri,
+                fallback: fallback,
                 node: node.clone(),
             });
         }
@@ -627,6 +638,7 @@ fn parse_style_attribute<'a>(node: &Node,
                                     post_link_data, entitis, opt));
                             }
                             None => {
+                                // TODO: maybe do not skip?
                                 println!("Warning: Unknown style attr: '{}'.", u8_to_str!(name));
                             }
                         }
@@ -654,20 +666,48 @@ fn resolve_links(post_link_data: &PostLinkData) -> Result<(), Error> {
     for d in &post_link_data.links {
         match post_link_data.elems_with_id.get(d.iri) {
             Some(node) => {
-                try!(d.node.set_link_attribute(d.attr_id.clone(), node.clone()));
+                try!(resolve_link(&d.node, node, d.attr_id, d.iri, &d.fallback));
             }
             None => {
-                println!("Warning: could not resolve IRI reference: {}.",
-                         u8_to_str!(d.iri));
-                // TODO: this
-                // if (Attribute::isPresentation(ld.attrId))
-                //     ld.elem->attributes.insert(Attribute(ld.attrId, AttributeValue::none));
-                // else
-                //     ld.elem->attributes.remove(ld.attrId);
+                // check that <paint> contains a fallback value before showing a warning
+                match d.fallback {
+                    Some(fallback) => {
+                        match fallback {
+                            PaintFallback::PredefValue(v) => d.node.set_attribute(d.attr_id, v),
+                            PaintFallback::Color(c) =>
+                                d.node.set_attribute(d.attr_id, Color::new(c.red, c.green, c.blue)),
+                        }
+                    }
+                    None => {
+                        if d.attr_id == AttributeId::Filter {
+                            let s = u8_to_string!(d.iri).to_string();
+                            return Err(Error::InvalidFuncIriInsideFilterAttribute(s));
+                        }
+
+                        println!("Warning: Could not resolve IRI reference: {}.",
+                                 u8_to_str!(d.iri));
+                    }
+                }
             }
         }
     }
 
+    Ok(())
+}
+
+fn resolve_link(node: &Node, ref_node: &Node, aid: AttributeId, iri: &[u8],
+                fallback: &Option<PaintFallback>)
+                -> Result<(), Error> {
+    // The SVG uses a fallback paint value not only when the FuncIRI is invalid, but also when
+    // a referenced element is invalid. And we don't now is it invalid or not.
+    // It will take tonnes of code to validate all supported referenced elements.
+    // So we just show an error.
+    match fallback {
+        &Some(_) =>
+            return Err(Error::UnsupportedPaintFallback(u8_to_str!(iri).to_string())),
+        &None =>
+            try!(node.set_link_attribute(aid, ref_node.clone())),
+    }
     Ok(())
 }
 

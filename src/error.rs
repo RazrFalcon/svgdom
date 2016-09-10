@@ -29,6 +29,22 @@ pub enum Error {
     InvalidCSS(ErrorPos),
     /// ENTITY with XML Element data is not supported.
     UnsupportedEntity(ErrorPos),
+    /// We don't support a \<paint\> type with a fallback value and a valid FuncIRI.
+    ///
+    /// Example:
+    /// ```
+    /// <linearGradient id="lg1"/>
+    /// <rect fill="url(#lg1) red"/>
+    /// ```
+    UnsupportedPaintFallback(String), // FuncIRI name
+    /// Broken FuncIRI inside a 'filter' attribute is not supported.
+    ///
+    /// If an element has 'filter' attribute with broken FuncIRI,
+    /// then it shouldn't be rendered. But we can't express such behavior
+    /// in the svgdom now.
+    /// Returning an error is not the best way, but it's better than storing
+    /// an invalid FuncIRI as string, which will break whole svgdom logic.
+    InvalidFuncIriInsideFilterAttribute(String), // FuncIRI name
 }
 
 impl fmt::Display for Error {
@@ -37,11 +53,15 @@ impl fmt::Display for Error {
             Error::ElementMustHaveAnId => write!(f, "Element must have an id"),
             Error::ElementCrosslink => write!(f, "Element crosslink"),
             Error::ParseError(e) => write!(f, "{:?}", e),
-            Error::NoSvgElement => write!(f, "Document didn't have a svg element"),
+            Error::NoSvgElement => write!(f, "Document didn't have an SVG element"),
             Error::EmptyDocument => write!(f, "Document didn't have any nodes"),
             Error::UnsupportedCSS(ref pos) => write!(f, "Unsupported CSS at: {:?}", pos),
             Error::InvalidCSS(ref pos) => write!(f, "Invalid CSS at: {:?}", pos),
             Error::UnsupportedEntity(ref pos) => write!(f, "Unsupported ENTITY data at: {:?}", pos),
+            Error::UnsupportedPaintFallback(ref iri) =>
+                write!(f, "Valid FuncIRI(#{}) with fallback value is not supported", iri),
+            Error::InvalidFuncIriInsideFilterAttribute(ref iri) =>
+                write!(f, "Broken FuncIRI(#{}) inside a 'filter' attribute is not supported", iri),
         }
     }
 }

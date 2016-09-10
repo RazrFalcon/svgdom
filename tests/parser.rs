@@ -4,8 +4,8 @@
 
 extern crate svgdom;
 
-use svgdom::{Document, ParseOptions, Error, ErrorPos, NodeType, TagName};
-use svgdom::types::Transform;
+use svgdom::{Document, ParseOptions, Error, ErrorPos, NodeType, TagName, ValueId};
+use svgdom::types::{Color, Transform};
 use svgdom::AttributeValue;
 use svgdom::AttributeId as AId;
 use svgdom::ElementId as EId;
@@ -386,8 +386,8 @@ b"<svg>
 fn parse_iri_1() {
     let doc = Document::from_data(
 b"<svg>
-    <radialGradient id=\"lg1\"/>
-    <rect fill=\"url(#lg1)\"/>
+    <radialGradient id=\"rg1\"/>
+    <rect fill=\"url(#rg1)\"/>
 </svg>").unwrap();
 
     let child = doc.first_child().unwrap();
@@ -404,8 +404,8 @@ fn parse_iri_2() {
 
     let doc = Document::from_data(
 b"<svg>
-    <rect fill=\"url(#lg1)\"/>
-    <radialGradient id=\"lg1\"/>
+    <rect fill=\"url(#rg1)\"/>
+    <radialGradient id=\"rg1\"/>
 </svg>").unwrap();
 
     let child = doc.first_child().unwrap();
@@ -414,6 +414,70 @@ b"<svg>
 
     assert_eq!(rg.is_used(), true);
     assert_eq!(rect.attribute_value(AId::Fill).unwrap(), AttributeValue::Link(rg));
+}
+
+#[test]
+fn parse_iri_with_fallback_1() {
+    let doc = Document::from_data(
+b"<svg>
+    <rect fill=\"url(#lg1) none\"/>
+</svg>").unwrap();
+
+    let child = doc.first_child().unwrap();
+    let rect = child.children().nth(0).unwrap();
+
+    assert_eq!(rect.attribute_value(AId::Fill).unwrap(),
+               AttributeValue::PredefValue(ValueId::None));
+}
+
+#[test]
+fn parse_iri_with_fallback_2() {
+    let doc = Document::from_data(
+b"<svg>
+    <rect fill=\"url(#lg1) red\"/>
+</svg>").unwrap();
+
+    let child = doc.first_child().unwrap();
+    let rect = child.children().nth(0).unwrap();
+
+    assert_eq!(rect.attribute_value(AId::Fill).unwrap(),
+               AttributeValue::Color(Color::new(255, 0, 0)));
+}
+
+#[test]
+fn parse_iri_with_fallback_3() {
+    // unsupported case
+
+    let doc = Document::from_data(
+b"<svg>
+    <radialGradient id=\"rg1\"/>
+    <rect fill=\"url(#rg1) none\"/>
+</svg>");
+
+    assert_eq!(doc.err().unwrap(), Error::UnsupportedPaintFallback("rg1".to_string()));
+}
+
+#[test]
+fn parse_iri_with_fallback_4() {
+    // unsupported case
+
+    let doc = Document::from_data(
+b"<svg>
+    <rect fill=\"url(#rg1) none\"/>
+    <radialGradient id=\"rg1\"/>
+</svg>");
+
+    assert_eq!(doc.err().unwrap(), Error::UnsupportedPaintFallback("rg1".to_string()));
+}
+
+#[test]
+fn parse_filter_iri_1() {
+    let doc = Document::from_data(
+b"<svg>
+    <rect filter=\"url(#rg1)\"/>
+</svg>");
+
+    assert_eq!(doc.err().unwrap(), Error::InvalidFuncIriInsideFilterAttribute("rg1".to_string()));
 }
 
 test_resave!(parse_entity_1,
