@@ -465,6 +465,8 @@ impl Node {
     ///
     /// Panics if the node, the new sibling, or one of their adjoining nodes is currently borrowed.
     pub fn insert_after(&self, new_sibling: Node) {
+        // TODO: add an example, since we need to detach 'new_sibling'
+        //       before passing it to this method
         let mut self_borrow = self.0.borrow_mut();
         {
             let mut new_sibling_borrow = new_sibling.0.borrow_mut();
@@ -1017,6 +1019,22 @@ impl Node {
         self.attributes().contains(id)
     }
 
+    /// Returns `true` if node has any of the provided attributes.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the node is currently mutability borrowed.
+    pub fn has_attributes(&self, ids: &[AttributeId]) -> bool {
+        let attrs = self.attributes();
+        for id in ids {
+            if attrs.contains(*id) {
+                return true;
+            }
+        }
+
+        false
+    }
+
     /// Returns `true` if node has attribute with such `id` and such `value`.
     ///
     /// # Panics
@@ -1367,8 +1385,13 @@ impl Drop for NodeData {
                 AttributeValue::Link(ref n) => {
                     let mut self_borrow = n.0.borrow_mut();
                     let ln = &mut self_borrow.linked_nodes;
-                    let index = ln.iter().position(|x| x.upgrade().is_none()).unwrap();
-                    ln.remove(index);
+                    let index = ln.iter().position(|x| x.upgrade().is_none());
+                    match index {
+                        Some(idx) => {
+                            ln.remove(idx);
+                        }
+                        None => {}
+                    }
                 }
                 _ => {}
             }

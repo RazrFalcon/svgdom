@@ -1,4 +1,4 @@
-use dtoa;
+use std::io::Write;
 
 use {WriteOptions, WriteBuffer};
 
@@ -50,16 +50,7 @@ pub fn write_num(num: f64, precision: u8, rm_leading_zero: bool, buf: &mut Vec<u
 
     let start_pos = buf.len();
 
-    dtoa::write(buf, new_value).unwrap();
-
-    // dtoa is always adds '.0', so we have to remove it
-    // yes, it's ugly, but fast
-    if buf[buf.len() - 1] == b'0' {
-        if buf[buf.len() - 2] == b'.' {
-            let new_len = buf.len() - 2;
-            buf.truncate(new_len);
-        }
-    }
+    write!(buf, "{}", new_value).unwrap();
 
     if rm_leading_zero {
         let mut has_dot = false;
@@ -126,4 +117,6 @@ mod tests {
     test_number!(gen_number_19, 80.000005,          6, false, "80");
     test_number!(gen_number_20, 32.000001,          6, false, "32");
     test_number!(gen_number_21, 1.5,                6, false, "1.5");
+    test_number!(gen_number_22, 0.5164937,          8, false, "0.5164937");
+    test_number!(gen_number_23, 0.14186,            8, false, "0.14186");
 }

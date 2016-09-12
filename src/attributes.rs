@@ -68,6 +68,11 @@ impl Attributes {
         self.0.len()
     }
 
+    /// Returns `true` if attributes list is empty.
+    pub fn is_empty(&self) -> bool {
+        self.0.is_empty()
+    }
+
     /// Returns an existing attribute or `def_value`.
     pub fn get_or<'a>(&'a self, id: AttributeId, def_value: &'a AttributeValue) -> &AttributeValue {
         match self.get(id) {

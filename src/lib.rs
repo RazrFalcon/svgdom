@@ -53,7 +53,6 @@ DOM structure itself based on: https://github.com/SimonSapin/rust-forest/tree/ma
 extern crate vec_map;
 #[macro_use]
 extern crate svgparser;
-extern crate dtoa;
 
 pub use attribute::{Attribute, AttributeValue};
 pub use attributes::Attributes;

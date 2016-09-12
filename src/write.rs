@@ -107,6 +107,7 @@ pub fn write_dom(doc: &Document, opt: &WriteOptions, out: &mut Vec<u8>) {
                                 write_newline(opt.indent, out);
                             },
                             NodeType::Text => {
+                                // TODO: implement xml escape
                                 depth.write_indent(out);
                                 out.extend_from_slice(node.text().unwrap().trim().as_bytes());
                                 write_newline(opt.indent, out);

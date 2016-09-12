@@ -7,11 +7,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 ### Added
 - A fallback value processing from the \<paint\> type.
+- 'has_attributes()' method to the `Node`.
+
+### Changed
+- Moved back from 'dtoa' to the std implementation.
+- The 'Transfrom' struct is now implements Copy.
+
+### Fixed
+- Fix crash in the NodeData's Drop.
 
 ## [0.0.2] - 2016-09-09
 ### Added
-- `first_element_child`, `svg_element`, `create_element_with_text` methods to `Document`.
-- `has_parent`, `has_text_children`, `document` methods to `Node`.
+- `first_element_child`, `svg_element`, `create_element_with_text` methods to the `Document`.
+- `has_parent`, `has_text_children`, `document` methods to the `Node`.
 
 ### Changed
 - Use `dtoa::write()` insted of `write!()`.

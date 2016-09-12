@@ -13,7 +13,7 @@ use svgparser::Error as ParseError;
 use svgparser::Stream;
 
 /// Representation of `<transform>` type.
-#[derive(Debug,Clone)]
+#[derive(Debug,Clone,Copy)]
 #[allow(missing_docs)]
 pub struct Transform {
     pub a: f64,
