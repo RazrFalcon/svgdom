@@ -69,11 +69,11 @@ fn linked_attributes_3() {
     {
         // remove n1
         let n = doc.descendants().next().unwrap();
-        n.detach();
+        n.remove();
     }
 
     {
-        // n1 should became unused
+        // n2 should became unused
         let n = doc.descendants().next().unwrap();
         assert_eq!(n.is_used(), false);
     }
@@ -81,6 +81,43 @@ fn linked_attributes_3() {
 
 #[test]
 fn linked_attributes_4() {
+    let doc = Document::new();
+
+    {
+        let n1 = doc.create_element(EId::Svg);
+        let n2 = doc.create_element(EId::Svg);
+
+        doc.root().append(&n1);
+        doc.root().append(&n2);
+
+        n1.set_id("1");
+        n2.set_id("2");
+
+        n1.set_link_attribute(AId::XlinkHref, n2.clone()).unwrap();
+
+        assert_eq!(n1.is_used(), false);
+        assert_eq!(n2.is_used(), true);
+    }
+
+    println!("{}", doc.to_string());
+
+    {
+        // remove n2
+        let n = doc.descendants().nth(1).unwrap();
+        n.remove();
+    }
+
+    println!("{}", doc.to_string());
+
+    {
+        // xlink:href attribute from n1 should be removed
+        let n = doc.descendants().next().unwrap();
+        assert_eq!(n.has_attribute(AId::XlinkHref), false);
+    }
+}
+
+#[test]
+fn linked_attributes_5() {
     let doc = Document::new();
     let n1 = doc.create_element(EId::Svg);
     let n2 = doc.create_element(EId::Svg);

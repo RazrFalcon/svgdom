@@ -7,14 +7,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 ### Added
 - A fallback value processing from the \<paint\> type.
-- 'has_attributes()' method to the `Node`.
+- `has_attributes`, `remove`, `is_basic_shape`  methods to the `Node`.
 
 ### Changed
-- Moved back from 'dtoa' to the std implementation.
-- The 'Transfrom' struct is now implements Copy.
+- Moved back from `dtoa` to the std implementation.
+- The `Transfrom` struct is now implements Copy.
+- Nodes should be removed via `Node::remove` method and not via `Node::detach` + Drop.
 
 ### Fixed
 - Fix crash in the NodeData's Drop.
+- Fix attributes remove which contains links to removed node.
 
 ## [0.0.2] - 2016-09-09
 ### Added
@@ -23,7 +25,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 - Use `dtoa::write()` insted of `write!()`.
-- `Document::append()` now returns added node.
+- `Document::append` now returns added node.
 
 ### Fixed
 - Fix default value of the 'stroke-miterlimit' attribute.

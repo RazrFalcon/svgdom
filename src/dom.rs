@@ -397,6 +397,51 @@ impl Node {
         self.0.borrow_mut().detach();
     }
 
+    /// Removes this node and all it children from the tree.
+    ///
+    /// Same as `detach()`, but also unlinks all linked nodes and attributes.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the node or one of its adjoining nodes or any children node is currently borrowed.
+    pub fn remove(&self) {
+        Node::_remove(self);
+        self.detach();
+    }
+
+    fn _remove(node: &Node) {
+        // remove all attributes, which will trigger nodes unlink
+        // if this node has referenced attributes
+        let ids: Vec<AttributeId> = node.attributes().values().map(|a| a.id).collect();
+        for id in ids {
+            node.remove_attribute(id);
+        }
+
+        // remove all attributes that linked to this node
+        let mut link_ids = Vec::new();
+        for linked in node.linked_nodes() {
+            for attr in linked.attributes().values() {
+                match attr.value {
+                    AttributeValue::Link(ref link) => {
+                        if link == node {
+                            link_ids.push(attr.id);
+                        }
+                    }
+                    _ => {}
+                }
+            }
+
+            while let Some(id) = link_ids.pop() {
+                linked.remove_attribute(id);
+            }
+        }
+
+        // repeat for children
+        for child in node.children() {
+            Node::_remove(&child);
+        }
+    }
+
     /// Appends a new child to this node, after existing children.
     ///
     /// # Panics
@@ -1060,10 +1105,10 @@ impl Node {
         let mut attrs = self.attributes_mut();
 
         // we must unlink referenced attributes
-        match attrs.get(id) {
-            Some(a) => {
-                match a.value {
-                    AttributeValue::Link(ref node) => {
+        match attrs.get_value(id) {
+            Some(value) => {
+                match value {
+                    &AttributeValue::Link(ref node) => {
                         let mut self_borrow = node.0.borrow_mut();
                         let ln = &mut self_borrow.linked_nodes;
                         // this code can't panic, because we know that such node exist
@@ -1134,7 +1179,7 @@ impl Node {
         self_borrow.linked_nodes.len()
     }
 
-    /// Returns true if current node is referenced.
+    /// Returns true if the current node is referenced.
     ///
     /// Referenced elements is elements that does not rendered by itself,
     /// rather defines rendering properties for other.
@@ -1160,16 +1205,54 @@ impl Node {
                 match *v {
                     TagName::Id(ref id) => {
                         match *id {
-                            ElementId::AltGlyphDef |
-                            ElementId::ClipPath |
-                            ElementId::Cursor |
-                            ElementId::Filter |
-                            ElementId::LinearGradient |
-                            ElementId::Marker |
-                            ElementId::Mask |
-                            ElementId::Pattern |
-                            ElementId::RadialGradient |
-                            ElementId::Symbol => true,
+                              ElementId::AltGlyphDef
+                            | ElementId::ClipPath
+                            | ElementId::Cursor
+                            | ElementId::Filter
+                            | ElementId::LinearGradient
+                            | ElementId::Marker
+                            | ElementId::Mask
+                            | ElementId::Pattern
+                            | ElementId::RadialGradient
+                            | ElementId::Symbol => true,
+                            _ => false,
+                        }
+                    }
+                    _ => false,
+                }
+            }
+            None => false,
+        }
+    }
+
+    /// Returns true if the current node is a basic shape.
+    ///
+    /// List: `rect`, `circle`, `ellipse`, `line`, `polyline`, `polygon`.
+    ///
+    /// Details: https://www.w3.org/TR/SVG/shapes.html
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use svgdom::Document;
+    ///
+    /// let doc = Document::from_data(b"<svg><rect/></svg>").unwrap();
+    /// let mut iter = doc.descendants();
+    /// assert_eq!(iter.next().unwrap().is_basic_shape(), false); // svg
+    /// assert_eq!(iter.next().unwrap().is_basic_shape(), true); // rect
+    /// ```
+    pub fn is_basic_shape(&self) -> bool {
+        match self.tag_name() {
+            Some(v) => {
+                match *v {
+                    TagName::Id(ref id) => {
+                        match *id {
+                              ElementId::Rect
+                            | ElementId::Circle
+                            | ElementId::Ellipse
+                            | ElementId::Line
+                            | ElementId::Polyline
+                            | ElementId::Polygon => true,
                             _ => false,
                         }
                     }
@@ -1372,30 +1455,6 @@ impl NodeData {
             if let Some(parent_strong) = parent_ref.upgrade() {
                 let mut parent_borrow = parent_strong.borrow_mut();
                 parent_borrow.first_child = next_sibling_strong;
-            }
-        }
-    }
-}
-
-impl Drop for NodeData {
-    fn drop(&mut self) {
-        // TODO: We probably need to do this in detach(), not in drop.
-        //       Otherwise we can get complex bags when detached node still has
-        //       referenced attributes and doc nodes still has links to this node.
-        for a in self.attributes.values() {
-            match a.value {
-                AttributeValue::Link(ref n) => {
-                    let mut self_borrow = n.0.borrow_mut();
-                    let ln = &mut self_borrow.linked_nodes;
-                    let index = ln.iter().position(|x| x.upgrade().is_none());
-                    match index {
-                        Some(idx) => {
-                            ln.remove(idx);
-                        }
-                        None => {}
-                    }
-                }
-                _ => {}
             }
         }
     }
