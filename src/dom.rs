@@ -1379,7 +1379,9 @@ impl NodeData {
 
 impl Drop for NodeData {
     fn drop(&mut self) {
-        // println!("drop");
+        // TODO: We probably need to do this in detach(), not in drop.
+        //       Otherwise we can get complex bags when detached node still has
+        //       referenced attributes and doc nodes still has links to this node.
         for a in self.attributes.values() {
             match a.value {
                 AttributeValue::Link(ref n) => {

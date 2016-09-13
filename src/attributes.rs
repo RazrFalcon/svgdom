@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use vec_map::{VecMap, Values};
+use vec_map::{VecMap, Values, Iter, IterMut};
 
 use super::{Attribute, AttributeId, AttributeValue};
 
@@ -71,6 +71,16 @@ impl Attributes {
     /// Returns `true` if attributes list is empty.
     pub fn is_empty(&self) -> bool {
         self.0.is_empty()
+    }
+
+    /// Returns an iterator.
+    pub fn iter(&self) -> Iter<Attribute> {
+        self.0.iter()
+    }
+
+    /// Returns a mutable iterator.
+    pub fn iter_mut(&mut self) -> IterMut<Attribute> {
+        self.0.iter_mut()
     }
 
     /// Returns an existing attribute or `def_value`.
