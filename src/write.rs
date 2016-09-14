@@ -184,7 +184,15 @@ fn write_attributes(node: &Node, opt: &WriteOptions, out: &mut Vec<u8>) {
     }
 
     let attrs = node.attributes();
-    for attr in attrs.values() {
+
+    // TODO: make optional
+    // sort attributes
+    let mut ids: Vec<AttributeId> = attrs.iter().map(|a| a.id).collect();
+    ids.sort_by_key(|x| *x as usize);
+
+    for aid in ids {
+        let attr = attrs.get(aid).unwrap();
+
         if !opt.write_hidden_attributes && !attr.visible {
             continue;
         }

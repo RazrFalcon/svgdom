@@ -412,7 +412,7 @@ impl Node {
     fn _remove(node: &Node) {
         // remove all attributes, which will trigger nodes unlink
         // if this node has referenced attributes
-        let ids: Vec<AttributeId> = node.attributes().values().map(|a| a.id).collect();
+        let ids: Vec<AttributeId> = node.attributes().iter().map(|a| a.id).collect();
         for id in ids {
             node.remove_attribute(id);
         }
@@ -420,7 +420,7 @@ impl Node {
         // remove all attributes that linked to this node
         let mut link_ids = Vec::new();
         for linked in node.linked_nodes() {
-            for attr in linked.attributes().values() {
+            for attr in linked.attributes().iter() {
                 match attr.value {
                     AttributeValue::Link(ref link) => {
                         if link == node {
@@ -959,8 +959,8 @@ impl Node {
     /// Panics if the node is currently mutability borrowed.
     pub fn find_reference_attribute(&self, node: &Node) -> Option<AttributeId> {
         // TODO: return iter, and not only first
-        let attrs = self.attributes();
-        for a in attrs.values() {
+        // let attrs = self.attributes();
+        for a in self.0.borrow().attributes.iter() {
             match a.value {
                 AttributeValue::Link(ref n) => {
                     if n == node {
@@ -1102,6 +1102,10 @@ impl Node {
     ///
     /// Panics if the node is currently borrowed.
     pub fn remove_attribute(&self, id: AttributeId) {
+        if !self.has_attribute(id) {
+            return;
+        }
+
         let mut attrs = self.attributes_mut();
 
         // we must unlink referenced attributes

@@ -2,7 +2,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use vec_map::{VecMap, Values, Iter, IterMut};
+use std::slice;
+use std::mem;
 
 use super::{Attribute, AttributeId, AttributeValue};
 
@@ -12,29 +13,47 @@ use super::{Attribute, AttributeId, AttributeValue};
 /// and not only copy like `Node`'s API.
 ///
 /// Use with care, since it didn't perform many check from `Node`'s API.
-pub struct Attributes(VecMap<Attribute>);
+pub struct Attributes(Vec<Attribute>);
 
 impl Attributes {
     /// Constructs a new attribute.
     ///
     /// **Warning:** newer construct it manually. All nodes has `Attributes` by default.
     pub fn new() -> Attributes {
-        Attributes(VecMap::new())
+        Attributes(Vec::new())
     }
 
     /// Returns a optional reference to `Attribute`.
     pub fn get(&self, id: AttributeId) -> Option<&Attribute> {
-        self.0.get(id as usize)
+        for v in self.0.iter() {
+            if v.id == id {
+                return Some(v);
+            }
+        }
+
+        None
     }
 
     /// Returns a optional mutable reference to `Attribute`.
     pub fn get_mut(&mut self, id: AttributeId) -> Option<&mut Attribute> {
-        self.0.get_mut(id as usize)
+        for v in self.0.iter_mut() {
+            if v.id == id {
+                return Some(v);
+            }
+        }
+
+        None
     }
 
     /// Returns optional reference to `AttributeValue`.
     pub fn get_value(&self, id: AttributeId) -> Option<&AttributeValue> {
-        self.0.get(id as usize).map(|x| &x.value)
+        for v in self.0.iter() {
+            if v.id == id {
+                return Some(&v.value);
+            }
+        }
+
+        None
     }
 
     /// Inserts new attribute. Previous will be overwritten.
@@ -42,7 +61,15 @@ impl Attributes {
     /// **Warning:** this method did not perform any checks for linked attributes.
     /// If you want to insert an linked attribute - use `Node::set_link_attribute()`.
     pub fn insert(&mut self, attr: Attribute) {
-        self.0.insert(attr.id as usize, attr);
+        if self.0.capacity() == 0 {
+            self.0.reserve(16);
+        }
+
+        let idx = self.0.iter().position(|x| x.id == attr.id);
+        match idx {
+            Some(i) => { mem::replace(&mut self.0[i], attr); }
+            None => self.0.push(attr),
+        }
     }
 
     /// Removes an existing attribute.
@@ -50,17 +77,22 @@ impl Attributes {
     /// **Warning:** this method did not perform any checks for linked attributes.
     /// If you want to remove an linked attribute - use `Node::remove_attribute()`.
     pub fn remove(&mut self, id: AttributeId) {
-        self.0.remove(id as usize);
+        let idx = self.0.iter().position(|x| x.id == id);
+        match idx {
+            Some(i) => { self.0.remove(i); }
+            None => {}
+        }
     }
 
     /// Returns `true` if container contains an attribute such `id`.
     pub fn contains(&self, id: AttributeId) -> bool {
-        self.0.contains_key(id as usize)
-    }
+        for v in self.0.iter() {
+            if v.id == id {
+                return true;
+            }
+        }
 
-    /// Returns an iterator over container values.
-    pub fn values(&self) -> Values<Attribute> {
-        self.0.values()
+        false
     }
 
     /// Returns count of the attributes.
@@ -74,12 +106,12 @@ impl Attributes {
     }
 
     /// Returns an iterator.
-    pub fn iter(&self) -> Iter<Attribute> {
+    pub fn iter(&self) -> slice::Iter<Attribute> {
         self.0.iter()
     }
 
     /// Returns a mutable iterator.
-    pub fn iter_mut(&mut self) -> IterMut<Attribute> {
+    pub fn iter_mut(&mut self) -> slice::IterMut<Attribute> {
         self.0.iter_mut()
     }
 

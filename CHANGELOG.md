@@ -11,8 +11,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 - Moved back from `dtoa` to the std implementation.
-- The `Transfrom` struct is now implements Copy.
+- The `Transform` struct is now implements Copy.
 - Nodes should be removed via `Node::remove` method and not via `Node::detach` + Drop.
+- `Attributes` implemented using `Vec` and not `VecMap` now. It's much faster.
 
 ### Fixed
 - Fix crash in the NodeData's Drop.

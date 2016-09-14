@@ -50,7 +50,6 @@ DOM structure itself based on: https://github.com/SimonSapin/rust-forest/tree/ma
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
 
-extern crate vec_map;
 #[macro_use]
 extern crate svgparser;
 
