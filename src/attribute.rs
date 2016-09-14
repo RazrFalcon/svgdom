@@ -82,6 +82,48 @@ static PRESENTATION_ATTRIBUTES: &'static [AttributeId] = &[
     AttributeId::WritingMode
 ];
 
+static GRAPHICAL_EVENT_ATTRIBUTES: &'static [AttributeId] = &[
+    AttributeId::Onactivate,
+    AttributeId::Onclick,
+    AttributeId::Onfocusin,
+    AttributeId::Onfocusout,
+    AttributeId::Onload,
+    AttributeId::Onmousedown,
+    AttributeId::Onmousemove,
+    AttributeId::Onmouseout,
+    AttributeId::Onmouseover,
+    AttributeId::Onmouseup,
+];
+
+static CONDITIONAL_PROCESSING_ATTRIBUTES: &'static [AttributeId] = &[
+    AttributeId::RequiredExtensions,
+    AttributeId::RequiredFeatures,
+    AttributeId::SystemLanguage,
+];
+
+static CORE_ATTRIBUTES: &'static [AttributeId] = &[
+    AttributeId::XmlBase,
+    AttributeId::XmlLang,
+    AttributeId::XmlSpace,
+];
+
+static FILL_ATTRIBUTES: &'static [AttributeId] = &[
+    AttributeId::Fill,
+    AttributeId::FillOpacity,
+    AttributeId::FillRule,
+];
+
+static STROKE_ATTRIBUTES: &'static [AttributeId] = &[
+    AttributeId::Stroke,
+    AttributeId::StrokeDasharray,
+    AttributeId::StrokeDashoffset,
+    AttributeId::StrokeLinecap,
+    AttributeId::StrokeLinejoin,
+    AttributeId::StrokeMiterlimit,
+    AttributeId::StrokeOpacity,
+    AttributeId::StrokeWidth,
+];
+
 /// Representation of the `<list-of-numbers>`.
 pub type NumberList = Vec<f64>;
 /// Representation of the `<list-of-lengths>`.
@@ -321,6 +363,47 @@ impl Attribute {
     /// [presentation attributes](https://www.w3.org/TR/SVG/propidx.html).
     pub fn is_presentation(&self) -> bool {
         PRESENTATION_ATTRIBUTES.iter().any(|aid| *aid == self.id)
+    }
+
+    /// Returns `true` if current attribute is part of
+    /// [graphical event attributes](https://www.w3.org/TR/SVG/intro.html#TermGraphicalEventAttribute).
+    pub fn is_graphical_event(&self) -> bool {
+        GRAPHICAL_EVENT_ATTRIBUTES.iter().any(|aid| *aid == self.id)
+    }
+
+    /// Returns `true` if current attribute is part of
+    /// [conditional processing attributes](https://www.w3.org/TR/SVG/intro.html#TermConditionalProcessingAttribute).
+    pub fn is_conditional_processing(&self) -> bool {
+        CONDITIONAL_PROCESSING_ATTRIBUTES.iter().any(|aid| *aid == self.id)
+    }
+
+    /// Returns `true` if current attribute is part of
+    /// [core attributes](https://www.w3.org/TR/SVG/intro.html#TermCoreAttributes).
+    ///
+    /// **NOTE:** the `id` attribute is part of core attributes, but we don't store it here
+    /// since it's part of the `Node` struct.
+    pub fn is_core(&self) -> bool {
+        CORE_ATTRIBUTES.iter().any(|aid| *aid == self.id)
+    }
+
+    /// Returns `true` if current attribute is part of fill attributes.
+    ///
+    /// List of fill attributes: `fill`, `fill-opacity`, `fill-rule`.
+    ///
+    /// This check is not defined by SVG spec.
+    pub fn is_fill(&self) -> bool {
+        FILL_ATTRIBUTES.iter().any(|aid| *aid == self.id)
+    }
+
+    /// Returns `true` if current attribute is part of stroke attributes.
+    ///
+    /// List of stroke attributes: `stroke`, `stroke-dasharray`, `stroke-dashoffset`,
+    /// `stroke-dashoffset`, `stroke-linecap`, `stroke-linejoin`, `stroke-miterlimit`,
+    /// `stroke-opacity`, `stroke-width`.
+    ///
+    /// This check is not defined by SVG spec.
+    pub fn is_stroke(&self) -> bool {
+        STROKE_ATTRIBUTES.iter().any(|aid| *aid == self.id)
     }
 }
 

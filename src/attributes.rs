@@ -115,6 +115,13 @@ impl Attributes {
         self.0.iter_mut()
     }
 
+    /// Retains only the elements specified by the predicate.
+    pub fn retain<F>(&mut self, f: F)
+        where F: FnMut(&Attribute) -> bool
+    {
+        self.0.retain(f)
+    }
+
     /// Returns an existing attribute or `def_value`.
     pub fn get_or<'a>(&'a self, id: AttributeId, def_value: &'a AttributeValue) -> &AttributeValue {
         match self.get(id) {

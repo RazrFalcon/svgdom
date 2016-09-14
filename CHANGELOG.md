@@ -7,7 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 ### Added
 - A fallback value processing from the \<paint\> type.
-- `has_attributes`, `remove`, `is_basic_shape`  methods to the `Node`.
+- `has_attributes`, `remove`, `is_basic_shape` methods to the `Node`.
+- `is_graphical_event`, `is_conditional_processing`, `is_core`, `is_fill`, `is_stroke` methods to the `Attribute`.
 
 ### Changed
 - Moved back from `dtoa` to the std implementation.
