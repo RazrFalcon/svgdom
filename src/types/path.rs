@@ -8,12 +8,221 @@ use std::fmt;
 
 use {WriteOptions, FromStream, WriteBuffer, WriteToString};
 
-pub use svgparser::path::{Command, Segment, SegmentData};
+pub use svgparser::path::SegmentData;
 use svgparser;
 use svgparser::Error as ParseError;
 use svgparser::Stream;
 
-/// Representation of SVG path data.
+/// List of all path commands.
+#[derive(Copy,Clone,Debug,PartialEq)]
+#[allow(missing_docs)]
+pub enum Command {
+    MoveTo,
+    LineTo,
+    HorizontalLineTo,
+    VerticalLineTo,
+    CurveTo,
+    SmoothCurveTo,
+    Quadratic,
+    SmoothQuadratic,
+    EllipticalArc,
+    ClosePath,
+}
+
+/// Representation of path segment.
+///
+/// If you want to change the segment type (for example: MoveTo to LineTo)
+/// - you should create a new segment.
+/// But you still can change points or make segment relative or absolute.
+#[derive(Copy,Clone,Debug,PartialEq)]
+pub struct Segment {
+    /// Indicate that segment is absolute.
+    pub absolute: bool,
+    data: SegmentData,
+}
+
+impl Segment {
+    /// Constructs a new MoveTo `Segment`.
+    pub fn new_move_to(x: f64, y: f64) -> Segment {
+        Segment {
+            absolute: true,
+            data: SegmentData::MoveTo { x: x, y: y },
+        }
+    }
+
+    /// Constructs a new ClosePath `Segment`.
+    pub fn new_close_path() -> Segment {
+        Segment {
+            absolute: true,
+            data: SegmentData::ClosePath,
+        }
+    }
+
+    /// Constructs a new LineTo `Segment`.
+    pub fn new_line_to(x: f64, y: f64) -> Segment {
+        Segment {
+            absolute: true,
+            data: SegmentData::LineTo { x: x, y: y },
+        }
+    }
+
+    /// Constructs a new HorizontalLineTo `Segment`.
+    pub fn new_hline_to(x: f64) -> Segment {
+        Segment {
+            absolute: true,
+            data: SegmentData::HorizontalLineTo { x: x },
+        }
+    }
+
+    /// Constructs a new VerticalLineTo `Segment`.
+    pub fn new_vline_to(y: f64) -> Segment {
+        Segment {
+            absolute: true,
+            data: SegmentData::VerticalLineTo { y: y },
+        }
+    }
+
+    /// Constructs a new CurveTo `Segment`.
+    pub fn new_curve_to(x1: f64, y1: f64, x2: f64, y2: f64, x: f64, y: f64) -> Segment {
+        Segment {
+            absolute: true,
+            data: SegmentData::CurveTo {
+                x1: x1,
+                y1: y1,
+                x2: x2,
+                y2: y2,
+                x: x,
+                y: y,
+            },
+        }
+    }
+
+    /// Constructs a new SmoothCurveTo `Segment`.
+    pub fn new_smooth_curve_to(x2: f64, y2: f64, x: f64, y: f64) -> Segment {
+        Segment {
+            absolute: true,
+            data: SegmentData::SmoothCurveTo {
+                x2: x2,
+                y2: y2,
+                x: x,
+                y: y,
+            },
+        }
+    }
+
+    /// Constructs a new QuadTo `Segment`.
+    pub fn new_quad_to(x1: f64, y1: f64, x: f64, y: f64) -> Segment {
+        Segment {
+            absolute: true,
+            data: SegmentData::Quadratic {
+                x1: x1,
+                y1: y1,
+                x: x,
+                y: y,
+            },
+        }
+    }
+
+    /// Constructs a new SmoothQuadTo `Segment`.
+    pub fn new_smooth_quad_to(x: f64, y: f64) -> Segment {
+        Segment {
+            absolute: true,
+            data: SegmentData::SmoothQuadratic {
+                x: x,
+                y: y,
+            },
+        }
+    }
+
+    /// Constructs a new ArcTo `Segment`.
+    pub fn new_arc_to(rx: f64, ry: f64, x_axis_rotation: f64, large_arc: bool, sweep: bool,
+                  x: f64, y: f64) -> Segment {
+        Segment {
+            absolute: true,
+            data: SegmentData::EllipticalArc {
+                rx: rx,
+                ry: ry,
+                x_axis_rotation: x_axis_rotation,
+                large_arc: large_arc,
+                sweep: sweep,
+                x: x,
+                y: y,
+            },
+        }
+    }
+
+    /// Returns a segment type.
+    pub fn cmd(&self) -> Command {
+        match *self.data() {
+            SegmentData::MoveTo { .. } => Command::MoveTo,
+            SegmentData::LineTo { .. } => Command::LineTo,
+            SegmentData::HorizontalLineTo { .. } => Command::HorizontalLineTo,
+            SegmentData::VerticalLineTo { .. } => Command::VerticalLineTo,
+            SegmentData::CurveTo { .. } => Command::CurveTo,
+            SegmentData::SmoothCurveTo { .. } => Command::SmoothCurveTo,
+            SegmentData::Quadratic { .. } => Command::Quadratic,
+            SegmentData::SmoothQuadratic { .. } => Command::SmoothQuadratic,
+            SegmentData::EllipticalArc { .. } => Command::EllipticalArc,
+            SegmentData::ClosePath => Command::ClosePath,
+        }
+    }
+
+    /// Returns segment's data.
+    pub fn data(&self) -> &SegmentData {
+        &self.data
+    }
+
+    /// Returns segment's data.
+    pub fn data_mut(&mut self) -> &mut SegmentData {
+        &mut self.data
+    }
+
+    /// Returns `true` if segment is absolute.
+    #[inline]
+    pub fn is_absolute(&self) -> bool {
+        self.absolute
+    }
+
+    #[inline]
+    /// Returns `true` if segment is relative.
+    pub fn is_relative(&self) -> bool {
+        !self.absolute
+    }
+
+    /// Returns the `x` coordinate of the segment if it has one.
+    fn x(&self) -> Option<f64> {
+        match *self.data() {
+            SegmentData::MoveTo { x, .. } => Some(x),
+            SegmentData::LineTo { x, .. } => Some(x),
+            SegmentData::HorizontalLineTo { x } => Some(x),
+            SegmentData::VerticalLineTo { .. } => None,
+            SegmentData::CurveTo { x, .. } => Some(x),
+            SegmentData::SmoothCurveTo { x, .. } => Some(x),
+            SegmentData::Quadratic { x, .. } => Some(x),
+            SegmentData::SmoothQuadratic { x, .. } => Some(x),
+            SegmentData::EllipticalArc { x, .. } => Some(x),
+            SegmentData::ClosePath => None,
+        }
+    }
+
+    /// Returns the `y` coordinate of the segment if it has one.
+    fn y(&self) -> Option<f64> {
+        match *self.data() {
+            SegmentData::MoveTo { y, .. } => Some(y),
+            SegmentData::LineTo { y, .. } => Some(y),
+            SegmentData::HorizontalLineTo { .. } => None,
+            SegmentData::VerticalLineTo { y } => Some(y),
+            SegmentData::CurveTo { y, .. } => Some(y),
+            SegmentData::SmoothCurveTo { y, .. } => Some(y),
+            SegmentData::Quadratic { y, .. } => Some(y),
+            SegmentData::SmoothQuadratic { y, .. } => Some(y),
+            SegmentData::EllipticalArc { y, .. } => Some(y),
+            SegmentData::ClosePath => None,
+        }
+    }
+}
+
+/// Representation of the SVG path data.
 #[derive(PartialEq,Clone)]
 pub struct Path {
     /// Vector which contain all the segments.
@@ -27,16 +236,211 @@ impl Path {
     }
 
     // TODO: append Path
+
+    /// Converts path's segments into absolute.
+    ///
+    /// Original segments can be mixed (relative, absolute).
+    pub fn to_absolute(&mut self) {
+        debug_assert!(!self.d.is_empty());
+
+        // position of the previous segment
+        let mut prev_x = 0.0;
+        let mut prev_y = 0.0;
+
+        // Position of the previous MoveTo segment.
+        // When we get 'm'(relative) segment, which is not first segment - then it's
+        // relative to previous 'M'(absolute) segment, not to first segment.
+        let mut prev_mx = 0.0;
+        let mut prev_my = 0.0;
+
+        let mut prev_cmd = Command::MoveTo;
+        for seg in self.d.iter_mut() {
+            if seg.cmd() == Command::ClosePath {
+                prev_x = prev_mx;
+                prev_y = prev_my;
+
+                seg.absolute = true;
+                continue;
+            }
+
+            let offset_x;
+            let offset_y;
+            if seg.is_relative() {
+                if seg.cmd() == Command::MoveTo && prev_cmd == Command::ClosePath {
+                    offset_x = prev_mx;
+                    offset_y = prev_my;
+                } else {
+                    offset_x = prev_x;
+                    offset_y = prev_y;
+                }
+            } else {
+                offset_x = 0.0;
+                offset_y = 0.0;
+            }
+
+            if seg.is_relative() {
+                shift_segment_data(seg.data_mut(), offset_x, offset_y);
+            }
+
+            if seg.cmd() == Command::MoveTo {
+                prev_mx = seg.x().unwrap();
+                prev_my = seg.y().unwrap();
+            }
+
+            seg.absolute = true;
+
+            if seg.cmd() == Command::HorizontalLineTo {
+                prev_x = seg.x().unwrap();
+            } else if seg.cmd() == Command::VerticalLineTo {
+                prev_y = seg.y().unwrap();
+            } else {
+                prev_x = seg.x().unwrap();
+                prev_y = seg.y().unwrap();
+            }
+
+            prev_cmd = seg.cmd();
+        }
+    }
+
+    /// Converts path's segments into relative.
+    ///
+    /// Original segments can be mixed (relative, absolute).
+    pub fn to_relative(&mut self) {
+        debug_assert!(!self.d.is_empty());
+
+        // NOTE: this method may look like 'to_absolute', but it's a bit different.
+
+        // position of the previous segment
+        let mut prev_x = 0.0;
+        let mut prev_y = 0.0;
+
+        // Position of the previous MoveTo segment.
+        // When we get 'm'(relative) segment, which is not first segment - then it's
+        // relative to previous 'M'(absolute) segment, not to first segment.
+        let mut prev_mx = 0.0;
+        let mut prev_my = 0.0;
+
+        let mut prev_cmd = Command::MoveTo;
+        for seg in self.d.iter_mut() {
+            if seg.cmd() == Command::ClosePath {
+                prev_x = prev_mx;
+                prev_y = prev_my;
+
+                seg.absolute = false;
+                continue;
+            }
+
+            let offset_x;
+            let offset_y;
+            if seg.is_absolute() {
+                if seg.cmd() == Command::MoveTo && prev_cmd == Command::ClosePath {
+                    offset_x = prev_mx;
+                    offset_y = prev_my;
+                } else {
+                    offset_x = prev_x;
+                    offset_y = prev_y;
+                }
+            } else {
+                offset_x = 0.0;
+                offset_y = 0.0;
+            }
+
+            // unlike in 'to_absolute', we should take prev values before changing segment data
+            if seg.is_absolute() {
+                if seg.cmd() == Command::HorizontalLineTo {
+                    prev_x = seg.x().unwrap();
+                } else if seg.cmd() == Command::VerticalLineTo {
+                    prev_y = seg.y().unwrap();
+                } else {
+                    prev_x = seg.x().unwrap();
+                    prev_y = seg.y().unwrap();
+                }
+            } else {
+                if seg.cmd() == Command::HorizontalLineTo {
+                    prev_x += seg.x().unwrap();
+                } else if seg.cmd() == Command::VerticalLineTo {
+                    prev_y += seg.y().unwrap();
+                } else {
+                    prev_x += seg.x().unwrap();
+                    prev_y += seg.y().unwrap();
+                }
+            }
+
+            if seg.cmd() == Command::MoveTo {
+                if seg.is_absolute() {
+                    prev_mx = seg.x().unwrap();
+                    prev_my = seg.y().unwrap();
+                } else {
+                    prev_mx += seg.x().unwrap();
+                    prev_my += seg.y().unwrap();
+                }
+            }
+
+            if seg.is_absolute() {
+                shift_segment_data(seg.data_mut(), -offset_x, -offset_y);
+            }
+
+            seg.absolute = false;
+
+            prev_cmd = seg.cmd();
+        }
+    }
 }
 
-// TODO: impl iter for Path
+fn shift_segment_data(d: &mut SegmentData, offset_x: f64, offset_y: f64) {
+    match *d {
+        SegmentData::MoveTo { ref mut x, ref mut y } => {
+            *x += offset_x;
+            *y += offset_y;
+        }
+        SegmentData::LineTo { ref mut x, ref mut y } => {
+            *x += offset_x;
+            *y += offset_y;
+        }
+        SegmentData::HorizontalLineTo { ref mut x } => {
+            *x += offset_x;
+        }
+        SegmentData::VerticalLineTo { ref mut y } => {
+            *y += offset_y;
+        }
+        SegmentData::CurveTo { ref mut x1, ref mut y1, ref mut x2, ref mut y2,
+                               ref mut x, ref mut y } => {
+            *x1 += offset_x;
+            *y1 += offset_y;
+            *x2 += offset_x;
+            *y2 += offset_y;
+            *x  += offset_x;
+            *y  += offset_y;
+        }
+        SegmentData::SmoothCurveTo { ref mut x2, ref mut y2, ref mut x, ref mut y } => {
+            *x2 += offset_x;
+            *y2 += offset_y;
+            *x  += offset_x;
+            *y  += offset_y;
+        }
+        SegmentData::Quadratic { ref mut x1, ref mut y1, ref mut x, ref mut y } => {
+            *x1 += offset_x;
+            *y1 += offset_y;
+            *x  += offset_x;
+            *y  += offset_y;
+        }
+        SegmentData::SmoothQuadratic { ref mut x, ref mut y } => {
+            *x += offset_x;
+            *y += offset_y;
+        }
+        SegmentData::EllipticalArc { ref mut x, ref mut y, .. } => {
+            *x += offset_x;
+            *y += offset_y;
+        }
+        SegmentData::ClosePath => {}
+    }
+}
 
 /// Construct a new path using build pattern.
 pub struct Builder {
     path: Path,
 }
 
-// TODO: Does moving expensive?
 impl Builder {
     /// Constructs a new builder.
     pub fn new() -> Builder {
@@ -120,7 +524,13 @@ impl FromStream for Path {
 
         while let Some(n) = t.next() {
             match n {
-                Ok(segment) => p.d.push(segment),
+                Ok(segment) => p.d.push({
+                    Segment {
+                        // cmd: Command(segment.cmd),
+                        absolute: svgparser::path::is_absolute(segment.cmd),
+                        data: segment.data,
+                    }
+                }),
                 Err(e) => return Err(e),
             }
         }
@@ -135,7 +545,7 @@ impl WriteBuffer for Path {
             return;
         }
 
-        let mut prev_cmd: Option<Command> = None;
+        let mut prev_cmd: Option<(Command, bool)> = None;
         let mut prev_coord_has_dot = false;
 
         for seg in &self.d {
@@ -158,7 +568,8 @@ impl WriteBuffer for Path {
                 }
 
                 SegmentData::CurveTo { x1, y1, x2, y2, x, y } => {
-                    write_coords(&[x1, y1, x2, y2, x, y], is_written, &mut prev_coord_has_dot, opt, buf);
+                    write_coords(&[x1, y1, x2, y2, x, y], is_written,
+                                 &mut prev_coord_has_dot, opt, buf);
                 }
 
                 SegmentData::SmoothCurveTo { x2, y2, x, y } => {
@@ -174,7 +585,8 @@ impl WriteBuffer for Path {
                 }
 
                 SegmentData::EllipticalArc { rx, ry, x_axis_rotation, large_arc, sweep, x, y } => {
-                    write_coords(&[rx, ry, x_axis_rotation], is_written, &mut prev_coord_has_dot, opt, buf);
+                    write_coords(&[rx, ry, x_axis_rotation], is_written,
+                                 &mut prev_coord_has_dot, opt, buf);
 
                     if opt.paths.use_compact_notation {
                         // flag must always have space before it
@@ -182,13 +594,13 @@ impl WriteBuffer for Path {
                     }
 
                     write_flag(large_arc, buf);
-                    // if !opt.paths.use_compact_notation {
+                    if !opt.paths.join_arc_to_flags {
                         buf.push(b' ');
-                    // }
+                    }
                     write_flag(sweep, buf);
-                    // if !opt.paths.use_compact_notation {
+                    if !opt.paths.join_arc_to_flags {
                         buf.push(b' ');
-                    // }
+                    }
                     write_coords(&[x, y], is_written, &mut prev_coord_has_dot, opt, buf);
                 }
                 SegmentData::ClosePath => {
@@ -206,7 +618,7 @@ impl WriteBuffer for Path {
     }
 }
 
-fn write_cmd(seg: &Segment, prev_cmd: &mut Option<Command>,
+fn write_cmd(seg: &Segment, prev_cmd: &mut Option<(Command, bool)>,
              opt: &WriteOptions, buf: &mut Vec<u8>) -> bool {
 
     let mut print_cmd = true;
@@ -214,7 +626,7 @@ fn write_cmd(seg: &Segment, prev_cmd: &mut Option<Command>,
     if opt.paths.remove_duplicated_commands {
         match prev_cmd {
             &mut Some(pcmd) => {
-                if *seg.cmd() == pcmd {
+                if seg.cmd() == pcmd.0 && seg.absolute == pcmd.1 {
                     print_cmd = false;
                 }
             }
@@ -227,10 +639,39 @@ fn write_cmd(seg: &Segment, prev_cmd: &mut Option<Command>,
         return false;
     }
 
-    buf.push(seg.cmd().data());
-    *prev_cmd = Some(*seg.cmd());
+    let cmd: u8;
+    if seg.is_absolute() {
+        cmd = match seg.cmd() {
+            Command::MoveTo => b'M',
+            Command::LineTo => b'L',
+            Command::HorizontalLineTo => b'H',
+            Command::VerticalLineTo => b'V',
+            Command::CurveTo => b'C',
+            Command::SmoothCurveTo => b'S',
+            Command::Quadratic => b'Q',
+            Command::SmoothQuadratic => b'T',
+            Command::EllipticalArc => b'A',
+            Command::ClosePath => b'Z',
+        };
+    } else {
+        cmd = match seg.cmd() {
+            Command::MoveTo => b'm',
+            Command::LineTo => b'l',
+            Command::HorizontalLineTo => b'h',
+            Command::VerticalLineTo => b'v',
+            Command::CurveTo => b'c',
+            Command::SmoothCurveTo => b's',
+            Command::Quadratic => b'q',
+            Command::SmoothQuadratic => b't',
+            Command::EllipticalArc => b'a',
+            Command::ClosePath => b'z',
+        };
+    }
+    buf.push(cmd);
 
-    if !(seg.cmd().to_absolute().data() == b'Z' || opt.paths.use_compact_notation) {
+    *prev_cmd = Some((seg.cmd(), seg.absolute));
+
+    if !(seg.cmd() == Command::ClosePath || opt.paths.use_compact_notation) {
         buf.push(b' ');
     }
 
@@ -295,47 +736,24 @@ impl fmt::Debug for Path {
     }
 }
 
-// TODO: to global
-macro_rules! assert_eq_text {
-    ($left:expr , $right:expr) => ({
-        let mut rd = Vec::new();
-        rd.extend_from_slice($right);
-        match (&$left, &rd) {
-            (left_val, rd) => {
-                if !(*left_val == *rd) {
-                    panic!("assertion failed: `(left == right)` \
-                           \nleft:  `{}`\nright: `{}`",
-                           String::from_utf8_lossy(left_val),
-                           String::from_utf8_lossy($right))
-                }
-            }
-        }
-    })
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
     use types::path;
-    use {WriteOptions, FromStream, WriteBuffer};
+    use {WriteOptions, FromStream, WriteToString};
 
     #[test]
     fn gen_path_1() {
         let mut path = Path::new();
         path.d.push(path::Segment::new_move_to(10.0, 20.0));
-        path.d.push(path::Segment::new_line_to(10.0, 20.0).to_relative());
-
-        let mut buf = Vec::new();
-        path.write_buf(&mut buf);
-        assert_eq!(String::from_utf8(buf).unwrap(), "M 10 20 l 10 20");
+        path.d.push(path::Segment::new_line_to(10.0, 20.0));
+        assert_eq!(path.to_string(), "M 10 20 L 10 20");
     }
 
     #[test]
     fn gen_path_2() {
         let path = Path::from_data(b"M 10 20 l 10 20").unwrap();
-        let mut buf = Vec::new();
-        path.write_buf(&mut buf);
-        assert_eq!(String::from_utf8(buf).unwrap(), "M 10 20 l 10 20");
+        assert_eq!(path.to_string(), "M 10 20 l 10 20");
     }
 
     #[test]
@@ -343,11 +761,10 @@ mod tests {
         let path = Path::from_data(b"M 10 20 L 30 40 H 50 V 60 C 70 80 90 100 110 120 \
                                      S 130 140 150 160 Q 170 180 190 200 T 210 220 \
                                      A 50 50 30 1 1 230 240 Z").unwrap();
-        let mut buf = Vec::new();
-        path.write_buf(&mut buf);
-        assert_eq_text!(buf, b"M 10 20 L 30 40 H 50 V 60 C 70 80 90 100 110 120 \
-                               S 130 140 150 160 Q 170 180 190 200 T 210 220 \
-                               A 50 50 30 1 1 230 240 Z");
+        assert_eq_text!(path.to_string(),
+            "M 10 20 L 30 40 H 50 V 60 C 70 80 90 100 110 120 \
+             S 130 140 150 160 Q 170 180 190 200 T 210 220 \
+             A 50 50 30 1 1 230 240 Z");
     }
 
     #[test]
@@ -355,19 +772,16 @@ mod tests {
         let path = Path::from_data(b"m 10 20 l 30 40 h 50 v 60 c 70 80 90 100 110 120 \
                                      s 130 140 150 160 q 170 180 190 200 t 210 220 \
                                      a 50 50 30 1 1 230 240 z").unwrap();
-        let mut buf = Vec::new();
-        path.write_buf(&mut buf);
-        assert_eq_text!(buf, b"m 10 20 l 30 40 h 50 v 60 c 70 80 90 100 110 120 \
-                               s 130 140 150 160 q 170 180 190 200 t 210 220 \
-                               a 50 50 30 1 1 230 240 z");
+        assert_eq_text!(path.to_string(),
+            "m 10 20 l 30 40 h 50 v 60 c 70 80 90 100 110 120 \
+             s 130 140 150 160 q 170 180 190 200 t 210 220 \
+             a 50 50 30 1 1 230 240 z");
     }
 
     #[test]
     fn gen_path_5() {
         let path = Path::from_data(b"").unwrap();
-        let mut buf = Vec::new();
-        path.write_buf(&mut buf);
-        assert_eq_text!(buf, b"");
+        assert_eq_text!(path.to_string(), "");
     }
 
     #[test]
@@ -377,9 +791,7 @@ mod tests {
         let mut opt = WriteOptions::default();
         opt.paths.remove_duplicated_commands = true;
 
-        let mut buf = Vec::new();
-        path.write_buf_opt(&opt, &mut buf);
-        assert_eq_text!(buf, b"M 10 20 L 30 40 50 60 l 70 80");
+        assert_eq_text!(path.to_string_with_opt(&opt), "M 10 20 L 30 40 50 60 l 70 80");
     }
 
     #[test]
@@ -389,9 +801,7 @@ mod tests {
         let mut opt = WriteOptions::default();
         opt.paths.remove_duplicated_commands = true;
 
-        let mut buf = Vec::new();
-        path.write_buf_opt(&opt, &mut buf);
-        assert_eq_text!(buf, b"M 10 20 L 30 40 50 60");
+        assert_eq_text!(path.to_string_with_opt(&opt), "M 10 20 L 30 40 50 60");
     }
 
     #[test]
@@ -401,9 +811,7 @@ mod tests {
         let mut opt = WriteOptions::default();
         opt.paths.use_compact_notation = true;
 
-        let mut buf = Vec::new();
-        path.write_buf_opt(&opt, &mut buf);
-        assert_eq_text!(buf, b"M10 20L30 40");
+        assert_eq_text!(path.to_string_with_opt(&opt), "M10 20L30 40");
     }
 
     #[test]
@@ -413,9 +821,7 @@ mod tests {
         let mut opt = WriteOptions::default();
         opt.paths.use_compact_notation = true;
 
-        let mut buf = Vec::new();
-        path.write_buf_opt(&opt, &mut buf);
-        assert_eq_text!(buf, b"M10 20V30H40V50H60Z");
+        assert_eq_text!(path.to_string_with_opt(&opt), "M10 20V30H40V50H60Z");
     }
 
     #[test]
@@ -424,14 +830,138 @@ mod tests {
 
         let mut opt = WriteOptions::default();
         opt.paths.use_compact_notation = true;
+        opt.paths.join_arc_to_flags = true;
         opt.numbers.remove_leading_zero = true;
 
-        let mut buf = Vec::new();
-        path.write_buf_opt(&opt, &mut buf);
-        assert_eq_text!(buf, b"M10-20A5.5.3-4 1 1 0-.1");
-        // TODO: this
-        // assert_eq_text!(buf, b"M10-20A5.5.3-4 110-.1");
+        assert_eq_text!(path.to_string_with_opt(&opt), "M10-20A5.5.3-4 110-.1");
     }
 
     // TODO: M L L L -> M
+}
+
+#[cfg(test)]
+mod to_absolute {
+    use types::path;
+    use FromStream;
+
+    macro_rules! test {
+        ($name:ident, $in_text:expr, $out_text:expr) => (
+            #[test]
+            fn $name() {
+                let mut path = path::Path::from_data($in_text).unwrap();
+                path.to_absolute();
+                assert_eq_text!(path.to_string(), $out_text);
+            }
+        )
+    }
+
+    test!(line_to,
+          b"m 10 20 l 20 20",
+           "M 10 20 L 30 40");
+
+    test!(close_path,
+          b"m 10 20 l 20 20 z",
+           "M 10 20 L 30 40 Z");
+
+    // test to check that libsvgparser parses implicit MoveTo as LineTo
+    test!(implicit_line_to,
+          b"m 10 20 20 20",
+           "M 10 20 L 30 40");
+
+    test!(hline_vline,
+          b"m 10 20 v 10 h 10 l 10 10",
+           "M 10 20 V 30 H 20 L 30 40");
+
+    test!(curve,
+          b"m 10 20 c 10 10 10 10 10 10",
+           "M 10 20 C 20 30 20 30 20 30");
+
+    test!(move_to_1,
+          b"m 10 20 l 10 10 m 10 10 l 10 10",
+           "M 10 20 L 20 30 M 30 40 L 40 50");
+
+    test!(move_to_2,
+          b"m 10 20 l 10 10 z m 10 10 l 10 10",
+           "M 10 20 L 20 30 Z M 20 30 L 30 40");
+
+    test!(move_to_3,
+          b"m 10 20 l 10 10 Z m 10 10 l 10 10",
+           "M 10 20 L 20 30 Z M 20 30 L 30 40");
+
+    test!(smooth_curve,
+          b"m 10 20 s 10 10 10 10",
+           "M 10 20 S 20 30 20 30");
+
+    test!(quad,
+          b"m 10 20 q 10 10 10 10",
+           "M 10 20 Q 20 30 20 30");
+
+    test!(arc_mixed,
+          b"M 30 150 a 40 40 0 0 1 65 50 Z m 30 30 A 20 20 0 0 0 125 230 Z \
+            m 40 24 a 20 20 0 0 1 65 50 z",
+           "M 30 150 A 40 40 0 0 1 95 200 Z M 60 180 A 20 20 0 0 0 125 230 Z \
+            M 100 204 A 20 20 0 0 1 165 254 Z");
+}
+
+#[cfg(test)]
+mod to_relative {
+    use types::path;
+    use FromStream;
+
+    macro_rules! test {
+        ($name:ident, $in_text:expr, $out_text:expr) => (
+            #[test]
+            fn $name() {
+                let mut path = path::Path::from_data($in_text).unwrap();
+                path.to_relative();
+                assert_eq_text!(path.to_string(), $out_text);
+            }
+        )
+    }
+
+    test!(line_to,
+          b"M 10 20 L 30 40",
+           "m 10 20 l 20 20");
+
+    test!(close_path,
+          b"M 10 20 L 30 40 Z",
+           "m 10 20 l 20 20 z");
+
+    test!(implicit_line_to,
+          b"M 10 20 30 40",
+           "m 10 20 l 20 20");
+
+    test!(hline_vline,
+          b"M 10 20 V 30 H 20 L 30 40",
+           "m 10 20 v 10 h 10 l 10 10");
+
+    test!(curve,
+          b"M 10 20 C 20 30 20 30 20 30",
+           "m 10 20 c 10 10 10 10 10 10");
+
+    test!(move_to_1,
+          b"M 10 20 L 20 30 M 30 40 L 40 50",
+           "m 10 20 l 10 10 m 10 10 l 10 10");
+
+    test!(move_to_2,
+          b"M 10 20 L 20 30 Z M 20 30 L 30 40",
+           "m 10 20 l 10 10 z m 10 10 l 10 10");
+
+    test!(move_to_3,
+          b"M 10 20 L 20 30 z M 20 30 L 30 40",
+           "m 10 20 l 10 10 z m 10 10 l 10 10");
+
+    test!(smooth_curve,
+          b"M 10 20 S 20 30 20 30",
+           "m 10 20 s 10 10 10 10");
+
+    test!(quad,
+          b"M 10 20 Q 20 30 20 30",
+           "m 10 20 q 10 10 10 10");
+
+    test!(arc_mixed,
+          b"M 30 150 a 40 40 0 0 1 65 50 Z m 30 30 A 20 20 0 0 0 125 230 Z \
+            m 40 24 a 20 20 0 0 1 65 50 z",
+           "m 30 150 a 40 40 0 0 1 65 50 z m 30 30 a 20 20 0 0 0 65 50 z \
+            m 40 24 a 20 20 0 0 1 65 50 z");
 }

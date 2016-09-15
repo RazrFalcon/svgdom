@@ -69,6 +69,21 @@ pub use svgparser::ValueId;
 #[macro_use]
 mod traits;
 
+#[cfg(test)]
+macro_rules! assert_eq_text {
+    ($left:expr, $right:expr) => ({
+        match (&$left, &$right) {
+            (left_val, right_val) => {
+                if !(*left_val == *right_val) {
+                    panic!("assertion failed: `(left == right)` \
+                           \nleft:  `{}`\nright: `{}`",
+                           left_val, right_val)
+                }
+            }
+        }
+    })
+}
+
 mod attribute;
 mod attributes;
 mod dom;

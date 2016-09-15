@@ -5,6 +5,7 @@
 extern crate svgdom;
 
 use svgdom::{Document, AttributeId, AttributeValue};
+use svgdom::types::path::Command;
 
 use std::env;
 use std::io::Read;
@@ -34,7 +35,7 @@ fn main() {
             Some(attr) => {
                 match attr.value {
                     AttributeValue::Path(ref path) => {
-                        count += path.d.iter().filter(|seg| seg.cmd().is_curve_to()).count();
+                        count += path.d.iter().filter(|seg| seg.cmd() == Command::CurveTo).count();
                     }
                     _ => {}
                 }
