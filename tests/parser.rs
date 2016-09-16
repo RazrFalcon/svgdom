@@ -395,7 +395,7 @@ b"<svg>
     let rect = child.children().nth(1).unwrap();
 
     assert_eq!(rg.is_used(), true);
-    assert_eq!(rect.attribute_value(AId::Fill).unwrap(), AttributeValue::Link(rg));
+    assert_eq!(rect.attribute_value(AId::Fill).unwrap(), AttributeValue::FuncLink(rg));
 }
 
 #[test]
@@ -413,7 +413,7 @@ b"<svg>
     let rg = child.children().nth(1).unwrap();
 
     assert_eq!(rg.is_used(), true);
-    assert_eq!(rect.attribute_value(AId::Fill).unwrap(), AttributeValue::Link(rg));
+    assert_eq!(rect.attribute_value(AId::Fill).unwrap(), AttributeValue::FuncLink(rg));
 }
 
 #[test]

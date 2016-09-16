@@ -136,7 +136,10 @@ pub enum AttributeValue {
     Color(Color),
     Length(Length),
     LengthList(LengthList),
+    /// IRI
     Link(Node),
+    /// FuncIRI
+    FuncLink(Node),
     Number(f64),
     NumberList(NumberList),
     Path(path::Path),
@@ -240,6 +243,7 @@ impl AttributeValue {
     impl_as_type!(as_length, Length, Length);
     impl_as_type!(as_length_list, LengthList, LengthList);
     impl_as_type!(as_link, Link, Node);
+    impl_as_type!(as_func_link, FuncLink, Node);
     impl_as_type!(as_number, Number, f64);
     impl_as_type!(as_number_list, NumberList, NumberList);
     impl_as_type!(as_path, Path, path::Path);
@@ -313,6 +317,63 @@ impl AttributeValue {
         }
     }
 }
+
+impl WriteBuffer for AttributeValue {
+    fn write_buf_opt(&self, opt: &WriteOptions, buf: &mut Vec<u8>) {
+        match *self {
+            AttributeValue::String(ref s) => {
+                buf.extend_from_slice(s.as_bytes());
+            },
+            AttributeValue::Number(ref n) => {
+                n.write_buf_opt(opt, buf);
+            },
+            AttributeValue::NumberList(ref list) => {
+                for (i, num) in list.iter().enumerate() {
+                    num.write_buf_opt(opt, buf);
+
+                    if i < list.len() - 1 {
+                        buf.push(b' ');
+                    }
+                }
+            },
+            AttributeValue::Length(ref l) => {
+                l.write_buf_opt(opt, buf);
+            },
+            AttributeValue::LengthList(ref list) => {
+                // TODO: impl for struct
+                for (n, l) in list.iter().enumerate() {
+                    l.write_buf_opt(opt, buf);
+                    if n < list.len() - 1 {
+                        buf.push(b' ');
+                    }
+                }
+            },
+            AttributeValue::Transform(ref t) => {
+                t.write_buf_opt(opt, buf);
+            }
+            AttributeValue::Path(ref p) => {
+                p.write_buf_opt(opt, buf);
+            }
+            AttributeValue::Link(ref n) => {
+                buf.push(b'#');
+                buf.extend_from_slice(n.id().as_bytes());
+            },
+            AttributeValue::FuncLink(ref n) => {
+                buf.extend_from_slice(b"url(#");
+                buf.extend_from_slice(n.id().as_bytes());
+                buf.push(b')');
+            },
+            AttributeValue::Color(ref c) => {
+                c.write_buf_opt(opt, buf);
+            },
+            AttributeValue::PredefValue(ref v) => {
+                buf.extend_from_slice(v.name().as_bytes())
+            },
+        }
+    }
+}
+
+impl_display!(AttributeValue);
 
 /// Representation oh the SVG attribute object.
 #[derive(PartialEq,Clone,Debug)]
@@ -422,59 +483,7 @@ impl WriteBuffer for Attribute {
         buf.extend_from_slice(name.as_bytes());
         buf.push(b'=');
         write_quote(opt, buf);
-
-        match &self.value {
-            &AttributeValue::String(ref s) => {
-                buf.extend_from_slice(s.as_bytes());
-            },
-            &AttributeValue::Number(ref n) => {
-                n.write_buf_opt(opt, buf);
-            },
-            &AttributeValue::NumberList(ref list) => {
-                for (i, num) in list.iter().enumerate() {
-                    num.write_buf_opt(opt, buf);
-
-                    if i < list.len() - 1 {
-                        buf.push(b' ');
-                    }
-                }
-            },
-            &AttributeValue::Length(ref l) => {
-                l.write_buf_opt(opt, buf);
-            },
-            &AttributeValue::LengthList(ref list) => {
-                // TODO: impl for struct
-                for (n, l) in list.iter().enumerate() {
-                    l.write_buf_opt(opt, buf);
-                    if n < list.len() - 1 {
-                        buf.push(b' ');
-                    }
-                }
-            },
-            &AttributeValue::Transform(ref t) => {
-                t.write_buf_opt(opt, buf);
-            }
-            &AttributeValue::Path(ref p) => {
-                p.write_buf_opt(opt, buf);
-            }
-            &AttributeValue::Link(ref n) => {
-                if self.id == AttributeId::XlinkHref {
-                    buf.push(b'#');
-                    buf.extend_from_slice(n.id().as_bytes());
-                } else {
-                    buf.extend_from_slice(b"url(#");
-                    buf.extend_from_slice(n.id().as_bytes());
-                    buf.push(b')');
-                }
-            },
-            &AttributeValue::Color(ref c) => {
-                c.write_buf_opt(opt, buf);
-            },
-            &AttributeValue::PredefValue(ref v) => {
-                buf.extend_from_slice(v.name().as_bytes())
-            },
-        }
-
+        self.value.write_buf_opt(opt, buf);
         write_quote(opt, buf);
     }
 }

@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - The `Transform` struct is now implements Copy.
 - Nodes should be removed via `Node::remove` method and not via `Node::detach` + Drop.
 - `Attributes` implemented using `Vec` and not `VecMap` now. It's much faster.
+- Split `AttributeValue::Link` into `AttributeValue::Link` and `AttributeValue::FuncLink`.
 
 ### Fixed
 - Fix crash in the NodeData's Drop.

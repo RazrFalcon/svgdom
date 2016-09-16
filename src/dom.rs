@@ -422,7 +422,7 @@ impl Node {
         for linked in node.linked_nodes() {
             for attr in linked.attributes().iter() {
                 match attr.value {
-                    AttributeValue::Link(ref link) => {
+                    AttributeValue::Link(ref link) | AttributeValue::FuncLink(ref link) => {
                         if link == node {
                             link_ids.push(attr.id);
                         }
@@ -838,7 +838,7 @@ impl Node {
         // TODO: do not panic on invalid attribute type
 
         match attr.value {
-            AttributeValue::Link(_) =>
+            AttributeValue::Link(_) | AttributeValue::FuncLink(_) =>
                 panic!("Link attributes must be set via set_link_attribute()"),
             _ => {}
         }
@@ -925,7 +925,13 @@ impl Node {
         }
 
         {
-            let a = Attribute::new(id, AttributeValue::Link(node.clone()));
+            let a;
+            if id == AttributeId::XlinkHref {
+                a = Attribute::new(id, AttributeValue::Link(node.clone()));
+            } else {
+                a = Attribute::new(id, AttributeValue::FuncLink(node.clone()));
+            }
+
             let mut attributes = self.attributes_mut();
             attributes.insert(a);
         }
@@ -962,7 +968,7 @@ impl Node {
         // let attrs = self.attributes();
         for a in self.0.borrow().attributes.iter() {
             match a.value {
-                AttributeValue::Link(ref n) => {
+                AttributeValue::Link(ref n) | AttributeValue::FuncLink(ref n) => {
                     if n == node {
                         return Some(a.id);
                     }
@@ -1111,8 +1117,8 @@ impl Node {
         // we must unlink referenced attributes
         match attrs.get_value(id) {
             Some(value) => {
-                match value {
-                    &AttributeValue::Link(ref node) => {
+                match *value {
+                    AttributeValue::Link(ref node) | AttributeValue::FuncLink(ref node) => {
                         let mut self_borrow = node.0.borrow_mut();
                         let ln = &mut self_borrow.linked_nodes;
                         // this code can't panic, because we know that such node exist
