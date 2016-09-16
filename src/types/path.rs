@@ -190,7 +190,7 @@ impl Segment {
     }
 
     /// Returns the `x` coordinate of the segment if it has one.
-    fn x(&self) -> Option<f64> {
+    pub fn x(&self) -> Option<f64> {
         match *self.data() {
             SegmentData::MoveTo { x, .. } => Some(x),
             SegmentData::LineTo { x, .. } => Some(x),
@@ -206,7 +206,7 @@ impl Segment {
     }
 
     /// Returns the `y` coordinate of the segment if it has one.
-    fn y(&self) -> Option<f64> {
+    pub fn y(&self) -> Option<f64> {
         match *self.data() {
             SegmentData::MoveTo { y, .. } => Some(y),
             SegmentData::LineTo { y, .. } => Some(y),

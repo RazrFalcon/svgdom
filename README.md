@@ -71,7 +71,6 @@ Main downside of this approach is that you can't save original formatting and so
  - Everything is a `Node`. There are no separated `ElementNode`, `TextNode`, etc.
    You still have all the data, but not in the specific *struct's*.
    You can check a node type via `Node::node_type()`.
- - *FuncIRI* and *IRI* are the same types.
 
 ### Usage
 
