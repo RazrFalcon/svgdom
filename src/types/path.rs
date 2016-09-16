@@ -241,8 +241,6 @@ impl Path {
     ///
     /// Original segments can be mixed (relative, absolute).
     pub fn to_absolute(&mut self) {
-        debug_assert!(!self.d.is_empty());
-
         // position of the previous segment
         let mut prev_x = 0.0;
         let mut prev_y = 0.0;
@@ -306,8 +304,6 @@ impl Path {
     ///
     /// Original segments can be mixed (relative, absolute).
     pub fn to_relative(&mut self) {
-        debug_assert!(!self.d.is_empty());
-
         // NOTE: this method may look like 'to_absolute', but it's a bit different.
 
         // position of the previous segment
