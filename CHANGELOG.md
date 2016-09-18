@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - `is_graphical_event`, `is_conditional_processing`, `is_core`, `is_fill`, `is_stroke` methods to the `Attribute`.
 - `types::path::Segment` struct which is used instead of one from `libsvgparser`.
 - `to_absolute` and `to_relative` methods to the `types::path::Path`.
+- New error type: `BrokenFuncIri`.
 
 ### Changed
 - Moved back from `dtoa` to the std implementation.

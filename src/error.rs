@@ -37,6 +37,8 @@ pub enum Error {
     /// <rect fill="url(#lg1) red"/>
     /// ```
     UnsupportedPaintFallback(String), // FuncIRI name
+    /// We don't support 'use' elements with broken filter attribute.
+    BrokenFuncIri(String), // FuncIRI name
 }
 
 impl fmt::Display for Error {
@@ -52,6 +54,9 @@ impl fmt::Display for Error {
             Error::UnsupportedEntity(ref pos) => write!(f, "Unsupported ENTITY data at: {:?}", pos),
             Error::UnsupportedPaintFallback(ref iri) =>
                 write!(f, "Valid FuncIRI(#{}) with fallback value is not supported", iri),
+            Error::BrokenFuncIri(ref iri) =>
+                write!(f, "The 'use' element with a broken filter attribute('#{}') \
+                           is not supported", iri),
         }
     }
 }
