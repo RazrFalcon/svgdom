@@ -1070,6 +1070,15 @@ impl Node {
         self.attributes().contains(id)
     }
 
+    /// Returns `true` if node has attribute with such `id` and this attribute is visible.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the node is currently mutability borrowed.
+    pub fn has_visible_attribute(&self, id: AttributeId) -> bool {
+        self.has_attribute(id) && self.attributes().get(id).unwrap().visible
+    }
+
     /// Returns `true` if node has any of the provided attributes.
     ///
     /// # Panics

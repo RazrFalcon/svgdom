@@ -99,15 +99,11 @@ fn linked_attributes_4() {
         assert_eq!(n2.is_used(), true);
     }
 
-    println!("{}", doc.to_string());
-
     {
         // remove n2
         let n = doc.descendants().nth(1).unwrap();
         n.remove();
     }
-
-    println!("{}", doc.to_string());
 
     {
         // xlink:href attribute from n1 should be removed

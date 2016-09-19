@@ -7,11 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 ### Added
 - A fallback value processing from the \<paint\> type.
-- `has_attributes`, `remove`, `is_basic_shape` methods to the `Node`.
-- `is_graphical_event`, `is_conditional_processing`, `is_core`, `is_fill`, `is_stroke` methods to the `Attribute`.
+- `has_attributes`, `remove`, `is_basic_shape`, `has_visible_attribute` methods to the `Node`.
+- `is_graphical_event`, `is_conditional_processing`, `is_core`, `is_fill`, `is_stroke`, `is_animation_event`, `is_document_event`,   methods to the `Attribute`.
 - `types::path::Segment` struct which is used instead of one from `libsvgparser`.
 - `to_absolute` and `to_relative` methods to the `types::path::Path`.
 - New error type: `BrokenFuncIri`.
+- `is_*type*` methods to the `Attribute`. Like `is_number`, etc.
 
 ### Changed
 - Moved back from `dtoa` to the std implementation.

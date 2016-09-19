@@ -82,6 +82,13 @@ static PRESENTATION_ATTRIBUTES: &'static [AttributeId] = &[
     AttributeId::WritingMode
 ];
 
+static ANIMATION_EVENT_ATTRIBUTES: &'static [AttributeId] = &[
+    AttributeId::Onbegin,
+    AttributeId::Onend,
+    AttributeId::Onload,
+    AttributeId::Onrepeat,
+];
+
 static GRAPHICAL_EVENT_ATTRIBUTES: &'static [AttributeId] = &[
     AttributeId::Onactivate,
     AttributeId::Onclick,
@@ -93,6 +100,15 @@ static GRAPHICAL_EVENT_ATTRIBUTES: &'static [AttributeId] = &[
     AttributeId::Onmouseout,
     AttributeId::Onmouseover,
     AttributeId::Onmouseup,
+];
+
+static DOCUMENT_EVENT_ATTRIBUTES: &'static [AttributeId] = &[
+    AttributeId::Onabort,
+    AttributeId::Onerror,
+    AttributeId::Onresize,
+    AttributeId::Onscroll,
+    AttributeId::Onunload,
+    AttributeId::Onzoom,
 ];
 
 static CONDITIONAL_PROCESSING_ATTRIBUTES: &'static [AttributeId] = &[
@@ -392,6 +408,18 @@ pub struct Attribute {
     pub visible: bool,
 }
 
+macro_rules! impl_is_type {
+    ($name:ident, $t:ident) => (
+        #[allow(missing_docs)]
+        pub fn $name(&self) -> bool {
+            match &self.value {
+                &AttributeValue::$t(_) => true,
+                _ => false,
+            }
+        }
+    )
+}
+
 impl Attribute {
     /// Constructs a new attribute.
     pub fn new<T>(id: AttributeId, value: T) -> Attribute
@@ -427,9 +455,21 @@ impl Attribute {
     }
 
     /// Returns `true` if current attribute is part of
+    /// [animation event attributes](https://www.w3.org/TR/SVG/intro.html#TermAnimationEventAttribute).
+    pub fn is_animation_event(&self) -> bool {
+        ANIMATION_EVENT_ATTRIBUTES.iter().any(|aid| *aid == self.id)
+    }
+
+    /// Returns `true` if current attribute is part of
     /// [graphical event attributes](https://www.w3.org/TR/SVG/intro.html#TermGraphicalEventAttribute).
     pub fn is_graphical_event(&self) -> bool {
         GRAPHICAL_EVENT_ATTRIBUTES.iter().any(|aid| *aid == self.id)
+    }
+
+    /// Returns `true` if current attribute is part of
+    /// [document event attributes](https://www.w3.org/TR/SVG/intro.html#TermDocumentEventAttribute).
+    pub fn is_document_event(&self) -> bool {
+        DOCUMENT_EVENT_ATTRIBUTES.iter().any(|aid| *aid == self.id)
     }
 
     /// Returns `true` if current attribute is part of
@@ -466,6 +506,18 @@ impl Attribute {
     pub fn is_stroke(&self) -> bool {
         STROKE_ATTRIBUTES.iter().any(|aid| *aid == self.id)
     }
+
+    impl_is_type!(is_color, Color);
+    impl_is_type!(is_length, Length);
+    impl_is_type!(is_length_list, LengthList);
+    impl_is_type!(is_link, Link);
+    impl_is_type!(is_func_link, FuncLink);
+    impl_is_type!(is_number, Number);
+    impl_is_type!(is_number_list, NumberList);
+    impl_is_type!(is_path, Path);
+    impl_is_type!(is_predef_value, PredefValue);
+    impl_is_type!(is_string, String);
+    impl_is_type!(is_transform, Transform);
 }
 
 fn write_quote(opt: &WriteOptions, out: &mut Vec<u8>) {
