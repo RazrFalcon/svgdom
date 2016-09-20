@@ -132,12 +132,19 @@ pub fn parse_svg(data: &[u8], opt: &ParseOptions) -> Result<Document, Error> {
                                 if id == ElementId::Style {
                                     // TODO: process only style with 'type='text/css'' or no 'type' attr.
 
+                                    // check that style element has children
+                                    let mut is_empty = false;
+
                                     // skip attributes, since we only interested in CDATA.
                                     while let Some(subitem) = p.next() {
                                         match subitem {
                                             Ok(st) => {
                                                 match st {
                                                     svg::Token::Attribute(_, _) => {}
+                                                    svg::Token::ElementEnd(svg::ElementEnd::Empty) => {
+                                                        is_empty = true;
+                                                        break;
+                                                    }
                                                     _ => break,
                                                 }
                                             }
@@ -145,6 +152,10 @@ pub fn parse_svg(data: &[u8], opt: &ParseOptions) -> Result<Document, Error> {
                                                 return Err(Error::ParseError(e));
                                             }
                                         }
+                                    }
+
+                                    if is_empty {
+                                        continue;
                                     }
 
                                     // TODO: check if two or more style elements can exist and how to
@@ -156,11 +167,6 @@ pub fn parse_svg(data: &[u8], opt: &ParseOptions) -> Result<Document, Error> {
                                     while let Some(subitem) = p.next() {
                                         match subitem {
                                             Ok(st) => {
-                                                // let parent = StreamRef {
-                                                //     text: data,
-                                                //     pos: p.pos(),
-                                                // };
-
                                                 match st {
                                                     svg::Token::Cdata(s) => try!(parse_css(&mut s.clone(), &mut css)),
                                                     svg::Token::Text(s) => try!(parse_css(&mut s.clone(), &mut css)),

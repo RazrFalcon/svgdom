@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Fixed
 - Fix crash in the NodeData's Drop.
 - Fix attributes remove which contains links to removed node.
+- Fix parsing of the empty `style` element.
 
 ## [0.0.2] - 2016-09-09
 ### Added

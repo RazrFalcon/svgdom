@@ -4,20 +4,45 @@
 
 extern crate svgdom;
 
-use svgdom::{Document, ParseOptions, Error, ErrorPos, NodeType, TagName, ValueId};
+use svgdom::{Document, ParseOptions, Error, ErrorPos, NodeType, TagName, ValueId, WriteToString};
 use svgdom::types::{Color, Transform};
 use svgdom::AttributeValue;
 use svgdom::AttributeId as AId;
 use svgdom::ElementId as EId;
 
+macro_rules! write_opt_for_tests {
+    () => ({
+        use svgdom::WriteOptions;
+        let mut opt = WriteOptions::default();
+        opt.use_single_quote = true;
+        opt
+    })
+}
+
+#[cfg(test)]
 macro_rules! test_resave {
     ($name:ident, $in_text:expr, $out_text:expr) => (
         #[test]
         fn $name() {
             let doc = Document::from_data($in_text).unwrap();
-            assert_eq!(doc.to_string(), $out_text);
+            assert_eq_text!(doc.to_string_with_opt(&write_opt_for_tests!()), $out_text);
         }
     )
+}
+
+#[cfg(test)]
+macro_rules! assert_eq_text {
+    ($left:expr, $right:expr) => ({
+        match (&$left, &$right) {
+            (left_val, right_val) => {
+                if !(*left_val == *right_val) {
+                    panic!("assertion failed: `(left == right)` \
+                           \nleft:  `{}`\nright: `{}`",
+                           left_val, right_val)
+                }
+            }
+        }
+    })
 }
 
 #[test]
@@ -37,7 +62,7 @@ fn parse_empty_3() {
 
 #[test]
 fn parse_empty_4() {
-    assert_eq!(Document::from_data(b"<?xml version=\"1.0\"?>").err().unwrap(), Error::NoSvgElement);
+    assert_eq!(Document::from_data(b"<?xml version='1.0'?>").err().unwrap(), Error::NoSvgElement);
 }
 
 #[test]
@@ -51,11 +76,11 @@ fn parse_single_node_1() {
 
 #[test]
 fn parse_declaration_1() {
-    let doc = Document::from_data(b"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?><svg/>").unwrap();
+    let doc = Document::from_data(b"<?xml version='1.0' encoding='UTF-8' standalone='no'?><svg/>").unwrap();
 
     let child = doc.root().first_child().unwrap();
     assert_eq!(child.node_type(), NodeType::Declaration);
-    assert_eq!(*child.text().unwrap(), "version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"");
+    assert_eq!(*child.text().unwrap(), "version='1.0' encoding='UTF-8' standalone='no'");
     assert_eq!(doc.root().children().count(), 2);
 }
 
@@ -123,8 +148,8 @@ b"<svg>
 </svg>
 ",
 "<svg>
-    <g fill=\"#00913f\"/>
-    <g stroke=\"#ffcc00\" stroke-linejoin=\"round\" stroke-width=\"2\"/>
+    <g fill='#00913f'/>
+    <g stroke='#ffcc00' stroke-linejoin='round' stroke-width='2'/>
 </svg>
 ");
 
@@ -138,7 +163,7 @@ b"<svg>
 </svg>
 ",
 "<svg>
-    <g fill=\"#00913f\"/>
+    <g fill='#00913f'/>
 </svg>
 ");
 
@@ -154,8 +179,8 @@ b"<svg>
 </svg>
 ",
 "<svg>
-    <rect fill=\"#ff0000\"/>
-    <rect fill=\"#ff0000\"/>
+    <rect fill='#ff0000'/>
+    <rect fill='#ff0000'/>
 </svg>
 ");
 
@@ -193,7 +218,7 @@ b"<svg>
     <g class='circle'/>
 </svg>",
 "<svg>
-    <g fill=\"#b9b9b9\" fill-opacity=\"1\" opacity=\"0\"/>
+    <g fill='#b9b9b9' fill-opacity='1' opacity='0'/>
 </svg>
 ");
 
@@ -210,8 +235,8 @@ b"<svg>
 </svg>
 ",
 "<svg>
-    <radialGradient id=\"lg1\"/>
-    <rect fill=\"url(#lg1)\"/>
+    <radialGradient id='lg1'/>
+    <rect fill='url(#lg1)'/>
 </svg>
 ");
 
@@ -227,7 +252,7 @@ b"<svg>
 </svg>
 ",
 "<svg>
-    <g fill=\"#008000\"/>
+    <g fill='#008000'/>
 </svg>
 ");
 
@@ -243,7 +268,7 @@ b"<svg>
 </svg>
 ",
 "<svg>
-    <g fill=\"#0000ff\"/>
+    <g fill='#0000ff'/>
 </svg>
 ");
 
@@ -257,7 +282,7 @@ b"<svg>
 </svg>
 ",
 "<svg>
-    <g fill=\"#0000ff\"/>
+    <g fill='#0000ff'/>
 </svg>
 ");
 
@@ -266,7 +291,7 @@ fn parse_css_11() {
     let res = Document::from_data(
 b"<svg>
     <style type='text/css'><![CDATA[
-        @import url(\"../some.css\");
+        @import url('../some.css');
         ]]>
     </style>
 </svg>");
@@ -300,6 +325,18 @@ b"<svg>
     assert_eq!(res.err().unwrap(), Error::UnsupportedCSS(ErrorPos::new(3,9)));
 }
 
+// empty style
+test_resave!(parse_css_14,
+b"<svg>
+    <style type='text/css'/>
+    <g fill='#0000ff'/>
+</svg>
+",
+"<svg>
+    <g fill='#0000ff'/>
+</svg>
+");
+
 // style must be ungroupped after presentation attributes
 test_resave!(parse_style_1,
 b"<svg>
@@ -307,7 +344,7 @@ b"<svg>
 </svg>
 ",
 "<svg>
-    <g fill=\"#008000\"/>
+    <g fill='#008000'/>
 </svg>
 ");
 
@@ -318,7 +355,7 @@ b"<svg>
 </svg>
 ",
 "<svg>
-    <g color=\"#00ffff\" fill=\"none\" stroke-width=\"4\"/>
+    <g color='#00ffff' fill='none' stroke-width='4'/>
 </svg>
 ");
 
@@ -331,10 +368,10 @@ b"<svg>
 </svg>
 ",
 "<svg>
-    <text font-family=\"Arial Bold\" font-size=\"24px\" font-stretch=\"normal\" \
-                   font-style=\"normal\" font-variant=\"normal\" font-weight=\"normal\" \
-                   line-height=\"125%\" text-anchor=\"middle\" \
-                   writing-mode=\"lr-tb\"/>
+    <text font-family='Arial Bold' font-size='24px' font-stretch='normal' \
+                   font-style='normal' font-variant='normal' font-weight='normal' \
+                   line-height='125%' text-anchor='middle' \
+                   writing-mode='lr-tb'/>
 </svg>
 ");
 
@@ -345,7 +382,7 @@ b"<svg>
 </svg>
 ",
 "<svg>
-    <text font-size=\"24px\" font-style=\"normal\"/>
+    <text font-size='24px' font-style='normal'/>
 </svg>
 ");
 
@@ -356,7 +393,7 @@ b"<svg>
 </svg>
 ",
 "<svg>
-    <text font-size=\"24px\" font-stretch=\"normal\"/>
+    <text font-size='24px' font-stretch='normal'/>
 </svg>
 ");
 
@@ -367,7 +404,7 @@ b"<svg>
 </svg>
 ",
 "<svg>
-    <g color=\"#00ffff\"/>
+    <g color='#00ffff'/>
 </svg>
 ");
 
@@ -386,8 +423,8 @@ b"<svg>
 fn parse_iri_1() {
     let doc = Document::from_data(
 b"<svg>
-    <radialGradient id=\"rg1\"/>
-    <rect fill=\"url(#rg1)\"/>
+    <radialGradient id='rg1'/>
+    <rect fill='url(#rg1)'/>
 </svg>").unwrap();
 
     let child = doc.first_child().unwrap();
@@ -404,8 +441,8 @@ fn parse_iri_2() {
 
     let doc = Document::from_data(
 b"<svg>
-    <rect fill=\"url(#rg1)\"/>
-    <radialGradient id=\"rg1\"/>
+    <rect fill='url(#rg1)'/>
+    <radialGradient id='rg1'/>
 </svg>").unwrap();
 
     let child = doc.first_child().unwrap();
@@ -420,7 +457,7 @@ b"<svg>
 fn parse_iri_with_fallback_1() {
     let doc = Document::from_data(
 b"<svg>
-    <rect fill=\"url(#lg1) none\"/>
+    <rect fill='url(#lg1) none'/>
 </svg>").unwrap();
 
     let child = doc.first_child().unwrap();
@@ -434,7 +471,7 @@ b"<svg>
 fn parse_iri_with_fallback_2() {
     let doc = Document::from_data(
 b"<svg>
-    <rect fill=\"url(#lg1) red\"/>
+    <rect fill='url(#lg1) red'/>
 </svg>").unwrap();
 
     let child = doc.first_child().unwrap();
@@ -450,8 +487,8 @@ fn parse_iri_with_fallback_3() {
 
     let doc = Document::from_data(
 b"<svg>
-    <radialGradient id=\"rg1\"/>
-    <rect fill=\"url(#rg1) none\"/>
+    <radialGradient id='rg1'/>
+    <rect fill='url(#rg1) none'/>
 </svg>");
 
     assert_eq!(doc.err().unwrap(), Error::UnsupportedPaintFallback("rg1".to_string()));
@@ -463,8 +500,8 @@ fn parse_iri_with_fallback_4() {
 
     let doc = Document::from_data(
 b"<svg>
-    <rect fill=\"url(#rg1) none\"/>
-    <radialGradient id=\"rg1\"/>
+    <rect fill='url(#rg1) none'/>
+    <radialGradient id='rg1'/>
 </svg>");
 
     assert_eq!(doc.err().unwrap(), Error::UnsupportedPaintFallback("rg1".to_string()));
@@ -472,17 +509,17 @@ b"<svg>
 
 test_resave!(parse_filter_iri_1,
 b"<svg>
-    <rect filter=\"url(#rg1)\"/>
+    <rect filter='url(#rg1)'/>
 </svg>",
 "<svg>
-    <rect visibility=\"hidden\"/>
+    <rect visibility='hidden'/>
 </svg>
 ");
 
 test_resave!(parse_filter_iri_2,
 b"<svg>
     <mask>
-        <rect filter=\"url(#rg1)\"/>
+        <rect filter='url(#rg1)'/>
     </mask>
 </svg>",
 "<svg>
@@ -496,8 +533,8 @@ test_resave!(parse_entity_1,
 b"<!DOCTYPE svg [
     <!ENTITY st1 \"font-size:12;\">
 ]>
-<svg style=\"&st1;\"/>",
-"<svg font-size=\"12\"/>
+<svg style='&st1;'/>",
+"<svg font-size='12'/>
 ");
 
 // inside svg attribute
@@ -506,8 +543,8 @@ b"<!DOCTYPE svg [
     <!ENTITY ns_svg \"http://www.w3.org/2000/svg\">
     <!ENTITY ns_xlink \"http://www.w3.org/1999/xlink\">
 ]>
-<svg xmlns=\"&ns_svg;\" xmlns:xlink=\"&ns_xlink;\"/>",
-"<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\"/>
+<svg xmlns='&ns_svg;' xmlns:xlink='&ns_xlink;'/>",
+"<svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'/>
 ");
 
 // inside external attribute
@@ -515,18 +552,16 @@ test_resave!(parse_entity_3,
 b"<!DOCTYPE svg  [
     <!ENTITY ns_extend \"http://ns.adobe.com/Extensibility/1.0/\">
 ]>
-<svg xmlns:x=\"&ns_extend;\"/>",
-"<svg xmlns:x=\"http://ns.adobe.com/Extensibility/1.0/\"/>
+<svg xmlns:x='&ns_extend;'/>",
+"<svg xmlns:x='http://ns.adobe.com/Extensibility/1.0/'/>
 ");
-
-// TODO: test entity element
 
 test_resave!(parse_entity_4,
 b"<!DOCTYPE svg [
     <!ENTITY st1 \"red\">
 ]>
-<svg fill=\"&st1;\"/>",
-"<svg fill=\"red\"/>
+<svg fill='&st1;'/>",
+"<svg fill='red'/>
 ");
 
 #[test]
@@ -535,7 +570,7 @@ fn parse_entity_5() {
 b"<!DOCTYPE svg [
     <!ENTITY Viewport1 \"<rect/>\">
 ]>
-<svg fill=\"&st1;\"/>");
+<svg fill='&st1;'/>");
     assert_eq!(doc.err().unwrap(), Error::UnsupportedEntity(ErrorPos::new(2, 25)));
 }
 
@@ -545,13 +580,13 @@ fn parse_entity_6() {
 b"<!DOCTYPE svg [
     <!ENTITY Viewport1 \" \t\n<rect/>\">
 ]>
-<svg fill=\"&st1;\"/>");
+<svg fill='&st1;'/>");
     assert_eq!(doc.err().unwrap(), Error::UnsupportedEntity(ErrorPos::new(3, 28)));
 }
 
 test_resave!(skip_unknown_refs_1,
-b"<svg unicode=\"&#x3b2;\"/>",
-"<svg unicode=\"&#x3b2;\"/>
+b"<svg unicode='&#x3b2;'/>",
+"<svg unicode='&#x3b2;'/>
 ");
 
 test_resave!(parse_script_1,
@@ -641,7 +676,7 @@ fn skip_comments_1() {
 b"<!--comment-->
 <svg/>", &opt).unwrap();
 
-    assert_eq!(doc.to_string(),
+    assert_eq!(doc.to_string_with_opt(&write_opt_for_tests!()),
 "<svg/>
 ");
 }
@@ -651,10 +686,10 @@ fn skip_declaration_1() {
     let mut opt = ParseOptions::default();
     opt.parse_declarations = false;
     let doc = Document::from_data_with_opt(
-b"<?xml version=\"1.0\"?>
+b"<?xml version='1.0'?>
 <svg/>", &opt).unwrap();
 
-    assert_eq!(doc.to_string(),
+    assert_eq!(doc.to_string_with_opt(&write_opt_for_tests!()),
 "<svg/>
 ");
 }
@@ -669,7 +704,7 @@ b"<svg>
     <rect/>
 </svg>", &opt).unwrap();
 
-    assert_eq!(doc.to_string(),
+    assert_eq!(doc.to_string_with_opt(&write_opt_for_tests!()),
 "<svg>
     <rect/>
 </svg>
@@ -690,7 +725,7 @@ b"<svg>
     <rect/>
 </svg>", &opt).unwrap();
 
-    assert_eq!(doc.to_string(),
+    assert_eq!(doc.to_string_with_opt(&write_opt_for_tests!()),
 "<svg>
     <rect/>
 </svg>
@@ -711,7 +746,7 @@ b"<svg>
     <rect/>
 </svg>", &opt).unwrap();
 
-    assert_eq!(doc.to_string(),
+    assert_eq!(doc.to_string_with_opt(&write_opt_for_tests!()),
 "<svg>
     <rect/>
 </svg>
@@ -729,7 +764,7 @@ b"<svg>
     <rect/>
 </svg>", &opt).unwrap();
 
-    assert_eq!(doc.to_string(),
+    assert_eq!(doc.to_string_with_opt(&write_opt_for_tests!()),
 "<svg>
     <rect/>
 </svg>
@@ -741,12 +776,12 @@ fn skip_unknown_attributes_1() {
     let mut opt = ParseOptions::default();
     opt.parse_unknown_attributes = false;
     let doc = Document::from_data_with_opt(
-b"<svg fill=\"#ff0000\" test=\"1\" qwe=\"zzz\" xmlns=\"http://www.w3.org/2000/svg\" \
-xmlns:xlink=\"http://www.w3.org/1999/xlink\"/>", &opt).unwrap();
+b"<svg fill='#ff0000' test='1' qwe='zzz' xmlns='http://www.w3.org/2000/svg' \
+xmlns:xlink='http://www.w3.org/1999/xlink'/>", &opt).unwrap();
 
-    assert_eq!(doc.to_string(),
-"<svg fill=\"#ff0000\" xmlns=\"http://www.w3.org/2000/svg\" \
-xmlns:xlink=\"http://www.w3.org/1999/xlink\"/>
+    assert_eq!(doc.to_string_with_opt(&write_opt_for_tests!()),
+"<svg fill='#ff0000' xmlns='http://www.w3.org/2000/svg' \
+xmlns:xlink='http://www.w3.org/1999/xlink'/>
 ");
 }
 
@@ -755,7 +790,7 @@ fn skip_px_unit_on_1() {
     let mut opt = ParseOptions::default();
     opt.parse_px_unit = true;
     let doc = Document::from_data_with_opt(b"<svg x='10px'/>", &opt).unwrap();
-    assert_eq!(doc.to_string(), "<svg x=\"10px\"/>\n");
+    assert_eq!(doc.to_string_with_opt(&write_opt_for_tests!()), "<svg x='10px'/>\n");
 }
 
 #[test]
@@ -763,7 +798,7 @@ fn skip_px_unit_off_1() {
     let mut opt = ParseOptions::default();
     opt.parse_px_unit = false;
     let doc = Document::from_data_with_opt(b"<svg x='10px'/>", &opt).unwrap();
-    assert_eq!(doc.to_string(), "<svg x=\"10\"/>\n");
+    assert_eq!(doc.to_string_with_opt(&write_opt_for_tests!()), "<svg x='10'/>\n");
 }
 
 #[test]
@@ -778,7 +813,7 @@ b"<svg>
     <path/>
 </svg>", &opt).unwrap();
 
-    assert_eq!(doc.to_string(),
+    assert_eq!(doc.to_string_with_opt(&write_opt_for_tests!()),
 "<svg>
     <circle/>
     <path/>
@@ -798,7 +833,7 @@ b"<svg>
     <path/>
 </svg>", &opt).unwrap();
 
-    assert_eq!(doc.to_string(),
+    assert_eq!(doc.to_string_with_opt(&write_opt_for_tests!()),
 "<svg>
     <circle/>
     <path/>
@@ -819,12 +854,3 @@ b"<svg>
 
     assert_eq!(doc.err().unwrap(), Error::EmptyDocument);
 }
-
-// TODO: ivalid structure
-// <svg>
-//
-// <svg>
-//      <g>
-// </svg>
-//
-// etc
