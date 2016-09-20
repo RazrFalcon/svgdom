@@ -78,7 +78,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-svgdom = "0.0.2"
+svgdom = "0.0.3"
 ```
 
 See documentation and [examples](examples/) for details.
@@ -94,16 +94,16 @@ It's still not as as fast as I want, but here is some examples using *resave* ex
 
 | Image | Result |
 | ------------- | ------------- |
-| [Some huge image](https://openclipart.org/detail/259586/cyberscooty-floral-border-extended-22)\*\* (17.3MiB) | ~700ms/~5500M instructions. |
-| [Big image](https://en.wikipedia.org/wiki/File:Jupiter_diagram.svg) (1.7MiB) | ~70ms/~500M instructions. |
+| [Some huge image](https://openclipart.org/detail/259586/cyberscooty-floral-border-extended-22)\*\* (17.3MiB) | ~850ms/~5500M instructions. |
+| [Big image](https://en.wikipedia.org/wiki/File:Jupiter_diagram.svg) (1.7MiB) | ~80ms/~500M instructions. |
 | [Average image](https://commons.wikimedia.org/wiki/File:Electromagnetic_Radiation_Spectrum_Infographic.svg) (324.4KiB) | ~20ms/~89M instructions. |
-| Small image, like [SVG Logo](https://commons.wikimedia.org/wiki/File:SVG_logo.svg) (8.8KiB) | ~0.4ms/~2M instructions. |
+| Small image, like [SVG Logo](https://commons.wikimedia.org/wiki/File:SVG_logo.svg) (8.8KiB) | ~0.45ms/~2M instructions. |
 
 \* At least I don't know.
 
 \*\* It's not a direct downloads links.
 
-Tested on i5-3570k@4.2GHz.
+Tested on i5-3570k 3.8GHz.
 
 ### Roadmap
 

@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/) 
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [Unreleased]
+## [0.0.3] - 2016-09-20
 ### Added
 - A fallback value processing from the \<paint\> type.
 - `has_attributes`, `remove`, `is_basic_shape`, `has_visible_attribute` methods to the `Node`.
@@ -43,5 +43,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/RazrFalcon/libsvgdom/compare/0.0.2...HEAD
+[Unreleased]: https://github.com/RazrFalcon/libsvgdom/compare/0.0.3...HEAD
+[0.0.3]: https://github.com/RazrFalcon/libsvgdom/compare/0.0.2...0.0.3
 [0.0.2]: https://github.com/RazrFalcon/libsvgdom/compare/0.0.1...0.0.2
