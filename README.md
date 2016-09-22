@@ -119,6 +119,7 @@ And even though the file is a bit different now - it will be rendered exactly th
    - Complex CSS. Only simple *class* and *group* selectors are supported.
    - Whitespacing using a numerical Unicode references, aka `&#x0020;`.
    - Custom namespaces, like
+   
       ```
       <g xmlns:s="http://www.w3.org/2000/svg">
         <s:circle/>
@@ -126,12 +127,13 @@ And even though the file is a bit different now - it will be rendered exactly th
       ```
       It will be treated as a non-SVG element.
    - Links to ENTITY not from attributes will lead to `Error::UnsupportedEntity`. Example:
-      ```
-      <!DOCTYPE svg [
-         <!ENTITY Rect1 "<rect x='.5' y='.5' width='20' height='20'/>">
-        ]>
-      <svg>&Rect1;</svg>
-      ```
+    
+     ```
+     <!DOCTYPE svg [
+        <!ENTITY Rect1 "<rect x='.5' y='.5' width='20' height='20'/>">
+       ]>
+     <svg>&Rect1;</svg>
+     ```
  - See [libsvgparser](https://github.com/RazrFalcon/libsvgparser)'s README for parsing limitations.
 
 ### Non-goal
