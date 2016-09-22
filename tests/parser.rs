@@ -549,7 +549,7 @@ b"<!DOCTYPE svg [
 
 // inside external attribute
 test_resave!(parse_entity_3,
-b"<!DOCTYPE svg  [
+b"<!DOCTYPE svg [
     <!ENTITY ns_extend \"http://ns.adobe.com/Extensibility/1.0/\">
 ]>
 <svg xmlns:x='&ns_extend;'/>",
@@ -561,7 +561,7 @@ b"<!DOCTYPE svg [
     <!ENTITY st1 \"red\">
 ]>
 <svg fill='&st1;'/>",
-"<svg fill='red'/>
+"<svg fill='#ff0000'/>
 ");
 
 #[test]

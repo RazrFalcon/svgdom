@@ -2,8 +2,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-// TODO: this module needs a lot of refactoring.
-
 use std::cmp;
 use std::str;
 use std::collections::HashMap;
@@ -21,7 +19,12 @@ use super::{
     TagName,
     ValueId,
 };
-use types::{Color, Transform, Length, LengthUnit};
+use types::{
+    Color,
+    Transform,
+    Length,
+    LengthUnit
+};
 use types::path;
 
 use svgparser::{
@@ -31,11 +34,6 @@ use svgparser::{
 };
 use svgparser::svg;
 use svgparser::style;
-
-enum Selector<'a> {
-    Tag(&'a [u8]),
-    Class(&'a [u8]),
-}
 
 struct CssData<'a> {
     by_tag: HashMap<String, Stream<'a>>,
@@ -47,14 +45,6 @@ struct NodeTextData<'a> {
     stream: Stream<'a>,
 }
 
-struct PostAttributes<'a> {
-    // List of element with 'class' attribute.
-    // We can't process it inplace, because style can be set after usage.
-    classes: Vec<NodeTextData<'a>>,
-    // List of style attributes.
-    styles: Vec<NodeTextData<'a>>,
-}
-
 struct LinkData<'a> {
     attr_id: AttributeId,
     iri: &'a [u8],
@@ -62,329 +52,315 @@ struct LinkData<'a> {
     node: Node,
 }
 
-struct PostLinkData<'a> {
-    links: Vec<LinkData<'a>>,
+struct Links<'a> {
+    // List of unresolved IRI.
+    list: Vec<LinkData<'a>>,
+    // Store all nodes with id's.
     elems_with_id: HashMap<&'a [u8], Node>,
 }
 
 type Entities<'a> = HashMap<&'a [u8], &'a [u8]>;
 
+struct PostData<'a> {
+    css: CssData<'a>,
+    links: Links<'a>,
+    entitis: Entities<'a>,
+    // List of element with 'class' attribute.
+    // We can't process it inplace, because styles can be set after usage.
+    classes: Vec<NodeTextData<'a>>,
+    // List of style attributes.
+    styles: Vec<NodeTextData<'a>>,
+}
+
 macro_rules! u8_to_string {
     ($text:expr) => (String::from_utf8_lossy($text).into_owned())
 }
 
-// Since we not only parsing, but also converting SVG structure,
-// we can't do everything in one take.
-// At first we create node structure with attributes.
-// Than apply CSS. And then ungroup style attributes.
-// Order is importtan, otherwise we get rendering error.
 pub fn parse_svg(data: &[u8], opt: &ParseOptions) -> Result<Document, Error> {
     let doc = Document::new();
     let mut parent = doc.root();
 
-    let mut p = svg::Tokenizer::new(data);
+    let mut tokenizer = svg::Tokenizer::new(data);
 
-    let mut is_first_element = true;
-
-    let mut post_link_data = PostLinkData {
-        // List of unresolved IRI.
-        links: Vec::new(),
-        // Store all nodes with id's.
-        elems_with_id: HashMap::new(),
-    };
-
-    let mut post_attrs = PostAttributes {
+    // Since we not only parsing, but also converting an SVG structure,
+    // we can't do everything in one take.
+    // At first, we create nodes structure with attributes.
+    // Than apply CSS. And then ungroup style attributes.
+    // Order is important, otherwise we get rendering error.
+    let mut post_data = PostData {
+        css: CssData {
+            by_tag: HashMap::new(),
+            by_class: HashMap::new(),
+        },
+        links: Links {
+            list: Vec::new(),
+            elems_with_id: HashMap::new(),
+        },
+        entitis: HashMap::new(),
         classes: Vec::new(),
         styles: Vec::new(),
     };
 
-    // Map of ENTITY values.
-    let mut entitis = HashMap::new();
-
-    // CSS content.
-    let mut css = CssData {
-        by_tag: HashMap::new(),
-        by_class: HashMap::new(),
-    };
-
+    // process SVG tokens
     let mut node: Option<Node> = None;
-    while let Some(item) = p.next() {
+    while let Some(item) = tokenizer.next() {
         match item {
-            Ok(t) => {
-                match t {
-                    svg::Token::ElementStart(s) => {
-                        match ElementId::from_name(u8_to_str!(s)) {
-                            Some(id) => {
-                                // first element must be <svg>
-                                if is_first_element && id != ElementId::Svg {
-                                    return Err(Error::NoSvgElement);
-                                }
-
-                                if opt.skip_svg_elements.iter().any(|ref x| **x == id) {
-                                    try!(skip_current_element(&mut p));
-                                    continue;
-                                }
-
-                                // We never create 'style' element.
-                                // If 'style' element is empty - we skip it.
-                                // If it contains CDATA/CSS - we parse it and store it for future use,
-                                // but node and it's content doesn't imported to DOM.
-                                if id == ElementId::Style {
-                                    // TODO: process only style with 'type='text/css'' or no 'type' attr.
-
-                                    // check that style element has children
-                                    let mut is_empty = false;
-
-                                    // skip attributes, since we only interested in CDATA.
-                                    while let Some(subitem) = p.next() {
-                                        match subitem {
-                                            Ok(st) => {
-                                                match st {
-                                                    svg::Token::Attribute(_, _) => {}
-                                                    svg::Token::ElementEnd(svg::ElementEnd::Empty) => {
-                                                        is_empty = true;
-                                                        break;
-                                                    }
-                                                    _ => break,
-                                                }
-                                            }
-                                            Err(e) => {
-                                                return Err(Error::ParseError(e));
-                                            }
-                                        }
-                                    }
-
-                                    if is_empty {
-                                        continue;
-                                    }
-
-                                    // TODO: check if two or more style elements can exist and how to
-                                    // process them.
-
-                                    // 'style' node can contain not only one CDATA block,
-                                    // so we process all of them.
-                                    // Also style node can contain only text.
-                                    while let Some(subitem) = p.next() {
-                                        match subitem {
-                                            Ok(st) => {
-                                                match st {
-                                                    svg::Token::Cdata(s) => try!(parse_css(&mut s.clone(), &mut css)),
-                                                    svg::Token::Text(s) => try!(parse_css(&mut s.clone(), &mut css)),
-                                                    svg::Token::Whitespace(_) => {}
-                                                    _ => break,
-                                                }
-                                            }
-                                            Err(e) => {
-                                                return Err(Error::ParseError(e));
-                                            }
-                                        }
-                                    }
-
-                                    // skip </style>
-                                    try!(p.parse_next());
-                                } else {
-                                    // create new node
-                                    let e = doc.create_element(TagName::Id(id));
-                                    node = Some(e.clone());
-                                    parent.append(&e);
-                                }
-                            }
-                            None => {
-                                // first element must be <svg>
-                                if is_first_element {
-                                    return Err(Error::NoSvgElement);
-                                }
-
-                                if !opt.parse_unknown_elements {
-                                    try!(skip_current_element(&mut p));
-                                } else {
-                                    // create new node
-                                    let e = doc.create_element(TagName::Name(u8_to_string!(s)));
-                                    node = Some(e.clone());
-                                    parent.append(&e);
-                                }
-                            }
-                        }
-
-                        is_first_element = false;
-                    }
-                    svg::Token::Attribute(name, val) => {
-                        let tag_name;
-                        {
-                            let n = node.as_ref().unwrap();
-                            tag_name = n.tag_name().unwrap().clone();
-                        }
-
-                        match tag_name {
-                            TagName::Id(_) => {
-                                let n = node.as_ref().unwrap();
-                                try!(parse_attribute(&n,
-                                                     &name,
-                                                     &mut val.clone(),
-                                                     &mut post_link_data,
-                                                     &mut post_attrs,
-                                                     &mut entitis,
-                                                     &opt));
-                            }
-                            TagName::Name(_) => {
-                                // we keep all attributes from unknown elements as external
-                                let n = node.as_ref().unwrap();
-                                n.unknown_attributes_mut()
-                                    .insert(u8_to_str!(name).to_string(),
-                                            u8_to_str!(val.slice()).to_string());
-                            }
-                        }
-                    }
-                    svg::Token::ElementEnd(end) => {
-                        match end {
-                            svg::ElementEnd::Empty => {}
-                            svg::ElementEnd::Close(_) => {
-                                if !parent.same_node(&doc.root()) {
-                                    parent = parent.parent().unwrap();
-                                }
-                            }
-                            svg::ElementEnd::Open => {
-                                match node {
-                                    Some(ref n) => parent = n.clone(),
-                                    None => {}
-                                }
-                            }
-                        }
-                    }
-                    svg::Token::Text(s) => {
-                        let e = doc.create_node(NodeType::Text, u8_to_str!(s.slice()));
-                        node = Some(e.clone());
-                        parent.append(&e);
-                    }
-                    svg::Token::Comment(s) => {
-                        if opt.parse_comments {
-                            let e = doc.create_node(NodeType::Comment, u8_to_str!(s));
-                            node = Some(e.clone());
-                            parent.append(&e);
-                        }
-                    }
-                    svg::Token::Cdata(s) => {
-                        let e = doc.create_node(NodeType::Cdata, u8_to_str!(s.slice()));
-                        node = Some(e.clone());
-                        parent.append(&e);
-                    }
-                    svg::Token::Whitespace(_) => {
-                        // do nothing
-                    }
-                    svg::Token::Declaration(s) => {
-                        // TODO: check that it UTF-8
-                        if opt.parse_declarations {
-                            let e = doc.create_node(NodeType::Declaration, u8_to_str!(s));
-                            node = Some(e.clone());
-                            parent.append(&e);
-                        }
-                    }
-                    svg::Token::DtdStart(_) => {
-                        // do nothing
-                    }
-                    svg::Token::DtdEmpty(_) => {
-                        // do nothing
-                    }
-                    svg::Token::Entity(name, value) => {
-                        let mut s = value.clone();
-                        s.skip_spaces();
-                        if !s.at_end() {
-                            if s.curr_char_raw() == b'<' {
-                                return Err(Error::UnsupportedEntity(s.gen_error_pos()));
-                            }
-                        }
-                        entitis.insert(name, value.slice());
-                    }
-                    svg::Token::DtdEnd => {
-                        // do nothing
-                    }
-                }
-            }
-            Err(e) => {
-                return Err(Error::ParseError(e));
-            }
+            Ok(t) => try!(process_token(&doc, t, &mut tokenizer,
+                                        &mut node, &mut parent,
+                                        &mut post_data, &opt)),
+            Err(e) => return Err(Error::ParseError(e)),
         }
     }
 
+    // document must contain any children
     if !doc.root().has_children() {
         return Err(Error::EmptyDocument);
     }
 
-    if !doc.root().has_child_with_tag_name(&TagName::Id(ElementId::Svg)) {
-        return Err(Error::NoSvgElement);
-    }
-
-    for d in post_attrs.classes {
-        let mut s = d.stream;
-
-        while !s.at_end() {
-            s.skip_spaces();
-            let len = s.len_to_space_or_end();
-            let class = s.read_raw(len);
-
-            match css.by_class.get(class) {
-                Some(stream) => {
-                    try!(parse_style_attribute(&d.node, stream.clone(), &mut post_link_data, &entitis, &opt));
-                }
-                None => {
-                    println!("Warning: Could resolve unknown class: {}.",
-                             u8_to_str!(class));
-                }
+    // first element must be an 'svg'
+    match doc.first_element_child() {
+        Some(n) => {
+            if !n.is_tag_id(ElementId::Svg) {
+                return Err(Error::NoSvgElement);
             }
-
-            s.skip_spaces();
+        }
+        None => {
+            return Err(Error::NoSvgElement);
         }
     }
 
-    for (k, v) in &css.by_tag {
-        for node in doc.root().descendants() {
-            let mut is_valid_tag = false;
-            match node.tag_name() {
-                Some(ref tag_name) => {
-                    let str_name = match &**tag_name {
-                        &TagName::Id(ref id) => id.name().to_string(),
-                        &TagName::Name(ref name) => name.clone(),
-                    };
-                    if str_name == *k {
-                        is_valid_tag = true;
-                    }
-                }
-                None => {}
-            }
+    try!(resolve_css(&doc, &mut post_data, &opt));
 
-            if is_valid_tag {
-                try!(parse_style_attribute(&node, v.clone(), &mut post_link_data, &entitis, &opt));
-            }
-        }
+    // resolve styles
+    for d in &post_data.styles {
+        try!(parse_style_attribute(&d.node, d.stream.clone(), &mut post_data.links,
+                                   &post_data.entitis, &opt));
     }
 
-    for ref d in post_attrs.styles {
-        try!(parse_style_attribute(&d.node, d.stream.clone(), &mut post_link_data, &entitis, &opt));
-    }
-
-    try!(resolve_links(&post_link_data));
+    try!(resolve_links(&post_data.links));
 
     return Ok(doc);
 }
 
+fn process_token<'a>(doc: &Document,
+                     token: svg::Token<'a>,
+                     tokenizer: &mut svg::Tokenizer<'a>,
+                     node: &mut Option<Node>,
+                     parent: &mut Node,
+                     post_data: &mut PostData<'a>,
+                     opt: &ParseOptions)
+                     -> Result<(), Error> {
+
+    macro_rules! create_node {
+        ($nodetype:expr, $buf:expr) => ({
+            let e = doc.create_node($nodetype, u8_to_str!($buf));
+            *node = Some(e.clone());
+            parent.append(&e);
+        })
+    }
+
+    match token {
+        svg::Token::ElementStart(s) => {
+            match ElementId::from_name(u8_to_str!(s)) {
+                Some(eid) => {
+                    let res = try!(parse_svg_element(&doc, tokenizer, eid,
+                                                     &mut post_data.css, &opt));
+
+                    match res {
+                        Some(n) => {
+                            *node = Some(n.clone());
+                            parent.append(&n);
+                        }
+                        None => {}
+                    }
+                }
+                None => {
+                    if !opt.parse_unknown_elements {
+                        try!(skip_current_element(tokenizer));
+                    } else {
+                        // create new node
+                        let e = doc.create_element(u8_to_string!(s));
+                        *node = Some(e.clone());
+                        parent.append(&e);
+                    }
+                }
+            }
+        }
+        svg::Token::Attribute(name, val) => {
+            let n = node.as_ref().unwrap();
+            if n.is_svg_element() {
+                try!(parse_attribute(&n,
+                                     &name,
+                                     &mut val.clone(),
+                                     post_data,
+                                     &opt));
+            } else {
+                // TODO: store as &str not String
+                // we keep all attributes from unknown elements as unknown
+                n.unknown_attributes_mut().insert(u8_to_str!(name).to_string(),
+                                                  u8_to_str!(val.slice()).to_string());
+            }
+        }
+        svg::Token::ElementEnd(end) => {
+            match end {
+                svg::ElementEnd::Empty => {}
+                svg::ElementEnd::Close(_) => {
+                    if !parent.same_node(&doc.root()) {
+                        *parent = parent.parent().unwrap();
+                    }
+                }
+                svg::ElementEnd::Open => {
+                    match *node {
+                        Some(ref n) => *parent = n.clone(),
+                        None => {}
+                    }
+                }
+            }
+        }
+        svg::Token::Text(s) => {
+            create_node!(NodeType::Text, s.slice());
+        }
+        svg::Token::Comment(s) => {
+            if opt.parse_comments {
+                create_node!(NodeType::Comment, s)
+            }
+        }
+        svg::Token::Cdata(s) => {
+            create_node!(NodeType::Cdata, s.slice());
+        }
+        svg::Token::Whitespace(_) => {
+            // do nothing
+        }
+        svg::Token::Declaration(s) => {
+            // TODO: check that it UTF-8
+            if opt.parse_declarations {
+                create_node!(NodeType::Declaration, s);
+            }
+        }
+        svg::Token::DtdStart(_) => {
+            // do nothing
+        }
+        svg::Token::DtdEmpty(_) => {
+            // do nothing
+        }
+        svg::Token::Entity(name, value) => {
+            // check that ENTITY does not contain an element(s)
+            let mut s = value.clone();
+            s.skip_spaces();
+            if !s.at_end() {
+                if s.curr_char_raw() == b'<' {
+                    return Err(Error::UnsupportedEntity(s.gen_error_pos()));
+                }
+            }
+
+            post_data.entitis.insert(name, value.slice());
+        }
+        svg::Token::DtdEnd => {
+            // do nothing
+        }
+    }
+
+    // check for 'svg' element only when we parsing root nodes,
+    // which is faster
+    if parent.node_type() == NodeType::Root {
+        // check that the first element of the doc is 'svg'
+        match doc.first_element_child() {
+            Some(n) => {
+                if !n.is_tag_id(ElementId::Svg) {
+                    return Err(Error::NoSvgElement);
+                }
+            }
+            None => {}
+        }
+    }
+
+    Ok(())
+}
+
+fn parse_svg_element<'a>(doc: &Document,
+                         tokenizer: &mut svg::Tokenizer<'a>,
+                         id: ElementId,
+                         css: &mut CssData<'a>,
+                         opt: &ParseOptions)
+                         -> Result<Option<Node>, Error> {
+    if opt.skip_svg_elements.iter().any(|x| *x == id) {
+        try!(skip_current_element(tokenizer));
+        return Ok(None);
+    }
+
+    // We never create 'style' element.
+    // If 'style' element is empty - we skip it.
+    // If it contains CDATA/CSS - we parse it and store it for future use,
+    // but node and it's content doesn't imported to DOM.
+    if id == ElementId::Style {
+        // TODO: process only style with 'type='text/css'' or no 'type' attr.
+
+        // skip attributes, since we only interested in CDATA.
+        while let Some(subitem) = tokenizer.next() {
+            match subitem {
+                Ok(st) => {
+                    match st {
+                        svg::Token::Attribute(_, _) => {}
+                        svg::Token::ElementEnd(svg::ElementEnd::Empty) => {
+                            // if 'style' do not have children - return
+                            return Ok(None);
+                        }
+                        _ => break,
+                    }
+                }
+                Err(e) => {
+                    return Err(Error::ParseError(e));
+                }
+            }
+        }
+
+        // TODO: check if two or more style elements can exist and how to
+        // process them.
+
+        // 'style' node can contain not only one CDATA block,
+        // so we process all of them.
+        // Also style node can contain only text.
+        while let Some(subitem) = tokenizer.next() {
+            match subitem {
+                Ok(st) => {
+                    match st {
+                        svg::Token::Cdata(s) => try!(parse_css(&mut s.clone(), css)),
+                        svg::Token::Text(s) => try!(parse_css(&mut s.clone(), css)),
+                        svg::Token::Whitespace(_) => {}
+                        _ => break,
+                    }
+                }
+                Err(e) => {
+                    return Err(Error::ParseError(e));
+                }
+            }
+        }
+
+        // skip </style>
+        try!(tokenizer.parse_next());
+        return Ok(None);
+    } else {
+        // create new node
+        let e = doc.create_element(TagName::Id(id));
+        return Ok(Some(e.clone()));
+    }
+}
+
 fn parse_attribute<'a>(node: &Node,
                        name: &'a [u8],
-                       mut stream: &mut Stream<'a>,
-                       mut post_link_data: &mut PostLinkData<'a>,
-                       post_attrs: &mut PostAttributes<'a>,
-                       entitis: &mut Entities<'a>,
+                       stream: &mut Stream<'a>,
+                       post_data: &mut PostData<'a>,
                        opt: &ParseOptions)
                        -> Result<(), Error> {
     match AttributeId::from_name(u8_to_str!(name)) {
         Some(id) => {
             match id {
                 AttributeId::Id => {
-                    // TODO: check that id is ascii
                     node.set_id(u8_to_string!(stream.slice()));
-                    post_link_data.elems_with_id.insert(stream.slice(), node.clone());
+                    post_data.links.elems_with_id.insert(stream.slice(), node.clone());
                 }
                 AttributeId::Style => {
-                    post_attrs.styles.push(NodeTextData {
+                    post_data.styles.push(NodeTextData {
                         node: node.clone(),
                         stream: stream.clone(),
                     })
@@ -400,13 +376,14 @@ fn parse_attribute<'a>(node: &Node,
                     node.set_attribute(AttributeId::D, AttributeValue::Path(p));
                 }
                 AttributeId::Class => {
-                    post_attrs.classes.push(NodeTextData {
+                    post_data.classes.push(NodeTextData {
                         node: node.clone(),
                         stream: stream.clone(),
                     })
                 }
                 _ => {
-                    try!(parse_svg_attribute(&node, id, &mut stream, post_link_data, entitis, opt));
+                    try!(parse_svg_attribute(&node, id, stream, &mut post_data.links,
+                                             &mut post_data.entitis, opt));
                 }
             }
         }
@@ -421,7 +398,7 @@ fn parse_attribute<'a>(node: &Node,
                 stream.advance_raw(1);
                 let link = stream.slice_next_raw(stream.len_to_char_or_end(b';'));
 
-                match entitis.get(link) {
+                match post_data.entitis.get(link) {
                     Some(link_value) => value2 = Some(*link_value),
                     None => {
                         println!("Warning: Could not resolve ENTITY: '{}'.", u8_to_str!(link));
@@ -450,23 +427,22 @@ fn parse_attribute<'a>(node: &Node,
 
 fn parse_svg_attribute<'a>(node: &Node,
                            id: AttributeId,
-                           mut stream: &mut Stream<'a>,
-                           post_link_data: &mut PostLinkData<'a>,
+                           stream: &mut Stream<'a>,
+                           links: &mut Links<'a>,
                            entitis: &Entities<'a>,
                            opt: &ParseOptions)
                            -> Result<(), Error> {
     let tag_id = node.tag_id().unwrap();
 
-    let val = try!(ParserAttributeValue::from_stream(tag_id, id, &mut stream));
-    let val2 = match val {
+    let val = match try!(ParserAttributeValue::from_stream(tag_id, id, stream)) {
         ParserAttributeValue::String(v) => Some(AttributeValue::String(u8_to_str!(v).to_string())),
           ParserAttributeValue::IRI(link)
         | ParserAttributeValue::FuncIRI(link) => {
-            try!(process_link(link, None, id, node, post_link_data));
+            try!(process_link(link, None, id, node, links));
             None
         }
         ParserAttributeValue::FuncIRIWithFallback(link, ref fallback) => {
-            try!(process_link(link, Some(fallback.clone()), id, node, post_link_data));
+            try!(process_link(link, Some(fallback.clone()), id, node, links));
             None
         }
         ParserAttributeValue::Number(v) => Some(AttributeValue::Number(v)),
@@ -508,18 +484,25 @@ fn parse_svg_attribute<'a>(node: &Node,
         }
         ParserAttributeValue::PredefValue(v) => Some(AttributeValue::PredefValue(v)),
         ParserAttributeValue::EntityRef(link) => {
-            // NOTE: We store an entity ref's value only as string.
-            // If we will have link to path of transform - they will be ignored.
-            // This is, probably, bad.
-
-            // TODO: to func and join with parse_attribute()
             match entitis.get(link) {
-                Some(link_value) => Some(AttributeValue::String(u8_to_str!(link_value).to_string())),
+                Some(link_value) => {
+                    let mut s = Stream::new(link_value);
+                    try!(parse_svg_attribute(node, id, &mut s,
+                                             links, entitis, opt));
+                    None
+                }
                 None => {
+                    // keep original link
                     let mut s = String::new();
                     s.push('&');
                     s.push_str(&u8_to_str!(link).to_string());
                     s.push(';');
+
+                    if link[0] != b'#' {
+                        // If link starts with # - than it's probably a Unicode code point.
+                        // Otherwise - unknown reference.
+                        println!("Warning: Unresolved ENTITY reference: '{}'.", s);
+                    }
 
                     Some(AttributeValue::String(s))
                 }
@@ -527,9 +510,9 @@ fn parse_svg_attribute<'a>(node: &Node,
         }
     };
 
-    match val2 {
+    match val {
         Some(v) => node.set_attribute(id, v),
-        None => {},
+        None => {}
     }
 
     Ok(())
@@ -539,9 +522,9 @@ fn process_link<'a>(iri: &'a [u8],
                     fallback: Option<PaintFallback>,
                     aid: AttributeId,
                     node: &Node,
-                    post_link_data: &mut PostLinkData<'a>)
+                    links: &mut Links<'a>)
                     -> Result<(), Error> {
-    match post_link_data.elems_with_id.get(iri) {
+    match links.elems_with_id.get(iri) {
         Some(link_node) => {
             try!(resolve_link(node, link_node, aid, iri, &fallback));
         }
@@ -550,7 +533,7 @@ fn process_link<'a>(iri: &'a [u8],
             // parsing of the whole doc. Since IRI can reference elements in any order
             // and we just not parsed this element yet.
             // Then we can check again.
-            post_link_data.links.push(LinkData {
+            links.list.push(LinkData {
                 attr_id: aid,
                 iri: iri,
                 fallback: fallback,
@@ -563,6 +546,11 @@ fn process_link<'a>(iri: &'a [u8],
 }
 
 fn parse_css<'a>(stream: &mut Stream<'a>, css: &mut CssData<'a>) -> Result<(), Error> {
+    enum Selector<'a> {
+        Tag(&'a [u8]),
+        Class(&'a [u8]),
+    }
+
     while !stream.at_end() {
         stream.skip_spaces();
 
@@ -629,7 +617,7 @@ fn parse_css<'a>(stream: &mut Stream<'a>, css: &mut CssData<'a>) -> Result<(), E
 
 fn parse_style_attribute<'a>(node: &Node,
                              stream: Stream<'a>,
-                             post_link_data: &mut PostLinkData<'a>,
+                             links: &mut Links<'a>,
                              entitis: &Entities<'a>,
                              opt: &ParseOptions)
                              -> Result<(), Error> {
@@ -642,7 +630,7 @@ fn parse_style_attribute<'a>(node: &Node,
                         match AttributeId::from_name(u8_to_str!(name)) {
                             Some(id) => {
                                 try!(parse_svg_attribute(&node, id, &mut substream.clone(),
-                                    post_link_data, entitis, opt));
+                                    links, entitis, opt));
                             }
                             None => {
                                 // TODO: maybe do not skip?
@@ -655,7 +643,7 @@ fn parse_style_attribute<'a>(node: &Node,
                             Some(value) => {
                                 // TODO: to proper stream
                                 let ss = Stream::new(value);
-                                try!(parse_style_attribute(&node, ss, post_link_data, entitis, opt));
+                                try!(parse_style_attribute(&node, ss, links, entitis, opt));
                             }
                             None => {}
                         }
@@ -669,9 +657,63 @@ fn parse_style_attribute<'a>(node: &Node,
     Ok(())
 }
 
-fn resolve_links(post_link_data: &PostLinkData) -> Result<(), Error> {
-    for d in &post_link_data.links {
-        match post_link_data.elems_with_id.get(d.iri) {
+fn resolve_css<'a>(doc: &Document,
+                   post_data: &mut PostData<'a>,
+                   opt: &ParseOptions)
+                   -> Result<(), Error> {
+    for d in &post_data.classes {
+        let mut s = d.stream;
+
+        while !s.at_end() {
+            s.skip_spaces();
+            let len = s.len_to_space_or_end();
+            let class = s.read_raw(len);
+
+            match post_data.css.by_class.get(class) {
+                Some(stream) => {
+                    try!(parse_style_attribute(&d.node, stream.clone(),
+                                               &mut post_data.links,
+                                               &post_data.entitis, &opt));
+                }
+                None => {
+                    println!("Warning: Could resolve unknown class: {}.",
+                             u8_to_str!(class));
+                }
+            }
+
+            s.skip_spaces();
+        }
+    }
+
+    for (k, v) in &post_data.css.by_tag {
+        for node in doc.descendants() {
+            let mut is_valid_tag = false;
+            match node.tag_name() {
+                Some(ref tag_name) => {
+                    let str_name = match &**tag_name {
+                        &TagName::Id(ref id) => id.name().to_string(),
+                        &TagName::Name(ref name) => name.clone(),
+                    };
+                    if str_name == *k {
+                        is_valid_tag = true;
+                    }
+                }
+                None => {}
+            }
+
+            if is_valid_tag {
+                try!(parse_style_attribute(&node, v.clone(), &mut post_data.links,
+                                           &post_data.entitis, &opt));
+            }
+        }
+    }
+
+    Ok(())
+}
+
+fn resolve_links(links: &Links) -> Result<(), Error> {
+    for d in &links.list {
+        match links.elems_with_id.get(d.iri) {
             Some(node) => {
                 try!(resolve_link(&d.node, node, d.attr_id, d.iri, &d.fallback));
             }
@@ -727,7 +769,10 @@ fn resolve_links(post_link_data: &PostLinkData) -> Result<(), Error> {
     Ok(())
 }
 
-fn resolve_link(node: &Node, ref_node: &Node, aid: AttributeId, iri: &[u8],
+fn resolve_link(node: &Node,
+                ref_node: &Node,
+                aid: AttributeId,
+                iri: &[u8],
                 fallback: &Option<PaintFallback>)
                 -> Result<(), Error> {
     // The SVG uses a fallback paint value not only when the FuncIRI is invalid, but also when

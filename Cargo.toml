@@ -1,6 +1,6 @@
 [package]
 name = "svgdom"
-version = "0.0.3"
+version = "0.0.4"
 authors = ["Evgeniy Reizner <razrfalcon@gmail.com>"]
 keywords = ["svg", "dom"]
 license = "MPL-2.0"
@@ -11,11 +11,11 @@ readme = "README.md"
 
 [dependencies]
 # latest public svgparser
-# svgparser = { git = "https://github.com/RazrFalcon/libsvgparser.git" }
+svgparser = { git = "https://github.com/RazrFalcon/libsvgparser.git" }
 # local copy
 # svgparser = { path = "../svgparser" }
 # from crates
-svgparser = "0.0.3"
+# svgparser = "0.0.3"
 
 [dev-dependencies]
 time = "0.1"

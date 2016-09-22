@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg [
+    <!ENTITY ns_xlink "http://www.w3.org/1999/xlink">
+    <!ENTITY color "red">
+]>
+<!-- Comment -->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="&ns_xlink;">
+    <defs>
+        <radialGradient id="rg1">
+            <stop offset="0" stop-color="yellow"/>
+            <stop offset="1" stop-color="green"/>
+        </radialGradient>
+    </defs>
+    <style type='text/css'>
+        <![CDATA[
+            .fill1 { fill:#00913f }
+        ]]>
+    </style>
+    <rect fill="url(#rg1)" stroke="url(#lg1)" x="5" y="5" width="50" height="50"/>
+    <rect class="fill1" y="2.5" width="25" height="25" transform="scale(2) translate(30)"/>
+    <rect style="fill:blue" stroke="&color;" x="115" y="5" width="50" height="50"/>
+    <text x="60" y="1.5em">Text</text>
+    <path stroke="red" d="M 165 60l-160 0 #L 50 100"/>
+    <myelement myattribute="value"/>
+</svg>

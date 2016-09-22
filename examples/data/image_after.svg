@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Comment -->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <defs>
+        <radialGradient id="rg1">
+            <stop offset="0" stop-color="#ffff00"/>
+            <stop offset="1" stop-color="#008000"/>
+        </radialGradient>
+    </defs>
+    <rect fill="url(#rg1)" height="50" width="50" x="5" y="5"/>
+    <rect fill="#00913f" height="25" transform="matrix(2 0 0 2 60 0)" width="25" y="2.5"/>
+    <rect fill="#0000ff" height="50" stroke="#ff0000" width="50" x="115" y="5"/>
+    <text x="60" y="1.5em">
+        Text
+    </text>
+    <path d="M 165 60 l -160 0" stroke="#ff0000"/>
+    <myelement myattribute="value"/>
+</svg>

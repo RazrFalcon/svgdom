@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/) 
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [Unreleased]
+### Added
+- Missing licence headers.
+
+### Changed
+- Rename `is_element` into `is_svg_element`.
+
+### Fixed
+- Attributes from ENTITY is now parsed and not inserted as is.
+
 ## [0.0.3] - 2016-09-20
 ### Added
 - A fallback value processing from the \<paint\> type.

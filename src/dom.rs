@@ -122,12 +122,12 @@ impl Document {
     ///
     /// let doc = Document::from_data(b"<!--comment--><svg/>").unwrap();
     ///
-    /// assert_eq!(doc.first_child().unwrap().is_element(), false);
-    /// assert_eq!(doc.first_element_child().unwrap().is_element(), true);
+    /// assert_eq!(doc.first_child().unwrap().is_svg_element(), false);
+    /// assert_eq!(doc.first_element_child().unwrap().is_svg_element(), true);
     /// ```
     pub fn first_element_child(&self) -> Option<Node> {
         for n in self.root.children() {
-            if n.is_element() {
+            if n.is_svg_element() {
                 return Some(n.clone());
             }
         }
@@ -154,7 +154,7 @@ impl Document {
     /// ```
     pub fn svg_element(&self) -> Option<Node> {
         for n in self.root.children() {
-            if n.is_element() && n.is_tag_id(ElementId::Svg) {
+            if n.is_svg_element() && n.is_tag_id(ElementId::Svg) {
                 return Some(n.clone());
             }
         }
@@ -684,14 +684,12 @@ impl Node {
         !self.0.borrow().id.is_empty()
     }
 
-    /// Returns `true` if node has `Element` type.
-    ///
-    /// Shorthand for `node.node_type() == NodeType::Element`.
+    /// Returns `true` if node has an `Element` type and an SVG tag name.
     ///
     /// # Panics
     ///
     /// Panics if the node is currently mutability borrowed.
-    pub fn is_element(&self) -> bool {
+    pub fn is_svg_element(&self) -> bool {
         match self.tag_name() {
             Some(tag) => {
                 match *tag {
@@ -1662,7 +1660,7 @@ impl Iterator for Descendants {
         loop {
             match self.0.next() {
                 Some(NodeEdge::Start(node)) => {
-                    if node.is_element() {
+                    if node.is_svg_element() {
                         return Some(node)
                     }
                 }
