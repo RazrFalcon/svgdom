@@ -97,9 +97,9 @@ How it will be represented and saved using svgdom:
 
 And even though the file is a bit different now - it will be rendered exactly the same.
 
-![Alt text](https://cdn.rawgit.com/RazrFalcon/svgdom/master/examples/data/image_before.svg)
+![Alt text](https://cdn.rawgit.com/RazrFalcon/libsvgdom/master/examples/data/image_before.svg)
 
-![Alt text](https://cdn.rawgit.com/RazrFalcon/svgdom/master/examples/data/image_after.svg)
+![Alt text](https://cdn.rawgit.com/RazrFalcon/libsvgdom/master/examples/data/image_after.svg)
 
 ### [Documentation](https://docs.rs/svgdom/)
 
