@@ -6,15 +6,22 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 ### Added
-- Missing licence headers.
+- Missing license headers.
+- The `children` method for the `Document`.
+- The `children_nodes` method for the `Node`.
 
 ### Changed
-- Rename `is_element` method into `is_svg_element` in `Node`.
-- Rename `to_absolute` method into `conv_to_absolute` in `Path`.
-- Rename `to_relative` method into `conv_to_relative` in `Path`.
+- Rename `is_element` method into `is_svg_element` in the `Node`.
+- Rename `to_absolute` method into `conv_to_absolute` in the `Path`.
+- Rename `to_relative` method into `conv_to_relative` in the `Path`.
+- Rename `descendants_all` method into `descendant_nodes` in the `Node`.
+- The `children` method of the `Node` struct now returns an iterator over SVG elements and not all nodes. For all nodes you should use `children_nodes` method now.
 
 ### Fixed
 - Attributes from ENTITY is now parsed and not inserted as is.
+
+### Removed
+- `first_element_child` method from the `Document`. Use `doc.children().nth(0)` instead.
 
 ## [0.0.3] - 2016-09-20
 ### Added

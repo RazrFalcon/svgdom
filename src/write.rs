@@ -235,7 +235,7 @@ fn process_text(iter: &mut Traverse, opt: &WriteOptions, root: &Node, depth: &De
 
     // Check that 'text' element contains only one text node.
     // We use 2, since 'descendants_all' includes current node.
-    let is_simple_text = root.descendants_all().count() == 2;
+    let is_simple_text = root.descendant_nodes().count() == 2;
 
     let mut is_first_text = true;
 

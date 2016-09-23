@@ -109,31 +109,6 @@ impl Document {
         self.root().first_child()
     }
 
-    /// Returns first child with `NodeType::Element` of the root `Node`.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the root node is currently mutability borrowed.
-    ///
-    /// # Examples
-    /// ```
-    /// use svgdom::Document;
-    ///
-    /// let doc = Document::from_data(b"<!--comment--><svg/>").unwrap();
-    ///
-    /// assert_eq!(doc.first_child().unwrap().is_svg_element(), false);
-    /// assert_eq!(doc.first_element_child().unwrap().is_svg_element(), true);
-    /// ```
-    pub fn first_element_child(&self) -> Option<Node> {
-        for n in self.root.children() {
-            if n.is_svg_element() {
-                return Some(n.clone());
-            }
-        }
-
-        None
-    }
-
     /// Returns first child with `svg` tag name of the root `Node`.
     ///
     /// In most of the cases result of this method and `first_element_child()` will be the same,
@@ -153,7 +128,7 @@ impl Document {
     /// ```
     pub fn svg_element(&self) -> Option<Node> {
         for n in self.root.children() {
-            if n.is_svg_element() && n.is_tag_id(ElementId::Svg) {
+            if n.is_tag_id(ElementId::Svg) {
                 return Some(n.clone());
             }
         }
@@ -187,8 +162,17 @@ impl Document {
     }
 
     /// Returns iterator over descendant SVG nodes.
-    pub fn descendants_all(&self) -> DescendantsAll {
-        self.root.descendants_all()
+    pub fn descendant_nodes(&self) -> DescendantNodes {
+        self.root.descendant_nodes()
+    }
+
+    /// Returns an iterator to this node’s children elements.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the node is currently mutability borrowed.
+    pub fn children(&self) -> Children {
+        self.root.children()
     }
 
     fn new_node(doc: Option<Link>, node_type: NodeType, tag_name: Option<TagName>,
@@ -334,13 +318,22 @@ impl Node {
         }
     }
 
-    /// Returns an iterator to this node’s children.
+    /// Returns an iterator to this node’s children elements.
     ///
     /// # Panics
     ///
     /// Panics if the node is currently mutability borrowed.
     pub fn children(&self) -> Children {
-        Children(self.first_child())
+        Children(self.children_nodes().filter(|n| n.is_svg_element()).nth(0))
+    }
+
+    /// Returns an iterator to this node’s children nodes.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the node is currently mutability borrowed.
+    pub fn children_nodes(&self) -> ChildrenNodes {
+        ChildrenNodes(self.first_child())
     }
 
     /// Returns `true` is this node has children nodes.
@@ -352,7 +345,7 @@ impl Node {
         self.first_child().is_some()
     }
 
-    /// Returns a reference to the first child of this node, unless it has no child.
+    /// Returns the first child of this node, unless it has no child.
     ///
     /// # Panics
     ///
@@ -361,7 +354,7 @@ impl Node {
         Some(Node(try_opt!(self.0.borrow().first_child.as_ref()).clone()))
     }
 
-    /// Returns a reference to the last child of this node, unless it has no child.
+    /// Returns the last child of this node, unless it has no child.
     ///
     /// # Panics
     ///
@@ -370,7 +363,7 @@ impl Node {
         Some(Node(try_opt!(try_opt!(self.0.borrow().last_child.as_ref()).upgrade())))
     }
 
-    /// Returns a reference to the previous sibling of this node, unless it is a first child.
+    /// Returns the previous sibling of this node, unless it is a first child.
     ///
     /// # Panics
     ///
@@ -379,7 +372,7 @@ impl Node {
         Some(Node(try_opt!(try_opt!(self.0.borrow().previous_sibling.as_ref()).upgrade())))
     }
 
-    /// Returns a reference to the previous sibling of this node, unless it is a first child.
+    /// Returns the previous sibling of this node, unless it is a first child.
     ///
     /// # Panics
     ///
@@ -388,7 +381,7 @@ impl Node {
         Some(Node(try_opt!(self.0.borrow().next_sibling.as_ref()).clone()))
     }
 
-    /// Returns whether two references point to the same node.
+    /// Returns `true` if two `Node`s are the same node.
     pub fn same_node(&self, other: &Node) -> bool {
         same_rc(&self.0, &other.0)
     }
@@ -649,7 +642,7 @@ impl Node {
     pub fn has_text_children(&self) -> bool {
         // TODO: to has_text_child and check only first child
 
-        for node in self.descendants_all() {
+        for node in self.descendant_nodes() {
             if node.node_type() == NodeType::Text {
                 return true;
             }
@@ -1308,7 +1301,7 @@ impl Node {
     /// assert_eq!(svg.child_by_tag_name(&TagName::from("myelem")).is_some(), true);
     /// ```
     pub fn child_by_tag_name(&self, tag_name: &TagName) -> Option<Node> {
-        let iter = self.descendants_all().skip(1);
+        let iter = self.descendant_nodes().skip(1);
         for node in iter {
             if node.is_tag_name(tag_name) {
                 return Some(node.clone());
@@ -1354,13 +1347,13 @@ impl Node {
     }
 
     /// Returns an iterator over descendant nodes.
-    pub fn descendants_all(&self) -> DescendantsAll {
-        DescendantsAll(self.traverse())
+    pub fn descendant_nodes(&self) -> DescendantNodes {
+        DescendantNodes(self.traverse())
     }
 
     /// Returns an iterator over descendant nodes.
     ///
-    /// More complex alternative of the `Node::descendants_all()`.
+    /// More complex alternative of the `Node::descendant_nodes()`.
     pub fn traverse(&self) -> Traverse {
         Traverse {
             root: self.clone(),
@@ -1551,7 +1544,7 @@ pub enum NodeEdge {
 }
 
 
-/// An iterator of references to a given node and its descendants, in tree order.
+/// An iterator of `Node`s to a given node and its descendants, in tree order.
 #[derive(Clone)]
 pub struct Traverse {
     root: Node,
@@ -1600,10 +1593,10 @@ impl Iterator for Traverse {
     }
 }
 
-/// An iterator of references to a given node and its descendants, in tree order.
-pub struct DescendantsAll(Traverse);
+/// An iterator of `Node`s to a given node and its descendants, in tree order.
+pub struct DescendantNodes(Traverse);
 
-impl Iterator for DescendantsAll {
+impl Iterator for DescendantNodes {
     type Item = Node;
 
     /// # Panics
@@ -1626,7 +1619,8 @@ pub struct Descendants(Traverse);
 impl Descendants {
     // TODO: find better way
     pub fn skip_children(&mut self) {
-        // TODO: do nothing if current node did not have children
+        // TODO: do nothing if current node does not have any children
+
         let n = match self.next() {
             Some(n) => n.parent().unwrap(),
             None => return,
@@ -1692,6 +1686,19 @@ macro_rules! impl_node_iterator {
     }
 }
 
-/// An iterator of references to the children of a given node.
+/// An iterator of `Node`s to the children of a given node.
 pub struct Children(Option<Node>);
-impl_node_iterator!(Children, |node: &Node| node.next_sibling());
+impl_node_iterator!(Children, |node: &Node| {
+    let mut curr = node.clone();
+    while let Some(n) = curr.next_sibling() {
+        if n.node_type() == NodeType::Element {
+            return Some(n);
+        }
+        curr = n.clone();
+    }
+    None
+});
+
+/// An iterator of `Node`s to the children of a given node.
+pub struct ChildrenNodes(Option<Node>);
+impl_node_iterator!(ChildrenNodes, |node: &Node| node.next_sibling());

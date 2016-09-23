@@ -118,7 +118,7 @@ pub fn parse_svg(data: &[u8], opt: &ParseOptions) -> Result<Document, Error> {
     }
 
     // first element must be an 'svg'
-    match doc.first_element_child() {
+    match doc.children().nth(0) {
         Some(n) => {
             if !n.is_tag_id(ElementId::Svg) {
                 return Err(Error::NoSvgElement);
@@ -260,7 +260,7 @@ fn process_token<'a>(doc: &Document,
     // which is faster
     if parent.node_type() == NodeType::Root {
         // check that the first element of the doc is 'svg'
-        if let Some(n) = doc.first_element_child() {
+        if let Some(n) = doc.children().nth(0) {
             if !n.is_tag_id(ElementId::Svg) {
                 return Err(Error::NoSvgElement);
             }
