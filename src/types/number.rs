@@ -50,7 +50,7 @@ pub fn write_num(num: f64, precision: u8, rm_leading_zero: bool, buf: &mut Vec<u
         new_value = new_value.floor();
     }
 
-    new_value = new_value * num.signum();
+    new_value *= num.signum();
 
     let start_pos = buf.len();
 
@@ -59,8 +59,8 @@ pub fn write_num(num: f64, precision: u8, rm_leading_zero: bool, buf: &mut Vec<u
     if rm_leading_zero {
         let mut has_dot = false;
         let mut pos = 0;
-        for i in start_pos..buf.len() {
-            if buf[i] == b'.' {
+        for c in buf.iter().skip(start_pos) {
+            if *c == b'.' {
                 has_dot = true;
                 break;
             }

@@ -139,7 +139,7 @@ pub fn parse_svg(data: &[u8], opt: &ParseOptions) -> Result<Document, Error> {
 
     try!(resolve_links(&post_data.links));
 
-    return Ok(doc);
+    Ok(doc)
 }
 
 fn process_token<'a>(doc: &Document,
@@ -166,12 +166,9 @@ fn process_token<'a>(doc: &Document,
                     let res = try!(parse_svg_element(&doc, tokenizer, eid,
                                                      &mut post_data.css, &opt));
 
-                    match res {
-                        Some(n) => {
-                            *node = Some(n.clone());
-                            parent.append(&n);
-                        }
-                        None => {}
+                    if let Some(n) = res {
+                        *node = Some(n.clone());
+                        parent.append(&n);
                     }
                 }
                 None => {
@@ -210,9 +207,8 @@ fn process_token<'a>(doc: &Document,
                     }
                 }
                 svg::ElementEnd::Open => {
-                    match *node {
-                        Some(ref n) => *parent = n.clone(),
-                        None => {}
+                    if let Some(ref n) = *node {
+                        *parent = n.clone();
                     }
                 }
             }
@@ -245,7 +241,7 @@ fn process_token<'a>(doc: &Document,
         }
         svg::Token::Entity(name, value) => {
             // check that ENTITY does not contain an element(s)
-            let mut s = value.clone();
+            let mut s = value;
             s.skip_spaces();
             if !s.at_end() {
                 if s.curr_char_raw() == b'<' {
@@ -264,13 +260,10 @@ fn process_token<'a>(doc: &Document,
     // which is faster
     if parent.node_type() == NodeType::Root {
         // check that the first element of the doc is 'svg'
-        match doc.first_element_child() {
-            Some(n) => {
-                if !n.is_tag_id(ElementId::Svg) {
-                    return Err(Error::NoSvgElement);
-                }
+        if let Some(n) = doc.first_element_child() {
+            if !n.is_tag_id(ElementId::Svg) {
+                return Err(Error::NoSvgElement);
             }
-            None => {}
         }
     }
 
@@ -324,8 +317,8 @@ fn parse_svg_element<'a>(doc: &Document,
             match subitem {
                 Ok(st) => {
                     match st {
-                        svg::Token::Cdata(s) => try!(parse_css(&mut s.clone(), css)),
-                        svg::Token::Text(s) => try!(parse_css(&mut s.clone(), css)),
+                          svg::Token::Cdata(s)
+                        | svg::Token::Text(s) => try!(parse_css(&mut s.clone(), css)),
                         svg::Token::Whitespace(_) => {}
                         _ => break,
                     }
@@ -338,11 +331,11 @@ fn parse_svg_element<'a>(doc: &Document,
 
         // skip </style>
         try!(tokenizer.parse_next());
-        return Ok(None);
+        Ok(None)
     } else {
         // create new node
         let e = doc.create_element(TagName::Id(id));
-        return Ok(Some(e.clone()));
+        Ok(Some(e.clone()))
     }
 }
 
@@ -362,7 +355,7 @@ fn parse_attribute<'a>(node: &Node,
                 AttributeId::Style => {
                     post_data.styles.push(NodeTextData {
                         node: node.clone(),
-                        stream: stream.clone(),
+                        stream: *stream,
                     })
                 }
                   AttributeId::Transform
@@ -378,12 +371,12 @@ fn parse_attribute<'a>(node: &Node,
                 AttributeId::Class => {
                     post_data.classes.push(NodeTextData {
                         node: node.clone(),
-                        stream: stream.clone(),
+                        stream: *stream,
                     })
                 }
                 _ => {
                     try!(parse_svg_attribute(&node, id, stream, &mut post_data.links,
-                                             &mut post_data.entitis, opt));
+                                             &post_data.entitis, opt));
                 }
             }
         }
@@ -409,15 +402,10 @@ fn parse_attribute<'a>(node: &Node,
                 value2 = Some(stream.slice());
             }
 
-            match value2 {
-                Some(val) => {
-                    node.unknown_attributes_mut()
-                        .insert(u8_to_str!(name).to_string(),
-                                u8_to_str!(val).to_string());
-                }
-                None => {
-                    // TODO: show error
-                }
+            if let Some(val) = value2 {
+                node.unknown_attributes_mut()
+                    .insert(u8_to_str!(name).to_string(),
+                            u8_to_str!(val).to_string());
             }
         }
     }
@@ -446,9 +434,9 @@ fn parse_svg_attribute<'a>(node: &Node,
             None
         }
         ParserAttributeValue::Number(v) => Some(AttributeValue::Number(v)),
-        ParserAttributeValue::NumberList(mut list) => {
+        ParserAttributeValue::NumberList(list) => {
             let mut vec = Vec::new();
-            while let Some(number) = list.next() {
+            for number in list {
                 match number {
                     Ok(n) => vec.push(n),
                     Err(e) => return Err(Error::ParseError(e)),
@@ -461,7 +449,7 @@ fn parse_svg_attribute<'a>(node: &Node,
                 Some(AttributeValue::Length(Length::new(v.num, v.unit)))
             } else {
                 if v.unit == LengthUnit::Px {
-                    let mut newv = v.clone();
+                    let mut newv = v;
                     newv.unit = LengthUnit::None;
                     Some(AttributeValue::Length(Length::new(newv.num, newv.unit)))
                 } else {
@@ -469,9 +457,9 @@ fn parse_svg_attribute<'a>(node: &Node,
                 }
             }
         }
-        ParserAttributeValue::LengthList(mut list) => {
+        ParserAttributeValue::LengthList(list) => {
             let mut vec = Vec::new();
-            while let Some(number) = list.next() {
+            for number in list {
                 match number {
                     Ok(n) => vec.push(Length::new(n.num, n.unit)),
                     Err(e) => return Err(Error::ParseError(e)),
@@ -510,9 +498,8 @@ fn parse_svg_attribute<'a>(node: &Node,
         }
     };
 
-    match val {
-        Some(v) => node.set_attribute(id, v),
-        None => {}
+    if let Some(v) = val {
+        node.set_attribute(id, v);
     }
 
     Ok(())
@@ -595,7 +582,7 @@ fn parse_css<'a>(stream: &mut Stream<'a>, css: &mut CssData<'a>) -> Result<(), E
         try!(stream.consume_char(b'{'));
 
         let end = stream.pos() + stream.len_to_char_or_end(b'}');
-        let substream = Stream::sub_stream(&stream, stream.pos(), end);
+        let substream = Stream::sub_stream(stream, stream.pos(), end);
         try!(stream.advance(substream.left()));
 
         try!(stream.consume_char(b'}'));
@@ -621,8 +608,8 @@ fn parse_style_attribute<'a>(node: &Node,
                              entitis: &Entities<'a>,
                              opt: &ParseOptions)
                              -> Result<(), Error> {
-    let mut s = style::Tokenizer::new(stream);
-    while let Some(item) = s.next() {
+    let s = style::Tokenizer::new(stream);
+    for item in s {
         match item {
             Ok(token) => {
                 match token {
@@ -639,13 +626,10 @@ fn parse_style_attribute<'a>(node: &Node,
                         }
                     }
                     style::Token::EntityRef(name) => {
-                        match entitis.get(name) {
-                            Some(value) => {
-                                // TODO: to proper stream
-                                let ss = Stream::new(value);
-                                try!(parse_style_attribute(&node, ss, links, entitis, opt));
-                            }
-                            None => {}
+                        if let Some(value) = entitis.get(name) {
+                            // TODO: to proper stream
+                            let ss = Stream::new(value);
+                            try!(parse_style_attribute(&node, ss, links, entitis, opt));
                         }
                     }
                 }
@@ -688,17 +672,15 @@ fn resolve_css<'a>(doc: &Document,
     for (k, v) in &post_data.css.by_tag {
         for node in doc.descendants() {
             let mut is_valid_tag = false;
-            match node.tag_name() {
-                Some(ref tag_name) => {
-                    let str_name = match &**tag_name {
-                        &TagName::Id(ref id) => id.name().to_string(),
-                        &TagName::Name(ref name) => name.clone(),
-                    };
-                    if str_name == *k {
-                        is_valid_tag = true;
-                    }
+            if let Some(ref tag_name) = node.tag_name() {
+                let str_name = match **tag_name {
+                    TagName::Id(ref id) => id.name().to_string(),
+                    TagName::Name(ref name) => name.clone(),
+                };
+
+                if str_name == *k {
+                    is_valid_tag = true;
                 }
-                None => {}
             }
 
             if is_valid_tag {
@@ -779,10 +761,10 @@ fn resolve_link(node: &Node,
     // a referenced element is invalid. And we don't now is it invalid or not.
     // It will take tonnes of code to validate all supported referenced elements.
     // So we just show an error.
-    match fallback {
-        &Some(_) =>
+    match *fallback {
+        Some(_) =>
             return Err(Error::UnsupportedPaintFallback(u8_to_str!(iri).to_string())),
-        &None =>
+        None =>
             try!(node.set_link_attribute(aid, ref_node.clone())),
     }
     Ok(())
@@ -790,31 +772,26 @@ fn resolve_link(node: &Node,
 
 fn skip_current_element(p: &mut svg::Tokenizer) -> Result<(), Error> {
     let mut local_depth = 0;
-    while let Some(subitem) = p.next() {
+    for subitem in p {
         match subitem {
             Ok(st) => {
-                match st {
-                    svg::Token::ElementStart(_) => {
-                    }
-                    svg::Token::ElementEnd(end) => {
-                        match end {
-                            svg::ElementEnd::Empty => {
-                                if local_depth == 0 {
-                                    break;
-                                }
-                            }
-                            svg::ElementEnd::Close(_) => {
-                                local_depth -= 1;
-                                if local_depth == 0 {
-                                    break;
-                                }
-                            }
-                            svg::ElementEnd::Open => {
-                                local_depth += 1;
+                if let svg::Token::ElementEnd(end) = st {
+                    match end {
+                        svg::ElementEnd::Empty => {
+                            if local_depth == 0 {
+                                break;
                             }
                         }
+                        svg::ElementEnd::Close(_) => {
+                            local_depth -= 1;
+                            if local_depth == 0 {
+                                break;
+                            }
+                        }
+                        svg::ElementEnd::Open => {
+                            local_depth += 1;
+                        }
                     }
-                    _ => {},
                 }
             }
             Err(e) => {

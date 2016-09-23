@@ -136,13 +136,12 @@ impl FromStream for Transform {
         use svgparser::transform::Tokenizer as TransformTokenizer;
         use svgparser::transform::Transform as ParserTransform;
 
-        let mut ts = TransformTokenizer::new(s);
-
+        let ts = TransformTokenizer::new(s);
         let mut matrix = Transform::default();
 
         let pi = f64::consts::PI;
 
-        while let Some(n) = ts.next() {
+        for n in ts {
             match n {
                 Ok(v) => {
                     match v {
@@ -267,12 +266,12 @@ impl Mul for TransformMatrix {
             for col in 0..3 {
                 let mut sum = 0.0;
                 for j in 0..3 {
-                    sum = sum + self.d[j][row] * other.d[col][j];
+                    sum += self.d[j][row] * other.d[col][j];
                 }
                 res.d[col][row] = sum;
             }
         }
-        return res;
+        res
     }
 }
 

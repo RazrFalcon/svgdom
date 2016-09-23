@@ -9,7 +9,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Missing licence headers.
 
 ### Changed
-- Rename `is_element` into `is_svg_element`.
+- Rename `is_element` method into `is_svg_element` in `Node`.
+- Rename `to_absolute` method into `conv_to_absolute` in `Path`.
+- Rename `to_relative` method into `conv_to_relative` in `Path`.
 
 ### Fixed
 - Attributes from ENTITY is now parsed and not inserted as is.

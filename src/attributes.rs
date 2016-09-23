@@ -25,7 +25,7 @@ impl Attributes {
 
     /// Returns a optional reference to `Attribute`.
     pub fn get(&self, id: AttributeId) -> Option<&Attribute> {
-        for v in self.0.iter() {
+        for v in &self.0 {
             if v.id == id {
                 return Some(v);
             }
@@ -36,7 +36,7 @@ impl Attributes {
 
     /// Returns a optional mutable reference to `Attribute`.
     pub fn get_mut(&mut self, id: AttributeId) -> Option<&mut Attribute> {
-        for v in self.0.iter_mut() {
+        for v in &mut self.0 {
             if v.id == id {
                 return Some(v);
             }
@@ -47,7 +47,7 @@ impl Attributes {
 
     /// Returns optional reference to `AttributeValue`.
     pub fn get_value(&self, id: AttributeId) -> Option<&AttributeValue> {
-        for v in self.0.iter() {
+        for v in &self.0 {
             if v.id == id {
                 return Some(&v.value);
             }
@@ -78,15 +78,14 @@ impl Attributes {
     /// If you want to remove an linked attribute - use `Node::remove_attribute()`.
     pub fn remove(&mut self, id: AttributeId) {
         let idx = self.0.iter().position(|x| x.id == id);
-        match idx {
-            Some(i) => { self.0.remove(i); }
-            None => {}
+        if let Some(i) = idx {
+            self.0.remove(i);
         }
     }
 
     /// Returns `true` if container contains an attribute such `id`.
     pub fn contains(&self, id: AttributeId) -> bool {
-        for v in self.0.iter() {
+        for v in &self.0 {
             if v.id == id {
                 return true;
             }

@@ -118,8 +118,8 @@ And even though the file is a bit different now - it will be rendered exactly th
  - Not supported (mostly rare cases, but still valid by the SVG spec):
    - Complex CSS. Only simple *class* and *group* selectors are supported.
    - Whitespacing using a numerical Unicode references, aka `&#x0020;`.
-   - Custom namespaces, like
-   
+   - Custom namespaces, like:
+
       ```
       <g xmlns:s="http://www.w3.org/2000/svg">
         <s:circle/>
@@ -127,7 +127,7 @@ And even though the file is a bit different now - it will be rendered exactly th
       ```
       It will be treated as a non-SVG element.
    - Links to ENTITY not from attributes will lead to `Error::UnsupportedEntity`. Example:
-    
+
      ```
      <!DOCTYPE svg [
         <!ENTITY Rect1 "<rect x='.5' y='.5' width='20' height='20'/>">

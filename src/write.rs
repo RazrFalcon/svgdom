@@ -60,79 +60,74 @@ pub fn write_dom(doc: &Document, opt: &WriteOptions, out: &mut Vec<u8>) {
 
     let mut iter = doc.root().traverse();
 
-    loop {
-        match iter.next() {
-            Some(edge) => {
-                match edge {
-                    NodeEdge::Start(node) => {
-                        match node.node_type() {
-                            NodeType::Root => continue,
-                            NodeType::Element => {
+    while let Some(edge) = iter.next() {
+        match edge {
+            NodeEdge::Start(node) => {
+                match node.node_type() {
+                    NodeType::Root => continue,
+                    NodeType::Element => {
 
-                                depth.write_indent(out);
+                        depth.write_indent(out);
 
-                                if node.is_tag_name(&TagName::Id(ElementId::Text)) && node.has_children() {
-                                    write_element_start(&node, &opt, out);
-                                    process_text(&mut iter, &opt, &node, &depth, out);
-                                    write_newline(opt.indent, out);
-                                    continue;
-                                }
+                        if node.is_tag_name(&TagName::Id(ElementId::Text)) && node.has_children() {
+                            write_element_start(&node, opt, out);
+                            process_text(&mut iter, opt, &node, &depth, out);
+                            write_newline(opt.indent, out);
+                            continue;
+                        }
 
-                                write_element_start(&node, &opt, out);
+                        write_element_start(&node, opt, out);
 
-                                if node.has_children() {
-                                    depth.value += 1;
-                                    write_newline(opt.indent, out);
-                                }
-                            },
-                            NodeType::Declaration => {
-                                depth.write_indent(out);
-                                out.extend_from_slice(b"<?xml ");
-                                out.extend_from_slice(node.text().unwrap().as_bytes());
-                                out.extend_from_slice(b"?>");
-                                write_newline(opt.indent, out);
-                            },
-                            NodeType::Comment => {
-                                depth.write_indent(out);
-                                out.extend_from_slice(b"<!--");
-                                out.extend_from_slice(node.text().unwrap().as_bytes());
-                                out.extend_from_slice(b"-->");
-                                write_newline(opt.indent, out);
-                            },
-                            NodeType::Cdata => {
-                                depth.write_indent_with_step(-1, out);
-                                out.extend_from_slice(b"<![CDATA[");
-                                out.extend_from_slice(node.text().unwrap().as_bytes());
-                                out.extend_from_slice(b"]]>");
-                                write_newline(opt.indent, out);
-                            },
-                            NodeType::Text => {
-                                // TODO: implement xml escape
-                                depth.write_indent(out);
-                                out.extend_from_slice(node.text().unwrap().trim().as_bytes());
-                                write_newline(opt.indent, out);
-                            },
+                        if node.has_children() {
+                            depth.value += 1;
+                            write_newline(opt.indent, out);
                         }
                     },
-                    NodeEdge::End(node) => {
-                        match node.node_type() {
-                            NodeType::Root => continue,
-                            NodeType::Element => {
-                                if node.has_children() {
-                                    if depth.value > 0 {
-                                        depth.value -= 1;
-                                    }
-                                    depth.write_indent(out);
-                                }
-                                write_element_end(&node, out);
-                                write_newline(opt.indent, out);
-                            },
-                            _ => {},
-                        }
+                    NodeType::Declaration => {
+                        depth.write_indent(out);
+                        out.extend_from_slice(b"<?xml ");
+                        out.extend_from_slice(node.text().unwrap().as_bytes());
+                        out.extend_from_slice(b"?>");
+                        write_newline(opt.indent, out);
+                    },
+                    NodeType::Comment => {
+                        depth.write_indent(out);
+                        out.extend_from_slice(b"<!--");
+                        out.extend_from_slice(node.text().unwrap().as_bytes());
+                        out.extend_from_slice(b"-->");
+                        write_newline(opt.indent, out);
+                    },
+                    NodeType::Cdata => {
+                        depth.write_indent_with_step(-1, out);
+                        out.extend_from_slice(b"<![CDATA[");
+                        out.extend_from_slice(node.text().unwrap().as_bytes());
+                        out.extend_from_slice(b"]]>");
+                        write_newline(opt.indent, out);
+                    },
+                    NodeType::Text => {
+                        // TODO: implement xml escape
+                        depth.write_indent(out);
+                        out.extend_from_slice(node.text().unwrap().trim().as_bytes());
+                        write_newline(opt.indent, out);
                     },
                 }
-            }
-            None => break,
+            },
+            NodeEdge::End(node) => {
+                match node.node_type() {
+                    NodeType::Root => continue,
+                    NodeType::Element => {
+                        if node.has_children() {
+                            if depth.value > 0 {
+                                depth.value -= 1;
+                            }
+                            depth.write_indent(out);
+                        }
+                        write_element_end(&node, out);
+                        write_newline(opt.indent, out);
+                    },
+                    _ => {},
+                }
+            },
         }
     }
 }
@@ -158,14 +153,14 @@ fn write_attribute(name: &[u8], value: &[u8], opt: &WriteOptions, out: &mut Vec<
 }
 
 fn write_tag_name(tag_name: &TagName, out: &mut Vec<u8>) {
-    match tag_name {
-        &TagName::Id(ref id) => {
+    match *tag_name {
+        TagName::Id(ref id) => {
             out.extend_from_slice(id.name().as_bytes());
-        },
-        &TagName::Name(ref name) => {
+        }
+        TagName::Name(ref name) => {
             let n = name.clone();
             out.extend_from_slice(n.as_bytes());
-        },
+        }
     }
 }
 
@@ -212,7 +207,7 @@ fn write_element_start(node: &Node, opt: &WriteOptions, out: &mut Vec<u8>) {
     out.push(b'<');
 
     write_tag_name(&node.tag_name().unwrap(), out);
-    write_attributes(&node, opt, out);
+    write_attributes(node, opt, out);
 
     if node.has_children() {
         out.push(b'>');
@@ -244,53 +239,45 @@ fn process_text(iter: &mut Traverse, opt: &WriteOptions, root: &Node, depth: &De
 
     let mut is_first_text = true;
 
-    loop {
-        match iter.next() {
-            Some(edge) => {
-                match edge {
-                    NodeEdge::Start(node) => {
-                        match node.node_type() {
-                            NodeType::Element => {
-                                write_element_start(&node, &opt, out);
-                            }
-                            NodeType::Text => {
-                                if is_root_preserve {
-                                    out.extend_from_slice(node.text().unwrap().as_bytes());
-                                } else if is_simple_text {
-                                    out.extend_from_slice(node.text().unwrap().trim().as_bytes());
-                                } else if is_first_text {
-                                    out.extend_from_slice(node.text().unwrap().trim_left().as_bytes());
-                                } else if root.last_child().unwrap() == node {
-                                    out.extend_from_slice(node.text().unwrap().trim_right().as_bytes());
-                                } else {
-                                    out.extend_from_slice(node.text().unwrap().as_bytes());
-                                }
-                                is_first_text = false;
-                            }
-                            _ => {}
-                        }
+    for edge in iter {
+        match edge {
+            NodeEdge::Start(node) => {
+                match node.node_type() {
+                    NodeType::Element => {
+                        write_element_start(&node, opt, out);
                     }
-                    NodeEdge::End(node) => {
-                        match node.node_type() {
-                            NodeType::Element => {
-                                if node == *root {
-                                    if !is_root_preserve {
-                                        write_newline(opt.indent, out);
-                                        depth.write_indent(out);
-                                    }
-                                    write_element_end(&node, out);
-
-                                    break;
-                                } else {
-                                    write_element_end(&node, out);
-                                }
-                            }
-                            _ => {}
+                    NodeType::Text => {
+                        if is_root_preserve {
+                            out.extend_from_slice(node.text().unwrap().as_bytes());
+                        } else if is_simple_text {
+                            out.extend_from_slice(node.text().unwrap().trim().as_bytes());
+                        } else if is_first_text {
+                            out.extend_from_slice(node.text().unwrap().trim_left().as_bytes());
+                        } else if root.last_child().unwrap() == node {
+                            out.extend_from_slice(node.text().unwrap().trim_right().as_bytes());
+                        } else {
+                            out.extend_from_slice(node.text().unwrap().as_bytes());
                         }
+                        is_first_text = false;
+                    }
+                    _ => {}
+                }
+            }
+            NodeEdge::End(node) => {
+                if let NodeType::Element = node.node_type() {
+                    if node == *root {
+                        if !is_root_preserve {
+                            write_newline(opt.indent, out);
+                            depth.write_indent(out);
+                        }
+                        write_element_end(&node, out);
+
+                        break;
+                    } else {
+                        write_element_end(&node, out);
                     }
                 }
             }
-            None => {}
         }
     }
 }

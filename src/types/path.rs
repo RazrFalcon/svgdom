@@ -223,7 +223,7 @@ impl Segment {
 }
 
 /// Representation of the SVG path data.
-#[derive(PartialEq,Clone)]
+#[derive(Default,PartialEq,Clone)]
 pub struct Path {
     /// Vector which contain all the segments.
     pub d: Vec<Segment>
@@ -240,7 +240,7 @@ impl Path {
     /// Converts path's segments into absolute.
     ///
     /// Original segments can be mixed (relative, absolute).
-    pub fn to_absolute(&mut self) {
+    pub fn conv_to_absolute(&mut self) {
         // position of the previous segment
         let mut prev_x = 0.0;
         let mut prev_y = 0.0;
@@ -252,7 +252,7 @@ impl Path {
         let mut prev_my = 0.0;
 
         let mut prev_cmd = Command::MoveTo;
-        for seg in self.d.iter_mut() {
+        for seg in &mut self.d {
             if seg.cmd() == Command::ClosePath {
                 prev_x = prev_mx;
                 prev_y = prev_my;
@@ -303,8 +303,8 @@ impl Path {
     /// Converts path's segments into relative.
     ///
     /// Original segments can be mixed (relative, absolute).
-    pub fn to_relative(&mut self) {
-        // NOTE: this method may look like 'to_absolute', but it's a bit different.
+    pub fn conv_to_relative(&mut self) {
+        // NOTE: this method may look like 'conv_to_absolute', but it's a bit different.
 
         // position of the previous segment
         let mut prev_x = 0.0;
@@ -317,7 +317,7 @@ impl Path {
         let mut prev_my = 0.0;
 
         let mut prev_cmd = Command::MoveTo;
-        for seg in self.d.iter_mut() {
+        for seg in &mut self.d {
             if seg.cmd() == Command::ClosePath {
                 prev_x = prev_mx;
                 prev_y = prev_my;
@@ -433,6 +433,7 @@ fn shift_segment_data(d: &mut SegmentData, offset_x: f64, offset_y: f64) {
 }
 
 /// Construct a new path using build pattern.
+#[derive(Default)]
 pub struct Builder {
     path: Path,
 }
@@ -515,10 +516,10 @@ impl Builder {
 impl FromStream for Path {
     type Err = ParseError;
     fn from_stream(s: Stream) -> Result<Path, ParseError> {
-        let mut t = svgparser::path::Tokenizer::new(s);
+        let t = svgparser::path::Tokenizer::new(s);
         let mut p = Path::new();
 
-        while let Some(n) = t.next() {
+        for n in t {
             match n {
                 Ok(segment) => p.d.push({
                     Segment {
@@ -545,7 +546,7 @@ impl WriteBuffer for Path {
         let mut prev_coord_has_dot = false;
 
         for seg in &self.d {
-            let is_written = write_cmd(&seg, &mut prev_cmd, opt, buf);
+            let is_written = write_cmd(seg, &mut prev_cmd, opt, buf);
             match *seg.data() {
                 SegmentData::MoveTo { x, y } => {
                     write_coords(&[x, y], is_written, &mut prev_coord_has_dot, opt, buf);
@@ -620,24 +621,19 @@ fn write_cmd(seg: &Segment, prev_cmd: &mut Option<(Command, bool)>,
     let mut print_cmd = true;
     // check is previous command is the same as current
     if opt.paths.remove_duplicated_commands {
-        match prev_cmd {
-            &mut Some(pcmd) => {
-                if seg.cmd() == pcmd.0 && seg.absolute == pcmd.1 {
-                    print_cmd = false;
-                }
+        if let Some(pcmd) = *prev_cmd {
+            if seg.cmd() == pcmd.0 && seg.absolute == pcmd.1 {
+                print_cmd = false;
             }
-            &mut None => {}
         }
-
     }
 
     if !print_cmd {
         return false;
     }
 
-    let cmd: u8;
-    if seg.is_absolute() {
-        cmd = match seg.cmd() {
+    let cmd: u8 = if seg.is_absolute() {
+        match seg.cmd() {
             Command::MoveTo => b'M',
             Command::LineTo => b'L',
             Command::HorizontalLineTo => b'H',
@@ -648,9 +644,9 @@ fn write_cmd(seg: &Segment, prev_cmd: &mut Option<(Command, bool)>,
             Command::SmoothQuadratic => b'T',
             Command::EllipticalArc => b'A',
             Command::ClosePath => b'Z',
-        };
+        }
     } else {
-        cmd = match seg.cmd() {
+        match seg.cmd() {
             Command::MoveTo => b'm',
             Command::LineTo => b'l',
             Command::HorizontalLineTo => b'h',
@@ -661,8 +657,8 @@ fn write_cmd(seg: &Segment, prev_cmd: &mut Option<(Command, bool)>,
             Command::SmoothQuadratic => b't',
             Command::EllipticalArc => b'a',
             Command::ClosePath => b'z',
-        };
-    }
+        }
+    };
     buf.push(cmd);
 
     *prev_cmd = Some((seg.cmd(), seg.absolute));
@@ -701,8 +697,8 @@ fn write_coords(coords: &[f64], is_explicit_cmd: bool, prev_coord_has_dot: &mut 
             }
 
             *prev_coord_has_dot = false;
-            for j in start_pos..buf.len() {
-                if buf[j] == b'.' {
+            for c in buf.iter().skip(start_pos) {
+                if *c == b'.' {
                     *prev_coord_has_dot = true;
                     break;
                 }
@@ -845,7 +841,7 @@ mod to_absolute {
             #[test]
             fn $name() {
                 let mut path = path::Path::from_data($in_text).unwrap();
-                path.to_absolute();
+                path.conv_to_absolute();
                 assert_eq_text!(path.to_string(), $out_text);
             }
         )
@@ -909,7 +905,7 @@ mod to_relative {
             #[test]
             fn $name() {
                 let mut path = path::Path::from_data($in_text).unwrap();
-                path.to_relative();
+                path.conv_to_relative();
                 assert_eq_text!(path.to_string(), $out_text);
             }
         )

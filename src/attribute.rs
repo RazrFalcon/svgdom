@@ -246,8 +246,8 @@ macro_rules! impl_as_type {
     ($name:ident, $t:ident, $out:ty) => (
         #[allow(missing_docs)]
         pub fn $name(&self) -> Option<&$out> {
-            match self {
-                &AttributeValue::$t(ref v) => Some(v),
+            match *self {
+                AttributeValue::$t(ref v) => Some(v),
                 _ => None,
             }
         }
@@ -412,8 +412,8 @@ macro_rules! impl_is_type {
     ($name:ident, $t:ident) => (
         #[allow(missing_docs)]
         pub fn $name(&self) -> bool {
-            match &self.value {
-                &AttributeValue::$t(_) => true,
+            match self.value {
+                AttributeValue::$t(_) => true,
                 _ => false,
             }
         }

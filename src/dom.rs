@@ -54,9 +54,8 @@ impl Document {
         let t = TagName::from(tag_name);
 
         // TODO: return error
-        match &t {
-            &TagName::Name(ref name) => debug_assert!(!name.is_empty()),
-            _ => {},
+        if let TagName::Name(ref name) = t {
+            debug_assert!(!name.is_empty());
         }
 
         Document::new_node(Some(self.root.0.clone()), NodeType::Element, Some(t), None)
@@ -210,6 +209,12 @@ impl Document {
             linked_nodes: Vec::new(),
             text: text,
         })))
+    }
+}
+
+impl Default for Document {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -717,9 +722,8 @@ impl Node {
 
         // TODO: to error
         // tag_name can't be empty
-        match &t {
-            &TagName::Name(ref name) => debug_assert!(!name.is_empty()),
-            _ => {},
+        if let TagName::Name(ref name) = t {
+            debug_assert!(!name.is_empty());
         }
 
         let mut self_borrow = self.0.borrow_mut();
@@ -764,14 +768,14 @@ impl Node {
     /// Panics if the node is currently mutability borrowed.
     pub fn is_tag_id(&self, eid: ElementId) -> bool {
         let b = self.0.borrow();
-        match &b.tag_name {
-            &Some(ref v) => {
-                match v {
-                    &TagName::Id(ref id) => *id == eid,
-                    &TagName::Name(_) => false,
+        match b.tag_name {
+            Some(ref v) => {
+                match *v {
+                    TagName::Id(ref id) => *id == eid,
+                    TagName::Name(_) => false,
                 }
             }
-            &None => false,
+            None => false,
         }
     }
 
@@ -782,9 +786,9 @@ impl Node {
     /// Panics if the node is currently mutability borrowed.
     pub fn is_tag_name(&self, tag_name: &TagName) -> bool {
         let b = self.0.borrow();
-        match &b.tag_name {
-            &Some(ref v) => v == tag_name,
-            &None => false,
+        match b.tag_name {
+            Some(ref v) => v == tag_name,
+            None => false,
         }
     }
 
@@ -917,18 +921,17 @@ impl Node {
             let self_borrow = self.0.borrow();
             let v = &self_borrow.linked_nodes;
 
-            if v.iter().find(|n| Node(n.upgrade().unwrap()) == node).is_some() {
+            if v.iter().any(|n| Node(n.upgrade().unwrap()) == node) {
                 return Err(Error::ElementCrosslink);
             }
         }
 
         {
-            let a;
-            if id == AttributeId::XlinkHref {
-                a = Attribute::new(id, AttributeValue::Link(node.clone()));
+            let a = if id == AttributeId::XlinkHref {
+                Attribute::new(id, AttributeValue::Link(node.clone()))
             } else {
-                a = Attribute::new(id, AttributeValue::FuncLink(node.clone()));
-            }
+                Attribute::new(id, AttributeValue::FuncLink(node.clone()))
+            };
 
             let mut attributes = self.attributes_mut();
             attributes.insert(a);
@@ -989,7 +992,7 @@ impl Node {
     ///
     /// Panics if the node is currently mutability borrowed.
     pub fn attribute_value(&self, id: AttributeId) -> Option<AttributeValue> {
-        self.attributes().get_value(id).map(|x| x.clone())
+        self.attributes().get_value(id).cloned()
     }
 
     /// Returns copy of attribute by `id`.
@@ -1003,7 +1006,7 @@ impl Node {
     ///
     /// Panics if the node is currently mutability borrowed.
     pub fn attribute(&self, id: AttributeId) -> Option<Attribute> {
-        self.attributes().get(id).map(|x| x.clone())
+        self.attributes().get(id).cloned()
     }
 
     /// Returns a reference to `Attributes` of current the node.
@@ -1122,22 +1125,19 @@ impl Node {
         let mut attrs = self.attributes_mut();
 
         // we must unlink referenced attributes
-        match attrs.get_value(id) {
-            Some(value) => {
-                match *value {
-                    AttributeValue::Link(ref node) | AttributeValue::FuncLink(ref node) => {
-                        let mut self_borrow = node.0.borrow_mut();
-                        let ln = &mut self_borrow.linked_nodes;
-                        // this code can't panic, because we know that such node exist
-                        let index = ln.iter().position(|x| {
-                            same_rc(&x.upgrade().unwrap(), &self.0)
-                        }).unwrap();
-                        ln.remove(index);
-                    }
-                    _ => {}
+        if let Some(value) = attrs.get_value(id) {
+            match *value {
+                AttributeValue::Link(ref node) | AttributeValue::FuncLink(ref node) => {
+                    let mut self_borrow = node.0.borrow_mut();
+                    let ln = &mut self_borrow.linked_nodes;
+                    // this code can't panic, because we know that such node exist
+                    let index = ln.iter().position(|x| {
+                        same_rc(&x.upgrade().unwrap(), &self.0)
+                    }).unwrap();
+                    ln.remove(index);
                 }
+                _ => {}
             }
-            None => {}
         }
 
         attrs.remove(id);
@@ -1506,9 +1506,9 @@ impl<'a> From<&'a str> for TagName {
 
 impl fmt::Debug for TagName {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            &TagName::Id(ref id) => write!(f, "{}", id.name()),
-            &TagName::Name(ref name) => write!(f, "{}", name),
+        match *self {
+            TagName::Id(ref id) => write!(f, "{}", id.name()),
+            TagName::Name(ref name) => write!(f, "{}", name),
         }
     }
 }
