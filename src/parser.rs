@@ -113,7 +113,7 @@ pub fn parse_svg(data: &[u8], opt: &ParseOptions) -> Result<Document, Error> {
     }
 
     // document must contain any children
-    if !doc.root().has_children() {
+    if !doc.root().has_children_nodes() {
         return Err(Error::EmptyDocument);
     }
 

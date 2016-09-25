@@ -336,12 +336,21 @@ impl Node {
         ChildrenNodes(self.first_child())
     }
 
-    /// Returns `true` is this node has children nodes.
+    /// Returns `true` is this node has children elements.
     ///
     /// # Panics
     ///
     /// Panics if the node is currently mutability borrowed.
     pub fn has_children(&self) -> bool {
+        self.children().count() > 0
+    }
+
+    /// Returns `true` is this node has children nodes.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the node is currently mutability borrowed.
+    pub fn has_children_nodes(&self) -> bool {
         self.first_child().is_some()
     }
 

@@ -1,7 +1,7 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](http://keepachangelog.com/) 
+The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
@@ -17,7 +17,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Rename `to_absolute` method into `conv_to_absolute` in the `Path`.
 - Rename `to_relative` method into `conv_to_relative` in the `Path`.
 - Rename `descendants_all` method into `descendant_nodes` in the `Node`.
-- The `children` method of the `Node` struct now returns an iterator over SVG elements and not all nodes. For all nodes you should use `children_nodes` method now.
+- The `children` method of the `Node` struct now returns an iterator over SVG elements and not all nodes.
+  For all nodes you should use `children_nodes` method now.
+- The `has_children` method now returns true if node has children elements, not nodes.
+  For nodes you should use `has_children_nodes` method now.
+
 - Remove redundant semicolon from error messages.
 
 ### Fixed

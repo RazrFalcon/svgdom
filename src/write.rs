@@ -69,7 +69,7 @@ pub fn write_dom(doc: &Document, opt: &WriteOptions, out: &mut Vec<u8>) {
 
                         depth.write_indent(out);
 
-                        if node.is_tag_name(&TagName::Id(ElementId::Text)) && node.has_children() {
+                        if node.is_tag_name(&TagName::Id(ElementId::Text)) && node.has_children_nodes() {
                             write_element_start(&node, opt, out);
                             process_text(&mut iter, opt, &node, &depth, out);
                             write_newline(opt.indent, out);
@@ -78,7 +78,7 @@ pub fn write_dom(doc: &Document, opt: &WriteOptions, out: &mut Vec<u8>) {
 
                         write_element_start(&node, opt, out);
 
-                        if node.has_children() {
+                        if node.has_children_nodes() {
                             depth.value += 1;
                             write_newline(opt.indent, out);
                         }
@@ -116,7 +116,7 @@ pub fn write_dom(doc: &Document, opt: &WriteOptions, out: &mut Vec<u8>) {
                 match node.node_type() {
                     NodeType::Root => continue,
                     NodeType::Element => {
-                        if node.has_children() {
+                        if node.has_children_nodes() {
                             if depth.value > 0 {
                                 depth.value -= 1;
                             }
@@ -209,13 +209,13 @@ fn write_element_start(node: &Node, opt: &WriteOptions, out: &mut Vec<u8>) {
     write_tag_name(&node.tag_name().unwrap(), out);
     write_attributes(node, opt, out);
 
-    if node.has_children() {
+    if node.has_children_nodes() {
         out.push(b'>');
     }
 }
 
 fn write_element_end(node: &Node, out: &mut Vec<u8>) {
-    if node.has_children() {
+    if node.has_children_nodes() {
         out.extend_from_slice(b"</");
         write_tag_name(&node.tag_name().unwrap(), out);
         out.push(b'>');
