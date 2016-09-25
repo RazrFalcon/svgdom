@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Missing license headers.
 - The `children` method for the `Document`.
 - The `children_nodes` method for the `Node`.
+- `has_translate`, `has_scale`, `has_proportional_scale`, `has_skew`, `has_rotate`, `get_translate`,
+  `get_scale`, `get_skew`, `get_rotate`, `apply` methods to the `Transform`.
 
 ### Changed
 - Rename `is_element` method into `is_svg_element` in the `Node`.
@@ -16,6 +18,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Rename `to_relative` method into `conv_to_relative` in the `Path`.
 - Rename `descendants_all` method into `descendant_nodes` in the `Node`.
 - The `children` method of the `Node` struct now returns an iterator over SVG elements and not all nodes. For all nodes you should use `children_nodes` method now.
+- Remove redundant semicolon from error messages.
 
 ### Fixed
 - Attributes from ENTITY is now parsed and not inserted as is.

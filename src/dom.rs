@@ -959,7 +959,6 @@ impl Node {
     /// Panics if the node is currently mutability borrowed.
     pub fn find_reference_attribute(&self, node: &Node) -> Option<AttributeId> {
         // TODO: return iter, and not only first
-        // let attrs = self.attributes();
         for a in self.0.borrow().attributes.iter() {
             match a.value {
                 AttributeValue::Link(ref n) | AttributeValue::FuncLink(ref n) => {

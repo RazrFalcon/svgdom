@@ -76,7 +76,7 @@ impl Transform {
         tm
     }
 
-    /// Returns `true` if the current transform is default, aka (1 0 0 1 0 0).
+    /// Returns `true` if the transform is default, aka (1 0 0 1 0 0).
     pub fn is_default(&self) -> bool {
            self.a == 1.0
         && self.b == 0.0
@@ -86,7 +86,7 @@ impl Transform {
         && self.f == 0.0
     }
 
-    /// Returns `true` if the current transform contains only translate part.
+    /// Returns `true` if the transform contains only translate part, aka (1 0 0 1 x y).
     pub fn is_translate(&self) -> bool {
            self.a == 1.0
         && self.b == 0.0
@@ -95,7 +95,7 @@ impl Transform {
         && (self.e != 0.0 || self.f != 0.0)
     }
 
-    /// Returns `true` if the current transform contains only scale part.
+    /// Returns `true` if the transform contains only scale part, aka (sx 0 0 sy 0 0).
     pub fn is_scale(&self) -> bool {
            (self.a != 1.0 || self.d != 1.0)
         && self.b == 0.0
@@ -104,11 +104,71 @@ impl Transform {
         && self.f == 0.0
     }
 
-    /// Returns `true` if the current transform contains only proportional scale part.
+    /// Returns `true` if the transform contains translate part.
+    pub fn has_translate(&self) -> bool {
+        self.e != 0.0 || self.f != 0.0
+    }
+
+    /// Returns `true` if the transform contains scale part.
+    pub fn has_scale(&self) -> bool {
+        let (sx, sy) = self.get_scale();
+        sx != 1.0 || sy != 1.0
+    }
+
+    /// Returns `true` if the transform scale is proportional.
     ///
     /// The proportional scale is when `<sx>` equal to `<sy>`.
-    pub fn is_proportional_scale(&self) -> bool {
-        self.is_scale() && self.a == self.d
+    pub fn has_proportional_scale(&self) -> bool {
+        let (sx, sy) = self.get_scale();
+        sx == sy
+    }
+
+    /// Returns `true` if the transform contains skew part.
+    pub fn has_skew(&self) -> bool {
+        let (skew_x, skew_y) = self.get_skew();
+        skew_x != 0.0 || skew_y != 0.0
+    }
+
+    /// Returns `true` if the transform contains rotate part.
+    pub fn has_rotate(&self) -> bool {
+        self.get_rotate() != 0.0
+    }
+
+    /// Returns transform's translate part.
+    pub fn get_translate(&self) -> (f64, f64) {
+        (self.e, self.f)
+    }
+
+    /// Returns transform's scale part.
+    pub fn get_scale(&self) -> (f64, f64) {
+        let x_scale = (self.a * self.a + self.c * self.c).sqrt();
+        let y_scale = (self.b * self.b + self.d * self.d).sqrt();
+        (x_scale, y_scale)
+    }
+
+    /// Returns transform's skew part.
+    pub fn get_skew(&self) -> (f64, f64) {
+        let rad = 180.0 / f64::consts::PI;
+        let skew_x = rad * (self.d).atan2(self.c) - 90.0;
+        let skew_y = rad * (self.b).atan2(self.a);
+        (skew_x, skew_y)
+    }
+
+    /// Returns transform's rotate part.
+    pub fn get_rotate(&self) -> f64 {
+        let rad = 180.0 / f64::consts::PI;
+        let mut angle = (-self.b/self.a).atan() * rad;
+        if self.b < self.c || self.b > self.c {
+            angle = -angle;
+        }
+        angle
+    }
+
+    /// Applies transform to selected coordinates.
+    pub fn apply(&self, x: f64, y: f64) -> (f64,f64) {
+        let new_x = self.a * x + self.c * y + self.e;
+        let new_y = self.b * x + self.d * y + self.f;
+        (new_x, new_y)
     }
 }
 

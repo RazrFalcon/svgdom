@@ -53,9 +53,9 @@ impl fmt::Display for Error {
             Error::ParseError(e) => write!(f, "{:?}", e),
             Error::NoSvgElement => write!(f, "Document didn't have an SVG element"),
             Error::EmptyDocument => write!(f, "Document didn't have any nodes"),
-            Error::UnsupportedCSS(ref pos) => write!(f, "Unsupported CSS at: {:?}", pos),
-            Error::InvalidCSS(ref pos) => write!(f, "Invalid CSS at: {:?}", pos),
-            Error::UnsupportedEntity(ref pos) => write!(f, "Unsupported ENTITY data at: {:?}", pos),
+            Error::UnsupportedCSS(ref pos) => write!(f, "Unsupported CSS at {:?}", pos),
+            Error::InvalidCSS(ref pos) => write!(f, "Invalid CSS at {:?}", pos),
+            Error::UnsupportedEntity(ref pos) => write!(f, "Unsupported ENTITY data at {:?}", pos),
             Error::UnsupportedPaintFallback(ref iri) =>
                 write!(f, "Valid FuncIRI(#{}) with fallback value is not supported", iri),
             Error::BrokenFuncIri(ref iri) =>
