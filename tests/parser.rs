@@ -397,14 +397,14 @@ b"<svg>
 </svg>
 ");
 
-// skip unknown attributes
+// keep unknown attributes
 test_resave!(parse_style_6,
 b"<svg>
     <g style='qwe:none; color:cyan;'/>
 </svg>
 ",
 "<svg>
-    <g color='#00ffff'/>
+    <g color='#00ffff' qwe='none'/>
 </svg>
 ");
 

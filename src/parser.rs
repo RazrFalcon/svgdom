@@ -193,9 +193,11 @@ fn process_token<'a>(doc: &Document,
                                      &opt));
             } else {
                 // TODO: store as &str not String
-                // we keep all attributes from unknown elements as unknown
-                n.unknown_attributes_mut().insert(u8_to_str!(name).to_string(),
-                                                  u8_to_str!(val.slice()).to_string());
+                if opt.parse_unknown_attributes {
+                    // we keep all attributes from unknown elements as unknown
+                    n.unknown_attributes_mut().insert(u8_to_str!(name).to_string(),
+                                                      u8_to_str!(val.slice()).to_string());
+                }
             }
         }
         svg::Token::ElementEnd(end) => {
@@ -620,8 +622,11 @@ fn parse_style_attribute<'a>(node: &Node,
                                     links, entitis, opt));
                             }
                             None => {
-                                // TODO: maybe do not skip?
-                                println!("Warning: Unknown style attr: '{}'.", u8_to_str!(name));
+                                if opt.parse_unknown_attributes {
+                                    node.unknown_attributes_mut()
+                                        .insert(u8_to_str!(name).to_string(),
+                                                u8_to_str!(substream.slice()).to_string());
+                                }
                             }
                         }
                     }

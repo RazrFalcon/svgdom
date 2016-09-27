@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Missing license headers.
 - The `children` method for the `Document`.
-- The `children_nodes` method for the `Node`.
+- `children_nodes`, `is_container` methods for the `Node`.
 - `has_translate`, `has_scale`, `has_proportional_scale`, `has_skew`, `has_rotate`, `get_translate`,
   `get_scale`, `get_skew`, `get_rotate`, `apply` methods to the `Transform`.
 
@@ -21,11 +21,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
   For all nodes you should use `children_nodes` method now.
 - The `has_children` method now returns true if node has children elements, not nodes.
   For nodes you should use `has_children_nodes` method now.
-
 - Remove redundant semicolon from error messages.
+- We keep unknown attributes from styles now.
 
 ### Fixed
 - Attributes from ENTITY is now parsed and not inserted as is.
+- `parse_unknown_attributes` flag doesn't processed correctly.
 
 ### Removed
 - `first_element_child` method from the `Document`. Use `doc.children().nth(0)` instead.

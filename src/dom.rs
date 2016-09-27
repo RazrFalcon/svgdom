@@ -166,7 +166,7 @@ impl Document {
         self.root.descendant_nodes()
     }
 
-    /// Returns an iterator to this node’s children elements.
+    /// Returns an iterator to this node`s children elements.
     ///
     /// # Panics
     ///
@@ -318,7 +318,7 @@ impl Node {
         }
     }
 
-    /// Returns an iterator to this node’s children elements.
+    /// Returns an iterator to this node`s children elements.
     ///
     /// # Panics
     ///
@@ -327,7 +327,7 @@ impl Node {
         Children(self.children_nodes().filter(|n| n.is_svg_element()).nth(0))
     }
 
-    /// Returns an iterator to this node’s children nodes.
+    /// Returns an iterator to this node`s children nodes.
     ///
     /// # Panics
     ///
@@ -1281,6 +1281,44 @@ impl Node {
         }
     }
 
+    /// Returns true if the current node is a container element.
+    ///
+    /// List: `a`, `defs`, `glyph`, `g`, `marker`, `mask`, `missing-glyph`, `pattern`, `svg`,
+    /// `switch` and `symbol`.
+    ///
+    /// Details: https://www.w3.org/TR/SVG/intro.html#TermContainerElement
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use svgdom::Document;
+    ///
+    /// let doc = Document::from_data(b"<svg><rect/></svg>").unwrap();
+    /// let mut iter = doc.descendants();
+    /// assert_eq!(iter.next().unwrap().is_container(), true); // svg
+    /// assert_eq!(iter.next().unwrap().is_container(), false); // rect
+    /// ```
+    pub fn is_container(&self) -> bool {
+        if !self.is_svg_element() {
+            return false;
+        }
+
+        match self.tag_id().unwrap() {
+              ElementId::A
+            | ElementId::Defs
+            | ElementId::Glyph
+            | ElementId::G
+            | ElementId::Marker
+            | ElementId::Mask
+            | ElementId::MissingGlyph
+            | ElementId::Pattern
+            | ElementId::Svg
+            | ElementId::Switch
+            | ElementId::Symbol => true,
+            _ => false,
+        }
+    }
+
     /// Returns `Node` if current node contains child with selected `TagName`.
     ///
     /// This function is recursive. Current node excluded.
@@ -1541,12 +1579,12 @@ impl Iterator for LinkAttributes {
 #[derive(Clone)]
 pub enum NodeEdge {
     /// Indicates that start of a node that has children.
-    /// Yielded by `Traverse::next` before the node’s descendants.
+    /// Yielded by `Traverse::next` before the node`s descendants.
     /// In HTML or XML, this corresponds to an opening tag like `<div>`
     Start(Node),
 
     /// Indicates that end of a node that has children.
-    /// Yielded by `Traverse::next` after the node’s descendants.
+    /// Yielded by `Traverse::next` after the node`s descendants.
     /// In HTML or XML, this corresponds to a closing tag like `</div>`
     End(Node),
 }
