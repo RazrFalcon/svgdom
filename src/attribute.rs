@@ -79,7 +79,7 @@ static PRESENTATION_ATTRIBUTES: &'static [AttributeId] = &[
     AttributeId::UnicodeBidi,
     AttributeId::Visibility,
     AttributeId::WordSpacing,
-    AttributeId::WritingMode
+    AttributeId::WritingMode,
 ];
 
 static ANIMATION_EVENT_ATTRIBUTES: &'static [AttributeId] = &[
@@ -452,31 +452,31 @@ impl Attribute {
     /// Returns `true` if current attribute is part of
     /// [presentation attributes](https://www.w3.org/TR/SVG/propidx.html).
     pub fn is_presentation(&self) -> bool {
-        PRESENTATION_ATTRIBUTES.iter().any(|aid| *aid == self.id)
+        PRESENTATION_ATTRIBUTES.binary_search(&self.id).is_ok()
     }
 
     /// Returns `true` if current attribute is part of
     /// [animation event attributes](https://www.w3.org/TR/SVG/intro.html#TermAnimationEventAttribute).
     pub fn is_animation_event(&self) -> bool {
-        ANIMATION_EVENT_ATTRIBUTES.iter().any(|aid| *aid == self.id)
+        ANIMATION_EVENT_ATTRIBUTES.binary_search(&self.id).is_ok()
     }
 
     /// Returns `true` if current attribute is part of
     /// [graphical event attributes](https://www.w3.org/TR/SVG/intro.html#TermGraphicalEventAttribute).
     pub fn is_graphical_event(&self) -> bool {
-        GRAPHICAL_EVENT_ATTRIBUTES.iter().any(|aid| *aid == self.id)
+        GRAPHICAL_EVENT_ATTRIBUTES.binary_search(&self.id).is_ok()
     }
 
     /// Returns `true` if current attribute is part of
     /// [document event attributes](https://www.w3.org/TR/SVG/intro.html#TermDocumentEventAttribute).
     pub fn is_document_event(&self) -> bool {
-        DOCUMENT_EVENT_ATTRIBUTES.iter().any(|aid| *aid == self.id)
+        DOCUMENT_EVENT_ATTRIBUTES.binary_search(&self.id).is_ok()
     }
 
     /// Returns `true` if current attribute is part of
     /// [conditional processing attributes](https://www.w3.org/TR/SVG/intro.html#TermConditionalProcessingAttribute).
     pub fn is_conditional_processing(&self) -> bool {
-        CONDITIONAL_PROCESSING_ATTRIBUTES.iter().any(|aid| *aid == self.id)
+        CONDITIONAL_PROCESSING_ATTRIBUTES.binary_search(&self.id).is_ok()
     }
 
     /// Returns `true` if current attribute is part of
@@ -485,7 +485,7 @@ impl Attribute {
     /// **NOTE:** the `id` attribute is part of core attributes, but we don't store it here
     /// since it's part of the `Node` struct.
     pub fn is_core(&self) -> bool {
-        CORE_ATTRIBUTES.iter().any(|aid| *aid == self.id)
+        CORE_ATTRIBUTES.binary_search(&self.id).is_ok()
     }
 
     /// Returns `true` if current attribute is part of fill attributes.
@@ -494,7 +494,7 @@ impl Attribute {
     ///
     /// This check is not defined by SVG spec.
     pub fn is_fill(&self) -> bool {
-        FILL_ATTRIBUTES.iter().any(|aid| *aid == self.id)
+        FILL_ATTRIBUTES.binary_search(&self.id).is_ok()
     }
 
     /// Returns `true` if current attribute is part of stroke attributes.
@@ -505,7 +505,7 @@ impl Attribute {
     ///
     /// This check is not defined by SVG spec.
     pub fn is_stroke(&self) -> bool {
-        STROKE_ATTRIBUTES.iter().any(|aid| *aid == self.id)
+        STROKE_ATTRIBUTES.binary_search(&self.id).is_ok()
     }
 
     impl_is_type!(is_color, Color);

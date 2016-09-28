@@ -19,11 +19,13 @@ impl Attributes {
     /// Constructs a new attribute.
     ///
     /// **Warning:** newer construct it manually. All nodes has `Attributes` by default.
+    #[inline]
     pub fn new() -> Attributes {
         Attributes(Vec::new())
     }
 
     /// Returns a optional reference to `Attribute`.
+    #[inline]
     pub fn get(&self, id: AttributeId) -> Option<&Attribute> {
         for v in &self.0 {
             if v.id == id {
@@ -35,6 +37,7 @@ impl Attributes {
     }
 
     /// Returns a optional mutable reference to `Attribute`.
+    #[inline]
     pub fn get_mut(&mut self, id: AttributeId) -> Option<&mut Attribute> {
         for v in &mut self.0 {
             if v.id == id {
@@ -46,6 +49,7 @@ impl Attributes {
     }
 
     /// Returns optional reference to `AttributeValue`.
+    #[inline]
     pub fn get_value(&self, id: AttributeId) -> Option<&AttributeValue> {
         for v in &self.0 {
             if v.id == id {
@@ -84,37 +88,37 @@ impl Attributes {
     }
 
     /// Returns `true` if container contains an attribute such `id`.
+    #[inline]
     pub fn contains(&self, id: AttributeId) -> bool {
-        for v in &self.0 {
-            if v.id == id {
-                return true;
-            }
-        }
-
-        false
+        self.0.iter().any(|a| a.id == id)
     }
 
     /// Returns count of the attributes.
+    #[inline]
     pub fn len(&self) -> usize {
         self.0.len()
     }
 
     /// Returns `true` if attributes list is empty.
+    #[inline]
     pub fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
 
     /// Returns an iterator.
+    #[inline]
     pub fn iter(&self) -> slice::Iter<Attribute> {
         self.0.iter()
     }
 
     /// Returns a mutable iterator.
+    #[inline]
     pub fn iter_mut(&mut self) -> slice::IterMut<Attribute> {
         self.0.iter_mut()
     }
 
     /// Retains only the elements specified by the predicate.
+    #[inline]
     pub fn retain<F>(&mut self, f: F)
         where F: FnMut(&Attribute) -> bool
     {
@@ -122,6 +126,7 @@ impl Attributes {
     }
 
     /// Returns an existing attribute or `def_value`.
+    #[inline]
     pub fn get_or<'a>(&'a self, id: AttributeId, def_value: &'a AttributeValue) -> &AttributeValue {
         match self.get(id) {
             Some(a) => &a.value,

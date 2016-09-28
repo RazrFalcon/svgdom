@@ -324,7 +324,45 @@ impl Node {
     ///
     /// Panics if the node is currently mutability borrowed.
     pub fn children(&self) -> Children {
-        Children(self.children_nodes().filter(|n| n.is_svg_element()).nth(0))
+        if let Some(mut child) = self.first_child() {
+            loop {
+                if child.is_svg_element() {
+                    return Children(Some(child));
+                }
+
+                if let Some(c) = child.next_sibling() {
+                    child = c;
+                } else {
+                    break;
+                }
+            }
+        }
+
+        Children(None)
+    }
+
+    /// Returns `true` is this node has children elements.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the node is currently mutability borrowed.
+    pub fn has_children(&self) -> bool {
+        // we don't used self.children iterator for performance reasons
+        if let Some(mut child) = self.first_child() {
+            loop {
+                if child.is_svg_element() {
+                    return true;
+                }
+
+                if let Some(c) = child.next_sibling() {
+                    child = c;
+                } else {
+                    break;
+                }
+            }
+        }
+
+        false
     }
 
     /// Returns an iterator to this node`s children nodes.
@@ -334,15 +372,6 @@ impl Node {
     /// Panics if the node is currently mutability borrowed.
     pub fn children_nodes(&self) -> ChildrenNodes {
         ChildrenNodes(self.first_child())
-    }
-
-    /// Returns `true` is this node has children elements.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the node is currently mutability borrowed.
-    pub fn has_children(&self) -> bool {
-        self.children().count() > 0
     }
 
     /// Returns `true` is this node has children nodes.
@@ -417,29 +446,32 @@ impl Node {
     }
 
     fn _remove(node: &Node) {
-        // remove all attributes, which will trigger nodes unlink
-        // if this node has referenced attributes
-        let ids: Vec<AttributeId> = node.attributes().iter().map(|a| a.id).collect();
-        for id in ids {
-            node.remove_attribute(id);
+        // remove link attributes, which will trigger nodes unlink
+        let mut ids: Vec<AttributeId> = node.attributes().iter()
+                                        .filter(|a| a.is_link() || a.is_func_link())
+                                        .map(|a| a.id)
+                                        .collect();
+        for id in &ids {
+            node.remove_attribute(*id);
         }
 
         // remove all attributes that linked to this node
-        let mut link_ids = Vec::new();
         for linked in node.linked_nodes() {
+            ids.clear();
+
             for attr in linked.attributes().iter() {
                 match attr.value {
                     AttributeValue::Link(ref link) | AttributeValue::FuncLink(ref link) => {
                         if link == node {
-                            link_ids.push(attr.id);
+                            ids.push(attr.id);
                         }
                     }
                     _ => {}
                 }
             }
 
-            while let Some(id) = link_ids.pop() {
-                linked.remove_attribute(id);
+            for id in &ids {
+                linked.remove_attribute(*id);
             }
         }
 
@@ -697,8 +729,9 @@ impl Node {
     ///
     /// Panics if the node is currently mutability borrowed.
     pub fn is_svg_element(&self) -> bool {
-        match self.tag_name() {
-            Some(tag) => {
+        let b = self.0.borrow();
+        match b.tag_name {
+            Some(ref tag) => {
                 match *tag {
                     TagName::Id(_) => true,
                     TagName::Name(_) => false,
@@ -1068,8 +1101,9 @@ impl Node {
     /// # Panics
     ///
     /// Panics if the node is currently mutability borrowed.
+    #[inline]
     pub fn has_attribute(&self, id: AttributeId) -> bool {
-        self.attributes().contains(id)
+        self.0.borrow().attributes.contains(id)
     }
 
     /// Returns `true` if node has attribute with such `id` and this attribute is visible.
@@ -1218,28 +1252,22 @@ impl Node {
     /// assert_eq!(iter.next().unwrap().is_referenced(), true); // linearGradient
     /// ```
     pub fn is_referenced(&self) -> bool {
-        match self.tag_name() {
-            Some(v) => {
-                match *v {
-                    TagName::Id(ref id) => {
-                        match *id {
-                              ElementId::AltGlyphDef
-                            | ElementId::ClipPath
-                            | ElementId::Cursor
-                            | ElementId::Filter
-                            | ElementId::LinearGradient
-                            | ElementId::Marker
-                            | ElementId::Mask
-                            | ElementId::Pattern
-                            | ElementId::RadialGradient
-                            | ElementId::Symbol => true,
-                            _ => false,
-                        }
-                    }
-                    _ => false,
-                }
+        if let Some(id) = self.tag_id() {
+            match id {
+                  ElementId::AltGlyphDef
+                | ElementId::ClipPath
+                | ElementId::Cursor
+                | ElementId::Filter
+                | ElementId::LinearGradient
+                | ElementId::Marker
+                | ElementId::Mask
+                | ElementId::Pattern
+                | ElementId::RadialGradient
+                | ElementId::Symbol => true,
+                _ => false,
             }
-            None => false,
+        } else {
+            false
         }
     }
 
@@ -1260,24 +1288,18 @@ impl Node {
     /// assert_eq!(iter.next().unwrap().is_basic_shape(), true); // rect
     /// ```
     pub fn is_basic_shape(&self) -> bool {
-        match self.tag_name() {
-            Some(v) => {
-                match *v {
-                    TagName::Id(ref id) => {
-                        match *id {
-                              ElementId::Rect
-                            | ElementId::Circle
-                            | ElementId::Ellipse
-                            | ElementId::Line
-                            | ElementId::Polyline
-                            | ElementId::Polygon => true,
-                            _ => false,
-                        }
-                    }
-                    _ => false,
-                }
+        if let Some(id) = self.tag_id() {
+            match id {
+                  ElementId::Rect
+                | ElementId::Circle
+                | ElementId::Ellipse
+                | ElementId::Line
+                | ElementId::Polyline
+                | ElementId::Polygon => true,
+                _ => false,
             }
-            None => false,
+        } else {
+            false
         }
     }
 
@@ -1299,23 +1321,23 @@ impl Node {
     /// assert_eq!(iter.next().unwrap().is_container(), false); // rect
     /// ```
     pub fn is_container(&self) -> bool {
-        if !self.is_svg_element() {
-            return false;
-        }
-
-        match self.tag_id().unwrap() {
-              ElementId::A
-            | ElementId::Defs
-            | ElementId::Glyph
-            | ElementId::G
-            | ElementId::Marker
-            | ElementId::Mask
-            | ElementId::MissingGlyph
-            | ElementId::Pattern
-            | ElementId::Svg
-            | ElementId::Switch
-            | ElementId::Symbol => true,
-            _ => false,
+        if let Some(id) = self.tag_id() {
+            match id {
+                  ElementId::A
+                | ElementId::Defs
+                | ElementId::Glyph
+                | ElementId::G
+                | ElementId::Marker
+                | ElementId::Mask
+                | ElementId::MissingGlyph
+                | ElementId::Pattern
+                | ElementId::Svg
+                | ElementId::Switch
+                | ElementId::Symbol => true,
+                _ => false,
+            }
+        } else {
+            false
         }
     }
 
