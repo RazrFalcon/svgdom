@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
   `get_scale`, `get_skew`, `get_rotate`, `apply` methods to the `Transform`.
 
 ### Changed
+- More correct CSS2 processing.
 - Rename `is_element` method into `is_svg_element` in the `Node`.
 - Rename `to_absolute` method into `conv_to_absolute` in the `Path`.
 - Rename `to_relative` method into `conv_to_relative` in the `Path`.

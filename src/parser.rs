@@ -2,7 +2,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use std::cmp;
 use std::str;
 use std::collections::HashMap;
 
@@ -36,7 +35,7 @@ use svgparser::svg;
 use svgparser::style;
 
 struct CssData<'a> {
-    by_tag: HashMap<String, Stream<'a>>,
+    by_tag: HashMap<ElementId, Stream<'a>>,
     by_class: HashMap<&'a [u8], Stream<'a>>,
 }
 
@@ -391,7 +390,7 @@ fn parse_attribute<'a>(node: &Node,
 
             if !stream.at_end() && stream.is_char_eq_raw(b'&') {
                 stream.advance_raw(1);
-                let link = stream.slice_next_raw(stream.len_to_char_or_end(b';'));
+                let link = stream.slice_next_raw(stream.len_to_or_end(b';'));
 
                 match post_data.entitis.get(link) {
                     Some(link_value) => value2 = Some(*link_value),
@@ -535,14 +534,18 @@ fn process_link<'a>(iri: &'a [u8],
 }
 
 fn parse_css<'a>(stream: &mut Stream<'a>, css: &mut CssData<'a>) -> Result<(), Error> {
-    enum Selector<'a> {
-        Tag(&'a [u8]),
-        Class(&'a [u8]),
+    // we support only tiny subset of the CSS2 spec
+    fn is_valid_css_char(c: u8) -> bool {
+        match c {
+            b'#' | b'@' | b':' | b'+' | b'[' | b']' | b'*' | b'>' => false,
+            _ => true,
+        }
     }
 
     while !stream.at_end() {
         stream.skip_spaces();
 
+        // skip comments
         if try!(stream.is_char_eq(b'/')) {
             try!(stream.advance(2)); // skip /*
             while !stream.at_end() {
@@ -557,47 +560,59 @@ fn parse_css<'a>(stream: &mut Stream<'a>, css: &mut CssData<'a>) -> Result<(), E
             continue;
         }
 
-        let selector: Selector;
-
-        match try!(stream.curr_char()) {
-            b'.' => {
-                stream.advance_raw(1);
-                let len = cmp::min(stream.len_to_char_or_end(b'{'), stream.len_to_space_or_end());
-                let class = stream.read_raw(len);
-                selector = Selector::Class(class);
-            }
-            b'#' | b'@' | b':' => {
-                return Err(Error::UnsupportedCSS(stream.gen_error_pos()));
-            }
-            _ => {
-                let len = cmp::min(stream.len_to_char_or_end(b'{'), stream.len_to_space_or_end());
-                let tag = stream.read_raw(len);
-                selector = Selector::Tag(tag);
-            }
+        if !is_valid_css_char(try!(stream.curr_char())) {
+            return Err(Error::UnsupportedCSS(stream.gen_error_pos()));
         }
 
-        try!(stream.jump_to(b'{'));
+        let pos = stream.pos();
 
-        if !try!(stream.is_char_eq(b'{')) {
-            return Err(Error::InvalidCSS(stream.gen_error_pos()));
-        }
-        try!(stream.consume_char(b'{'));
+        // parse selectors
+        let selectors = try!(stream.read_to_trimmed(b'{'));
 
-        let end = stream.pos() + stream.len_to_char_or_end(b'}');
-        let substream = Stream::sub_stream(stream, stream.pos(), end);
-        try!(stream.advance(substream.left()));
-
-        try!(stream.consume_char(b'}'));
-
-        match selector {
-            Selector::Class(class) => {
-                css.by_class.insert(class, substream);
-            }
-            Selector::Tag(tag) => {
-                css.by_tag.insert(u8_to_string!(tag), substream);
-            }
+        if let Some(_) = selectors.iter().position(|c| !is_valid_css_char(*c)) {
+            stream.set_pos_raw(pos);
+            return Err(Error::UnsupportedCSS(stream.gen_error_pos()));
         }
 
+        stream.advance_raw(1);
+        stream.skip_spaces();
+
+        // parse declaration
+        let decl_len = try!(stream.len_to(b'}'));
+        let substream = Stream::sub_stream(stream, stream.pos(), stream.pos() + decl_len);
+
+        // split selectors
+        //
+        // we support only tag and class selectors
+        let mut s = Stream::new(selectors);
+        while !s.at_end() {
+            let is_class = s.is_char_eq_raw(b'.');
+            if is_class {
+                s.advance_raw(1);
+            }
+
+            let l = s.len_to_or_end(b',');
+            let name = s.read_raw(l);
+
+            if is_class {
+                css.by_class.insert(name, substream);
+            } else {
+                if let Some(eid) = ElementId::from_name(u8_to_str!(name)) {
+                    css.by_tag.insert(eid, substream);
+                } else {
+                    // CSS for a non-SVG element is not supported
+                    stream.set_pos_raw(pos);
+                    return Err(Error::UnsupportedCSS(stream.gen_error_pos()));
+                }
+            }
+
+            if !s.at_end() && s.is_char_eq_raw(b',') {
+                s.advance_raw(1);
+            }
+            s.skip_spaces();
+        }
+
+        stream.advance_raw(decl_len + 1); // }
         stream.skip_spaces();
     }
 
@@ -676,19 +691,7 @@ fn resolve_css<'a>(doc: &Document,
 
     for (k, v) in &post_data.css.by_tag {
         for node in doc.descendants() {
-            let mut is_valid_tag = false;
-            if let Some(ref tag_name) = node.tag_name() {
-                let str_name = match **tag_name {
-                    TagName::Id(ref id) => id.name().to_string(),
-                    TagName::Name(ref name) => name.clone(),
-                };
-
-                if str_name == *k {
-                    is_valid_tag = true;
-                }
-            }
-
-            if is_valid_tag {
+            if node.tag_id().unwrap() == *k {
                 try!(parse_style_attribute(&node, v.clone(), &mut post_data.links,
                                            &post_data.entitis, &opt));
             }

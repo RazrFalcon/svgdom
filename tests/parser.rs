@@ -304,7 +304,7 @@ fn parse_css_12() {
     let res = Document::from_data(
 b"<svg>
     <style type='text/css'><![CDATA[
-        #c .final {fill: red }
+        #c {fill: red }
         ]]>
     </style>
 </svg>");
@@ -325,14 +325,68 @@ b"<svg>
     assert_eq!(res.err().unwrap(), Error::UnsupportedCSS(ErrorPos::new(3,9)));
 }
 
+#[test]
+fn parse_css_14() {
+    let res = Document::from_data(
+b"<svg>
+    <style type='text/css'><![CDATA[
+        * { fill: green}
+        ]]>
+    </style>
+</svg>");
+
+    assert_eq!(res.err().unwrap(), Error::UnsupportedCSS(ErrorPos::new(3,9)));
+}
+
+#[test]
+fn parse_css_15() {
+    let res = Document::from_data(
+b"<svg>
+    <style type='text/css'><![CDATA[
+        a > b { fill: green}
+        ]]>
+    </style>
+</svg>");
+
+    assert_eq!(res.err().unwrap(), Error::UnsupportedCSS(ErrorPos::new(3,9)));
+}
+
+#[test]
+fn parse_css_16() {
+    let res = Document::from_data(
+b"<svg>
+    <style type='text/css'><![CDATA[
+        g rect { fill: green }
+        ]]>
+    </style>
+</svg>");
+
+    assert_eq!(res.err().unwrap(), Error::UnsupportedCSS(ErrorPos::new(3,9)));
+}
+
 // empty style
-test_resave!(parse_css_14,
+test_resave!(parse_css_17,
 b"<svg>
     <style type='text/css'/>
     <g fill='#0000ff'/>
 </svg>
 ",
 "<svg>
+    <g fill='#0000ff'/>
+</svg>
+");
+
+test_resave!(parse_css_18,
+b"<svg>
+    <style type='text/css'>
+        .fil1, .fil2 {fill:blue}
+    </style>
+    <g class='fil1'/>
+    <g class='fil2'/>
+</svg>
+",
+"<svg>
+    <g fill='#0000ff'/>
     <g fill='#0000ff'/>
 </svg>
 ");
