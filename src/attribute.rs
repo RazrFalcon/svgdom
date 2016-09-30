@@ -23,6 +23,7 @@ use types::path;
 static PRESENTATION_ATTRIBUTES: &'static [AttributeId] = &[
     AttributeId::AlignmentBaseline,
     AttributeId::BaselineShift,
+    AttributeId::Clip,
     AttributeId::ClipPath,
     AttributeId::ClipRule,
     AttributeId::Color,
@@ -41,6 +42,7 @@ static PRESENTATION_ATTRIBUTES: &'static [AttributeId] = &[
     AttributeId::Filter,
     AttributeId::FloodColor,
     AttributeId::FloodOpacity,
+    AttributeId::Font,
     AttributeId::FontFamily,
     AttributeId::FontSize,
     AttributeId::FontSizeAdjust,
@@ -80,6 +82,28 @@ static PRESENTATION_ATTRIBUTES: &'static [AttributeId] = &[
     AttributeId::Visibility,
     AttributeId::WordSpacing,
     AttributeId::WritingMode,
+];
+
+static NON_INHERITABLE_ATTRIBUTES: &'static [AttributeId] = &[
+    AttributeId::AlignmentBaseline,
+    AttributeId::BaselineShift,
+    AttributeId::Clip,
+    AttributeId::ClipPath,
+    AttributeId::Display,
+    AttributeId::DominantBaseline,
+    AttributeId::EnableBackground,
+    AttributeId::Filter,
+    AttributeId::FloodColor,
+    AttributeId::FloodOpacity,
+    AttributeId::LightingColor,
+    AttributeId::Mask,
+    AttributeId::Opacity,
+    AttributeId::Overflow,
+    AttributeId::StopColor,
+    AttributeId::StopOpacity,
+    AttributeId::DominantBaseline,
+    AttributeId::TextDecoration,
+    AttributeId::UnicodeBidi,
 ];
 
 static ANIMATION_EVENT_ATTRIBUTES: &'static [AttributeId] = &[
@@ -453,6 +477,12 @@ impl Attribute {
     /// [presentation attributes](https://www.w3.org/TR/SVG/propidx.html).
     pub fn is_presentation(&self) -> bool {
         PRESENTATION_ATTRIBUTES.binary_search(&self.id).is_ok()
+    }
+
+    /// Returns `true` if current attribute is part of inheritable
+    /// [presentation attributes](https://www.w3.org/TR/SVG/propidx.html).
+    pub fn is_inheritable(&self) -> bool {
+        self.is_presentation() && NON_INHERITABLE_ATTRIBUTES.binary_search(&self.id).is_err()
     }
 
     /// Returns `true` if current attribute is part of

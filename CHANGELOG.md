@@ -8,9 +8,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Missing license headers.
 - The `children` method for the `Document`.
-- `children_nodes`, `is_container` methods for the `Node`.
+- The `is_inheritable` method for the `Attribute`.
+- `children_nodes`, `is_container`, methods for the `Node`.
 - `has_translate`, `has_scale`, `has_proportional_scale`, `has_skew`, `has_rotate`, `get_translate`,
   `get_scale`, `get_skew`, `get_rotate`, `apply` methods to the `Transform`.
+- `clip` and `font` attributes to the presentation attributes list.
 
 ### Changed
 - More correct CSS2 processing.
