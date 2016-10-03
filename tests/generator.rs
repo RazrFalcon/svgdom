@@ -9,6 +9,8 @@ use svgdom::AttributeId as AId;
 use svgdom::ElementId as EId;
 use svgdom::types::{Transform, Length, LengthUnit, Color};
 
+// TODO: rename to writer
+
 macro_rules! assert_eq_text {
     ($left:expr, $right:expr) => ({
         match (&$left, &$right) {

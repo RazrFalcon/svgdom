@@ -595,9 +595,13 @@ impl WriteBuffer for Path {
                         buf.push(b' ');
                     }
                     write_flag(sweep, buf);
-                    if !opt.paths.join_arc_to_flags {
+                    if !opt.paths.join_arc_to_flags && x.is_sign_positive() {
                         buf.push(b' ');
                     }
+
+                    // reset, because flags cna't have dots
+                    prev_coord_has_dot = false;
+
                     write_coords(&[x, y], is_written, &mut prev_coord_has_dot, opt, buf);
                 }
                 SegmentData::ClosePath => {
@@ -671,8 +675,8 @@ fn write_cmd(seg: &Segment, prev_cmd: &mut Option<(Command, bool)>,
 }
 
 fn write_coords(coords: &[f64], is_explicit_cmd: bool, prev_coord_has_dot: &mut bool,
-    opt: &WriteOptions, buf: &mut Vec<u8>) {
-
+                opt: &WriteOptions, buf: &mut Vec<u8>)
+{
     if opt.paths.use_compact_notation {
         for (i, num) in coords.iter().enumerate() {
             let start_pos = buf.len() - 1;
@@ -686,7 +690,7 @@ fn write_coords(coords: &[f64], is_explicit_cmd: bool, prev_coord_has_dot: &mut 
                 write_space = true;
             } else if i == 0 && is_explicit_cmd {
                 write_space = false;
-            } else if (c as char).is_digit(10)  {
+            } else if (c as char).is_digit(10) {
                 write_space = true;
             } else {
                 write_space = false;
@@ -826,6 +830,26 @@ mod tests {
         opt.numbers.remove_leading_zero = true;
 
         assert_eq_text!(path.to_string_with_opt(&opt), "M10-20A5.5.3-4 110-.1");
+    }
+
+    #[test]
+    fn gen_path_11() {
+        let path = Path::from_data(b"M 10-10 a 1 1 0 1 1 -1 1").unwrap();
+
+        let mut opt = WriteOptions::default();
+        opt.paths.use_compact_notation = true;
+
+        assert_eq_text!(path.to_string_with_opt(&opt), "M10-10a1 1 0 1 1-1 1");
+    }
+
+    #[test]
+    fn gen_path_12() {
+        let path = Path::from_data(b"M 10-10 a 1 1 0 1 1 0.1 1").unwrap();
+
+        let mut opt = WriteOptions::default();
+        opt.paths.use_compact_notation = true;
+
+        assert_eq_text!(path.to_string_with_opt(&opt), "M10-10a1 1 0 1 1 0.1 1");
     }
 
     // TODO: M L L L -> M

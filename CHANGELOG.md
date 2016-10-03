@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Fixed
 - Attributes from ENTITY is now parsed and not inserted as is.
 - `parse_unknown_attributes` flag doesn't processed correctly.
+- ArcTo segment writing.
 
 ### Removed
 - `first_element_child` method from the `Document`. Use `doc.children().nth(0)` instead.
