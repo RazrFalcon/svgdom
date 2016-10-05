@@ -252,47 +252,43 @@ impl WriteBuffer for Transform {
 }
 
 fn write_matrix_transform(ts: &Transform, opt: &WriteOptions, out: &mut Vec<u8>) {
-    let pt = opt.numbers.precision_transforms;
-    let pc = opt.numbers.precision_coordinates;
-    let rm = opt.numbers.remove_leading_zero;
+    let rm = opt.remove_leading_zero;
 
     out.extend_from_slice(b"matrix(");
-    write_num(ts.a, pt, rm, out);
+    write_num(ts.a, rm, out);
     out.push(b' ');
-    write_num(ts.b, pt, rm, out);
+    write_num(ts.b, rm, out);
     out.push(b' ');
-    write_num(ts.c, pt, rm, out);
+    write_num(ts.c, rm, out);
     out.push(b' ');
-    write_num(ts.d, pt, rm, out);
+    write_num(ts.d, rm, out);
     out.push(b' ');
-    write_num(ts.e, pc, rm, out);
+    write_num(ts.e, rm, out);
     out.push(b' ');
-    write_num(ts.f, pc, rm, out);
+    write_num(ts.f, rm, out);
     out.push(b')');
 }
 
 fn write_simplified_transform(ts: &Transform, opt: &WriteOptions, out: &mut Vec<u8>) {
-    let pt = opt.numbers.precision_transforms;
-    let pc = opt.numbers.precision_coordinates;
-    let rm = opt.numbers.remove_leading_zero;
+    let rm = opt.remove_leading_zero;
 
     if ts.is_translate() {
         out.extend_from_slice(b"translate(");
-        write_num(ts.e, pc, rm, out);
+        write_num(ts.e, rm, out);
 
         if ts.f != 0.0 {
             out.push(b' ');
-            write_num(ts.f, pc, rm, out);
+            write_num(ts.f, rm, out);
         }
 
         out.push(b')');
     } else if ts.is_scale() {
         out.extend_from_slice(b"scale(");
-        write_num(ts.a, pt, rm, out);
+        write_num(ts.a, rm, out);
 
         if ts.a != ts.d {
             out.push(b' ');
-            write_num(ts.d, pt, rm, out);
+            write_num(ts.d, rm, out);
         }
 
         out.push(b')');

@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
   For nodes you should use `has_children_nodes` method now.
 - Remove redundant semicolon from error messages.
 - We keep unknown attributes from styles now.
+- `WriteOptions::numbers::remove_leading_zero` move to `WriteOptions::remove_leading_zero`.
 
 ### Fixed
 - Attributes from ENTITY is now parsed and not inserted as is.
@@ -34,6 +35,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Removed
 - `first_element_child` method from the `Document`. Use `doc.children().nth(0)` instead.
+- `WriteOptions::numbers`. The precision is fixed now.
 
 ## [0.0.3] - 2016-09-20
 ### Added

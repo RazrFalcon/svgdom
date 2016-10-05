@@ -827,7 +827,7 @@ mod tests {
         let mut opt = WriteOptions::default();
         opt.paths.use_compact_notation = true;
         opt.paths.join_arc_to_flags = true;
-        opt.numbers.remove_leading_zero = true;
+        opt.remove_leading_zero = true;
 
         assert_eq_text!(path.to_string_with_opt(&opt), "M10-20A5.5.3-4 110-.1");
     }

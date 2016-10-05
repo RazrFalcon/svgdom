@@ -8,53 +8,14 @@ use {WriteOptions, WriteBuffer};
 
 // TODO: add method to compare with specific precision
 
-static POW_VEC: &'static [f64] = &[
-    0.0,
-    10.0,
-    100.0,
-    1000.0,
-    10000.0,
-    100000.0,
-    1000000.0,
-    10000000.0,
-    100000000.0,
-];
-
-static THRESHOLD_VEC: &'static [f64] = &[
-    0.0,
-    0.01,
-    0.001,
-    0.0001,
-    0.00001,
-    0.000001,
-    0.0000001,
-    0.00000001,
-    0.000000001,
-];
-
-pub fn write_num(num: f64, precision: u8, rm_leading_zero: bool, buf: &mut Vec<u8>) {
-    debug_assert!(precision <= 8 && precision != 0);
-
-    let multiplier = POW_VEC[precision as usize];
-    let tmp_value = (num * multiplier).round().abs() as u64;
-
-    if tmp_value == 0 {
-        buf.push(b'0');
-        return;
-    }
-
-    let mut new_value = (tmp_value as f64) / multiplier;
-
-    let threshold = THRESHOLD_VEC[precision as usize];
-    if (new_value - new_value.floor()) / new_value < threshold {
-        new_value = new_value.floor();
-    }
-
-    new_value *= num.signum();
+pub fn write_num(num: f64, rm_leading_zero: bool, buf: &mut Vec<u8>) {
+    // We always round a number to 8 digits.
+    // f64 can handle up to 15 numbers, but we still round to 8 top.
+    let v = (num * 100000000.0f64).round() / 100000000.0f64;
 
     let start_pos = buf.len();
 
-    write!(buf, "{}", new_value).unwrap();
+    write!(buf, "{}", v).unwrap();
 
     if rm_leading_zero {
         let mut has_dot = false;
@@ -68,10 +29,10 @@ pub fn write_num(num: f64, precision: u8, rm_leading_zero: bool, buf: &mut Vec<u
         }
 
         if has_dot && buf[start_pos + pos - 1] == b'0' {
-            if pos == 2 && new_value.is_sign_negative() {
+            if pos == 2 && v.is_sign_negative() {
                 // -0.1 -> -.1
                 buf.remove(start_pos + 1);
-            } else if pos == 1 && new_value.is_sign_positive() {
+            } else if pos == 1 && v.is_sign_positive() {
                 // 0.1 -> .1
                 buf.remove(start_pos);
             }
@@ -81,7 +42,7 @@ pub fn write_num(num: f64, precision: u8, rm_leading_zero: bool, buf: &mut Vec<u
 
 impl WriteBuffer for f64 {
     fn write_buf_opt(&self, opt: &WriteOptions, buf: &mut Vec<u8>) {
-        write_num(*self, opt.numbers.precision_coordinates, opt.numbers.remove_leading_zero, buf);
+        write_num(*self, opt.remove_leading_zero, buf);
     }
 }
 
@@ -90,37 +51,27 @@ mod tests {
     use super::*;
 
     macro_rules! test_number {
-        ($name:ident, $num:expr, $precision:expr, $rm_zero:expr, $result:expr) => (
+        ($name:ident, $num:expr, $rm_zero:expr, $result:expr) => (
             #[test]
             fn $name() {
                 let mut v = Vec::new();
-                write_num($num, $precision, $rm_zero, &mut v);
+                write_num($num, $rm_zero, &mut v);
                 assert_eq!(String::from_utf8(v).unwrap(), $result);
             }
         )
     }
 
-    test_number!(gen_number_1,  1.0,                8, false, "1");
-    test_number!(gen_number_2,  1.2345678,          4, false, "1.2346");
-    test_number!(gen_number_3,  0.0,                8, false, "0");
-    test_number!(gen_number_4,  -0.0,               8, false, "0");
-    test_number!(gen_number_5,  -1.0,               8, false, "-1");
-    test_number!(gen_number_6,  1.2345678,          2, false, "1.23");
-    test_number!(gen_number_7,  1.3333333,          4, false, "1.3333");
-    test_number!(gen_number_8,  0.0000001,          4, false, "0");
-    test_number!(gen_number_9,  1.0000001,          4, false, "1");
-    test_number!(gen_number_10, 0.12555,            2, false, "0.13");
-    test_number!(gen_number_11, 0.15,               1, false, "0.2");
-    test_number!(gen_number_12, 0.125,              2, false, "0.13");
-    test_number!(gen_number_13, 0.14,               1, false, "0.1");
-    test_number!(gen_number_14, 12345678.12345678,  8, false, "12345678.12345678");
-    test_number!(gen_number_15, -0.1,               8, true,  "-.1");
-    test_number!(gen_number_16, 0.1,                8, true,  ".1");
-    test_number!(gen_number_17, 1.0,                8, true,  "1");
-    test_number!(gen_number_18, -1.0,               8, true,  "-1");
-    test_number!(gen_number_19, 80.000005,          6, false, "80");
-    test_number!(gen_number_20, 32.000001,          6, false, "32");
-    test_number!(gen_number_21, 1.5,                6, false, "1.5");
-    test_number!(gen_number_22, 0.5164937,          8, false, "0.5164937");
-    test_number!(gen_number_23, 0.14186,            8, false, "0.14186");
+    test_number!(gen_number_1, 1.0,                 false, "1");
+    test_number!(gen_number_2, 0.0,                 false, "0");
+    test_number!(gen_number_3, -0.0,                false, "0");
+    test_number!(gen_number_4, -1.0,                false, "-1");
+    test_number!(gen_number_5, 12345678.12345678,   false, "12345678.12345678");
+    test_number!(gen_number_6, -0.1,                true,  "-.1");
+    test_number!(gen_number_7, 0.1,                 true,  ".1");
+    test_number!(gen_number_8, 1.0,                 true,  "1");
+    test_number!(gen_number_9, -1.0,                true,  "-1");
+    test_number!(gen_number_10, 1.5,                false, "1.5");
+    test_number!(gen_number_11, 0.14186,            false, "0.14186");
+    test_number!(gen_number_12, 0.4621799999999894, false, "0.46218");
+    test_number!(gen_number_13, 0.0338000000000136, false, "0.0338");
 }

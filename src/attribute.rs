@@ -360,7 +360,6 @@ impl AttributeValue {
 
 impl WriteBuffer for AttributeValue {
     fn write_buf_opt(&self, opt: &WriteOptions, buf: &mut Vec<u8>) {
-        // TODO: save stdDeviation with transform precision
         match *self {
             AttributeValue::String(ref s) => {
                 buf.extend_from_slice(s.as_bytes());

@@ -42,32 +42,6 @@ pub struct WriteOptionsPaths {
     pub remove_duplicated_commands: bool,
 }
 
-/// Options used during writing numbers.
-pub struct WriteOptionsNumbers {
-    /// Set numeric precision for coordinates attributes, like: x, y, width, height, etc.
-    ///
-    /// Range: 1..8
-    ///
-    /// Default: 6
-    pub precision_coordinates: u8,
-
-    /// Set numeric precision for transform values: a, b, c, d.
-    ///
-    /// Range: 1..8
-    ///
-    /// Default: 8
-    pub precision_transforms: u8,
-
-    /// Remove leading zero from numbers.
-    ///
-    /// Example:
-    ///
-    /// `0.1` -> `.1`, `-0.1` -> `-.1`
-    ///
-    /// Default: disabled
-    pub remove_leading_zero: bool,
-}
-
 /// Options used during writing SVG transforms.
 pub struct WriteOptionsTransforms {
     /// Simplify transform matrices into short equivalent when possible.
@@ -150,10 +124,14 @@ pub struct WriteOptions {
     /// Default: disabled
     pub write_hidden_attributes: bool,
 
-    /// Numbers options.
+    /// Remove leading zero from numbers.
     ///
-    /// See `WriteOptionsNumbers` documentation.
-    pub numbers: WriteOptionsNumbers,
+    /// Example:
+    ///
+    /// `0.1` -> `.1`, `-0.1` -> `-.1`
+    ///
+    /// Default: disabled
+    pub remove_leading_zero: bool,
 
     /// Paths options.
     ///
@@ -173,11 +151,7 @@ impl Default for WriteOptions {
             use_single_quote: false,
             trim_hex_colors: false,
             write_hidden_attributes: false,
-            numbers: WriteOptionsNumbers {
-                precision_coordinates: 6,
-                precision_transforms: 8,
-                remove_leading_zero: false,
-            },
+            remove_leading_zero: false,
             paths: WriteOptionsPaths {
                 use_compact_notation: false,
                 join_arc_to_flags: false,
