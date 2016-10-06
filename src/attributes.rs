@@ -60,6 +60,28 @@ impl Attributes {
         None
     }
 
+    /// Returns optional mutable reference to `AttributeValue`.
+    #[inline]
+    pub fn get_value_mut(&mut self, id: AttributeId) -> Option<&mut AttributeValue> {
+        for v in &mut self.0 {
+            if v.id == id {
+                return Some(&mut v.value);
+            }
+        }
+
+        None
+    }
+
+    /// Returns an existing attribute or `def_value`.
+    #[inline]
+    pub fn get_value_or<'a>(&'a self, id: AttributeId, def_value: &'a AttributeValue)
+                            -> &AttributeValue {
+        match self.get(id) {
+            Some(a) => &a.value,
+            None => def_value,
+        }
+    }
+
     /// Inserts new attribute. Previous will be overwritten.
     ///
     /// **Warning:** this method did not perform any checks for linked attributes.
@@ -123,14 +145,5 @@ impl Attributes {
         where F: FnMut(&Attribute) -> bool
     {
         self.0.retain(f)
-    }
-
-    /// Returns an existing attribute or `def_value`.
-    #[inline]
-    pub fn get_or<'a>(&'a self, id: AttributeId, def_value: &'a AttributeValue) -> &AttributeValue {
-        match self.get(id) {
-            Some(a) => &a.value,
-            None => def_value,
-        }
     }
 }

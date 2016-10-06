@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Missing license headers.
 - The `children` method for the `Document`.
 - The `is_inheritable` method for the `Attribute`.
+- The `get_value_mut` method for the `Attributes`.
 - `children_nodes`, `is_container`, methods for the `Node`.
 - `has_translate`, `has_scale`, `has_proportional_scale`, `has_skew`, `has_rotate`, `get_translate`,
   `get_scale`, `get_skew`, `get_rotate`, `apply` methods to the `Transform`.
@@ -20,6 +21,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Rename `to_absolute` method into `conv_to_absolute` in the `Path`.
 - Rename `to_relative` method into `conv_to_relative` in the `Path`.
 - Rename `descendants_all` method into `descendant_nodes` in the `Node`.
+- Rename `get_or` method into `get_value_or` in the `Attributes`.
 - The `children` method of the `Node` struct now returns an iterator over SVG elements and not all nodes.
   For all nodes you should use `children_nodes` method now.
 - The `has_children` method now returns true if node has children elements, not nodes.
