@@ -7,6 +7,7 @@
 pub use self::transform::Transform;
 pub use self::color::Color;
 pub use self::length::Length;
+pub use self::number::FuzzyEq;
 
 pub use svgparser::{LengthUnit};
 

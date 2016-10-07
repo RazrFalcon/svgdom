@@ -298,60 +298,66 @@ impl AttributeValue {
         }
 
         match id {
-            AttributeId::AlignmentBaseline =>           some!(ValueId::Auto),
+              AttributeId::AlignmentBaseline
+            | AttributeId::ColorProfile
+            | AttributeId::ColorRendering
+            | AttributeId::Cursor
+            | AttributeId::DominantBaseline
+            | AttributeId::GlyphOrientationVertical
+            | AttributeId::ImageRendering
+            | AttributeId::Kerning
+            | AttributeId::ShapeRendering
+            | AttributeId::TextRendering => some!(ValueId::Auto),
+
+              AttributeId::ClipPath
+            | AttributeId::Filter
+            | AttributeId::FontSizeAdjust
+            | AttributeId::Marker
+            | AttributeId::MarkerEnd
+            | AttributeId::MarkerMid
+            | AttributeId::MarkerStart
+            | AttributeId::Mask
+            | AttributeId::Stroke
+            | AttributeId::StrokeDasharray
+            | AttributeId::TextDecoration => some!(ValueId::None),
+
+              AttributeId::FontStretch
+            | AttributeId::FontStyle
+            | AttributeId::FontVariant
+            | AttributeId::FontWeight
+            | AttributeId::LetterSpacing
+            | AttributeId::UnicodeBidi
+            | AttributeId::WordSpacing => some!(ValueId::Normal),
+
+              AttributeId::Fill
+            | AttributeId::FloodColor
+            | AttributeId::StopColor => some!(Color::new(0, 0, 0)),
+
+              AttributeId::FillOpacity
+            | AttributeId::FloodOpacity
+            | AttributeId::Opacity
+            | AttributeId::StopOpacity
+            | AttributeId::StrokeOpacity => some!(1.0),
+
+              AttributeId::ClipRule
+            | AttributeId::FillRule => some!(ValueId::Nonzero),
+
             AttributeId::BaselineShift =>               some!(ValueId::Baseline),
-            AttributeId::ClipPath =>                    some!(ValueId::None),
-            AttributeId::ClipRule =>                    some!(ValueId::Nonzero),
             AttributeId::ColorInterpolation =>          some!(ValueId::SRGB),
             AttributeId::ColorInterpolationFilters =>   some!(ValueId::LinearRGB),
-            AttributeId::ColorProfile =>                some!(ValueId::Auto),
-            AttributeId::ColorRendering =>              some!(ValueId::Auto),
-            AttributeId::Cursor =>                      some!(ValueId::Auto),
             AttributeId::Direction =>                   some!(ValueId::Ltr),
             AttributeId::Display =>                     some!(ValueId::Inline),
-            AttributeId::DominantBaseline =>            some!(ValueId::Auto),
             AttributeId::EnableBackground =>            some!(ValueId::Accumulate),
-            AttributeId::Fill =>                        some!(Color::new(0, 0, 0)),
-            AttributeId::FillOpacity =>                 some!(1.0),
-            AttributeId::FillRule =>                    some!(ValueId::Nonzero),
-            AttributeId::Filter =>                      some!(ValueId::None),
-            AttributeId::FloodColor =>                  some!(Color::new(0, 0, 0)),
-            AttributeId::FloodOpacity =>                some!(1.0),
-            AttributeId::FontSizeAdjust =>              some!(ValueId::None),
             AttributeId::FontSize =>                    some!(ValueId::Medium),
-            AttributeId::FontStretch =>                 some!(ValueId::Normal),
-            AttributeId::FontStyle =>                   some!(ValueId::Normal),
-            AttributeId::FontVariant =>                 some!(ValueId::Normal),
-            AttributeId::FontWeight =>                  some!(ValueId::Normal),
             AttributeId::GlyphOrientationHorizontal =>  some!("0deg"),
-            AttributeId::GlyphOrientationVertical =>    some!(ValueId::Auto),
-            AttributeId::ImageRendering =>              some!(ValueId::Auto),
-            AttributeId::Kerning =>                     some!(ValueId::Auto),
-            AttributeId::LetterSpacing =>               some!(ValueId::Normal),
             AttributeId::LightingColor =>               some!(Color::new(255, 255, 255)),
-            AttributeId::Marker =>                      some!(ValueId::None),
-            AttributeId::MarkerStart =>                 some!(ValueId::None),
-            AttributeId::MarkerMid =>                   some!(ValueId::None),
-            AttributeId::MarkerEnd =>                   some!(ValueId::None),
-            AttributeId::Mask =>                        some!(ValueId::None),
-            AttributeId::Opacity =>                     some!(1.0),
-            AttributeId::ShapeRendering =>              some!(ValueId::Auto),
-            AttributeId::StopColor =>                   some!(Color::new(0, 0, 0)),
-            AttributeId::StopOpacity =>                 some!(1.0),
-            AttributeId::Stroke =>                      some!(ValueId::None),
-            AttributeId::StrokeDasharray =>             some!(ValueId::None),
             AttributeId::StrokeDashoffset =>            some!((0.0, LengthUnit::None)),
             AttributeId::StrokeLinecap =>               some!(ValueId::Butt),
             AttributeId::StrokeLinejoin =>              some!(ValueId::Miter),
             AttributeId::StrokeMiterlimit =>            some!((4.0, LengthUnit::None)),
-            AttributeId::StrokeOpacity =>               some!(1.0),
             AttributeId::StrokeWidth =>                 some!((1.0, LengthUnit::None)),
             AttributeId::TextAnchor =>                  some!(ValueId::Start),
-            AttributeId::TextDecoration =>              some!(ValueId::None),
-            AttributeId::TextRendering =>               some!(ValueId::Auto),
-            AttributeId::UnicodeBidi =>                 some!(ValueId::Normal),
             AttributeId::Visibility =>                  some!(ValueId::Visible),
-            AttributeId::WordSpacing =>                 some!(ValueId::Normal),
             AttributeId::WritingMode =>                 some!(ValueId::LrTb),
             _ => None,
         }

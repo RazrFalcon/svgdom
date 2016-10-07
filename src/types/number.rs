@@ -6,11 +6,28 @@ use std::io::Write;
 
 use {WriteOptions, WriteBuffer};
 
-// TODO: add method to compare with specific precision
+/// Trait for comparing f64 numbers.
+pub trait FuzzyEq {
+    /// Returns `true` if numbers are equal.
+    fn fuzzy_eq(&self, other: &f64) -> bool;
+    /// Returns `true` if numbers are not equal.
+    fn fuzzy_ne(&self, other: &f64) -> bool {
+        !self.fuzzy_eq(other)
+    }
+}
+
+impl FuzzyEq for f64 {
+    #[inline]
+    fn fuzzy_eq(&self, other: &f64) -> bool {
+        // we don't use EPSILON, because we only care about 8 digits in a fractional part
+        (*self - *other).abs() < 0.000000001
+    }
+}
 
 pub fn write_num(num: f64, rm_leading_zero: bool, buf: &mut Vec<u8>) {
     // We always round a number to 8 digits.
     // f64 can handle up to 15 numbers, but we still round to 8 top.
+    // It's not really good, but smaller numbers are mostly useless in the SVG.
     let v = (num * 100000000.0f64).round() / 100000000.0f64;
 
     let start_pos = buf.len();

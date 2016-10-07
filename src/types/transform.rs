@@ -7,7 +7,7 @@ use std::ops::Mul;
 use std::f64;
 
 use {WriteOptions, FromStream, WriteBuffer, WriteToString};
-use super::number::write_num;
+use super::number::{write_num, FuzzyEq};
 
 use svgparser::Error as ParseError;
 use svgparser::Stream;
@@ -78,41 +78,41 @@ impl Transform {
 
     /// Returns `true` if the transform is default, aka (1 0 0 1 0 0).
     pub fn is_default(&self) -> bool {
-           self.a == 1.0
-        && self.b == 0.0
-        && self.c == 0.0
-        && self.d == 1.0
-        && self.e == 0.0
-        && self.f == 0.0
+           self.a.fuzzy_eq(&1.0)
+        && self.b.fuzzy_eq(&0.0)
+        && self.c.fuzzy_eq(&0.0)
+        && self.d.fuzzy_eq(&1.0)
+        && self.e.fuzzy_eq(&0.0)
+        && self.f.fuzzy_eq(&0.0)
     }
 
     /// Returns `true` if the transform contains only translate part, aka (1 0 0 1 x y).
     pub fn is_translate(&self) -> bool {
-           self.a == 1.0
-        && self.b == 0.0
-        && self.c == 0.0
-        && self.d == 1.0
-        && (self.e != 0.0 || self.f != 0.0)
+           self.a.fuzzy_eq(&1.0)
+        && self.b.fuzzy_eq(&0.0)
+        && self.c.fuzzy_eq(&0.0)
+        && self.d.fuzzy_eq(&1.0)
+        && (self.e.fuzzy_ne(&0.0) || self.f.fuzzy_ne(&0.0))
     }
 
     /// Returns `true` if the transform contains only scale part, aka (sx 0 0 sy 0 0).
     pub fn is_scale(&self) -> bool {
-           (self.a != 1.0 || self.d != 1.0)
-        && self.b == 0.0
-        && self.c == 0.0
-        && self.e == 0.0
-        && self.f == 0.0
+           (self.a.fuzzy_ne(&1.0) || self.d.fuzzy_ne(&1.0))
+        && self.b.fuzzy_eq(&0.0)
+        && self.c.fuzzy_eq(&0.0)
+        && self.e.fuzzy_eq(&0.0)
+        && self.f.fuzzy_eq(&0.0)
     }
 
     /// Returns `true` if the transform contains translate part.
     pub fn has_translate(&self) -> bool {
-        self.e != 0.0 || self.f != 0.0
+        self.e.fuzzy_ne(&0.0) || self.f.fuzzy_ne(&0.0)
     }
 
     /// Returns `true` if the transform contains scale part.
     pub fn has_scale(&self) -> bool {
         let (sx, sy) = self.get_scale();
-        sx != 1.0 || sy != 1.0
+        sx.fuzzy_ne(&1.0) || sy.fuzzy_ne(&1.0)
     }
 
     /// Returns `true` if the transform scale is proportional.
@@ -120,18 +120,18 @@ impl Transform {
     /// The proportional scale is when `<sx>` equal to `<sy>`.
     pub fn has_proportional_scale(&self) -> bool {
         let (sx, sy) = self.get_scale();
-        sx == sy
+        sx.fuzzy_eq(&sy)
     }
 
     /// Returns `true` if the transform contains skew part.
     pub fn has_skew(&self) -> bool {
         let (skew_x, skew_y) = self.get_skew();
-        skew_x != 0.0 || skew_y != 0.0
+        skew_x.fuzzy_ne(&0.0) || skew_y.fuzzy_ne(&0.0)
     }
 
     /// Returns `true` if the transform contains rotate part.
     pub fn has_rotate(&self) -> bool {
-        self.get_rotate() != 0.0
+        self.get_rotate().fuzzy_ne(&0.0)
     }
 
     /// Returns transform's translate part.
@@ -180,12 +180,12 @@ impl Default for Transform {
 
 impl PartialEq for Transform {
     fn eq(&self, other: &Transform) -> bool {
-           self.a == other.a
-        && self.b == other.b
-        && self.c == other.c
-        && self.d == other.d
-        && self.e == other.e
-        && self.f == other.f
+           self.a.fuzzy_eq(&other.a)
+        && self.b.fuzzy_eq(&other.b)
+        && self.c.fuzzy_eq(&other.c)
+        && self.d.fuzzy_eq(&other.d)
+        && self.e.fuzzy_eq(&other.e)
+        && self.f.fuzzy_eq(&other.f)
     }
 }
 
@@ -276,7 +276,7 @@ fn write_simplified_transform(ts: &Transform, opt: &WriteOptions, out: &mut Vec<
         out.extend_from_slice(b"translate(");
         write_num(ts.e, rm, out);
 
-        if ts.f != 0.0 {
+        if ts.f.fuzzy_ne(&0.0) {
             out.push(b' ');
             write_num(ts.f, rm, out);
         }
@@ -286,7 +286,7 @@ fn write_simplified_transform(ts: &Transform, opt: &WriteOptions, out: &mut Vec<
         out.extend_from_slice(b"scale(");
         write_num(ts.a, rm, out);
 
-        if ts.a != ts.d {
+        if ts.a.fuzzy_ne(&ts.d) {
             out.push(b' ');
             write_num(ts.d, rm, out);
         }

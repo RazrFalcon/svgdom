@@ -192,32 +192,34 @@ impl Segment {
     /// Returns the `x` coordinate of the segment if it has one.
     pub fn x(&self) -> Option<f64> {
         match *self.data() {
-            SegmentData::MoveTo { x, .. } => Some(x),
-            SegmentData::LineTo { x, .. } => Some(x),
-            SegmentData::HorizontalLineTo { x } => Some(x),
-            SegmentData::VerticalLineTo { .. } => None,
-            SegmentData::CurveTo { x, .. } => Some(x),
-            SegmentData::SmoothCurveTo { x, .. } => Some(x),
-            SegmentData::Quadratic { x, .. } => Some(x),
-            SegmentData::SmoothQuadratic { x, .. } => Some(x),
-            SegmentData::EllipticalArc { x, .. } => Some(x),
-            SegmentData::ClosePath => None,
+              SegmentData::MoveTo { x, .. }
+            | SegmentData::LineTo { x, .. }
+            | SegmentData::HorizontalLineTo { x }
+            | SegmentData::CurveTo { x, .. }
+            | SegmentData::SmoothCurveTo { x, .. }
+            | SegmentData::Quadratic { x, .. }
+            | SegmentData::SmoothQuadratic { x, .. }
+            | SegmentData::EllipticalArc { x, .. } => Some(x),
+
+              SegmentData::VerticalLineTo { .. }
+            | SegmentData::ClosePath => None,
         }
     }
 
     /// Returns the `y` coordinate of the segment if it has one.
     pub fn y(&self) -> Option<f64> {
         match *self.data() {
-            SegmentData::MoveTo { y, .. } => Some(y),
-            SegmentData::LineTo { y, .. } => Some(y),
-            SegmentData::HorizontalLineTo { .. } => None,
-            SegmentData::VerticalLineTo { y } => Some(y),
-            SegmentData::CurveTo { y, .. } => Some(y),
-            SegmentData::SmoothCurveTo { y, .. } => Some(y),
-            SegmentData::Quadratic { y, .. } => Some(y),
-            SegmentData::SmoothQuadratic { y, .. } => Some(y),
-            SegmentData::EllipticalArc { y, .. } => Some(y),
-            SegmentData::ClosePath => None,
+              SegmentData::MoveTo { y, .. }
+            | SegmentData::LineTo { y, .. }
+            | SegmentData::VerticalLineTo { y }
+            | SegmentData::CurveTo { y, .. }
+            | SegmentData::SmoothCurveTo { y, .. }
+            | SegmentData::Quadratic { y, .. }
+            | SegmentData::SmoothQuadratic { y, .. }
+            | SegmentData::EllipticalArc { y, .. } => Some(y),
+
+              SegmentData::HorizontalLineTo { .. }
+            | SegmentData::ClosePath => None,
         }
     }
 }
@@ -548,11 +550,9 @@ impl WriteBuffer for Path {
         for seg in &self.d {
             let is_written = write_cmd(seg, &mut prev_cmd, opt, buf);
             match *seg.data() {
-                SegmentData::MoveTo { x, y } => {
-                    write_coords(&[x, y], is_written, &mut prev_coord_has_dot, opt, buf);
-                }
-
-                SegmentData::LineTo { x, y } => {
+                  SegmentData::MoveTo { x, y }
+                | SegmentData::LineTo { x, y }
+                | SegmentData::SmoothQuadratic { x, y } => {
                     write_coords(&[x, y], is_written, &mut prev_coord_has_dot, opt, buf);
                 }
 
@@ -575,10 +575,6 @@ impl WriteBuffer for Path {
 
                 SegmentData::Quadratic { x1, y1, x, y } => {
                     write_coords(&[x1, y1, x, y], is_written, &mut prev_coord_has_dot, opt, buf);
-                }
-
-                SegmentData::SmoothQuadratic { x, y } => {
-                    write_coords(&[x, y], is_written, &mut prev_coord_has_dot, opt, buf);
                 }
 
                 SegmentData::EllipticalArc { rx, ry, x_axis_rotation, large_arc, sweep, x, y } => {
