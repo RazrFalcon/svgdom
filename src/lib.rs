@@ -5,7 +5,7 @@
 /*!
 This library is designed to represent SVG data as a tree structure.
 
-Here is simple overview of a such structure:
+Here is simple overview of such structure:
 
 - [`Document`](struct.Document.html)
     - root [`Node`](struct.Node.html)
@@ -18,23 +18,23 @@ Here is simple overview of a such structure:
         - ...
 
 The [`Document`](struct.Document.html) itself is just a container of the `Node`s.
-You can create new a `Node`s only from the `Document`. Parsing and generating of the SVG data also
+You can create new `Node`s only by the `Document`. Parsing and generating of the SVG data also
 done through it.
 
-The [`Node`](struct.Node.html) represents any kind of a XML node.
+The [`Node`](struct.Node.html) represents any kind of an XML node.
 It can be an element, a comment, a text, etc. There are no different structs for each type.
 
-The [`TagName`](struct.TagName.html) represents tag name of the element node. It's a tuple of
+The [`TagName`](struct.TagName.html) represents a tag name of the element node. It's an enum of
 [`ElementId`](enum.ElementId.html) and `String` types. The `ElementId` contains all possible
-SVG element names and `String` used for unknown elements. Such separation used for
-a performance reasons.
+SVG element names and `String` used for non-SVG elements. Such separation used for
+performance reasons.
 
 There are two types of attributes, like with tag names: one for SVG attributes and one for unknown.
 Unknown attributes stored in a simple `HashMap<String,String>` structure.
 And SVG attributes stored behind a pretty complex struct.
 See [`Attributes`](struct.Attribute.html) documentation for details.
-Only SVG attributes supports [`AttributeValue`](enum.AttributeValue.html), which is stored
-preprocessed data and not a raw strings like usual XML parser.
+Only SVG attributes support [`AttributeValue`](enum.AttributeValue.html), which is used to store
+preprocessed data and not raw strings like usual XML parser.
 
 At last, the `id` attribute is stored as a separate value and not as part of the `Attributes`.
 

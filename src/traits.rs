@@ -5,34 +5,34 @@
 use super::WriteOptions;
 use svgparser::Stream;
 
-/// Trait for parsing data from data stream.
+/// The trait for parsing data from the data stream.
 pub trait FromStream: Sized {
     /// Error type.
     type Err;
 
-    /// Parses data from `Stream`.
+    /// Parses data from the `Stream`.
     fn from_stream(s: Stream) -> Result<Self, Self::Err>;
 
-    /// Parses data from `&[u8]`.
+    /// Parses data from the `&[u8]`.
     fn from_data(data: &[u8]) -> Result<Self, Self::Err> {
         FromStream::from_stream(Stream::new(data))
     }
 }
 
-/// Trait for writing data to buffer.
+/// The trait for writing a data to the buffer.
 pub trait WriteBuffer {
-    /// Writes data to `Vec<u8>` buffer using specified WriteOptions.
+    /// Writes data to the `Vec<u8>` buffer using specified WriteOptions.
     fn write_buf_opt(&self, opt: &WriteOptions, buf: &mut Vec<u8>);
 
-    /// Writes data to `Vec<u8>` buffer using default WriteOptions.
+    /// Writes data to the `Vec<u8>` buffer using default WriteOptions.
     fn write_buf(&self, buf: &mut Vec<u8>) {
         self.write_buf_opt(&WriteOptions::default(), buf);
     }
 }
 
-/// Trait for writing data to `String`. Tunable `to_string()` alternative.
+/// The trait for writing data to the `String`. Tunable `to_string()` alternative.
 pub trait WriteToString: WriteBuffer {
-    /// Writes data to `String` using specified WriteOptions.
+    /// Writes data to the `String` using specified WriteOptions.
     fn to_string_with_opt(&self, opt: &WriteOptions) -> String {
         let mut out = Vec::with_capacity(32);
         self.write_buf_opt(opt, &mut out);

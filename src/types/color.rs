@@ -9,7 +9,7 @@ use svgparser::Error as ParseError;
 use svgparser::Stream;
 use svgparser::RgbColor;
 
-/// Representation of `<color>` type.
+/// Representation of the `<color>` type.
 #[derive(Clone,Copy,PartialEq,Debug)]
 pub struct Color {
     #[allow(missing_docs)]

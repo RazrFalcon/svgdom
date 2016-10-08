@@ -2,9 +2,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-/// Options used during writing SVG paths.
+/// Options that defines SVG paths writing.
 pub struct WriteOptionsPaths {
-    /// Use compact path notation
+    /// Use compact path notation.
     ///
     /// SVG allow us to remove some symbols from path notation without breaking parsing.
     ///
@@ -32,7 +32,7 @@ pub struct WriteOptionsPaths {
 
     /// Remove duplicated commands.
     ///
-    /// If segment has same type as previous - we can skip command specifier.
+    /// If the segment has the same type as previous - we can skip command specifier.
     ///
     /// Example:
     ///
@@ -42,32 +42,8 @@ pub struct WriteOptionsPaths {
     pub remove_duplicated_commands: bool,
 }
 
-/// Options used during writing SVG transforms.
-pub struct WriteOptionsTransforms {
-    /// Simplify transform matrices into short equivalent when possible.
-    ///
-    /// If not set - all transform will be saved as 'matrix'.
-    ///
-    /// Examples:
-    ///
-    /// ```text
-    /// matrix(1 0 0 1 10 20) -> translate(10 20)
-    /// matrix(1 0 0 1 10 0)  -> translate(10)
-    /// matrix(2 0 0 3 0 0)   -> scale(2 3)
-    /// matrix(2 0 0 2 0 0)   -> scale(2)
-    /// matrix(0 1 -1 0 0 0)  -> rotate(-90)
-    /// ```
-    ///
-    /// Default: disabled
-    pub simplify_matrix: bool,
-
-    // TODO: compact notation
-}
-
-/// Options used during writing.
+/// Options that defines SVG writing.
 pub struct WriteOptions {
-    // TODO: Sort attributes alphabetically
-
     /// Set XML nodes indention.
     ///
     /// Range: -1..4 (-1 indicates no spaces and new lines)
@@ -117,7 +93,7 @@ pub struct WriteOptions {
 
     /// Write hidden attributes.
     ///
-    /// libsvgdom support invisible attributes, which can be dumped to output using this option.
+    /// `libsvgdom` support invisible attributes, which can be dumped to output using this option.
     ///
     /// See `svgdom::Attribute` documentation.
     ///
@@ -138,10 +114,22 @@ pub struct WriteOptions {
     /// See `WriteOptionsPaths` documentation.
     pub paths: WriteOptionsPaths,
 
-    /// Transforms options.
+    /// Simplify transform matrices into short equivalent when possible.
     ///
-    /// See `WriteOptionsTransforms` documentation.
-    pub transforms: WriteOptionsTransforms,
+    /// If not set - all transform will be saved as 'matrix'.
+    ///
+    /// Examples:
+    ///
+    /// ```text
+    /// matrix(1 0 0 1 10 20) -> translate(10 20)
+    /// matrix(1 0 0 1 10 0)  -> translate(10)
+    /// matrix(2 0 0 3 0 0)   -> scale(2 3)
+    /// matrix(2 0 0 2 0 0)   -> scale(2)
+    /// matrix(0 1 -1 0 0 0)  -> rotate(-90)
+    /// ```
+    ///
+    /// Default: disabled
+    pub simplify_transform_matrices: bool,
 }
 
 impl Default for WriteOptions {
@@ -157,9 +145,7 @@ impl Default for WriteOptions {
                 join_arc_to_flags: false,
                 remove_duplicated_commands: false,
             },
-            transforms: WriteOptionsTransforms {
-                simplify_matrix: false,
-            },
+            simplify_transform_matrices: false,
         }
     }
 }

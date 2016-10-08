@@ -169,7 +169,7 @@ pub type NumberList = Vec<f64>;
 /// Representation of the `<list-of-lengths>`.
 pub type LengthList = Vec<Length>;
 
-/// Value of SVG attribute.
+/// Value of the SVG attribute.
 #[derive(Clone,PartialEq,Debug)]
 #[allow(missing_docs)]
 pub enum AttributeValue {
@@ -291,7 +291,7 @@ impl AttributeValue {
     impl_as_type!(as_string, String, String);
     impl_as_type!(as_transform, Transform, Transform);
 
-    /// Constructs a new attribute value with default value, if it's known.
+    /// Constructs a new attribute value with a default value, if it's known.
     pub fn default_value(id: AttributeId) -> Option<AttributeValue> {
         macro_rules! some {
             ($expr:expr) => (Some(AttributeValue::from($expr)))
@@ -431,7 +431,7 @@ pub struct Attribute {
     /// Visibility.
     ///
     /// Unlike many other DOM implementations, libsvgdom supports hiding of the attributes,
-    /// instead removing them. Invisible attributes acts just like other attributes,
+    /// instead of removing them. Invisible attributes act just like other attributes,
     /// but they will not be printed during SVG writing. Unless you enable them via `WriteOptions`.
     ///
     /// All attributes are visible by default.
@@ -462,7 +462,7 @@ impl Attribute {
         }
     }
 
-    /// Constructs a new attribute with default value, if it known.
+    /// Constructs a new attribute with a default value, if it known.
     pub fn default(id: AttributeId) -> Option<Attribute> {
         match AttributeValue::default_value(id) {
             Some(v) => Some(Attribute::new(id, v)),
@@ -470,7 +470,7 @@ impl Attribute {
         }
     }
 
-    /// Returns `true` if current attribute's value is equal to default by SVG spec.
+    /// Returns `true` if the current attribute's value is equal to a default by the SVG spec.
     pub fn check_is_default(&self) -> bool {
         match AttributeValue::default_value(self.id) {
             Some(v) => self.value == v,
@@ -478,43 +478,43 @@ impl Attribute {
         }
     }
 
-    /// Returns `true` if current attribute is part of
+    /// Returns `true` if the current attribute is part of
     /// [presentation attributes](https://www.w3.org/TR/SVG/propidx.html).
     pub fn is_presentation(&self) -> bool {
         PRESENTATION_ATTRIBUTES.binary_search(&self.id).is_ok()
     }
 
-    /// Returns `true` if current attribute is part of inheritable
+    /// Returns `true` if the current attribute is part of inheritable
     /// [presentation attributes](https://www.w3.org/TR/SVG/propidx.html).
     pub fn is_inheritable(&self) -> bool {
         self.is_presentation() && NON_INHERITABLE_ATTRIBUTES.binary_search(&self.id).is_err()
     }
 
-    /// Returns `true` if current attribute is part of
+    /// Returns `true` if the current attribute is part of
     /// [animation event attributes](https://www.w3.org/TR/SVG/intro.html#TermAnimationEventAttribute).
     pub fn is_animation_event(&self) -> bool {
         ANIMATION_EVENT_ATTRIBUTES.binary_search(&self.id).is_ok()
     }
 
-    /// Returns `true` if current attribute is part of
+    /// Returns `true` if the current attribute is part of
     /// [graphical event attributes](https://www.w3.org/TR/SVG/intro.html#TermGraphicalEventAttribute).
     pub fn is_graphical_event(&self) -> bool {
         GRAPHICAL_EVENT_ATTRIBUTES.binary_search(&self.id).is_ok()
     }
 
-    /// Returns `true` if current attribute is part of
+    /// Returns `true` if the current attribute is part of
     /// [document event attributes](https://www.w3.org/TR/SVG/intro.html#TermDocumentEventAttribute).
     pub fn is_document_event(&self) -> bool {
         DOCUMENT_EVENT_ATTRIBUTES.binary_search(&self.id).is_ok()
     }
 
-    /// Returns `true` if current attribute is part of
+    /// Returns `true` if the current attribute is part of
     /// [conditional processing attributes](https://www.w3.org/TR/SVG/intro.html#TermConditionalProcessingAttribute).
     pub fn is_conditional_processing(&self) -> bool {
         CONDITIONAL_PROCESSING_ATTRIBUTES.binary_search(&self.id).is_ok()
     }
 
-    /// Returns `true` if current attribute is part of
+    /// Returns `true` if the current attribute is part of
     /// [core attributes](https://www.w3.org/TR/SVG/intro.html#TermCoreAttributes).
     ///
     /// **NOTE:** the `id` attribute is part of core attributes, but we don't store it here
@@ -523,22 +523,22 @@ impl Attribute {
         CORE_ATTRIBUTES.binary_search(&self.id).is_ok()
     }
 
-    /// Returns `true` if current attribute is part of fill attributes.
+    /// Returns `true` if the current attribute is part of fill attributes.
     ///
     /// List of fill attributes: `fill`, `fill-opacity`, `fill-rule`.
     ///
-    /// This check is not defined by SVG spec.
+    /// This check is not defined by the SVG spec.
     pub fn is_fill(&self) -> bool {
         FILL_ATTRIBUTES.binary_search(&self.id).is_ok()
     }
 
-    /// Returns `true` if current attribute is part of stroke attributes.
+    /// Returns `true` if the current attribute is part of stroke attributes.
     ///
     /// List of stroke attributes: `stroke`, `stroke-dasharray`, `stroke-dashoffset`,
     /// `stroke-dashoffset`, `stroke-linecap`, `stroke-linejoin`, `stroke-miterlimit`,
     /// `stroke-opacity`, `stroke-width`.
     ///
-    /// This check is not defined by SVG spec.
+    /// This check is not defined by the SVG spec.
     pub fn is_stroke(&self) -> bool {
         STROKE_ATTRIBUTES.binary_search(&self.id).is_ok()
     }

@@ -718,34 +718,40 @@ fn resolve_links(links: &Links) -> Result<(), Error> {
                         }
                     }
                     None => {
-                        if d.attr_id == AttributeId::Filter {
-                            // If an element has a 'filter' attribute with a broken FuncIRI,
-                            // then it shouldn't be rendered. But we can't express such behavior
-                            // in the svgdom now.
-                            // It's not the best solution, but it works.
+                        match d.attr_id {
+                            AttributeId::Filter => {
+                                // If an element has a 'filter' attribute with a broken FuncIRI,
+                                // then it shouldn't be rendered. But we can't express such behavior
+                                // in the svgdom now.
+                                // It's not the best solution, but it works.
 
-                            if d.node.is_tag_id(ElementId::Use) {
-                                // TODO: find a solution
-                                // For some reasons if we remove attribute with a broken filter
-                                // from 'use' elements - image will become broken.
-                                // Have no idea why this is happening.
-                                //
-                                // You can test this issue on:
-                                // breeze-icons/icons/actions/22/color-management.svg
-                                return Err(Error::BrokenFuncIri(u8_to_str!(d.iri).to_string()));
-                            }
+                                if d.node.is_tag_id(ElementId::Use) {
+                                    // TODO: find a solution
+                                    // For some reasons if we remove attribute with a broken filter
+                                    // from 'use' elements - image will become broken.
+                                    // Have no idea why this is happening.
+                                    //
+                                    // You can test this issue on:
+                                    // breeze-icons/icons/actions/22/color-management.svg
+                                    return Err(Error::BrokenFuncIri(u8_to_str!(d.iri).to_string()));
+                                }
 
-                            if    d.node.parent_element(ElementId::Mask).is_some()
-                               || d.node.parent_element(ElementId::ClipPath).is_some()
-                               || d.node.parent_element(ElementId::Marker).is_some() {
-                                // If our element is inside one of this elements - then do nothing.
-                                // I can't find explanation of this in the SVG spec, but it works.
-                                // Probably because this elements only care about a shape,
-                                // not a style.
-                            } else {
-                                // Imitate invisible element.
-                                d.node.set_attribute(AttributeId::Visibility, ValueId::Hidden);
+                                if    d.node.parent_element(ElementId::Mask).is_some()
+                                   || d.node.parent_element(ElementId::ClipPath).is_some()
+                                   || d.node.parent_element(ElementId::Marker).is_some() {
+                                    // If our element is inside one of this elements - then do nothing.
+                                    // I can't find explanation of this in the SVG spec, but it works.
+                                    // Probably because this elements only care about a shape,
+                                    // not a style.
+                                } else {
+                                    // Imitate invisible element.
+                                    d.node.set_attribute(AttributeId::Visibility, ValueId::Hidden);
+                                }
                             }
+                            AttributeId::Fill => {
+                                d.node.set_attribute(AttributeId::Fill, ValueId::None);
+                            }
+                            _ => {}
                         }
 
                         println!("Warning: Could not resolve IRI reference: {}.",

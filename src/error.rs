@@ -7,11 +7,11 @@ use std::fmt;
 use svgparser::Error as ParseError;
 use svgparser::ErrorPos;
 
-/// List of all errors that can occur during processing of SVG DOM.
+/// List of all errors that can occur during processing of the SVG DOM.
 #[derive(PartialEq)]
 pub enum Error {
     /// If you want to use referenced element inside link attribute,
-    /// such element must have an non-empty ID.
+    /// such element must have a non-empty ID.
     ElementMustHaveAnId,
     /// A linked nodes can't reference each other.
     ///
@@ -19,6 +19,10 @@ pub enum Error {
     /// ```
     /// <linearGradient id="lg1" xlink:href="#lg2"/>
     /// <linearGradient id="lg2" xlink:href="#lg1"/>
+    /// ```
+    /// or
+    /// ```
+    /// <linearGradient id="lg1" xlink:href="#lg1"/>
     /// ```
     ElementCrosslink,
     /// Error from *libsvgparser*.
@@ -41,7 +45,7 @@ pub enum Error {
     /// <rect fill="url(#lg1) red"/>
     /// ```
     UnsupportedPaintFallback(String), // FuncIRI name
-    /// We don't support 'use' elements with broken filter attribute.
+    /// We don't support `use` elements with broken filter attribute.
     BrokenFuncIri(String), // FuncIRI name
 }
 

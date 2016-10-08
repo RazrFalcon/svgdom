@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-//! This module contains submodules which represents SVG value types.
+//! This module contains submodules which represent SVG value types.
 
 pub use self::transform::Transform;
 pub use self::color::Color;

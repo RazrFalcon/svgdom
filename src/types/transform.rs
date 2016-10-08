@@ -12,7 +12,7 @@ use super::number::{write_num, FuzzyEq};
 use svgparser::Error as ParseError;
 use svgparser::Stream;
 
-/// Representation of `<transform>` type.
+/// Representation of the`<transform>` type.
 #[derive(Debug,Clone,Copy)]
 #[allow(missing_docs)]
 pub struct Transform {
@@ -243,7 +243,7 @@ impl WriteBuffer for Transform {
             return;
         }
 
-        if opt.transforms.simplify_matrix {
+        if opt.simplify_transform_matrices {
             write_simplified_transform(self, opt, buf);
         } else {
             write_matrix_transform(self, opt, buf);
@@ -353,7 +353,7 @@ mod tests {
             #[test]
             fn $name() {
                 let mut opt = WriteOptions::default();
-                opt.transforms.simplify_matrix = $simplify;
+                opt.simplify_transform_matrices = $simplify;
                 let mut out = Vec::new();
                 $ts.write_buf_opt(&opt, &mut out);
                 assert_eq!(String::from_utf8(out).unwrap(), $result);

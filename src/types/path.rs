@@ -29,9 +29,9 @@ pub enum Command {
     ClosePath,
 }
 
-/// Representation of path segment.
+/// Representation of the path segment.
 ///
-/// If you want to change the segment type (for example: MoveTo to LineTo)
+/// If you want to change the segment type (for example MoveTo to LineTo)
 /// - you should create a new segment.
 /// But you still can change points or make segment relative or absolute.
 #[derive(Copy,Clone,Debug,PartialEq)]
@@ -172,19 +172,19 @@ impl Segment {
         &self.data
     }
 
-    /// Returns segment's data.
+    /// Returns segment's mutable data.
     pub fn data_mut(&mut self) -> &mut SegmentData {
         &mut self.data
     }
 
-    /// Returns `true` if segment is absolute.
+    /// Returns `true` if the segment is absolute.
     #[inline]
     pub fn is_absolute(&self) -> bool {
         self.absolute
     }
 
     #[inline]
-    /// Returns `true` if segment is relative.
+    /// Returns `true` if the segment is relative.
     pub fn is_relative(&self) -> bool {
         !self.absolute
     }
@@ -227,7 +227,7 @@ impl Segment {
 /// Representation of the SVG path data.
 #[derive(Default,PartialEq,Clone)]
 pub struct Path {
-    /// Vector which contain all the segments.
+    /// Vector which contain all segments.
     pub d: Vec<Segment>
 }
 
@@ -239,7 +239,7 @@ impl Path {
 
     // TODO: append Path
 
-    /// Converts path's segments into absolute.
+    /// Converts path's segments into absolute one.
     ///
     /// Original segments can be mixed (relative, absolute).
     pub fn conv_to_absolute(&mut self) {
@@ -302,7 +302,7 @@ impl Path {
         }
     }
 
-    /// Converts path's segments into relative.
+    /// Converts path's segments into relative one.
     ///
     /// Original segments can be mixed (relative, absolute).
     pub fn conv_to_relative(&mut self) {
@@ -525,7 +525,6 @@ impl FromStream for Path {
             match n {
                 Ok(segment) => p.d.push({
                     Segment {
-                        // cmd: Command(segment.cmd),
                         absolute: svgparser::path::is_absolute(segment.cmd),
                         data: segment.data,
                     }

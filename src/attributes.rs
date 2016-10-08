@@ -18,13 +18,13 @@ pub struct Attributes(Vec<Attribute>);
 impl Attributes {
     /// Constructs a new attribute.
     ///
-    /// **Warning:** newer construct it manually. All nodes has `Attributes` by default.
+    /// **Warning:** newer construct it manually. All nodes have `Attributes` by default.
     #[inline]
     pub fn new() -> Attributes {
         Attributes(Vec::new())
     }
 
-    /// Returns a optional reference to `Attribute`.
+    /// Returns an optional reference to `Attribute`.
     #[inline]
     pub fn get(&self, id: AttributeId) -> Option<&Attribute> {
         for v in &self.0 {
@@ -36,7 +36,7 @@ impl Attributes {
         None
     }
 
-    /// Returns a optional mutable reference to `Attribute`.
+    /// Returns an optional mutable reference to `Attribute`.
     #[inline]
     pub fn get_mut(&mut self, id: AttributeId) -> Option<&mut Attribute> {
         for v in &mut self.0 {
@@ -48,7 +48,7 @@ impl Attributes {
         None
     }
 
-    /// Returns optional reference to `AttributeValue`.
+    /// Returns an optional reference to `AttributeValue`.
     #[inline]
     pub fn get_value(&self, id: AttributeId) -> Option<&AttributeValue> {
         for v in &self.0 {
@@ -60,7 +60,7 @@ impl Attributes {
         None
     }
 
-    /// Returns optional mutable reference to `AttributeValue`.
+    /// Returns an optional mutable reference to `AttributeValue`.
     #[inline]
     pub fn get_value_mut(&mut self, id: AttributeId) -> Option<&mut AttributeValue> {
         for v in &mut self.0 {
@@ -82,7 +82,7 @@ impl Attributes {
         }
     }
 
-    /// Inserts new attribute. Previous will be overwritten.
+    /// Inserts a new attribute. Previous will be overwritten.
     ///
     /// **Warning:** this method did not perform any checks for linked attributes.
     /// If you want to insert an linked attribute - use `Node::set_link_attribute()`.
@@ -109,7 +109,7 @@ impl Attributes {
         }
     }
 
-    /// Returns `true` if container contains an attribute such `id`.
+    /// Returns `true` if the container contains an attribute with such `id`.
     #[inline]
     pub fn contains(&self, id: AttributeId) -> bool {
         self.0.iter().any(|a| a.id == id)
@@ -121,7 +121,7 @@ impl Attributes {
         self.0.len()
     }
 
-    /// Returns `true` if attributes list is empty.
+    /// Returns `true` if attributes is empty.
     #[inline]
     pub fn is_empty(&self) -> bool {
         self.0.is_empty()
@@ -139,7 +139,7 @@ impl Attributes {
         self.0.iter_mut()
     }
 
-    /// Retains only the elements specified by the predicate.
+    /// Retains only elements specified by the predicate.
     #[inline]
     pub fn retain<F>(&mut self, f: F)
         where F: FnMut(&Attribute) -> bool

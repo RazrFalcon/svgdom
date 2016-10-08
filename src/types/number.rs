@@ -6,7 +6,7 @@ use std::io::Write;
 
 use {WriteOptions, WriteBuffer};
 
-/// Trait for comparing f64 numbers.
+/// The trait for comparing f64 numbers.
 pub trait FuzzyEq {
     /// Returns `true` if numbers are equal.
     fn fuzzy_eq(&self, other: &f64) -> bool;

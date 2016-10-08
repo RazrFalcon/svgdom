@@ -4,17 +4,15 @@
 
 use ElementId;
 
-// TODO: add strict option to treat warnings as errors
 // TODO: option to disable path parsing
-// TODO: set dpi for unit convert
 
-/// Options used during parsing.
+/// Options that defines parsing.
 pub struct ParseOptions {
-    /// Add comment nodes to DOM during parsing.
+    /// Add comment nodes to the DOM during parsing.
     pub parse_comments: bool,
-    /// Add declaration nodes to DOM during parsing.
+    /// Add declaration nodes to the DOM during parsing.
     pub parse_declarations: bool,
-    /// Add unknown elements to DOM during parsing.
+    /// Add unknown elements to the DOM during parsing.
     ///
     /// All elements which is not defined in `ElementId` are unknown.
     pub parse_unknown_elements: bool,
@@ -22,7 +20,7 @@ pub struct ParseOptions {
     ///
     /// All attributes which is not defined in `AttributeId` are unknown.
     pub parse_unknown_attributes: bool,
-    /// `px` unit in `<length>` is rudimentary, since it is the same as none.
+    /// `px` unit in the `<length>` type is rudimentary, since it's the same as none.
     ///
     /// By default we parse it as is, but it can be disabled.
     pub parse_px_unit: bool,

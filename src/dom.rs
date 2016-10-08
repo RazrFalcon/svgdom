@@ -35,12 +35,12 @@ impl Document {
         }
     }
 
-    /// Constructs a new `Document` from `data` using default `ParseOptions`.
+    /// Constructs a new `Document` from the `data` using a default `ParseOptions`.
     pub fn from_data(data: &[u8]) -> Result<Document, Error> {
         Document::from_data_with_opt(data, &ParseOptions::default())
     }
 
-    /// Constructs a new `Document` from `data` using supplied `ParseOptions`.
+    /// Constructs a new `Document` from the `data` using a supplied `ParseOptions`.
     pub fn from_data_with_opt(data: &[u8], opt: &ParseOptions) -> Result<Document, Error> {
         parse_svg(data, opt)
     }
@@ -61,7 +61,7 @@ impl Document {
         Document::new_node(Some(self.root.0.clone()), NodeType::Element, Some(t), None)
     }
 
-    /// Constructs a new `Node` using supplied `NodeType`.
+    /// Constructs a new `Node` using the supplied `NodeType`.
     ///
     /// Constructed node do belong to this document, but not added to it tree structure.
     ///
@@ -71,7 +71,7 @@ impl Document {
         Document::new_node(Some(self.root.0.clone()), node_type, None, Some(text.to_owned()))
     }
 
-    /// Constructs a new element with text node.
+    /// Constructs a new element with a text node.
     ///
     /// # Examples
     /// ```
@@ -156,17 +156,17 @@ impl Document {
         new_child.clone()
     }
 
-    /// Returns iterator over descendant SVG elements.
+    /// Returns an iterator over descendant SVG elements.
     pub fn descendants(&self) -> Descendants {
         self.root.descendants()
     }
 
-    /// Returns iterator over descendant SVG nodes.
+    /// Returns an iterator over descendant SVG nodes.
     pub fn descendant_nodes(&self) -> DescendantNodes {
         self.root.descendant_nodes()
     }
 
-    /// Returns an iterator to this node`s children elements.
+    /// Returns an iterator to this node's children elements.
     ///
     /// # Panics
     ///
@@ -219,20 +219,20 @@ macro_rules! try_opt {
     }
 }
 
-/// Representation of an SVG node.
+/// Representation of the SVG node.
 ///
-/// This is main block of the library.
+/// This is the main block of the library.
 ///
-/// It's designed as classical DOM node. We have links to parent node, first child, last child,
+/// It's designed as classical DOM node. We have links to a parent node, first child, last child,
 /// previous sibling and next sibling. So DOM nodes manipulations are very fast.
 ///
-/// Node consist of:
+/// Node consists of:
 ///  - The `NodeType`, which indicates it's type. It can't be changed.
-///  - Optional `TagName`, used only by the element nodes.
-///  - Unique ID of the element node. Can be set to the nodes with other types,
+///  - Optional `TagName`, used only by element nodes.
+///  - Unique ID of the element node. Can be set to nodes with other types,
 ///    but without any affect.
-///  - List of the SVG attributes.
-///  - List of the unknown attributes.
+///  - List of SVG attributes.
+///  - List of unknown attributes.
 ///  - Optional text data, which is used by non-element nodes.
 ///
 /// Most of the API are designed to work with SVG elements and attributes.
@@ -284,7 +284,7 @@ impl Node {
         None
     }
 
-    /// Returns `true` if node has parent node.
+    /// Returns `true` if the node has a parent node.
     ///
     /// This method ignores root node.
     ///
@@ -318,7 +318,7 @@ impl Node {
         }
     }
 
-    /// Returns an iterator to this node`s children elements.
+    /// Returns an iterator to this node's children elements.
     ///
     /// # Panics
     ///
@@ -365,7 +365,7 @@ impl Node {
         false
     }
 
-    /// Returns an iterator to this node`s children nodes.
+    /// Returns an iterator to this node's children nodes.
     ///
     /// # Panics
     ///
@@ -624,7 +624,7 @@ impl Node {
 
     /// Returns node's type.
     ///
-    /// You can't change type of the node. Only create new one.
+    /// You can't change the type of the node. Only create a new one.
     ///
     /// # Panics
     ///
@@ -648,7 +648,16 @@ impl Node {
         }
     }
 
-    // TODO: set_text
+    /// Sets a text data to the node.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the node is currently mutability borrowed.
+    pub fn set_text(&self, text: &str) {
+        debug_assert!(self.node_type() != NodeType::Element);
+        let mut b = self.0.borrow_mut();
+        b.text = Some(text.to_owned());
+    }
 
     /// Returns `true` if there are any children text nodes.
     ///
@@ -693,7 +702,7 @@ impl Node {
 
     /// Sets an ID of the element.
     ///
-    /// Only element nodes can contain ID.
+    /// Only element nodes can contain an ID.
     ///
     /// # Panics
     ///
@@ -836,7 +845,7 @@ impl Node {
         self.children().any(|n| n.is_tag_name(tag_name))
     }
 
-    /// Inserts new SVG attribute into attributes list.
+    /// Inserts a new SVG attribute into attributes list.
     ///
     /// This method will overwrite an existing attribute with the same id.
     ///
@@ -861,7 +870,7 @@ impl Node {
         attrs.insert(a);
     }
 
-    /// Inserts new SVG attribute into attributes list.
+    /// Inserts a new SVG attribute into the attributes list.
     ///
     /// This method will overwrite an existing attribute with the same id.
     ///
@@ -887,7 +896,7 @@ impl Node {
         attrs.insert(attr);
     }
 
-    /// Inserts new referenced SVG attribute into attributes list.
+    /// Inserts a new referenced SVG attribute into the attributes list.
     ///
     /// This method will overwrite an existing attribute with the same id.
     ///
@@ -901,7 +910,7 @@ impl Node {
     /// use svgdom::AttributeId as AId;
     /// use svgdom::ElementId as EId;
     ///
-    /// // Create simple document.
+    /// // Create a simple document.
     /// let doc = Document::new();
     /// let gradient = doc.create_element(EId::LinearGradient);
     /// let rect = doc.create_element(EId::Rect);
@@ -912,18 +921,18 @@ impl Node {
     /// gradient.set_id("lg1");
     /// rect.set_id("rect1");
     ///
-    /// // Set `fill` attribute value to `none`.
+    /// // Set a `fill` attribute value to the `none`.
     /// // For now everything like in any other XML DOM library.
     /// rect.set_attribute(AId::Fill, ValueId::None);
     ///
-    /// // Now we want to fill our rect with gradient.
-    /// // To do this we need to set link attribute:
+    /// // Now we want to fill our rect with a gradient.
+    /// // To do this we need to set a link attribute:
     /// rect.set_link_attribute(AId::Fill, gradient.clone()).unwrap();
     ///
-    /// // Now our fill attribute has a link to `gradient` node.
-    /// // Not as text, aka `url(#lg1)`, but actual reference.
+    /// // Now our fill attribute has a link to the `gradient` node.
+    /// // Not as text, aka `url(#lg1)`, but an actual reference.
     ///
-    /// // This adds support for fast checking of elements usage. Which is very useful.
+    /// // This adds support for fast checking that the element is used. Which is very useful.
     ///
     /// // `gradient` is now used, since we link it.
     /// assert_eq!(gradient.is_used(), true);
@@ -942,16 +951,18 @@ impl Node {
     /// ```
     pub fn set_link_attribute(&self, id: AttributeId, node: Node) -> Result<(), Error> {
         // TODO: rewrite to template specialization when it will be available
-        // TODO" check that node is element
+        // TODO: check that node is element
 
         if node.id().is_empty() {
             return Err(Error::ElementMustHaveAnId);
         }
 
-        // we must remove existing attribute to prevent dangling links
-        self.remove_attribute(id);
-
         // check for recursion
+        if *self.id() == *node.id() {
+            return Err(Error::ElementCrosslink);
+        }
+
+        // check for recursion 2
         {
             let self_borrow = self.0.borrow();
             let v = &self_borrow.linked_nodes;
@@ -960,6 +971,9 @@ impl Node {
                 return Err(Error::ElementCrosslink);
             }
         }
+
+        // we must remove existing attribute to prevent dangling links
+        self.remove_attribute(id);
 
         {
             let a = if id == AttributeId::XlinkHref {
@@ -980,7 +994,7 @@ impl Node {
         Ok(())
     }
 
-    /// Returns iterator over linked nodes.
+    /// Returns an iterator over linked nodes.
     ///
     /// # Panics
     ///
@@ -994,28 +1008,7 @@ impl Node {
         }
     }
 
-    /// Returns `AttributeId` of the first available `node` in current node's attributes.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the node is currently mutability borrowed.
-    pub fn find_reference_attribute(&self, node: &Node) -> Option<AttributeId> {
-        // TODO: return iter, and not only first
-        for a in self.0.borrow().attributes.iter() {
-            match a.value {
-                AttributeValue::Link(ref n) | AttributeValue::FuncLink(ref n) => {
-                    if n == node {
-                        return Some(a.id);
-                    }
-                }
-                _ => {}
-            }
-        }
-
-        None
-    }
-
-    /// Returns copy of attribute value by `id`.
+    /// Returns a copy of the attribute value by `id`.
     ///
     /// Use it only for simple `AttributeValue` types, and not for `String` and `Path`,
     /// since their copying will be very expensive.
@@ -1029,7 +1022,7 @@ impl Node {
         self.attributes().get_value(id).cloned()
     }
 
-    /// Returns copy of attribute by `id`.
+    /// Returns a copy of the attribute by `id`.
     ///
     /// Use it only for attributes with simple `AttributeValue` types,
     /// and not for `String` and `Path`, since their copying will be very expensive.
@@ -1043,7 +1036,7 @@ impl Node {
         self.attributes().get(id).cloned()
     }
 
-    /// Returns a reference to `Attributes` of current the node.
+    /// Returns a reference to the `Attributes` of the current node.
     ///
     /// # Panics
     ///
@@ -1052,7 +1045,7 @@ impl Node {
         Ref::map(self.0.borrow(), |n| &n.attributes)
     }
 
-    /// Returns a mutable reference to `Attributes` of current the node.
+    /// Returns a mutable reference to the `Attributes` of the current node.
     ///
     /// # Panics
     ///
@@ -1063,7 +1056,7 @@ impl Node {
 
     /// Returns first occurrence of the selected `AttributeId` from it's parents.
     ///
-    /// This function will check all parent, not only direct parent.
+    /// This function will check all parents, not only direct one.
     ///
     /// # Examples
     ///
@@ -1096,7 +1089,7 @@ impl Node {
         None
     }
 
-    /// Returns `true` if node has attribute with such `id`.
+    /// Returns `true` if the node has an attribute with such `id`.
     ///
     /// # Panics
     ///
@@ -1106,7 +1099,7 @@ impl Node {
         self.0.borrow().attributes.contains(id)
     }
 
-    /// Returns `true` if node has attribute with such `id` and this attribute is visible.
+    /// Returns `true` if the node has an attribute with such `id` and this attribute is visible.
     ///
     /// # Panics
     ///
@@ -1115,7 +1108,7 @@ impl Node {
         self.has_attribute(id) && self.attributes().get(id).unwrap().visible
     }
 
-    /// Returns `true` if node has any of the provided attributes.
+    /// Returns `true` if the node has any of provided attributes.
     ///
     /// # Panics
     ///
@@ -1131,7 +1124,7 @@ impl Node {
         false
     }
 
-    /// Returns `true` if node has attribute with such `id` and such `value`.
+    /// Returns `true` if node has an attribute with such `id` and such `value`.
     ///
     /// # Panics
     ///
@@ -1207,7 +1200,7 @@ impl Node {
         RefMut::map(self.0.borrow_mut(), |n| &mut n.ext_attributes)
     }
 
-    /// Returns `true` if current node is linked to any of DOM nodes.
+    /// Returns `true` if the current node is linked to any of the DOM nodes.
     ///
     /// See `Node::set_link_attribute()` for details.
     ///
@@ -1219,7 +1212,7 @@ impl Node {
         !self_borrow.linked_nodes.is_empty()
     }
 
-    /// Returns number of the nodes, which is linked to this node.
+    /// Returns a number of nodes, which is linked to this node.
     ///
     /// See `Node::set_link_attribute()` for details.
     ///
@@ -1233,7 +1226,7 @@ impl Node {
 
     /// Returns true if the current node is referenced.
     ///
-    /// Referenced elements is elements that does not rendered by itself,
+    /// Referenced elements are elements that do not render by itself,
     /// rather defines rendering properties for other.
     ///
     /// List: `altGlyphDef`, `clipPath`, `cursor`, `filter`, `linearGradient`, `marker`,
@@ -1341,7 +1334,7 @@ impl Node {
         }
     }
 
-    /// Returns `Node` if current node contains child with selected `TagName`.
+    /// Returns a child `Node` with selected `TagName`.
     ///
     /// This function is recursive. Current node excluded.
     ///
@@ -1378,7 +1371,7 @@ impl Node {
         None
     }
 
-    /// Returns `Node` if current node contains child with selected `ElementId`.
+    /// Returns `Node` if the current node contains child with selected `ElementId`.
     ///
     /// Shorthand for `Node::child_by_tag_name(&TagName::Id(id))`.
     pub fn child_by_tag_id(&self, id: ElementId) -> Option<Node> {

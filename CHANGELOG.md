@@ -10,10 +10,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - The `children` method for the `Document`.
 - The `is_inheritable` method for the `Attribute`.
 - The `get_value_mut` method for the `Attributes`.
-- `children_nodes`, `is_container`, methods for the `Node`.
+- `children_nodes`, `is_container`, `set_text`, methods for the `Node`.
 - `has_translate`, `has_scale`, `has_proportional_scale`, `has_skew`, `has_rotate`, `get_translate`,
   `get_scale`, `get_skew`, `get_rotate`, `apply` methods to the `Transform`.
 - `clip` and `font` attributes to the presentation attributes list.
+- The `types::number::FuzzyEq` trait.
 
 ### Changed
 - More correct CSS2 processing.
@@ -28,7 +29,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
   For nodes you should use `has_children_nodes` method now.
 - Remove redundant semicolon from error messages.
 - We keep unknown attributes from styles now.
-- `WriteOptions::numbers::remove_leading_zero` move to `WriteOptions::remove_leading_zero`.
+- Broken FuncIRI inside `fill` attributes now replaces with `none`.
+- The `WriteOptions::numbers::remove_leading_zero` move to `WriteOptions::remove_leading_zero`.
+- The `WriteOptions::transforms::simplify_matrix` move to `WriteOptions::simplify_transform_matrices`.
 
 ### Fixed
 - Attributes from ENTITY is now parsed and not inserted as is.
@@ -36,14 +39,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - ArcTo segment writing.
 
 ### Removed
-- `first_element_child` method from the `Document`. Use `doc.children().nth(0)` instead.
+- The `first_element_child` method from the `Document`. Use `doc.children().nth(0)` instead.
 - `WriteOptions::numbers`. The precision is fixed now.
+- The `find_reference_attribute` method from the `Node`.
 
 ## [0.0.3] - 2016-09-20
 ### Added
 - A fallback value processing from the \<paint\> type.
 - `has_attributes`, `remove`, `is_basic_shape`, `has_visible_attribute` methods to the `Node`.
-- `is_graphical_event`, `is_conditional_processing`, `is_core`, `is_fill`, `is_stroke`, `is_animation_event`, `is_document_event`,   methods to the `Attribute`.
+- `is_graphical_event`, `is_conditional_processing`, `is_core`, `is_fill`, `is_stroke`,
+  `is_animation_event`, `is_document_event`,   methods to the `Attribute`.
 - `types::path::Segment` struct which is used instead of one from `libsvgparser`.
 - `to_absolute` and `to_relative` methods to the `types::path::Path`.
 - New error type: `BrokenFuncIri`.

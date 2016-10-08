@@ -10,6 +10,9 @@ use {WriteOptions, FromStream, WriteBuffer, WriteToString};
 use svgparser::Error as ParseError;
 use svgparser::Stream;
 
+/// Representation of the [`<length>`] type.
+/// [`<length>`]: https://www.w3.org/TR/SVG/types.html#DataTypeLength
+///
 /// We use own struct and not one from svgparser, because of traits.
 #[derive(Clone,Copy,PartialEq,Debug)]
 #[allow(missing_docs)]
