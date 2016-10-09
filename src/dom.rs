@@ -224,7 +224,8 @@ impl Node {
     ///
     /// # Panics
     ///
-    /// Panics if the node is currently mutability borrowed.
+    /// - Panics if the node is currently mutability borrowed.
+    /// - Panics if the node is a root node.
     pub fn document(&self) -> Document {
         // TODO: will fail on root node
         Document { root: Node(self.0.borrow().doc.as_ref().unwrap().clone()) }
@@ -670,8 +671,6 @@ impl Node {
     /// assert_eq!(rect.has_text_children(), false);
     /// ```
     pub fn has_text_children(&self) -> bool {
-        // TODO: to has_text_child and check only first child
-
         for node in self.descendant_nodes() {
             if node.node_type() == NodeType::Text {
                 return true;
@@ -1671,7 +1670,7 @@ impl Iterator for DescendantNodes {
 pub struct Descendants(Traverse);
 
 impl Descendants {
-    // TODO: find better way
+    // TODO: find a better way
     pub fn skip_children(&mut self) {
         // TODO: do nothing if current node does not have any children
 

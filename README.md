@@ -115,6 +115,7 @@ And even though the file is a bit different now - it will be rendered exactly th
  - Encoding should be UTF-8.
  - Only most popular attributes are parsed, other stored as strings.
  - Compressed SVG (.svgz). You should decompress it by yourself.
+ - XML text escape is not implemented yet. Parsed text will be stored as is.
  - Not supported (mostly rare cases, but still valid by the SVG spec):
    - Complex CSS. Only simple *class* and *group* selectors are supported.
    - Whitespacing using a numerical Unicode references, aka `&#x0020;`.
