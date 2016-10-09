@@ -84,6 +84,10 @@ static PRESENTATION_ATTRIBUTES: &'static [AttributeId] = &[
     AttributeId::WritingMode,
 ];
 
+// NOTE: `visibility` is marked as inheritable here: https://www.w3.org/TR/SVG/propidx.html,
+// but here https://www.w3.org/TR/SVG/painting.html#VisibilityControl
+// we have "Note that `visibility` is not an inheritable property."
+// And according to webkit, it's really non-inheritable.
 static NON_INHERITABLE_ATTRIBUTES: &'static [AttributeId] = &[
     AttributeId::AlignmentBaseline,
     AttributeId::BaselineShift,
@@ -104,6 +108,7 @@ static NON_INHERITABLE_ATTRIBUTES: &'static [AttributeId] = &[
     AttributeId::DominantBaseline,
     AttributeId::TextDecoration,
     AttributeId::UnicodeBidi,
+    AttributeId::Visibility,
 ];
 
 static ANIMATION_EVENT_ATTRIBUTES: &'static [AttributeId] = &[
