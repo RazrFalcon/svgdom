@@ -391,6 +391,17 @@ b"<svg>
 </svg>
 ");
 
+test_resave!(parse_css_19,
+b"<svg>
+    <style type='text/css'>
+    <![CDATA[
+    ]]>
+    </style>
+</svg>
+",
+"<svg/>
+");
+
 // style must be ungroupped after presentation attributes
 test_resave!(parse_style_1,
 b"<svg>

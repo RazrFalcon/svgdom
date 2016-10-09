@@ -329,8 +329,6 @@ fn parse_svg_element<'a>(doc: &Document,
             }
         }
 
-        // skip </style>
-        try!(tokenizer.parse_next());
         Ok(None)
     } else {
         // create new node
@@ -544,6 +542,10 @@ fn parse_css<'a>(stream: &mut Stream<'a>, css: &mut CssData<'a>) -> Result<(), E
     while !stream.at_end() {
         stream.skip_spaces();
 
+        if stream.at_end() {
+            break;
+        }
+
         // skip comments
         if try!(stream.is_char_eq(b'/')) {
             try!(stream.advance(2)); // skip /*
@@ -742,19 +744,27 @@ fn resolve_links(links: &Links) -> Result<(), Error> {
                                     // I can't find explanation of this in the SVG spec, but it works.
                                     // Probably because this elements only care about a shape,
                                     // not a style.
+                                    println!("Warning: Could not resolve IRI reference: {}.",
+                                             u8_to_str!(d.iri));
                                 } else {
                                     // Imitate invisible element.
+                                    println!("Warning: Unresolved 'filter' link: '{}'. \
+                                              Marking the element as invisible.",
+                                             u8_to_str!(d.iri));
                                     d.node.set_attribute(AttributeId::Visibility, ValueId::Hidden);
                                 }
                             }
                             AttributeId::Fill => {
+                                println!("Warning: Could not resolve the 'fill' IRI reference '{}'. \
+                                          Fallback to 'none'.",
+                                         u8_to_str!(d.iri));
                                 d.node.set_attribute(AttributeId::Fill, ValueId::None);
                             }
-                            _ => {}
+                            _ => {
+                                println!("Warning: Could not resolve IRI reference: {}.",
+                                         u8_to_str!(d.iri));
+                            }
                         }
-
-                        println!("Warning: Could not resolve IRI reference: {}.",
-                                 u8_to_str!(d.iri));
                     }
                 }
             }
