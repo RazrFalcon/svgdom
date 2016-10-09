@@ -154,7 +154,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-svgdom = "0.0.3"
+svgdom = "0.1"
 ```
 
 See documentation and [examples](examples/) for details.
@@ -180,11 +180,6 @@ It's still not as fast as I want, but here are some stats using *resave* example
 \*\* It's not a direct downloads links.
 
 Tested on i5-3570k 3.8GHz.
-
-### Contributing
-
-Contributions are welcome, but current API is so much unstable, that it's better to wait until
-v0.1.0.
 
 ### License
 
