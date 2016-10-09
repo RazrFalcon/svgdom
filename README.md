@@ -181,27 +181,6 @@ It's still not as fast as I want, but here are some stats using *resave* example
 
 Tested on i5-3570k 3.8GHz.
 
-### Roadmap
-
-V0.1.0
- - [ ] Increase performance:
-   - [x] `f64` to string conversion takes about 75% off all DOM to String conversion time.
-         Specifically: `core::fmt::float_to_decimal_common`.
-   - [x] `VecMap::insert` is very expensive for some reasons.
- - [ ] Improve grammar of the documentation.
-   English is not my native language, so there is probably a lot of errors.
-
-V0.2.0
- - [ ] Parsing and writing as a feature.
- - [ ] Add support for a custom writer.
- - [ ] Memory pool for nodes.
- - [ ] Implement DOM with less `Rc`.
-
-V0.N.0
- - [ ] Complete CSS support using external CSS parser.
-
-\* this roadmap is not final and will be complemented.
-
 ### Contributing
 
 Contributions are welcome, but current API is so much unstable, that it's better to wait until
