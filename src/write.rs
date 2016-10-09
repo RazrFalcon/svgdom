@@ -69,7 +69,7 @@ pub fn write_dom(doc: &Document, opt: &WriteOptions, out: &mut Vec<u8>) {
 
                         depth.write_indent(out);
 
-                        if node.is_tag_name(&TagName::Id(ElementId::Text)) && node.has_children_nodes() {
+                        if node.is_tag_id(ElementId::Text) && node.has_children_nodes() {
                             write_element_start(&node, opt, out);
                             process_text(&mut iter, opt, &node, &depth, out);
                             write_newline(opt.indent, out);

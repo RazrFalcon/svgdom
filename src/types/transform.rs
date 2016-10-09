@@ -49,10 +49,23 @@ impl Transform {
         self
     }
 
-    // TODO: rotate
-    // TODO: rotate by pos
-    // TODO: skewX
-    // TODO: skewY
+    /// Rotates the current transform.
+    pub fn rotate(mut self, angle: f64) -> Transform {
+        self.append(&Transform::new(angle.cos(), angle.sin(), -angle.sin(), angle.cos(), 0.0, 0.0));
+        self
+    }
+
+    /// Skews the current transform along the X axis.
+    pub fn skew_x(mut self, angle: f64) -> Transform {
+        self.append(&Transform::new(1.0, 0.0, angle.tan(), 1.0, 0.0, 0.0));
+        self
+    }
+
+    /// Skews the current transform along the Y axis.
+    pub fn skew_y(mut self, angle: f64) -> Transform {
+        self.append(&Transform::new(1.0, angle.tan(), 0.0, 1.0, 0.0, 0.0));
+        self
+    }
 
     /// Appends transform to the current transform.
     pub fn append(&mut self, t: &Transform) {
@@ -292,6 +305,18 @@ fn write_simplified_transform(ts: &Transform, opt: &WriteOptions, out: &mut Vec<
         }
 
         out.push(b')');
+    } else if !ts.has_translate() {
+        let a = ts.get_rotate();
+        let (sx, sy) = ts.get_scale();
+        let (skx, sky) = ts.get_skew();
+
+        if a.fuzzy_eq(&skx) && a.fuzzy_eq(&sky) && sx.fuzzy_eq(&1.0) && sy.fuzzy_eq(&1.0) {
+            out.extend_from_slice(b"rotate(");
+            write_num(a, rm, out);
+            out.push(b')');
+        } else {
+            write_matrix_transform(ts, opt, out);
+        }
     } else {
         write_matrix_transform(ts, opt, out);
     }
@@ -334,7 +359,77 @@ impl Mul for TransformMatrix {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use {FromStream, WriteOptions, WriteBuffer};
+    use {
+        Document,
+        FromStream,
+        WriteOptions,
+        WriteBuffer,
+        AttributeId as AId,
+        AttributeValue,
+    };
+
+    // NOTE: Transform tests below are testing transform multiplication and not parsing.
+
+    macro_rules! test_transform {
+        ($name:ident, $text:expr, $result:expr) => (
+            #[test]
+            fn $name() {
+                let doc = Document::from_data($text).unwrap();
+                let svg = doc.root().first_child().unwrap();
+                match svg.attribute_value(AId::Transform).unwrap() {
+                    AttributeValue::Transform(v) => assert_eq!(v, $result),
+                    _ => unreachable!(),
+                }
+            }
+        )
+    }
+
+    test_transform!(parse_transform_1,
+        b"<svg transform='matrix(1 0 0 1 10 20)'/>",
+        Transform::new(1.0, 0.0, 0.0, 1.0, 10.0, 20.0)
+    );
+
+    test_transform!(parse_transform_2,
+        b"<svg transform='translate(10 20)'/>",
+        Transform::new(1.0, 0.0, 0.0, 1.0, 10.0, 20.0)
+    );
+
+    test_transform!(parse_transform_3,
+        b"<svg transform='scale(2 3)'/>",
+        Transform::new(2.0, 0.0, 0.0, 3.0, 0.0, 0.0)
+    );
+
+    test_transform!(parse_transform_4,
+        b"<svg transform='rotate(30)'/>",
+        Transform::new(0.8660254037, 0.5, -0.5,
+                       0.8660254037, 0.0, 0.0)
+    );
+
+    test_transform!(parse_transform_5,
+        b"<svg transform='rotate(30 10 20)'/>",
+        Transform::new(0.8660254037, 0.5, -0.5,
+                       0.8660254037, 11.339745962, -2.320508075)
+    );
+
+    test_transform!(parse_transform_6,
+        b"<svg transform='translate(10 15) translate(0 5)'/>",
+        Transform::new(1.0, 0.0, 0.0, 1.0, 10.0, 20.0)
+    );
+
+    test_transform!(parse_transform_7,
+        b"<svg transform='translate(10) scale(2)'/>",
+        Transform::new(2.0, 0.0, 0.0, 2.0, 10.0, 0.0)
+    );
+
+    test_transform!(parse_transform_8,
+        b"<svg transform='translate(25 215) scale(2) skewX(45)'/>",
+        Transform::new(2.0, 0.0, 2.0, 2.0, 25.0, 215.0)
+    );
+
+    test_transform!(parse_transform_9,
+        b"<svg transform='skewX(45)'/>",
+        Transform::new(1.0, 0.0, 1.0, 1.0, 0.0, 0.0)
+    );
 
     #[test]
     fn from_data_1() {
@@ -362,55 +457,59 @@ mod tests {
     }
 
     test_ts!(write_buf_1, Transform::default(), false, "");
+
     test_ts!(write_buf_2,
         Transform::new(2.0, 0.0, 0.0, 3.0, 20.0, 30.0), false,
         "matrix(2 0 0 3 20 30)"
     );
+
     test_ts!(write_buf_3,
         Transform::new(1.0, 0.0, 0.0, 1.0, 20.0, 30.0), true,
         "translate(20 30)"
     );
+
     test_ts!(write_buf_4,
         Transform::new(1.0, 0.0, 0.0, 1.0, 20.0, 0.0), true,
         "translate(20)"
     );
+
     test_ts!(write_buf_5,
         Transform::new(2.0, 0.0, 0.0, 3.0, 0.0, 0.0), true,
         "scale(2 3)"
     );
+
     test_ts!(write_buf_6,
         Transform::new(2.0, 0.0, 0.0, 2.0, 0.0, 0.0), true,
         "scale(2)"
     );
 
-    // TODO: this
-    // COMPARE(Transform::fromRotate(45).toString(opt), "rotate(45)");
-    // COMPARE(Transform::fromRotate(32).toString(opt), "rotate(32)");
-    // COMPARE(Transform::fromSkewX(33).toString(opt), "matrix(1 0 0.64940759 1 0 0)");
-    // COMPARE(Transform::fromSkewY(33).toString(opt), "matrix(1 0.64940759 0 1 0 0)");
+    test_ts!(write_buf_7,
+        Transform::from_data(b"rotate(30)").unwrap(), true,
+        "rotate(30)"
+    );
 
-    // { "5",
-    //         "matrix(-1 0 0 -1 0 0)",
-    //         "scale(-1)",
-    //     },
+    test_ts!(write_buf_8,
+        Transform::from_data(b"rotate(-45)").unwrap(), true,
+        "rotate(-45)"
+    );
 
-    //     { "6",
-    //         "matrix(-1 0 0 1 0 0)",
-    //         "scale(-1 1)",
-    //     },
+    test_ts!(write_buf_9,
+        Transform::from_data(b"rotate(33)").unwrap(), true,
+        "rotate(33)"
+    );
 
-    //     { "7",
-    //         "matrix(1 0 0 -1 0 0)",
-    //         "scale(1 -1)",
-    //     },
+    test_ts!(write_buf_10,
+        Transform::from_data(b"scale(-1)").unwrap(), true,
+        "scale(-1)"
+    );
 
-    //     { "8",
-    //         "matrix(0 -1 1 0 0 0)",
-    //         "rotate(-90)",
-    //     },
+    test_ts!(write_buf_11,
+        Transform::from_data(b"scale(-1 1)").unwrap(), true,
+        "scale(-1 1)"
+    );
 
-    //     { "9",
-    //         "matrix(0 1 -1 0 0 0)",
-    //         "rotate(90)",
-    //     },
+    test_ts!(write_buf_12,
+        Transform::from_data(b"scale(1 -1)").unwrap(), true,
+        "scale(1 -1)"
+    );
 }

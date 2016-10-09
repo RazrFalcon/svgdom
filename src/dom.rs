@@ -48,17 +48,21 @@ impl Document {
     /// Constructs a new `Node` with `Element` type.
     ///
     /// Constructed node do belong to this document, but not added to it tree structure.
-    pub fn create_element<T>(&self, tag_name: T) -> Node
-        where TagName: From<T>
-    {
-        let t = TagName::from(tag_name);
+    pub fn create_element(&self, eid: ElementId) -> Node {
+        Document::new_node(Some(self.root.0.clone()), NodeType::Element,
+                           Some(TagName::Id(eid)), None)
+    }
 
-        // TODO: return error
-        if let TagName::Name(ref name) = t {
-            debug_assert!(!name.is_empty());
+    /// Constructs a new `Node` with `Element` type and non-SVG tag name.
+    ///
+    /// Constructed node do belong to this document, but not added to it tree structure.
+    pub fn create_nonsvg_element(&self, tag_name: &str) -> Result<Node, Error> {
+        if tag_name.is_empty() {
+            return Err(Error::EmptyTagName);
         }
 
-        Document::new_node(Some(self.root.0.clone()), NodeType::Element, Some(t), None)
+        Ok(Document::new_node(Some(self.root.0.clone()), NodeType::Element,
+                              Some(TagName::Name(tag_name.to_owned())), None))
     }
 
     /// Constructs a new `Node` using the supplied `NodeType`.
@@ -71,36 +75,12 @@ impl Document {
         Document::new_node(Some(self.root.0.clone()), node_type, None, Some(text.to_owned()))
     }
 
-    /// Constructs a new element with a text node.
-    ///
-    /// # Examples
-    /// ```
-    /// use svgdom::{Document, ElementId};
-    ///
-    /// let doc = Document::new();
-    /// doc.append(&doc.create_element_with_text(ElementId::Text, "text"));
-    ///
-    /// assert_eq!(doc.to_string(),
-    /// "<text>
-    ///     text
-    /// </text>
-    /// ");
-    /// ```
-    pub fn create_element_with_text<T>(&self, tag_name: T, text: &str) -> Node
-        where TagName: From<T>
-    {
-        let elem = self.create_element(tag_name);
-        let text_node = self.create_node(NodeType::Text, text);
-        elem.append(&text_node);
-        elem
-    }
-
-    /// Returns root `Node`.
+    /// Returns the root `Node`.
     pub fn root(&self) -> Node {
         self.root.clone()
     }
 
-    /// Returns first child of the root `Node`.
+    /// Returns the first child of the root `Node`.
     ///
     /// # Panics
     ///
@@ -109,7 +89,7 @@ impl Document {
         self.root().first_child()
     }
 
-    /// Returns first child with `svg` tag name of the root `Node`.
+    /// Returns the first child with `svg` tag name of the root `Node`.
     ///
     /// In most of the cases result of this method and `first_element_child()` will be the same,
     /// but an additional check may be helpful.
@@ -750,28 +730,42 @@ impl Node {
         }
     }
 
-    /// Sets a tag name of the element node.
+    /// Sets a tag id of the element node.
     ///
     /// Only element nodes can contain tag name.
     ///
     /// # Panics
     ///
     /// Panics if the node is currently borrowed.
-    pub fn set_tag_name<T>(&self, tag_name: T)
-        where TagName: From<T>
-    {
+    pub fn set_tag_id(&self, eid: ElementId) {
         debug_assert!(self.node_type() == NodeType::Element);
 
-        let t = TagName::from(tag_name);
+        let mut self_borrow = self.0.borrow_mut();
+        self_borrow.tag_name = Some(TagName::Id(eid));
+    }
 
-        // TODO: to error
-        // tag_name can't be empty
-        if let TagName::Name(ref name) = t {
-            debug_assert!(!name.is_empty());
+    /// Sets a tag name of the element node.
+    ///
+    /// Only element nodes can contain tag name.
+    ///
+    /// # Errors
+    ///
+    /// The string tag name must be non-empty.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the node is currently borrowed.
+    pub fn set_tag_name(&self, tag_name: &str) -> Result<(), Error> {
+        debug_assert!(self.node_type() == NodeType::Element);
+
+        if tag_name.is_empty() {
+            return Err(Error::EmptyTagName);
         }
 
         let mut self_borrow = self.0.borrow_mut();
-        self_borrow.tag_name = Some(t);
+        self_borrow.tag_name = Some(TagName::Name(tag_name.to_owned()));
+
+        Ok(())
     }
 
     /// Returns a tag name of the element node.
@@ -866,7 +860,6 @@ impl Node {
 
         let a = Attribute::new(id, value);
         let mut attrs = self.attributes_mut();
-        // TODO: very slow
         attrs.insert(a);
     }
 

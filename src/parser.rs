@@ -15,7 +15,6 @@ use super::{
     Node,
     NodeType,
     ParseOptions,
-    TagName,
     ValueId,
 };
 use types::{
@@ -72,7 +71,7 @@ struct PostData<'a> {
 }
 
 macro_rules! u8_to_string {
-    ($text:expr) => (String::from_utf8_lossy($text).into_owned())
+    ($text:expr) => (String::from_utf8_lossy($text).as_ref())
 }
 
 pub fn parse_svg(data: &[u8], opt: &ParseOptions) -> Result<Document, Error> {
@@ -175,7 +174,7 @@ fn process_token<'a>(doc: &Document,
                         try!(skip_current_element(tokenizer));
                     } else {
                         // create new node
-                        let e = doc.create_element(u8_to_string!(s));
+                        let e = try!(doc.create_nonsvg_element(u8_to_string!(s)));
                         *node = Some(e.clone());
                         parent.append(&e);
                     }
@@ -335,7 +334,7 @@ fn parse_svg_element<'a>(doc: &Document,
         Ok(None)
     } else {
         // create new node
-        let e = doc.create_element(TagName::Id(id));
+        let e = doc.create_element(id);
         Ok(Some(e.clone()))
     }
 }

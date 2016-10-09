@@ -5,7 +5,7 @@
 extern crate svgdom;
 
 use svgdom::{Document, ParseOptions, Error, ErrorPos, NodeType, TagName, ValueId, WriteToString};
-use svgdom::types::{Color, Transform};
+use svgdom::types::Color;
 use svgdom::AttributeValue;
 use svgdom::AttributeId as AId;
 use svgdom::ElementId as EId;
@@ -663,64 +663,6 @@ b"<svg>
     </script>
 </svg>
 ");
-
-// NOTE: transform tests below are testing transform multiplication and not parsing.
-
-macro_rules! test_transform {
-    ($name:ident, $text:expr, $result:expr) => (
-        #[test]
-        fn $name() {
-            let doc = Document::from_data($text).unwrap();
-            let svg = doc.root().first_child().unwrap();
-            match svg.attribute_value(AId::Transform).unwrap() {
-                AttributeValue::Transform(v) => assert_eq!(v, $result),
-                _ => unreachable!(),
-            }
-        }
-    )
-}
-
-test_transform!(parse_transform_1,
-    b"<svg transform='matrix(1 0 0 1 10 20)'/>",
-    Transform::new(1.0, 0.0, 0.0, 1.0, 10.0, 20.0)
-);
-
-test_transform!(parse_transform_2,
-    b"<svg transform='translate(10 20)'/>",
-    Transform::new(1.0, 0.0, 0.0, 1.0, 10.0, 20.0)
-);
-
-test_transform!(parse_transform_3,
-    b"<svg transform='scale(2 3)'/>",
-    Transform::new(2.0, 0.0, 0.0, 3.0, 0.0, 0.0)
-);
-
-test_transform!(parse_transform_4,
-    b"<svg transform='rotate(30)'/>",
-    Transform::new(0.8660254037844387, 0.49999999999999994, -0.49999999999999994,
-                   0.8660254037844387, 0.0, 0.0)
-);
-
-test_transform!(parse_transform_5,
-    b"<svg transform='rotate(30 10 20)'/>",
-    Transform::new(0.8660254037844387, 0.49999999999999994, -0.49999999999999994,
-                   0.8660254037844387, 11.339745962155611, -2.3205080756887746)
-);
-
-test_transform!(parse_transform_6,
-    b"<svg transform='translate(10 15) translate(0 5)'/>",
-    Transform::new(1.0, 0.0, 0.0, 1.0, 10.0, 20.0)
-);
-
-test_transform!(parse_transform_7,
-    b"<svg transform='translate(10) scale(2)'/>",
-    Transform::new(2.0, 0.0, 0.0, 2.0, 10.0, 0.0)
-);
-
-test_transform!(parse_transform_8,
-    b"<svg transform='translate(25 215) scale(2) skewX(45)'/>",
-    Transform::new(2.0, 0.0, 1.9999999999999998, 2.0, 25.0, 215.0)
-);
 
 #[test]
 fn skip_comments_1() {

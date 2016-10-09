@@ -12,9 +12,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - The `get_value_mut` method for the `Attributes`.
 - `children_nodes`, `is_container`, `set_text`, methods for the `Node`.
 - `has_translate`, `has_scale`, `has_proportional_scale`, `has_skew`, `has_rotate`, `get_translate`,
-  `get_scale`, `get_skew`, `get_rotate`, `apply` methods to the `Transform`.
+  `get_scale`, `get_skew`, `get_rotate`, `apply`, `rotate`, `skew_x`, `skew_y` methods to the `Transform`.
 - `clip` and `font` attributes to the presentation attributes list.
 - The `types::number::FuzzyEq` trait.
+- A new error type: `EmptyTagName`.
 
 ### Changed
 - More correct CSS2 processing.
@@ -32,6 +33,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Broken FuncIRI inside `fill` attributes now replaces with `none`.
 - The `WriteOptions::numbers::remove_leading_zero` move to `WriteOptions::remove_leading_zero`.
 - The `WriteOptions::transforms::simplify_matrix` move to `WriteOptions::simplify_transform_matrices`.
+- Split the `Document::create_element` method into two: `create_element` and `create_nonsvg_element`.
+- Split the `Node::set_tag_name` method into two: `set_tag_id` and `set_tag_name`.
 
 ### Fixed
 - Attributes from ENTITY is now parsed and not inserted as is.
