@@ -590,7 +590,7 @@ impl WriteBuffer for Path {
                         buf.push(b' ');
                     }
                     write_flag(sweep, buf);
-                    if !opt.paths.join_arc_to_flags && x.is_sign_positive() {
+                    if !opt.paths.join_arc_to_flags {
                         buf.push(b' ');
                     }
 
@@ -834,7 +834,7 @@ mod tests {
         let mut opt = WriteOptions::default();
         opt.paths.use_compact_notation = true;
 
-        assert_eq_text!(path.to_string_with_opt(&opt), "M10-10a1 1 0 1 1-1 1");
+        assert_eq_text!(path.to_string_with_opt(&opt), "M10-10a1 1 0 1 1 -1 1");
     }
 
     #[test]
