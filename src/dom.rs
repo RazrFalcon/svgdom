@@ -2,7 +2,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use std::collections::HashMap;
 use std::cell::{RefCell, Ref, RefMut};
 use std::fmt;
 use std::rc::{Rc, Weak};
@@ -169,7 +168,6 @@ impl Document {
             tag_name: tag_name,
             id: String::new(),
             attributes: Attributes::new(),
-            ext_attributes: HashMap::new(),
             linked_nodes: Vec::new(),
             text: text,
         })))
@@ -428,9 +426,9 @@ impl Node {
 
     fn _remove(node: &Node) {
         // remove link attributes, which will trigger nodes unlink
-        let mut ids: Vec<AttributeId> = node.attributes().iter()
-                                        .filter(|a| a.is_link() || a.is_func_link())
-                                        .map(|a| a.id)
+        let mut ids: Vec<AttributeId> = node.attributes().iter_svg()
+                                        .filter(|&(_, a)| a.is_link() || a.is_func_link())
+                                        .map(|(id, _)| id)
                                         .collect();
         for id in &ids {
             node.remove_attribute(*id);
@@ -440,11 +438,11 @@ impl Node {
         for linked in node.linked_nodes() {
             ids.clear();
 
-            for attr in linked.attributes().iter() {
+            for (aid, attr) in linked.attributes().iter_svg() {
                 match attr.value {
                     AttributeValue::Link(ref link) | AttributeValue::FuncLink(ref link) => {
                         if link == node {
-                            ids.push(attr.id);
+                            ids.push(aid);
                         }
                     }
                     _ => {}
@@ -851,13 +849,13 @@ impl Node {
     /// # Panics
     ///
     /// Panics if the node is currently borrowed.
-    pub fn set_attribute<T>(&self, id: AttributeId, value: T)
-        where AttributeValue: From<T>
+    pub fn set_attribute<'a, N, T>(&self, name: N, value: T)
+        where AttributeNameRef<'a>: From<N>, N: Copy, AttributeValue: From<T>
     {
         // we must remove existing attribute to prevent dangling links
-        self.remove_attribute(id);
+        self.remove_attribute(name);
 
-        let a = Attribute::new(id, value);
+        let a = Attribute::new(name, value);
         let mut attrs = self.attributes_mut();
         attrs.insert(a);
     }
@@ -882,7 +880,7 @@ impl Node {
         }
 
         // we must remove existing attribute to prevent dangling links
-        self.remove_attribute(attr.id);
+        self.remove_attribute(attr.name.into_ref());
 
         let mut attrs = self.attributes_mut();
         attrs.insert(attr);
@@ -1087,8 +1085,10 @@ impl Node {
     ///
     /// Panics if the node is currently mutability borrowed.
     #[inline]
-    pub fn has_attribute(&self, id: AttributeId) -> bool {
-        self.0.borrow().attributes.contains(id)
+    pub fn has_attribute<'a, N>(&self, name: N) -> bool
+        where AttributeNameRef<'a>: From<N>
+    {
+        self.0.borrow().attributes.contains(name)
     }
 
     /// Returns `true` if the node has an attribute with such `id` and this attribute is visible.
@@ -1137,15 +1137,17 @@ impl Node {
     /// # Panics
     ///
     /// Panics if the node is currently borrowed.
-    pub fn remove_attribute(&self, id: AttributeId) {
-        if !self.has_attribute(id) {
+    pub fn remove_attribute<'a, N>(&self, name: N)
+        where AttributeNameRef<'a>: From<N>, N: Copy
+    {
+        if !self.has_attribute(name) {
             return;
         }
 
         let mut attrs = self.attributes_mut();
 
         // we must unlink referenced attributes
-        if let Some(value) = attrs.get_value(id) {
+        if let Some(value) = attrs.get_value(name) {
             match *value {
                 AttributeValue::Link(ref node) | AttributeValue::FuncLink(ref node) => {
                     let mut self_borrow = node.0.borrow_mut();
@@ -1160,7 +1162,7 @@ impl Node {
             }
         }
 
-        attrs.remove(id);
+        attrs.remove(name);
     }
 
     /// Removes attributes from the node.
@@ -1172,24 +1174,6 @@ impl Node {
         for id in ids {
             self.remove_attribute(*id);
         }
-    }
-
-    /// Returns a reference to an unknown attributes object.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the node is currently mutability borrowed.
-    pub fn unknown_attributes(&self) -> Ref<HashMap<String,String>> {
-        Ref::map(self.0.borrow(), |n| &n.ext_attributes)
-    }
-
-    /// Returns a mutable reference to an unknown attributes object.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the node is currently borrowed.
-    pub fn unknown_attributes_mut(&self) -> RefMut<HashMap<String,String>> {
-        RefMut::map(self.0.borrow_mut(), |n| &mut n.ext_attributes)
     }
 
     /// Returns `true` if the current node is linked to any of the DOM nodes.
@@ -1487,7 +1471,6 @@ struct NodeData {
     tag_name: Option<TagName>,
     id: String,
     attributes: Attributes,
-    ext_attributes: HashMap<String,String>,
     linked_nodes: Vec<WeakLink>,
     text: Option<String>,
 }

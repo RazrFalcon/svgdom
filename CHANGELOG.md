@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 ### Changed
 - Always add a space after ArcTo flags during the path writing.
+- SVG and non-SVG attributes now stored in the same container and not separately.
 
 ## [0.1.0] - 2016-10-09
 ### Added

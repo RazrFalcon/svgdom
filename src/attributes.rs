@@ -5,7 +5,7 @@
 use std::slice;
 use std::mem;
 
-use super::{Attribute, AttributeId, AttributeValue};
+use super::{Attribute, AttributeName, AttributeNameRef, AttributeId, AttributeValue};
 
 /// Wrapper around attributes list.
 ///
@@ -26,9 +26,12 @@ impl Attributes {
 
     /// Returns an optional reference to `Attribute`.
     #[inline]
-    pub fn get(&self, id: AttributeId) -> Option<&Attribute> {
+    pub fn get<'a, N>(&self, name: N) -> Option<&Attribute>
+        where AttributeNameRef<'a>: From<N>
+    {
+        let name = AttributeNameRef::from(name);
         for v in &self.0 {
-            if v.id == id {
+            if v.name.into_ref() == name {
                 return Some(v);
             }
         }
@@ -38,9 +41,12 @@ impl Attributes {
 
     /// Returns an optional mutable reference to `Attribute`.
     #[inline]
-    pub fn get_mut(&mut self, id: AttributeId) -> Option<&mut Attribute> {
+    pub fn get_mut<'a, N>(&mut self, name: N) -> Option<&mut Attribute>
+        where AttributeNameRef<'a>: From<N>
+    {
+        let name = AttributeNameRef::from(name);
         for v in &mut self.0 {
-            if v.id == id {
+            if v.name.into_ref() == name {
                 return Some(v);
             }
         }
@@ -50,9 +56,12 @@ impl Attributes {
 
     /// Returns an optional reference to `AttributeValue`.
     #[inline]
-    pub fn get_value(&self, id: AttributeId) -> Option<&AttributeValue> {
+    pub fn get_value<'a, N>(&self, name: N) -> Option<&AttributeValue>
+        where AttributeNameRef<'a>: From<N>
+    {
+        let name = AttributeNameRef::from(name);
         for v in &self.0 {
-            if v.id == id {
+            if v.name.into_ref() == name {
                 return Some(&v.value);
             }
         }
@@ -62,9 +71,12 @@ impl Attributes {
 
     /// Returns an optional mutable reference to `AttributeValue`.
     #[inline]
-    pub fn get_value_mut(&mut self, id: AttributeId) -> Option<&mut AttributeValue> {
+    pub fn get_value_mut<'a, N>(&mut self, name: N) -> Option<&mut AttributeValue>
+        where AttributeNameRef<'a>: From<N>
+    {
+        let name = AttributeNameRef::from(name);
         for v in &mut self.0 {
-            if v.id == id {
+            if v.name.into_ref() == name {
                 return Some(&mut v.value);
             }
         }
@@ -91,7 +103,7 @@ impl Attributes {
             self.0.reserve(16);
         }
 
-        let idx = self.0.iter().position(|x| x.id == attr.id);
+        let idx = self.0.iter().position(|x| x.name == attr.name);
         match idx {
             Some(i) => { mem::replace(&mut self.0[i], attr); }
             None => self.0.push(attr),
@@ -102,8 +114,11 @@ impl Attributes {
     ///
     /// **Warning:** this method did not perform any checks for linked attributes.
     /// If you want to remove an linked attribute - use `Node::remove_attribute()`.
-    pub fn remove(&mut self, id: AttributeId) {
-        let idx = self.0.iter().position(|x| x.id == id);
+    pub fn remove<'a, N>(&mut self, name: N)
+        where AttributeNameRef<'a>: From<N>
+    {
+        let name = AttributeNameRef::from(name);
+        let idx = self.0.iter().position(|x| x.name.into_ref() == name);
         if let Some(i) = idx {
             self.0.remove(i);
         }
@@ -111,8 +126,11 @@ impl Attributes {
 
     /// Returns `true` if the container contains an attribute with such `id`.
     #[inline]
-    pub fn contains(&self, id: AttributeId) -> bool {
-        self.0.iter().any(|a| a.id == id)
+    pub fn contains<'a, N>(&self, name: N) -> bool
+        where AttributeNameRef<'a>: From<N>
+    {
+        let name = AttributeNameRef::from(name);
+        self.0.iter().any(|a| a.name.into_ref() == name)
     }
 
     /// Returns count of the attributes.
@@ -139,11 +157,44 @@ impl Attributes {
         self.0.iter_mut()
     }
 
+    /// Returns an iterator over SVG attributes.
+    #[inline]
+    pub fn iter_svg(&self) -> SvgAttributesIter {
+        SvgAttributesIter {
+            data: self,
+            idx: 0,
+        }
+    }
+
     /// Retains only elements specified by the predicate.
     #[inline]
     pub fn retain<F>(&mut self, f: F)
         where F: FnMut(&Attribute) -> bool
     {
         self.0.retain(f)
+    }
+}
+
+pub struct SvgAttributesIter<'a> {
+    data: &'a Attributes,
+    idx: usize,
+}
+
+impl<'a> Iterator for SvgAttributesIter<'a> {
+    type Item = (AttributeId, &'a Attribute);
+
+    fn next(&mut self) -> Option<(AttributeId, &'a Attribute)> {
+        while self.idx < self.data.len() {
+            let attr = &self.data.0[self.idx];
+            self.idx += 1;
+            match attr.name {
+                AttributeName::Id(id) => {
+                    return Some((id, attr));
+                }
+                AttributeName::Name(_) => {}
+            }
+        }
+
+        None
     }
 }

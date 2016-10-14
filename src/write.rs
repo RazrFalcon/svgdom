@@ -4,6 +4,7 @@
 
 use super::{
     AttributeId,
+    AttributeName,
     Document,
     ElementId,
     Node,
@@ -182,11 +183,11 @@ fn write_attributes(node: &Node, opt: &WriteOptions, out: &mut Vec<u8>) {
 
     // TODO: make optional
     // sort attributes
-    let mut ids: Vec<AttributeId> = attrs.iter().map(|a| a.id).collect();
+    let mut ids: Vec<AttributeId> = attrs.iter_svg().map(|(aid, _)| aid).collect();
     ids.sort_by_key(|x| *x as usize);
 
-    for aid in ids {
-        let attr = attrs.get(aid).unwrap();
+    for aid in &ids {
+        let attr = attrs.get(*aid).unwrap();
 
         if !opt.write_hidden_attributes && !attr.visible {
             continue;
@@ -196,10 +197,14 @@ fn write_attributes(node: &Node, opt: &WriteOptions, out: &mut Vec<u8>) {
         attr.write_buf_opt(opt, out);
     }
 
-    let ext_hash = node.unknown_attributes();
-    for (name, value) in ext_hash.iter() {
-        out.push(b' ');
-        write_attribute(name.as_bytes(), value.as_bytes(), opt, out);
+    for attr in attrs.iter() {
+        match attr.name {
+            AttributeName::Id(_) => {}
+            AttributeName::Name(_) => {
+                out.push(b' ');
+                attr.write_buf_opt(opt, out);
+            }
+        }
     }
 }
 

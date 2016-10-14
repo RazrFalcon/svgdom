@@ -192,9 +192,7 @@ fn process_token<'a>(doc: &Document,
             } else {
                 // TODO: store as &str not String
                 if opt.parse_unknown_attributes {
-                    // we keep all attributes from unknown elements as unknown
-                    n.unknown_attributes_mut().insert(u8_to_str!(name).to_string(),
-                                                      u8_to_str!(val.slice()).to_string());
+                    n.set_attribute(u8_to_str!(name), u8_to_str!(val.slice()));
                 }
             }
         }
@@ -224,20 +222,11 @@ fn process_token<'a>(doc: &Document,
         svg::Token::Cdata(s) => {
             create_node!(NodeType::Cdata, s.slice());
         }
-        svg::Token::Whitespace(_) => {
-            // do nothing
-        }
         svg::Token::Declaration(s) => {
             // TODO: check that it UTF-8
             if opt.parse_declarations {
                 create_node!(NodeType::Declaration, s);
             }
-        }
-        svg::Token::DtdStart(_) => {
-            // do nothing
-        }
-        svg::Token::DtdEmpty(_) => {
-            // do nothing
         }
         svg::Token::Entity(name, value) => {
             // check that ENTITY does not contain an element(s)
@@ -251,7 +240,10 @@ fn process_token<'a>(doc: &Document,
 
             post_data.entitis.insert(name, value.slice());
         }
-        svg::Token::DtdEnd => {
+          svg::Token::Whitespace(_)
+        | svg::Token::DtdStart(_)
+        | svg::Token::DtdEmpty(_)
+        | svg::Token::DtdEnd => {
             // do nothing
         }
     }
@@ -401,9 +393,7 @@ fn parse_attribute<'a>(node: &Node,
             }
 
             if let Some(val) = value2 {
-                node.unknown_attributes_mut()
-                    .insert(u8_to_str!(name).to_string(),
-                            u8_to_str!(val).to_string());
+                node.set_attribute(u8_to_str!(name), u8_to_str!(val));
             }
         }
     }
@@ -639,9 +629,7 @@ fn parse_style_attribute<'a>(node: &Node,
                             }
                             None => {
                                 if opt.parse_unknown_attributes {
-                                    node.unknown_attributes_mut()
-                                        .insert(u8_to_str!(name).to_string(),
-                                                u8_to_str!(substream.slice()).to_string());
+                                    node.set_attribute(u8_to_str!(name), u8_to_str!(substream.slice()));
                                 }
                             }
                         }

@@ -426,11 +426,72 @@ impl WriteBuffer for AttributeValue {
 
 impl_display!(AttributeValue);
 
+/// An attribute name container.
+#[derive(PartialEq,Clone,Debug)]
+pub enum AttributeName {
+    /// An ID of the SVG attribute.
+    Id(AttributeId),
+    /// Custom attribute name.
+    Name(String),
+}
+
+impl AttributeName {
+    /// Converts `AttributeName` into `AttributeNameRef`.
+    pub fn into_ref(&self) -> AttributeNameRef {
+        match *self {
+            AttributeName::Id(id) => AttributeNameRef::Id(id),
+            AttributeName::Name(ref name) => AttributeNameRef::Name(name),
+        }
+    }
+}
+
+/// A temporary container for an attribute name.
+#[derive(PartialEq,Clone,Copy,Debug)]
+pub enum AttributeNameRef<'a> {
+    /// An ID of the SVG attribute.
+    Id(AttributeId),
+    /// Custom attribute name.
+    Name(&'a str),
+}
+
+impl<'a> From<AttributeNameRef<'a>> for AttributeName {
+    fn from(value: AttributeNameRef<'a>) -> AttributeName {
+        match value {
+            AttributeNameRef::Id(id) => AttributeName::Id(id),
+            AttributeNameRef::Name(n) => AttributeName::Name(n.to_string()),
+        }
+    }
+}
+
+impl From<AttributeId> for AttributeName {
+    fn from(value: AttributeId) -> AttributeName {
+        AttributeName::Id(value)
+    }
+}
+
+impl From<String> for AttributeName {
+    fn from(value: String) -> AttributeName {
+        AttributeName::Name(value)
+    }
+}
+
+impl<'a> From<AttributeId> for AttributeNameRef<'a> {
+    fn from(value: AttributeId) -> AttributeNameRef<'a> {
+        AttributeNameRef::Id(value)
+    }
+}
+
+impl<'a> From<&'a str> for AttributeNameRef<'a> {
+    fn from(value: &'a str) -> AttributeNameRef<'a> {
+        AttributeNameRef::Name(value)
+    }
+}
+
 /// Representation oh the SVG attribute object.
 #[derive(PartialEq,Clone,Debug)]
 pub struct Attribute {
     /// Internal ID of the attribute.
-    pub id: AttributeId,
+    pub name: AttributeName,
     /// Attribute value.
     pub value: AttributeValue,
     /// Visibility.
@@ -457,13 +518,38 @@ macro_rules! impl_is_type {
 
 impl Attribute {
     /// Constructs a new attribute.
-    pub fn new<T>(id: AttributeId, value: T) -> Attribute
-        where AttributeValue: From<T>
+    pub fn new<'a, N, T>(name: N, value: T) -> Attribute
+        where AttributeNameRef<'a>: From<N>, AttributeValue: From<T>
     {
+        let n = AttributeNameRef::from(name);
         Attribute {
-            id: id,
+            name: AttributeName::from(n),
             value: AttributeValue::from(value),
             visible: true,
+        }
+    }
+
+    /// Returns an SVG attribute ID.
+    pub fn id(&self) -> Option<AttributeId> {
+        match self.name {
+            AttributeName::Id(id) => Some(id),
+            AttributeName::Name(_) => None,
+        }
+    }
+
+    /// Returns `true` if the attribute has the selected ID.
+    pub fn has_id(&self, id: AttributeId) -> bool {
+        match self.name {
+            AttributeName::Id(id2) => id2 == id,
+            AttributeName::Name(_) => false,
+        }
+    }
+
+    /// Returns `true` if the attribute is an SVG attribute.
+    pub fn is_svg(&self) -> bool {
+        match self.name {
+            AttributeName::Id(_) => true,
+            AttributeName::Name(_) => false,
         }
     }
 
@@ -477,46 +563,57 @@ impl Attribute {
 
     /// Returns `true` if the current attribute's value is equal to a default by the SVG spec.
     pub fn check_is_default(&self) -> bool {
-        match AttributeValue::default_value(self.id) {
-            Some(v) => self.value == v,
-            None => false,
+        if let AttributeName::Id(id) = self.name {
+            match AttributeValue::default_value(id) {
+                Some(v) => self.value == v,
+                None => false,
+            }
+        } else {
+            false
         }
     }
 
     /// Returns `true` if the current attribute is part of
     /// [presentation attributes](https://www.w3.org/TR/SVG/propidx.html).
     pub fn is_presentation(&self) -> bool {
-        PRESENTATION_ATTRIBUTES.binary_search(&self.id).is_ok()
+        self.list_contains(PRESENTATION_ATTRIBUTES)
     }
 
     /// Returns `true` if the current attribute is part of inheritable
     /// [presentation attributes](https://www.w3.org/TR/SVG/propidx.html).
     pub fn is_inheritable(&self) -> bool {
-        self.is_presentation() && NON_INHERITABLE_ATTRIBUTES.binary_search(&self.id).is_err()
+        if self.is_presentation() {
+            match self.name {
+                AttributeName::Id(id) => NON_INHERITABLE_ATTRIBUTES.binary_search(&id).is_err(),
+                AttributeName::Name(_) => false,
+            }
+        } else {
+            false
+        }
     }
 
     /// Returns `true` if the current attribute is part of
     /// [animation event attributes](https://www.w3.org/TR/SVG/intro.html#TermAnimationEventAttribute).
     pub fn is_animation_event(&self) -> bool {
-        ANIMATION_EVENT_ATTRIBUTES.binary_search(&self.id).is_ok()
+        self.list_contains(ANIMATION_EVENT_ATTRIBUTES)
     }
 
     /// Returns `true` if the current attribute is part of
     /// [graphical event attributes](https://www.w3.org/TR/SVG/intro.html#TermGraphicalEventAttribute).
     pub fn is_graphical_event(&self) -> bool {
-        GRAPHICAL_EVENT_ATTRIBUTES.binary_search(&self.id).is_ok()
+        self.list_contains(GRAPHICAL_EVENT_ATTRIBUTES)
     }
 
     /// Returns `true` if the current attribute is part of
     /// [document event attributes](https://www.w3.org/TR/SVG/intro.html#TermDocumentEventAttribute).
     pub fn is_document_event(&self) -> bool {
-        DOCUMENT_EVENT_ATTRIBUTES.binary_search(&self.id).is_ok()
+        self.list_contains(DOCUMENT_EVENT_ATTRIBUTES)
     }
 
     /// Returns `true` if the current attribute is part of
     /// [conditional processing attributes](https://www.w3.org/TR/SVG/intro.html#TermConditionalProcessingAttribute).
     pub fn is_conditional_processing(&self) -> bool {
-        CONDITIONAL_PROCESSING_ATTRIBUTES.binary_search(&self.id).is_ok()
+        self.list_contains(CONDITIONAL_PROCESSING_ATTRIBUTES)
     }
 
     /// Returns `true` if the current attribute is part of
@@ -525,7 +622,7 @@ impl Attribute {
     /// **NOTE:** the `id` attribute is part of core attributes, but we don't store it here
     /// since it's part of the `Node` struct.
     pub fn is_core(&self) -> bool {
-        CORE_ATTRIBUTES.binary_search(&self.id).is_ok()
+        self.list_contains(CORE_ATTRIBUTES)
     }
 
     /// Returns `true` if the current attribute is part of fill attributes.
@@ -534,7 +631,7 @@ impl Attribute {
     ///
     /// This check is not defined by the SVG spec.
     pub fn is_fill(&self) -> bool {
-        FILL_ATTRIBUTES.binary_search(&self.id).is_ok()
+        self.list_contains(FILL_ATTRIBUTES)
     }
 
     /// Returns `true` if the current attribute is part of stroke attributes.
@@ -545,7 +642,14 @@ impl Attribute {
     ///
     /// This check is not defined by the SVG spec.
     pub fn is_stroke(&self) -> bool {
-        STROKE_ATTRIBUTES.binary_search(&self.id).is_ok()
+        self.list_contains(STROKE_ATTRIBUTES)
+    }
+
+    fn list_contains(&self, list: &[AttributeId]) -> bool {
+        match self.name {
+            AttributeName::Id(id) => list.binary_search(&id).is_ok(),
+            AttributeName::Name(_) => false,
+        }
     }
 
     impl_is_type!(is_color, Color);
@@ -571,9 +675,10 @@ fn write_quote(opt: &WriteOptions, out: &mut Vec<u8>) {
 
 impl WriteBuffer for Attribute {
     fn write_buf_opt(&self, opt: &WriteOptions, buf: &mut Vec<u8>) {
-        let name = self.id.name();
-
-        buf.extend_from_slice(name.as_bytes());
+        match self.name {
+            AttributeName::Id(id) => buf.extend_from_slice(id.name().as_bytes()),
+            AttributeName::Name(ref name) => buf.extend_from_slice(name.as_bytes()),
+        }
         buf.push(b'=');
         write_quote(opt, buf);
         self.value.write_buf_opt(opt, buf);

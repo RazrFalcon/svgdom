@@ -186,7 +186,7 @@ fn attributes_exist_2() {
 
     n.set_attribute(AId::StrokeWidth, 1.0);
 
-    assert_eq!(n.attributes().iter().find(|ref attr| attr.id == AId::StrokeWidth).is_some(), true);
+    assert_eq!(n.attributes().iter().find(|ref attr| attr.has_id(AId::StrokeWidth)).is_some(), true);
 }
 
 #[test]
