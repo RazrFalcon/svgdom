@@ -53,7 +53,8 @@ DOM structure itself based on: https://github.com/SimonSapin/rust-forest/tree/ma
 #[macro_use]
 extern crate svgparser;
 
-pub use attribute::{Attribute, AttributeName, AttributeNameRef, AttributeValue};
+pub use attribute::{Attribute, AttributeName, AttributeNameRef};
+pub use attribute_value::AttributeValue;
 pub use attributes::Attributes;
 pub use dom::{Document, Node, NodeEdge, NodeType, TagName, Traverse};
 pub use error::Error;
@@ -85,6 +86,7 @@ macro_rules! assert_eq_text {
 }
 
 mod attribute;
+mod attribute_value;
 mod attributes;
 mod dom;
 mod error;

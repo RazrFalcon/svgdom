@@ -13,6 +13,7 @@ use write;
 use super::{
     AttributeId,
     Attributes,
+    AttributeValue,
     ElementId,
     Error,
     ParseOptions,

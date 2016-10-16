@@ -11,8 +11,8 @@ pub use self::number::FuzzyEq;
 
 pub use svgparser::{LengthUnit};
 
-pub use super::attribute::NumberList;
-pub use super::attribute::LengthList;
+pub use super::attribute_value::NumberList;
+pub use super::attribute_value::LengthList;
 
 pub mod path;
 mod color;
