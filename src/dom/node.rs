@@ -3,191 +3,28 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 use std::cell::{RefCell, Ref, RefMut};
-use std::fmt;
-use std::rc::{Rc, Weak};
-use std::str::FromStr;
+use std::rc::{Rc};
 
 use attribute::*;
-use parser::parse_svg;
-use write;
-use super::{
+use {
     AttributeId,
     Attributes,
     AttributeValue,
     ElementId,
     Error,
-    ParseOptions,
-    WriteBuffer,
-    WriteOptions,
-    WriteToString,
 };
-
-/// Container of [`Node`](struct.Node.html)s.
-pub struct Document {
-    root: Node,
-}
-
-impl Document {
-    /// Constructs a new `Document`.
-    pub fn new() -> Document {
-        Document {
-            root: Document::new_node(None, NodeType::Root, None, None)
-        }
-    }
-
-    /// Constructs a new `Document` from the `data` using a default `ParseOptions`.
-    pub fn from_data(data: &[u8]) -> Result<Document, Error> {
-        Document::from_data_with_opt(data, &ParseOptions::default())
-    }
-
-    /// Constructs a new `Document` from the `data` using a supplied `ParseOptions`.
-    pub fn from_data_with_opt(data: &[u8], opt: &ParseOptions) -> Result<Document, Error> {
-        parse_svg(data, opt)
-    }
-
-    /// Constructs a new `Node` with `Element` type.
-    ///
-    /// Constructed node do belong to this document, but not added to it tree structure.
-    pub fn create_element(&self, eid: ElementId) -> Node {
-        Document::new_node(Some(self.root.0.clone()), NodeType::Element,
-                           Some(TagName::Id(eid)), None)
-    }
-
-    /// Constructs a new `Node` with `Element` type and non-SVG tag name.
-    ///
-    /// Constructed node do belong to this document, but not added to it tree structure.
-    pub fn create_nonsvg_element(&self, tag_name: &str) -> Result<Node, Error> {
-        if tag_name.is_empty() {
-            return Err(Error::EmptyTagName);
-        }
-
-        Ok(Document::new_node(Some(self.root.0.clone()), NodeType::Element,
-                              Some(TagName::Name(tag_name.to_owned())), None))
-    }
-
-    /// Constructs a new `Node` using the supplied `NodeType`.
-    ///
-    /// Constructed node do belong to this document, but not added to it tree structure.
-    ///
-    /// This method should be used for any non-element nodes.
-    pub fn create_node(&self, node_type: NodeType, text: &str) -> Node {
-        debug_assert!(node_type != NodeType::Element && node_type != NodeType::Root);
-        Document::new_node(Some(self.root.0.clone()), node_type, None, Some(text.to_owned()))
-    }
-
-    /// Returns the root `Node`.
-    pub fn root(&self) -> Node {
-        self.root.clone()
-    }
-
-    /// Returns the first child of the root `Node`.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the root node is currently mutability borrowed.
-    pub fn first_child(&self) -> Option<Node> {
-        self.root().first_child()
-    }
-
-    /// Returns the first child with `svg` tag name of the root `Node`.
-    ///
-    /// In most of the cases result of this method and `first_element_child()` will be the same,
-    /// but an additional check may be helpful.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the root node is currently mutability borrowed.
-    ///
-    /// # Examples
-    /// ```
-    /// use svgdom::{Document, ElementId};
-    ///
-    /// let doc = Document::from_data(b"<!--comment--><svg/>").unwrap();
-    ///
-    /// assert_eq!(doc.svg_element().unwrap().is_tag_id(ElementId::Svg), true);
-    /// ```
-    pub fn svg_element(&self) -> Option<Node> {
-        for n in self.root.children() {
-            if n.is_tag_id(ElementId::Svg) {
-                return Some(n.clone());
-            }
-        }
-
-        None
-    }
-
-    /// Appends a new child to root node, after existing children, and returns it.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the node, the new child, or one of their adjoining nodes is currently borrowed.
-    ///
-    /// # Examples
-    /// ```
-    /// use svgdom::{Document, ElementId};
-    ///
-    /// let doc = Document::new();
-    /// doc.append(&doc.create_element(ElementId::Svg));
-    ///
-    /// assert_eq!(doc.to_string(), "<svg/>\n");
-    /// ```
-    pub fn append(&self, new_child: &Node) -> Node {
-        self.root.append(new_child);
-        new_child.clone()
-    }
-
-    /// Returns an iterator over descendant SVG elements.
-    pub fn descendants(&self) -> Descendants {
-        self.root.descendants()
-    }
-
-    /// Returns an iterator over descendant SVG nodes.
-    pub fn descendant_nodes(&self) -> DescendantNodes {
-        self.root.descendant_nodes()
-    }
-
-    /// Returns an iterator to this node's children elements.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the node is currently mutability borrowed.
-    pub fn children(&self) -> Children {
-        self.root.children()
-    }
-
-    fn new_node(doc: Option<Link>, node_type: NodeType, tag_name: Option<TagName>,
-                text: Option<String>)
-                -> Node {
-        Node(Rc::new(RefCell::new(NodeData {
-            doc: doc,
-            parent: None,
-            first_child: None,
-            last_child: None,
-            previous_sibling: None,
-            next_sibling: None,
-            node_type: node_type,
-            tag_name: tag_name,
-            id: String::new(),
-            attributes: Attributes::new(),
-            linked_nodes: Vec::new(),
-            text: text,
-        })))
-    }
-}
-
-impl Default for Document {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl WriteBuffer for Document {
-    fn write_buf_opt(&self, opt: &WriteOptions, buf: &mut Vec<u8>) {
-        write::write_dom(self, opt, buf);
-    }
-}
-
-impl_display!(Document);
+use super::doc::Document;
+use super::tag_name::TagName;
+use super::node_data::NodeData;
+use super::node_type::NodeType;
+use super::iterators::{
+    Traverse,
+    Descendants,
+    DescendantNodes,
+    Children,
+    ChildrenNodes,
+    LinkAttributes,
+};
 
 macro_rules! try_opt {
     ($expr: expr) => {
@@ -216,7 +53,7 @@ macro_rules! try_opt {
 ///
 /// Most of the API are designed to work with SVG elements and attributes.
 /// Processing of non-SVG data is pretty hard/verbose, since it's an SVG DOM, not an XML.
-pub struct Node(Rc<RefCell<NodeData>>);
+pub struct Node(pub Rc<RefCell<NodeData>>);
 
 impl Node {
     /// Returns a `Document` that owns this node.
@@ -307,7 +144,7 @@ impl Node {
         if let Some(mut child) = self.first_child() {
             loop {
                 if child.is_svg_element() {
-                    return Children(Some(child));
+                    return Children::new(Some(child));
                 }
 
                 if let Some(c) = child.next_sibling() {
@@ -318,7 +155,7 @@ impl Node {
             }
         }
 
-        Children(None)
+        Children::new(None)
     }
 
     /// Returns `true` is this node has children elements.
@@ -351,7 +188,7 @@ impl Node {
     ///
     /// Panics if the node is currently mutability borrowed.
     pub fn children_nodes(&self) -> ChildrenNodes {
-        ChildrenNodes(self.first_child())
+        ChildrenNodes::new(self.first_child())
     }
 
     /// Returns `true` is this node has children nodes.
@@ -992,11 +829,7 @@ impl Node {
     /// Panics if the node is currently mutability borrowed.
     pub fn linked_nodes(&self) -> LinkAttributes {
         let self_borrow = self.0.borrow();
-
-        LinkAttributes {
-            data: self_borrow.linked_nodes.clone(),
-            idx: 0,
-        }
+        LinkAttributes::new(self_borrow.linked_nodes.clone())
     }
 
     /// Returns a copy of the attribute value by `id`.
@@ -1381,22 +1214,19 @@ impl Node {
     /// assert_eq!(iter.next().is_none(), true);
     /// ```
     pub fn descendants(&self) -> Descendants {
-        Descendants(self.traverse())
+        Descendants::new(self)
     }
 
     /// Returns an iterator over descendant nodes.
     pub fn descendant_nodes(&self) -> DescendantNodes {
-        DescendantNodes(self.traverse())
+        DescendantNodes::new(self)
     }
 
     /// Returns an iterator over descendant nodes.
     ///
     /// More complex alternative of the `Node::descendant_nodes()`.
     pub fn traverse(&self) -> Traverse {
-        Traverse {
-            root: self.clone(),
-            next: Some(NodeEdge::Start(self.clone())),
-        }
+        Traverse::new(self)
     }
 }
 
@@ -1405,337 +1235,3 @@ fn same_rc<T>(a: &Rc<T>, b: &Rc<T>) -> bool {
     let b: *const T = &**b;
     a == b
 }
-
-/// Cloning a `Node` only increments a reference count. It does not copy the data.
-impl Clone for Node {
-    fn clone(&self) -> Node {
-        Node(self.0.clone())
-    }
-}
-
-impl PartialEq for Node {
-    fn eq(&self, other: &Node) -> bool {
-        self.same_node(other)
-    }
-}
-
-// TODO: write better messages
-impl fmt::Debug for Node {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self.node_type() {
-            NodeType::Root => write!(f, "Root node"),
-            NodeType::Element => write!(f, "<{:?} id={:?}>", self.tag_name().unwrap(), self.id()),
-            NodeType::Declaration => write!(f, "Declaration node"),
-            NodeType::Comment => write!(f, "Comment node"),
-            NodeType::Cdata => write!(f, "CDATA node"),
-            NodeType::Text => write!(f, "Text node"),
-        }
-    }
-}
-
-/// List of supported node types.
-#[derive(Clone,Copy,PartialEq,Debug)]
-pub enum NodeType {
-    /// Root node of the `Document`.
-    ///
-    /// Constructed with `Document`. Unavailable to user.
-    Root,
-    /// Element node.
-    ///
-    /// Only an element can have attributes, ID and tag name.
-    Element,
-    /// Declaration node.
-    Declaration,
-    /// Comment node.
-    Comment,
-    /// CDATA node.
-    Cdata,
-    /// Text node.
-    Text,
-}
-
-type Link = Rc<RefCell<NodeData>>;
-type WeakLink = Weak<RefCell<NodeData>>;
-
-#[allow(dead_code)]
-struct NodeData {
-    // TODO: check that doc is equal in append, insert, etc.
-    doc: Option<Link>,
-
-    parent: Option<WeakLink>,
-    first_child: Option<Link>,
-    last_child: Option<WeakLink>,
-    previous_sibling: Option<WeakLink>,
-    next_sibling: Option<Link>,
-
-    node_type: NodeType, // TODO: should be immutable/const somehow
-    tag_name: Option<TagName>,
-    id: String,
-    attributes: Attributes,
-    linked_nodes: Vec<WeakLink>,
-    text: Option<String>,
-}
-
-impl NodeData {
-    /// Detach a node from its parent and siblings. Children are not affected.
-    fn detach(&mut self) {
-        let parent_weak = self.parent.take();
-        let previous_sibling_weak = self.previous_sibling.take();
-        let next_sibling_strong = self.next_sibling.take();
-
-        let previous_sibling_opt = previous_sibling_weak.as_ref().and_then(|weak| weak.upgrade());
-
-        if let Some(next_sibling_ref) = next_sibling_strong.as_ref() {
-            let mut next_sibling_borrow = next_sibling_ref.borrow_mut();
-            next_sibling_borrow.previous_sibling = previous_sibling_weak;
-        } else if let Some(parent_ref) = parent_weak.as_ref() {
-            if let Some(parent_strong) = parent_ref.upgrade() {
-                let mut parent_borrow = parent_strong.borrow_mut();
-                parent_borrow.last_child = previous_sibling_weak;
-            }
-        }
-
-        if let Some(previous_sibling_strong) = previous_sibling_opt {
-            let mut previous_sibling_borrow = previous_sibling_strong.borrow_mut();
-            previous_sibling_borrow.next_sibling = next_sibling_strong;
-        } else if let Some(parent_ref) = parent_weak.as_ref() {
-            if let Some(parent_strong) = parent_ref.upgrade() {
-                let mut parent_borrow = parent_strong.borrow_mut();
-                parent_borrow.first_child = next_sibling_strong;
-            }
-        }
-    }
-}
-
-/// Wrapper arrow element tag name.
-#[derive(Clone,PartialEq)]
-pub enum TagName {
-    /// For SVG elements.
-    Id(ElementId),
-    /// For unknown elements.
-    Name(String),
-}
-
-impl From<ElementId> for TagName {
-    fn from(value: ElementId) -> TagName {
-        TagName::Id(value)
-    }
-}
-
-impl From<String> for TagName {
-    fn from(value: String) -> TagName {
-        TagName::Name(value)
-    }
-}
-
-impl<'a> From<&'a str> for TagName {
-    fn from(value: &str) -> TagName {
-        TagName::Name(String::from_str(value).unwrap())
-    }
-}
-
-impl fmt::Debug for TagName {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            TagName::Id(ref id) => write!(f, "{}", id.name()),
-            TagName::Name(ref name) => write!(f, "{}", name),
-        }
-    }
-}
-
-pub struct LinkAttributes {
-    data: Vec<WeakLink>,
-    idx: usize,
-}
-
-impl Iterator for LinkAttributes {
-    type Item = Node;
-
-    fn next(&mut self) -> Option<Node> {
-        let i = self.idx;
-        self.idx += 1;
-
-        if i < self.data.len() {
-            match self.data[i].upgrade() {
-                Some(n) => Some(Node(n)),
-                None => None,
-            }
-        } else {
-            None
-        }
-    }
-}
-
-#[allow(missing_docs)]
-#[derive(Clone)]
-pub enum NodeEdge {
-    /// Indicates that start of a node that has children.
-    /// Yielded by `Traverse::next` before the node`s descendants.
-    /// In HTML or XML, this corresponds to an opening tag like `<div>`
-    Start(Node),
-
-    /// Indicates that end of a node that has children.
-    /// Yielded by `Traverse::next` after the node`s descendants.
-    /// In HTML or XML, this corresponds to a closing tag like `</div>`
-    End(Node),
-}
-
-
-/// An iterator of `Node`s to a given node and its descendants, in tree order.
-#[derive(Clone)]
-pub struct Traverse {
-    root: Node,
-    next: Option<NodeEdge>,
-}
-
-impl Iterator for Traverse {
-    type Item = NodeEdge;
-
-    /// # Panics
-    ///
-    /// Panics if the node about to be yielded is currently mutability borrowed.
-    fn next(&mut self) -> Option<NodeEdge> {
-        match self.next.take() {
-            Some(item) => {
-                self.next = match item {
-                    NodeEdge::Start(ref node) => {
-                        match node.first_child() {
-                            Some(first_child) => Some(NodeEdge::Start(first_child)),
-                            None => Some(NodeEdge::End(node.clone()))
-                        }
-                    }
-                    NodeEdge::End(ref node) => {
-                        if node.same_node(&self.root) {
-                            None
-                        } else {
-                            match node.next_sibling() {
-                                Some(next_sibling) => Some(NodeEdge::Start(next_sibling)),
-                                None => match node.parent() {
-                                    Some(parent) => Some(NodeEdge::End(parent)),
-
-                                    // `node.parent()` here can only be `None`
-                                    // if the tree has been modified during iteration,
-                                    // but silently stopping iteration
-                                    // seems a more sensible behavior than panicking.
-                                    None => None
-                                }
-                            }
-                        }
-                    }
-                };
-                Some(item)
-            }
-            None => None
-        }
-    }
-}
-
-/// An iterator of `Node`s to a given node and its descendants, in tree order.
-pub struct DescendantNodes(Traverse);
-
-impl Iterator for DescendantNodes {
-    type Item = Node;
-
-    /// # Panics
-    ///
-    /// Panics if the node about to be yielded is currently mutability borrowed.
-    fn next(&mut self) -> Option<Node> {
-        loop {
-            match self.0.next() {
-                Some(NodeEdge::Start(node)) => return Some(node),
-                Some(NodeEdge::End(_)) => {}
-                None => return None
-            }
-        }
-    }
-}
-
-#[derive(Clone)]
-pub struct Descendants(Traverse);
-
-impl Descendants {
-    // TODO: find a better way
-    pub fn skip_children(&mut self) {
-        // TODO: do nothing if current node does not have any children
-
-        let n = match self.next() {
-            Some(n) => n.parent().unwrap(),
-            None => return,
-        };
-
-        if !n.has_children() {
-            return;
-        }
-
-        loop {
-            match self.0.next() {
-                Some(NodeEdge::Start(_)) => {}
-                Some(NodeEdge::End(node)) => {
-                    if n == node {
-                        break;
-                    }
-                }
-                None => break
-            }
-        }
-    }
-}
-
-impl Iterator for Descendants {
-    type Item = Node;
-
-    /// # Panics
-    ///
-    /// Panics if the node about to be yielded is currently mutability borrowed.
-    fn next(&mut self) -> Option<Node> {
-        loop {
-            match self.0.next() {
-                Some(NodeEdge::Start(node)) => {
-                    if node.is_svg_element() {
-                        return Some(node)
-                    }
-                }
-                Some(NodeEdge::End(_)) => {}
-                None => return None
-            }
-        }
-    }
-}
-
-macro_rules! impl_node_iterator {
-    ($name: ident, $next: expr) => {
-        impl Iterator for $name {
-            type Item = Node;
-
-            /// # Panics
-            ///
-            /// Panics if the node about to be yielded is currently mutability borrowed.
-            fn next(&mut self) -> Option<Node> {
-                match self.0.take() {
-                    Some(node) => {
-                        self.0 = $next(&node);
-                        Some(node)
-                    }
-                    None => None
-                }
-            }
-        }
-    }
-}
-
-/// An iterator of `Node`s to the children of a given node.
-pub struct Children(Option<Node>);
-impl_node_iterator!(Children, |node: &Node| {
-    let mut curr = node.clone();
-    while let Some(n) = curr.next_sibling() {
-        if n.node_type() == NodeType::Element {
-            return Some(n);
-        }
-        curr = n.clone();
-    }
-    None
-});
-
-/// An iterator of `Node`s to the children of a given node.
-pub struct ChildrenNodes(Option<Node>);
-impl_node_iterator!(ChildrenNodes, |node: &Node| node.next_sibling());
