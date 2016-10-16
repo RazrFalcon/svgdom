@@ -2,6 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#[macro_use]
 extern crate svgdom;
 
 use svgdom::{Document, ParseOptions, Error, ErrorPos, NodeType, TagName, ValueId, WriteToString};
@@ -19,7 +20,6 @@ macro_rules! write_opt_for_tests {
     })
 }
 
-#[cfg(test)]
 macro_rules! test_resave {
     ($name:ident, $in_text:expr, $out_text:expr) => (
         #[test]
@@ -28,21 +28,6 @@ macro_rules! test_resave {
             assert_eq_text!(doc.to_string_with_opt(&write_opt_for_tests!()), $out_text);
         }
     )
-}
-
-#[cfg(test)]
-macro_rules! assert_eq_text {
-    ($left:expr, $right:expr) => ({
-        match (&$left, &$right) {
-            (left_val, right_val) => {
-                if !(*left_val == *right_val) {
-                    panic!("assertion failed: `(left == right)` \
-                           \nleft:  `{}`\nright: `{}`",
-                           left_val, right_val)
-                }
-            }
-        }
-    })
 }
 
 #[test]
@@ -683,7 +668,7 @@ fn skip_comments_1() {
 b"<!--comment-->
 <svg/>", &opt).unwrap();
 
-    assert_eq!(doc.to_string_with_opt(&write_opt_for_tests!()),
+    assert_eq_text!(doc.to_string_with_opt(&write_opt_for_tests!()),
 "<svg/>
 ");
 }
@@ -696,7 +681,7 @@ fn skip_declaration_1() {
 b"<?xml version='1.0'?>
 <svg/>", &opt).unwrap();
 
-    assert_eq!(doc.to_string_with_opt(&write_opt_for_tests!()),
+    assert_eq_text!(doc.to_string_with_opt(&write_opt_for_tests!()),
 "<svg/>
 ");
 }
@@ -711,7 +696,7 @@ b"<svg>
     <rect/>
 </svg>", &opt).unwrap();
 
-    assert_eq!(doc.to_string_with_opt(&write_opt_for_tests!()),
+    assert_eq_text!(doc.to_string_with_opt(&write_opt_for_tests!()),
 "<svg>
     <rect/>
 </svg>
@@ -732,7 +717,7 @@ b"<svg>
     <rect/>
 </svg>", &opt).unwrap();
 
-    assert_eq!(doc.to_string_with_opt(&write_opt_for_tests!()),
+    assert_eq_text!(doc.to_string_with_opt(&write_opt_for_tests!()),
 "<svg>
     <rect/>
 </svg>
@@ -753,7 +738,7 @@ b"<svg>
     <rect/>
 </svg>", &opt).unwrap();
 
-    assert_eq!(doc.to_string_with_opt(&write_opt_for_tests!()),
+    assert_eq_text!(doc.to_string_with_opt(&write_opt_for_tests!()),
 "<svg>
     <rect/>
 </svg>
@@ -771,7 +756,7 @@ b"<svg>
     <rect/>
 </svg>", &opt).unwrap();
 
-    assert_eq!(doc.to_string_with_opt(&write_opt_for_tests!()),
+    assert_eq_text!(doc.to_string_with_opt(&write_opt_for_tests!()),
 "<svg>
     <rect/>
 </svg>
@@ -786,7 +771,7 @@ fn skip_unknown_attributes_1() {
 b"<svg fill='#ff0000' test='1' qwe='zzz' xmlns='http://www.w3.org/2000/svg' \
 xmlns:xlink='http://www.w3.org/1999/xlink'/>", &opt).unwrap();
 
-    assert_eq!(doc.to_string_with_opt(&write_opt_for_tests!()),
+    assert_eq_text!(doc.to_string_with_opt(&write_opt_for_tests!()),
 "<svg fill='#ff0000' xmlns='http://www.w3.org/2000/svg' \
 xmlns:xlink='http://www.w3.org/1999/xlink'/>
 ");
@@ -797,7 +782,7 @@ fn skip_px_unit_on_1() {
     let mut opt = ParseOptions::default();
     opt.parse_px_unit = true;
     let doc = Document::from_data_with_opt(b"<svg x='10px'/>", &opt).unwrap();
-    assert_eq!(doc.to_string_with_opt(&write_opt_for_tests!()), "<svg x='10px'/>\n");
+    assert_eq_text!(doc.to_string_with_opt(&write_opt_for_tests!()), "<svg x='10px'/>\n");
 }
 
 #[test]
@@ -805,7 +790,7 @@ fn skip_px_unit_off_1() {
     let mut opt = ParseOptions::default();
     opt.parse_px_unit = false;
     let doc = Document::from_data_with_opt(b"<svg x='10px'/>", &opt).unwrap();
-    assert_eq!(doc.to_string_with_opt(&write_opt_for_tests!()), "<svg x='10'/>\n");
+    assert_eq_text!(doc.to_string_with_opt(&write_opt_for_tests!()), "<svg x='10'/>\n");
 }
 
 #[test]
@@ -820,7 +805,7 @@ b"<svg>
     <path/>
 </svg>", &opt).unwrap();
 
-    assert_eq!(doc.to_string_with_opt(&write_opt_for_tests!()),
+    assert_eq_text!(doc.to_string_with_opt(&write_opt_for_tests!()),
 "<svg>
     <circle/>
     <path/>
@@ -840,7 +825,7 @@ b"<svg>
     <path/>
 </svg>", &opt).unwrap();
 
-    assert_eq!(doc.to_string_with_opt(&write_opt_for_tests!()),
+    assert_eq_text!(doc.to_string_with_opt(&write_opt_for_tests!()),
 "<svg>
     <circle/>
     <path/>
@@ -859,5 +844,5 @@ b"<svg>
     <path/>
 </svg>", &opt);
 
-    assert_eq!(doc.err().unwrap(), Error::EmptyDocument);
+    assert_eq_text!(doc.err().unwrap(), Error::EmptyDocument);
 }

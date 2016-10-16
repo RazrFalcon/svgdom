@@ -69,7 +69,7 @@ pub use svgparser::ValueId;
 #[macro_use]
 mod traits;
 
-#[cfg(test)]
+#[macro_export]
 macro_rules! assert_eq_text {
     ($left:expr, $right:expr) => ({
         match (&$left, &$right) {

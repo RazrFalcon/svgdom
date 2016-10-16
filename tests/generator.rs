@@ -2,6 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#[macro_use]
 extern crate svgdom;
 
 use svgdom::{Document, WriteOptions, WriteToString, NodeType};
@@ -10,20 +11,6 @@ use svgdom::ElementId as EId;
 use svgdom::types::{Transform, Length, LengthUnit, Color};
 
 // TODO: rename to writer
-
-macro_rules! assert_eq_text {
-    ($left:expr, $right:expr) => ({
-        match (&$left, &$right) {
-            (left_val, right_val) => {
-                if !(*left_val == *right_val) {
-                    panic!("assertion failed: `(left == right)` \
-                           \nleft:  `{}`\nright: `{}`",
-                           left_val, right_val)
-                }
-            }
-        }
-    })
-}
 
 macro_rules! test_resave {
     ($name:ident, $in_text:expr, $out_text:expr) => (
@@ -37,7 +24,7 @@ macro_rules! test_resave {
 
 #[test]
 fn empty_doc_1() {
-    assert_eq!(Document::new().to_string(), String::new());
+    assert_eq_text!(Document::new().to_string(), String::new());
 }
 
 #[test]
@@ -47,7 +34,7 @@ fn single_node_1() {
 
     doc.append(&n);
 
-    assert_eq!(doc.to_string(), "<svg/>\n");
+    assert_eq_text!(doc.to_string(), "<svg/>\n");
 }
 
 #[test]
@@ -59,7 +46,7 @@ fn child_node_1() {
     doc.append(&svg);
     svg.append(&defs);
 
-    assert_eq!(doc.to_string(),
+    assert_eq_text!(doc.to_string(),
 "<svg>
     <defs/>
 </svg>
@@ -81,7 +68,7 @@ fn child_nodes_1() {
         parent = r;
     }
 
-    assert_eq!(doc.to_string(),
+    assert_eq_text!(doc.to_string(),
 "<svg>
     <rect id=\"1\">
         <rect id=\"2\">
@@ -107,7 +94,7 @@ fn links_1() {
 
     use_n.set_link_attribute(AId::XlinkHref, svg_n).unwrap();
 
-    assert_eq!(doc.to_string(),
+    assert_eq_text!(doc.to_string(),
 "<svg id=\"svg1\">
     <use xlink:href=\"#svg1\"/>
 </svg>
@@ -129,7 +116,7 @@ fn links_2() {
 
     rect_n.set_link_attribute(AId::Fill, lg_n).unwrap();
 
-    assert_eq!(doc.to_string(),
+    assert_eq_text!(doc.to_string(),
 "<svg>
     <linearGradient id=\"lg1\"/>
     <rect fill=\"url(#lg1)\"/>
@@ -159,7 +146,7 @@ fn attributes_types_1() {
 
     // TODO: add path
 
-    assert_eq!(doc.to_string(),
+    assert_eq_text!(doc.to_string(),
         "<svg fill=\"#ffffff\" height=\"1.5%\" \
          stdDeviation=\"1.5 2.5 3.5\" stroke-dasharray=\"1.5mm 2.5mm 3.5mm\" \
          transform=\"matrix(2 0 0 3 20 30)\" version=\"1.0\" width=\"1.5\"/>\n");
@@ -176,7 +163,7 @@ fn declaration_1() {
     doc.append(&dec);
     doc.append(&svg);
 
-    assert_eq!(doc.to_string(), "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<svg/>\n");
+    assert_eq_text!(doc.to_string(), "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<svg/>\n");
 }
 
 #[test]
@@ -189,7 +176,7 @@ fn comment_1() {
     doc.append(&comm);
     doc.append(&svg);
 
-    assert_eq!(doc.to_string(), "<!--comment-->\n<svg/>\n");
+    assert_eq_text!(doc.to_string(), "<!--comment-->\n<svg/>\n");
 }
 
 #[test]
@@ -202,7 +189,7 @@ fn text_1() {
     doc.append(&svg);
     svg.append(&text);
 
-    assert_eq!(doc.to_string(),
+    assert_eq_text!(doc.to_string(),
 "<svg>
     text
 </svg>
@@ -365,7 +352,7 @@ b"<svg>
 </svg>
 ").unwrap();
 
-    assert_eq!(doc.to_string(),
+    assert_eq_text!(doc.to_string(),
 "<svg>
     <g>
         <rect/>
@@ -386,7 +373,7 @@ b"<svg>
 
     let mut opt = WriteOptions::default();
     opt.indent = 2;
-    assert_eq!(doc.to_string_with_opt(&opt),
+    assert_eq_text!(doc.to_string_with_opt(&opt),
 "<svg>
   <g>
     <rect/>
@@ -407,7 +394,7 @@ b"<svg>
 
     let mut opt = WriteOptions::default();
     opt.indent = 0;
-    assert_eq!(doc.to_string_with_opt(&opt),
+    assert_eq_text!(doc.to_string_with_opt(&opt),
 "<svg>
 <g>
 <rect/>
@@ -428,7 +415,7 @@ b"<svg>
 
     let mut opt = WriteOptions::default();
     opt.indent = -1;
-    assert_eq!(doc.to_string_with_opt(&opt),
+    assert_eq_text!(doc.to_string_with_opt(&opt),
 "<svg><g><rect/></g></svg>");
 }
 
@@ -440,5 +427,5 @@ b"<svg id=\"svg1\"/>").unwrap();
     let mut opt = WriteOptions::default();
     opt.indent = -1;
     opt.use_single_quote = true;
-    assert_eq!(doc.to_string_with_opt(&opt), "<svg id='svg1'/>");
+    assert_eq_text!(doc.to_string_with_opt(&opt), "<svg id='svg1'/>");
 }

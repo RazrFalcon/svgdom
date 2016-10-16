@@ -5,7 +5,13 @@
 use std::slice;
 use std::mem;
 
-use super::{Attribute, AttributeName, AttributeNameRef, AttributeId, AttributeValue};
+use super::{
+    Attribute,
+    AttributeName,
+    AttributeNameRef,
+    AttributeId,
+    AttributeValue
+};
 
 /// Wrapper around attributes list.
 ///
