@@ -200,27 +200,3 @@ fn remove_attribute_1() {
     n.remove_attribute(AId::StrokeWidth);
     assert_eq!(n.has_attribute(AId::StrokeWidth), false);
 }
-
-#[test]
-fn descendants_iter_1() {
-    let doc = Document::from_data(
-b"<svg>
-    <g>
-        <rect/>
-        <g>
-            <rect/>
-            <rect/>
-        </g>
-        <rect/>
-    </g>
-    <path/>
-    <circle/>
-</svg>").unwrap();
-
-    let mut iter = doc.descendants();
-    assert_eq!(iter.next().unwrap().is_tag_id(EId::Svg), true);
-    assert_eq!(iter.next().unwrap().is_tag_id(EId::G), true);
-    iter.skip_children();
-    assert_eq!(iter.next().unwrap().is_tag_id(EId::Path), true);
-    assert_eq!(iter.next().unwrap().is_tag_id(EId::Circle), true);
-}

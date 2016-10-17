@@ -111,12 +111,12 @@ pub fn parse_svg(data: &[u8], opt: &ParseOptions) -> Result<Document, Error> {
     }
 
     // document must contain any children
-    if !doc.root().has_children_nodes() {
+    if !doc.root().has_children() {
         return Err(Error::EmptyDocument);
     }
 
     // first element must be an 'svg'
-    match doc.children().nth(0) {
+    match doc.children().svg().nth(0) {
         Some(n) => {
             if !n.is_tag_id(ElementId::Svg) {
                 return Err(Error::NoSvgElement);
@@ -252,7 +252,7 @@ fn process_token<'a>(doc: &Document,
     // which is faster
     if parent.node_type() == NodeType::Root {
         // check that the first element of the doc is 'svg'
-        if let Some(n) = doc.children().nth(0) {
+        if let Some(n) = doc.children().svg().nth(0) {
             if !n.is_tag_id(ElementId::Svg) {
                 return Err(Error::NoSvgElement);
             }
@@ -679,7 +679,7 @@ fn resolve_css<'a>(doc: &Document,
     }
 
     for (k, v) in &post_data.css.by_tag {
-        for node in doc.descendants() {
+        for node in doc.descendants().svg() {
             if node.tag_id().unwrap() == *k {
                 try!(parse_style_attribute(&node, v.clone(), &mut post_data.links,
                                            &post_data.entitis, &opt));

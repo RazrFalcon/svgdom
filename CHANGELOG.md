@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 - Always add a space after ArcTo flags during the path writing.
 - SVG and non-SVG attributes now stored in the same container and not separately.
+- Rename `LinkAttributes` to `LinkedNodes`.
+- `descendants` and `children` methods now returns all nodes and not only SVG elements.
+  Use the `svg()` method to get only SVG elements. Example: `descendants().svg()`.
+- Rename `has_children_nodes` to `has_children`.
+
+### Removed
+- `descendant_nodes` and `children_nodes` methods.
+- `Descendants::skip_children`.
 
 ## [0.1.0] - 2016-10-09
 ### Added

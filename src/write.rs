@@ -70,7 +70,7 @@ pub fn write_dom(doc: &Document, opt: &WriteOptions, out: &mut Vec<u8>) {
 
                         depth.write_indent(out);
 
-                        if node.is_tag_id(ElementId::Text) && node.has_children_nodes() {
+                        if node.is_tag_id(ElementId::Text) && node.has_children() {
                             write_element_start(&node, opt, out);
                             process_text(&mut iter, opt, &node, &depth, out);
                             write_newline(opt.indent, out);
@@ -79,7 +79,7 @@ pub fn write_dom(doc: &Document, opt: &WriteOptions, out: &mut Vec<u8>) {
 
                         write_element_start(&node, opt, out);
 
-                        if node.has_children_nodes() {
+                        if node.has_children() {
                             depth.value += 1;
                             write_newline(opt.indent, out);
                         }
@@ -117,7 +117,7 @@ pub fn write_dom(doc: &Document, opt: &WriteOptions, out: &mut Vec<u8>) {
                 match node.node_type() {
                     NodeType::Root => continue,
                     NodeType::Element => {
-                        if node.has_children_nodes() {
+                        if node.has_children() {
                             if depth.value > 0 {
                                 depth.value -= 1;
                             }
@@ -214,13 +214,13 @@ fn write_element_start(node: &Node, opt: &WriteOptions, out: &mut Vec<u8>) {
     write_tag_name(&node.tag_name().unwrap(), out);
     write_attributes(node, opt, out);
 
-    if node.has_children_nodes() {
+    if node.has_children() {
         out.push(b'>');
     }
 }
 
 fn write_element_end(node: &Node, out: &mut Vec<u8>) {
-    if node.has_children_nodes() {
+    if node.has_children() {
         out.extend_from_slice(b"</");
         write_tag_name(&node.tag_name().unwrap(), out);
         out.push(b'>');
@@ -239,8 +239,8 @@ fn process_text(iter: &mut Traverse, opt: &WriteOptions, root: &Node, depth: &De
     }
 
     // Check that 'text' element contains only one text node.
-    // We use 2, since 'descendants_all' includes current node.
-    let is_simple_text = root.descendant_nodes().count() == 2;
+    // We use 2, since 'descendants' includes current node.
+    let is_simple_text = root.descendants().count() == 2;
 
     let mut is_first_text = true;
 

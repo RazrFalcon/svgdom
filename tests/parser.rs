@@ -56,7 +56,7 @@ fn parse_single_node_1() {
 
     let child = doc.root().first_child().unwrap();
     assert_eq!(*child.tag_name().unwrap(), TagName::Id(EId::Svg));
-    assert_eq!(doc.root().children_nodes().count(), 1);
+    assert_eq!(doc.root().children().count(), 1);
 }
 
 #[test]
@@ -66,17 +66,17 @@ fn parse_declaration_1() {
     let child = doc.root().first_child().unwrap();
     assert_eq!(child.node_type(), NodeType::Declaration);
     assert_eq!(*child.text().unwrap(), "version='1.0' encoding='UTF-8' standalone='no'");
-    assert_eq!(doc.root().children_nodes().count(), 2);
+    assert_eq!(doc.root().children().count(), 2);
 }
 
 #[test]
 fn parse_comment_1() {
     let doc = Document::from_data(b"<svg/><!--comment-->").unwrap();
 
-    let child = doc.root().children_nodes().nth(1).unwrap();
+    let child = doc.root().children().nth(1).unwrap();
     assert_eq!(child.node_type(), NodeType::Comment);
     assert_eq!(*child.text().unwrap(), "comment");
-    assert_eq!(doc.root().children_nodes().count(), 2);
+    assert_eq!(doc.root().children().count(), 2);
 }
 
 #[test]
@@ -92,7 +92,7 @@ fn parse_text_1() {
 fn parse_text_2() {
     let doc = Document::from_data(b"<svg><text>Some<tspan>complex</tspan>text</text></svg>").unwrap();
 
-    let mut nodes = doc.root().first_child().unwrap().descendant_nodes();
+    let mut nodes = doc.root().first_child().unwrap().descendants();
 
     let svg_node = nodes.next().unwrap();
     assert_eq!(*svg_node.tag_name().unwrap(), TagName::Id(EId::Svg));
@@ -478,8 +478,8 @@ b"<svg>
 </svg>").unwrap();
 
     let child = doc.first_child().unwrap();
-    let rg = child.children_nodes().nth(0).unwrap();
-    let rect = child.children_nodes().nth(1).unwrap();
+    let rg = child.children().nth(0).unwrap();
+    let rect = child.children().nth(1).unwrap();
 
     assert_eq!(rg.is_used(), true);
     assert_eq!(rect.attribute_value(AId::Fill).unwrap(), AttributeValue::FuncLink(rg));
@@ -496,8 +496,8 @@ b"<svg>
 </svg>").unwrap();
 
     let child = doc.first_child().unwrap();
-    let rect = child.children_nodes().nth(0).unwrap();
-    let rg = child.children_nodes().nth(1).unwrap();
+    let rect = child.children().nth(0).unwrap();
+    let rg = child.children().nth(1).unwrap();
 
     assert_eq!(rg.is_used(), true);
     assert_eq!(rect.attribute_value(AId::Fill).unwrap(), AttributeValue::FuncLink(rg));
@@ -511,7 +511,7 @@ b"<svg>
 </svg>").unwrap();
 
     let child = doc.first_child().unwrap();
-    let rect = child.children_nodes().nth(0).unwrap();
+    let rect = child.children().nth(0).unwrap();
 
     assert_eq!(rect.attribute_value(AId::Fill).unwrap(),
                AttributeValue::PredefValue(ValueId::None));
@@ -525,7 +525,7 @@ b"<svg>
 </svg>").unwrap();
 
     let child = doc.first_child().unwrap();
-    let rect = child.children_nodes().nth(0).unwrap();
+    let rect = child.children().nth(0).unwrap();
 
     assert_eq!(rect.attribute_value(AId::Fill).unwrap(),
                AttributeValue::Color(Color::new(255, 0, 0)));

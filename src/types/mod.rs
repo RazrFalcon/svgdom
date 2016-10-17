@@ -9,7 +9,7 @@ pub use self::color::Color;
 pub use self::length::Length;
 pub use self::number::FuzzyEq;
 
-pub use svgparser::{LengthUnit};
+pub use svgparser::LengthUnit;
 
 pub use super::attribute_value::NumberList;
 pub use super::attribute_value::LengthList;

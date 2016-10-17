@@ -29,7 +29,7 @@ fn main() {
 
     let mut count = 0;
 
-    for node in doc.descendants() {
+    for node in doc.descendants().svg() {
         let attrs = node.attributes();
         match attrs.get(AttributeId::D) {
             Some(attr) => {

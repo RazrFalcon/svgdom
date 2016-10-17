@@ -2,43 +2,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+use std::iter::Filter;
+
 use super::node::Node;
 use super::node_data::WeakLink;
-use super::node_type::NodeType;
 
-pub struct LinkAttributes {
-    data: Vec<WeakLink>,
-    idx: usize,
-}
-
-impl LinkAttributes {
-    pub fn new(data: Vec<WeakLink>) -> LinkAttributes {
-        LinkAttributes {
-            data: data,
-            idx: 0,
-        }
-    }
-}
-
-impl Iterator for LinkAttributes {
-    type Item = Node;
-
-    fn next(&mut self) -> Option<Node> {
-        let i = self.idx;
-        self.idx += 1;
-
-        if i < self.data.len() {
-            match self.data[i].upgrade() {
-                Some(n) => Some(Node(n)),
-                None => None,
-            }
-        } else {
-            None
-        }
-    }
-}
-
-#[allow(missing_docs)]
+/// Node type during traverse.
 #[derive(Clone)]
 pub enum NodeEdge {
     /// Indicates that start of a node that has children.
@@ -112,15 +81,26 @@ impl Iterator for Traverse {
 }
 
 /// An iterator of `Node`s to a given node and its descendants, in tree order.
-pub struct DescendantNodes(Traverse);
+pub struct Descendants(Traverse);
 
-impl DescendantNodes {
-    pub fn new(node: &Node) -> DescendantNodes {
-        DescendantNodes(node.traverse())
+impl Descendants {
+    /// Constructs a new Descendants iterator.
+    pub fn new(node: &Node) -> Descendants {
+        Descendants(node.traverse())
     }
 }
 
-impl Iterator for DescendantNodes {
+impl Descendants {
+    /// Returns an iterator over descendant SVG elements.
+    ///
+    /// Shorthand for: `filter(|n| n.is_svg_element())`
+    pub fn svg(self) -> Filter<Descendants, fn(&Node) -> bool> {
+        fn is_svg(n: &Node) -> bool { n.is_svg_element() }
+        self.filter(is_svg)
+    }
+}
+
+impl Iterator for Descendants {
     type Item = Node;
 
     /// # Panics
@@ -137,104 +117,73 @@ impl Iterator for DescendantNodes {
     }
 }
 
-#[derive(Clone)]
-pub struct Descendants(Traverse);
+/// An iterator of `Node`s to the children of a given node.
+pub struct Children(Option<Node>);
 
-impl Descendants {
-    pub fn new(node: &Node) -> Descendants {
-        Descendants(node.traverse())
+impl Children {
+    /// Constructs a new Children iterator.
+    pub fn new(node: Option<Node>) -> Children {
+        Children(node)
     }
 }
 
-impl Descendants {
-    // TODO: find a better way
-    pub fn skip_children(&mut self) {
-        // TODO: do nothing if current node does not have any children
-
-        let n = match self.next() {
-            Some(n) => n.parent().unwrap(),
-            None => return,
-        };
-
-        if !n.has_children() {
-            return;
-        }
-
-        loop {
-            match self.0.next() {
-                Some(NodeEdge::Start(_)) => {}
-                Some(NodeEdge::End(node)) => {
-                    if n == node {
-                        break;
-                    }
-                }
-                None => break
-            }
-        }
-    }
-}
-
-impl Iterator for Descendants {
+impl Iterator for Children {
     type Item = Node;
 
     /// # Panics
     ///
     /// Panics if the node about to be yielded is currently mutability borrowed.
     fn next(&mut self) -> Option<Node> {
-        loop {
-            match self.0.next() {
-                Some(NodeEdge::Start(node)) => {
-                    if node.is_svg_element() {
-                        return Some(node)
-                    }
-                }
-                Some(NodeEdge::End(_)) => {}
-                None => return None
+        match self.0.take() {
+            Some(node) => {
+                self.0 = node.next_sibling();
+                Some(node)
             }
+            None => None
         }
     }
 }
 
-macro_rules! impl_node_iterator {
-    ($name: ident, $next: expr) => {
-        impl $name {
-            pub fn new(node: Option<Node>) -> $name {
-                $name(node)
-            }
-        }
+impl Children {
+    /// Returns an iterator over children SVG elements.
+    ///
+    /// Shorthand for: `filter(|n| n.is_svg_element())`
+    pub fn svg(self) -> Filter<Children, fn(&Node) -> bool> {
+        fn is_svg(n: &Node) -> bool { n.is_svg_element() }
+        self.filter(is_svg)
+    }
+}
 
-        impl Iterator for $name {
-            type Item = Node;
+/// An iterator over linked nodes.
+pub struct LinkedNodes {
+    data: Vec<WeakLink>,
+    idx: usize,
+}
 
-            /// # Panics
-            ///
-            /// Panics if the node about to be yielded is currently mutability borrowed.
-            fn next(&mut self) -> Option<Node> {
-                match self.0.take() {
-                    Some(node) => {
-                        self.0 = $next(&node);
-                        Some(node)
-                    }
-                    None => None
-                }
-            }
+impl LinkedNodes {
+    /// Constructs a new LinkedNodes iterator.
+    pub fn new(data: Vec<WeakLink>) -> LinkedNodes {
+        LinkedNodes {
+            data: data,
+            idx: 0,
         }
     }
 }
 
-/// An iterator of `Node`s to the children of a given node.
-pub struct Children(Option<Node>);
-impl_node_iterator!(Children, |node: &Node| {
-    let mut curr = node.clone();
-    while let Some(n) = curr.next_sibling() {
-        if n.node_type() == NodeType::Element {
-            return Some(n);
-        }
-        curr = n.clone();
-    }
-    None
-});
+impl Iterator for LinkedNodes {
+    type Item = Node;
 
-/// An iterator of `Node`s to the children of a given node.
-pub struct ChildrenNodes(Option<Node>);
-impl_node_iterator!(ChildrenNodes, |node: &Node| node.next_sibling());
+    fn next(&mut self) -> Option<Node> {
+        let i = self.idx;
+        self.idx += 1;
+
+        if i < self.data.len() {
+            match self.data[i].upgrade() {
+                Some(n) => Some(Node(n)),
+                None => None,
+            }
+        } else {
+            None
+        }
+    }
+}

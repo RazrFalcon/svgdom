@@ -25,7 +25,6 @@ use super::node_data::{
 use super::node_type::NodeType;
 use super::iterators::{
     Descendants,
-    DescendantNodes,
     Children,
 };
 use super::tag_name::TagName;
@@ -116,7 +115,7 @@ impl Document {
     /// assert_eq!(doc.svg_element().unwrap().is_tag_id(ElementId::Svg), true);
     /// ```
     pub fn svg_element(&self) -> Option<Node> {
-        for n in self.root.children() {
+        for n in self.root.children().svg() {
             if n.is_tag_id(ElementId::Svg) {
                 return Some(n.clone());
             }
@@ -145,14 +144,9 @@ impl Document {
         new_child.clone()
     }
 
-    /// Returns an iterator over descendant SVG elements.
+    /// Returns an iterator over descendants.
     pub fn descendants(&self) -> Descendants {
         self.root.descendants()
-    }
-
-    /// Returns an iterator over descendant SVG nodes.
-    pub fn descendant_nodes(&self) -> DescendantNodes {
-        self.root.descendant_nodes()
     }
 
     /// Returns an iterator to this node's children elements.

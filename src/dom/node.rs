@@ -20,10 +20,8 @@ use super::node_type::NodeType;
 use super::iterators::{
     Traverse,
     Descendants,
-    DescendantNodes,
     Children,
-    ChildrenNodes,
-    LinkAttributes,
+    LinkedNodes,
 };
 
 macro_rules! try_opt {
@@ -135,68 +133,21 @@ impl Node {
         }
     }
 
-    /// Returns an iterator to this node's children elements.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the node is currently mutability borrowed.
-    pub fn children(&self) -> Children {
-        if let Some(mut child) = self.first_child() {
-            loop {
-                if child.is_svg_element() {
-                    return Children::new(Some(child));
-                }
-
-                if let Some(c) = child.next_sibling() {
-                    child = c;
-                } else {
-                    break;
-                }
-            }
-        }
-
-        Children::new(None)
-    }
-
-    /// Returns `true` is this node has children elements.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the node is currently mutability borrowed.
-    pub fn has_children(&self) -> bool {
-        // we don't used self.children iterator for performance reasons
-        if let Some(mut child) = self.first_child() {
-            loop {
-                if child.is_svg_element() {
-                    return true;
-                }
-
-                if let Some(c) = child.next_sibling() {
-                    child = c;
-                } else {
-                    break;
-                }
-            }
-        }
-
-        false
-    }
-
     /// Returns an iterator to this node's children nodes.
     ///
     /// # Panics
     ///
     /// Panics if the node is currently mutability borrowed.
-    pub fn children_nodes(&self) -> ChildrenNodes {
-        ChildrenNodes::new(self.first_child())
+    pub fn children(&self) -> Children {
+        Children::new(self.first_child())
     }
 
-    /// Returns `true` is this node has children nodes.
+    /// Returns `true` if this node has children nodes.
     ///
     /// # Panics
     ///
     /// Panics if the node is currently mutability borrowed.
-    pub fn has_children_nodes(&self) -> bool {
+    pub fn has_children(&self) -> bool {
         self.first_child().is_some()
     }
 
@@ -293,7 +244,7 @@ impl Node {
         }
 
         // repeat for children
-        for child in node.children() {
+        for child in node.children().svg() {
             Node::_remove(&child);
         }
     }
@@ -507,7 +458,7 @@ impl Node {
     /// assert_eq!(rect.has_text_children(), false);
     /// ```
     pub fn has_text_children(&self) -> bool {
-        for node in self.descendant_nodes() {
+        for node in self.descendants() {
             if node.node_type() == NodeType::Text {
                 return true;
             }
@@ -671,7 +622,7 @@ impl Node {
     ///
     /// Panics if the node is currently mutability borrowed.
     pub fn has_child_with_tag_name(&self, tag_name: &TagName) -> bool {
-        self.children().any(|n| n.is_tag_name(tag_name))
+        self.children().svg().any(|n| n.is_tag_name(tag_name))
     }
 
     /// Inserts a new SVG attribute into attributes list.
@@ -827,9 +778,10 @@ impl Node {
     /// # Panics
     ///
     /// Panics if the node is currently mutability borrowed.
-    pub fn linked_nodes(&self) -> LinkAttributes {
+    pub fn linked_nodes(&self) -> LinkedNodes {
         let self_borrow = self.0.borrow();
-        LinkAttributes::new(self_borrow.linked_nodes.clone())
+        // TODO: do not clone
+        LinkedNodes::new(self_borrow.linked_nodes.clone())
     }
 
     /// Returns a copy of the attribute value by `id`.
@@ -1050,7 +1002,7 @@ impl Node {
     /// use svgdom::Document;
     ///
     /// let doc = Document::from_data(b"<svg><linearGradient/></svg>").unwrap();
-    /// let mut iter = doc.descendants();
+    /// let mut iter = doc.descendants().svg();
     /// assert_eq!(iter.next().unwrap().is_referenced(), false); // svg
     /// assert_eq!(iter.next().unwrap().is_referenced(), true); // linearGradient
     /// ```
@@ -1086,7 +1038,7 @@ impl Node {
     /// use svgdom::Document;
     ///
     /// let doc = Document::from_data(b"<svg><rect/></svg>").unwrap();
-    /// let mut iter = doc.descendants();
+    /// let mut iter = doc.descendants().svg();
     /// assert_eq!(iter.next().unwrap().is_basic_shape(), false); // svg
     /// assert_eq!(iter.next().unwrap().is_basic_shape(), true); // rect
     /// ```
@@ -1119,7 +1071,7 @@ impl Node {
     /// use svgdom::Document;
     ///
     /// let doc = Document::from_data(b"<svg><rect/></svg>").unwrap();
-    /// let mut iter = doc.descendants();
+    /// let mut iter = doc.descendants().svg();
     /// assert_eq!(iter.next().unwrap().is_container(), true); // svg
     /// assert_eq!(iter.next().unwrap().is_container(), false); // rect
     /// ```
@@ -1172,7 +1124,7 @@ impl Node {
     /// assert_eq!(svg.child_by_tag_name(&TagName::from("myelem")).is_some(), true);
     /// ```
     pub fn child_by_tag_name(&self, tag_name: &TagName) -> Option<Node> {
-        let iter = self.descendant_nodes().skip(1);
+        let iter = self.descendants().skip(1);
         for node in iter {
             if node.is_tag_name(tag_name) {
                 return Some(node.clone());
@@ -1188,38 +1140,9 @@ impl Node {
         self.child_by_tag_name(&TagName::Id(id))
     }
 
-    /// Returns an iterator over descendant elements.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use svgdom::{Document, ElementId};
-    ///
-    /// let doc = Document::from_data(
-    /// b"<!--comment-->
-    /// <svg>
-    ///   <g>
-    ///     <nonsvg/>
-    ///     <rect/>
-    ///   </g>
-    ///   <text>Text</text>
-    ///   <nonsvg/>
-    /// </svg>").unwrap();
-    ///
-    /// let mut iter = doc.descendants();
-    /// assert_eq!(iter.next().unwrap().is_tag_id(ElementId::Svg), true);
-    /// assert_eq!(iter.next().unwrap().is_tag_id(ElementId::G), true);
-    /// assert_eq!(iter.next().unwrap().is_tag_id(ElementId::Rect), true);
-    /// assert_eq!(iter.next().unwrap().is_tag_id(ElementId::Text), true);
-    /// assert_eq!(iter.next().is_none(), true);
-    /// ```
+    /// Returns an iterator over descendant nodes.
     pub fn descendants(&self) -> Descendants {
         Descendants::new(self)
-    }
-
-    /// Returns an iterator over descendant nodes.
-    pub fn descendant_nodes(&self) -> DescendantNodes {
-        DescendantNodes::new(self)
     }
 
     /// Returns an iterator over descendant nodes.

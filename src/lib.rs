@@ -53,10 +53,10 @@ DOM structure itself based on: https://github.com/SimonSapin/rust-forest/tree/ma
 #[macro_use]
 extern crate svgparser;
 
-pub use attribute::{Attribute, AttributeName, AttributeNameRef};
+pub use attribute::*;
 pub use attribute_value::AttributeValue;
 pub use attributes::Attributes;
-pub use dom::{Document, Node, NodeEdge, NodeType, TagName, Traverse};
+pub use dom::*;
 pub use error::Error;
 pub use parse_options::*;
 pub use traits::*;
