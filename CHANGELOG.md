@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - `descendants` and `children` methods now returns all nodes and not only SVG elements.
   Use the `svg()` method to get only SVG elements. Example: `descendants().svg()`.
 - Rename `has_children_nodes` to `has_children`.
+- The `LinkedNodes` iterator contains a reference to nodes vec and not a copy now.
+  It will break node modifying while iterating. Less useful, but more correct.
 
 ### Removed
 - `descendant_nodes` and `children_nodes` methods.

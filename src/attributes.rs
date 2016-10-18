@@ -154,6 +154,7 @@ impl Attributes {
     /// Returns an iterator.
     #[inline]
     pub fn iter(&self) -> slice::Iter<Attribute> {
+        // TODO: via trait
         self.0.iter()
     }
 

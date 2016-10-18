@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 use std::cell::{RefCell, Ref, RefMut};
-use std::rc::{Rc};
+use std::rc::Rc;
 
 use attribute::*;
 use {
@@ -51,6 +51,7 @@ macro_rules! try_opt {
 ///
 /// Most of the API are designed to work with SVG elements and attributes.
 /// Processing of non-SVG data is pretty hard/verbose, since it's an SVG DOM, not an XML.
+// TODO: maybe copyable
 pub struct Node(pub Rc<RefCell<NodeData>>);
 
 impl Node {
@@ -224,7 +225,7 @@ impl Node {
         }
 
         // remove all attributes that linked to this node
-        for linked in node.linked_nodes() {
+        for linked in node.linked_nodes().collect::<Vec<Node>>() {
             ids.clear();
 
             for (aid, attr) in linked.attributes().iter_svg() {
@@ -779,9 +780,7 @@ impl Node {
     ///
     /// Panics if the node is currently mutability borrowed.
     pub fn linked_nodes(&self) -> LinkedNodes {
-        let self_borrow = self.0.borrow();
-        // TODO: do not clone
-        LinkedNodes::new(self_borrow.linked_nodes.clone())
+        LinkedNodes::new(Ref::map(self.0.borrow(), |n| &n.linked_nodes))
     }
 
     /// Returns a copy of the attribute value by `id`.

@@ -3,6 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 use std::iter::Filter;
+use std::cell::Ref;
 
 use super::node::Node;
 use super::node_data::WeakLink;
@@ -155,14 +156,14 @@ impl Children {
 }
 
 /// An iterator over linked nodes.
-pub struct LinkedNodes {
-    data: Vec<WeakLink>,
+pub struct LinkedNodes<'a> {
+    data: Ref<'a, Vec<WeakLink>>,
     idx: usize,
 }
 
-impl LinkedNodes {
+impl<'a> LinkedNodes<'a> {
     /// Constructs a new LinkedNodes iterator.
-    pub fn new(data: Vec<WeakLink>) -> LinkedNodes {
+    pub fn new(data: Ref<'a, Vec<WeakLink>>) -> LinkedNodes<'a> {
         LinkedNodes {
             data: data,
             idx: 0,
@@ -170,7 +171,7 @@ impl LinkedNodes {
     }
 }
 
-impl Iterator for LinkedNodes {
+impl<'a> Iterator for LinkedNodes<'a> {
     type Item = Node;
 
     fn next(&mut self) -> Option<Node> {
