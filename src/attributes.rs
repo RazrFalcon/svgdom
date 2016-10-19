@@ -2,16 +2,18 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use std::slice;
+use std::slice::{Iter, IterMut};
 use std::mem;
+use std::iter::{Filter, Map};
 
 use super::{
     Attribute,
-    AttributeName,
     AttributeNameRef,
     AttributeId,
     AttributeValue
 };
+
+pub type SvgAttrFilter<'a> = Filter<Iter<'a, Attribute>, fn(&&Attribute) -> bool>;
 
 /// Wrapper around attributes list.
 ///
@@ -153,24 +155,29 @@ impl Attributes {
 
     /// Returns an iterator.
     #[inline]
-    pub fn iter(&self) -> slice::Iter<Attribute> {
-        // TODO: via trait
+    pub fn iter(&self) -> Iter<Attribute> {
         self.0.iter()
     }
 
     /// Returns a mutable iterator.
     #[inline]
-    pub fn iter_mut(&mut self) -> slice::IterMut<Attribute> {
+    pub fn iter_mut(&mut self) -> IterMut<Attribute> {
         self.0.iter_mut()
     }
 
     /// Returns an iterator over SVG attributes.
     #[inline]
-    pub fn iter_svg(&self) -> SvgAttributesIter {
-        SvgAttributesIter {
-            data: self,
-            idx: 0,
-        }
+    pub fn iter_svg<'a>(&'a self)
+        -> Map<SvgAttrFilter, fn(&'a Attribute) -> (AttributeId, &'a Attribute)>
+    {
+        fn map_svg<'a>(a: &'a Attribute) -> (AttributeId, &'a Attribute) { (a.id().unwrap(), a) }
+        self.filter_svg().map(map_svg)
+    }
+
+    #[inline]
+    fn filter_svg(&self) -> SvgAttrFilter {
+        fn is_svg(a: &&Attribute) -> bool { a.is_svg() }
+        self.iter().filter(is_svg)
     }
 
     /// Retains only elements specified by the predicate.
@@ -182,26 +189,4 @@ impl Attributes {
     }
 }
 
-pub struct SvgAttributesIter<'a> {
-    data: &'a Attributes,
-    idx: usize,
-}
-
-impl<'a> Iterator for SvgAttributesIter<'a> {
-    type Item = (AttributeId, &'a Attribute);
-
-    fn next(&mut self) -> Option<(AttributeId, &'a Attribute)> {
-        while self.idx < self.data.len() {
-            let attr = &self.data.0[self.idx];
-            self.idx += 1;
-            match attr.name {
-                AttributeName::Id(id) => {
-                    return Some((id, attr));
-                }
-                AttributeName::Name(_) => {}
-            }
-        }
-
-        None
-    }
-}
+// TODO: IntoIterator

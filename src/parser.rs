@@ -337,7 +337,7 @@ fn parse_svg_element<'a>(doc: &Document,
 
 fn parse_attribute<'a>(node: &Node,
                        name: &'a [u8],
-                       stream: &mut Stream<'a>,
+                       value: &mut Stream<'a>,
                        post_data: &mut PostData<'a>,
                        opt: &ParseOptions)
                        -> Result<(), Error> {
@@ -345,33 +345,33 @@ fn parse_attribute<'a>(node: &Node,
         Some(id) => {
             match id {
                 AttributeId::Id => {
-                    node.set_id(u8_to_string!(stream.slice()));
-                    post_data.links.elems_with_id.insert(stream.slice(), node.clone());
+                    node.set_id(u8_to_string!(value.slice()));
+                    post_data.links.elems_with_id.insert(value.slice(), node.clone());
                 }
                 AttributeId::Style => {
                     post_data.styles.push(NodeTextData {
                         node: node.clone(),
-                        stream: *stream,
+                        stream: *value,
                     })
                 }
                   AttributeId::Transform
                 | AttributeId::GradientTransform
                 | AttributeId::PatternTransform => {
-                    let ts = try!(Transform::from_stream(stream.clone()));
+                    let ts = try!(Transform::from_stream(value.clone()));
                     node.set_attribute(id, AttributeValue::Transform(ts));
                 }
                 AttributeId::D => {
-                    let p = try!(path::Path::from_stream(stream.clone()));
+                    let p = try!(path::Path::from_stream(value.clone()));
                     node.set_attribute(AttributeId::D, AttributeValue::Path(p));
                 }
                 AttributeId::Class => {
                     post_data.classes.push(NodeTextData {
                         node: node.clone(),
-                        stream: *stream,
+                        stream: *value,
                     })
                 }
                 _ => {
-                    try!(parse_svg_attribute(&node, id, stream, &mut post_data.links,
+                    try!(parse_svg_attribute(&node, id, value, &mut post_data.links,
                                              &post_data.entitis, opt));
                 }
             }
@@ -383,9 +383,9 @@ fn parse_attribute<'a>(node: &Node,
 
             let value2;
 
-            if !stream.at_end() && stream.is_char_eq_raw(b'&') {
-                stream.advance_raw(1);
-                let link = stream.slice_next_raw(stream.len_to_or_end(b';'));
+            if !value.at_end() && value.is_char_eq_raw(b'&') {
+                value.advance_raw(1);
+                let link = value.slice_next_raw(value.len_to_or_end(b';'));
 
                 match post_data.entitis.get(link) {
                     Some(link_value) => value2 = Some(*link_value),
@@ -395,7 +395,7 @@ fn parse_attribute<'a>(node: &Node,
                     }
                 }
             } else {
-                value2 = Some(stream.slice());
+                value2 = Some(value.slice());
             }
 
             if let Some(val) = value2 {
