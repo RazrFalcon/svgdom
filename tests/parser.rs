@@ -794,6 +794,15 @@ fn skip_px_unit_off_1() {
 }
 
 #[test]
+fn skip_px_unit_off_2() {
+    let mut opt = ParseOptions::default();
+    opt.parse_px_unit = false;
+    let doc = Document::from_data_with_opt(b"<svg stroke-dasharray='10px 20px'/>", &opt).unwrap();
+    assert_eq_text!(doc.to_string_with_opt(&write_opt_for_tests!()),
+                    "<svg stroke-dasharray='10 20'/>\n");
+}
+
+#[test]
 fn skip_svg_elements_1() {
     let mut opt = ParseOptions::default();
     opt.skip_svg_elements.push(EId::Rect);

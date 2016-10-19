@@ -19,6 +19,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - `descendant_nodes` and `children_nodes` methods.
 - `Descendants::skip_children`.
 
+### Fixed
+- `ParseOptions::parse_px_unit` now works in `LengthList`.
+
 ## [0.1.0] - 2016-10-09
 ### Added
 - Missing license headers.

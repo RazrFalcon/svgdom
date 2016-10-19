@@ -57,6 +57,18 @@ struct Links<'a> {
     elems_with_id: HashMap<&'a [u8], Node>,
 }
 
+impl<'a> Links<'a> {
+    fn append(&mut self, id: AttributeId, iri: &'a [u8], fallback: Option<PaintFallback>,
+              node: &Node) {
+        self.list.push(LinkData {
+            attr_id: id,
+            iri: iri,
+            fallback: fallback,
+            node: node.clone(),
+        });
+    }
+}
+
 type Entities<'a> = HashMap<&'a [u8], &'a [u8]>;
 
 struct PostData<'a> {
@@ -412,13 +424,14 @@ fn parse_svg_attribute<'a>(node: &Node,
 
     let val = match try!(ParserAttributeValue::from_stream(tag_id, id, stream)) {
         ParserAttributeValue::String(v) => Some(AttributeValue::String(u8_to_str!(v).to_string())),
-          ParserAttributeValue::IRI(link)
-        | ParserAttributeValue::FuncIRI(link) => {
-            try!(process_link(link, None, id, node, links));
+        ParserAttributeValue::IRI(link) | ParserAttributeValue::FuncIRI(link) => {
+            // collect links for later processing
+            links.append(id, link, None, node);
             None
         }
         ParserAttributeValue::FuncIRIWithFallback(link, ref fallback) => {
-            try!(process_link(link, Some(fallback.clone()), id, node, links));
+            // collect links for later processing
+            links.append(id, link, Some(fallback.clone()), node);
             None
         }
         ParserAttributeValue::Number(v) => Some(AttributeValue::Number(v)),
@@ -433,23 +446,13 @@ fn parse_svg_attribute<'a>(node: &Node,
             Some(AttributeValue::NumberList(vec))
         }
         ParserAttributeValue::Length(v) => {
-            if opt.parse_px_unit {
-                Some(AttributeValue::Length(Length::new(v.num, v.unit)))
-            } else {
-                if v.unit == LengthUnit::Px {
-                    let mut newv = v;
-                    newv.unit = LengthUnit::None;
-                    Some(AttributeValue::Length(Length::new(newv.num, newv.unit)))
-                } else {
-                    Some(AttributeValue::Length(Length::new(v.num, v.unit)))
-                }
-            }
+            Some(AttributeValue::Length(Length::new(v.num, prepare_length(v.unit, opt))))
         }
         ParserAttributeValue::LengthList(list) => {
             let mut vec = Vec::new();
             for number in list {
                 match number {
-                    Ok(n) => vec.push(Length::new(n.num, n.unit)),
+                    Ok(n) => vec.push(Length::new(n.num, prepare_length(n.unit, opt))),
                     Err(e) => return Err(Error::ParseError(e)),
                 }
             }
@@ -469,10 +472,7 @@ fn parse_svg_attribute<'a>(node: &Node,
                 }
                 None => {
                     // keep original link
-                    let mut s = String::new();
-                    s.push('&');
-                    s.push_str(&u8_to_str!(link).to_string());
-                    s.push(';');
+                    let s = format!("&{};", u8_to_str!(link));
 
                     if link[0] != b'#' {
                         // If link starts with # - than it's probably a Unicode code point.
@@ -493,31 +493,13 @@ fn parse_svg_attribute<'a>(node: &Node,
     Ok(())
 }
 
-fn process_link<'a>(iri: &'a [u8],
-                    fallback: Option<PaintFallback>,
-                    aid: AttributeId,
-                    node: &Node,
-                    links: &mut Links<'a>)
-                    -> Result<(), Error> {
-    match links.elems_with_id.get(iri) {
-        Some(link_node) => {
-            try!(resolve_link(node, link_node, aid, iri, &fallback));
-        }
-        None => {
-            // If linked element is not found, keep this IRI until we finish
-            // parsing of the whole doc. Since IRI can reference elements in any order
-            // and we just not parsed this element yet.
-            // Then we can check again.
-            links.list.push(LinkData {
-                attr_id: aid,
-                iri: iri,
-                fallback: fallback,
-                node: node.clone(),
-            });
-        }
+fn prepare_length(unit: LengthUnit, opt: &ParseOptions) -> LengthUnit {
+    // replace 'px' with none if 'parse_px_unit' option is disabled
+    if !opt.parse_px_unit && unit == LengthUnit::Px {
+        return LengthUnit::None;
     }
 
-    Ok(())
+    unit
 }
 
 fn parse_css<'a>(stream: &mut Stream<'a>, css: &mut CssData<'a>) -> Result<(), Error> {
@@ -773,10 +755,8 @@ fn resolve_link(node: &Node,
     // It will take tonnes of code to validate all supported referenced elements.
     // So we just show an error.
     match *fallback {
-        Some(_) =>
-            return Err(Error::UnsupportedPaintFallback(u8_to_str!(iri).to_string())),
-        None =>
-            try!(node.set_link_attribute(aid, ref_node.clone())),
+        Some(_) => return Err(Error::UnsupportedPaintFallback(u8_to_str!(iri).to_string())),
+        None => try!(node.set_link_attribute(aid, ref_node.clone())),
     }
     Ok(())
 }
