@@ -8,6 +8,8 @@ use std::cell::Ref;
 use super::node::Node;
 use super::node_data::WeakLink;
 
+// TODO: drain iter
+
 /// Node type during traverse.
 #[derive(Clone)]
 pub enum NodeEdge {

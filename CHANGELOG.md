@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Removed
 - `descendant_nodes` and `children_nodes` methods.
 - `Descendants::skip_children`.
+- `ParseOptions::skip_svg_elements`
 
 ### Fixed
 - `ParseOptions::parse_px_unit` now works in `LengthList`.

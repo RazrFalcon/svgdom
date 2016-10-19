@@ -174,7 +174,7 @@ fn process_token<'a>(doc: &Document,
             match ElementId::from_name(u8_to_str!(s)) {
                 Some(eid) => {
                     let res = try!(parse_svg_element(&doc, tokenizer, eid,
-                                                     &mut post_data.css, &opt));
+                                                     &mut post_data.css));
 
                     if let Some(n) = res {
                         *node = Some(n.clone());
@@ -277,14 +277,8 @@ fn process_token<'a>(doc: &Document,
 fn parse_svg_element<'a>(doc: &Document,
                          tokenizer: &mut svg::Tokenizer<'a>,
                          id: ElementId,
-                         css: &mut CssData<'a>,
-                         opt: &ParseOptions)
+                         css: &mut CssData<'a>)
                          -> Result<Option<Node>, Error> {
-    if opt.skip_svg_elements.iter().any(|x| *x == id) {
-        try!(skip_current_element(tokenizer));
-        return Ok(None);
-    }
-
     // We never create 'style' element.
     // If 'style' element is empty - we skip it.
     // If it contains CDATA/CSS - we parse it and store it for future use,

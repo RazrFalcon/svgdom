@@ -2,8 +2,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use ElementId;
-
 // TODO: option to disable path parsing
 
 /// Options that defines parsing.
@@ -24,8 +22,6 @@ pub struct ParseOptions {
     ///
     /// By default we parse it as is, but it can be disabled.
     pub parse_px_unit: bool,
-    /// Skip specified SVG elements and all their children during parsing.
-    pub skip_svg_elements: Vec<ElementId>,
 }
 
 impl Default for ParseOptions {
@@ -36,7 +32,6 @@ impl Default for ParseOptions {
             parse_unknown_elements: true,
             parse_unknown_attributes: true,
             parse_px_unit: true,
-            skip_svg_elements: Vec::new(),
         }
     }
 }
