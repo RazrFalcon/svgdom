@@ -2,6 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#[macro_use]
 extern crate svgdom;
 
 use svgdom::{Document, AttributeValue, Error};
@@ -199,4 +200,79 @@ fn remove_attribute_1() {
 
     n.remove_attribute(AId::StrokeWidth);
     assert_eq!(n.has_attribute(AId::StrokeWidth), false);
+}
+
+#[test]
+fn drain_1() {
+    let doc = Document::from_data(
+                b"<svg>
+                    <rect/>
+                </svg>").unwrap();
+
+    assert_eq!(doc.root().drain(|n| n.is_tag_id(EId::Rect)), 1);
+
+    assert_eq_text!(doc.to_string(), "<svg/>\n");
+}
+
+#[test]
+fn drain_2() {
+    let doc = Document::from_data(
+                b"<svg>
+                    <rect/>
+                    <g>
+                        <path/>
+                    </g>
+                    <rect/>
+                </svg>").unwrap();
+
+    assert_eq!(doc.root().drain(|n| n.is_tag_id(EId::Path)), 1);
+
+    assert_eq_text!(doc.to_string(),
+"<svg>
+    <rect/>
+    <g/>
+    <rect/>
+</svg>
+");
+}
+
+#[test]
+fn drain_3() {
+    let doc = Document::from_data(
+                b"<svg>
+                    <rect/>
+                    <g>
+                        <path/>
+                    </g>
+                    <rect/>
+                </svg>").unwrap();
+
+    assert_eq!(doc.root().drain(|n| n.is_tag_id(EId::G)), 1);
+
+    assert_eq_text!(doc.to_string(),
+"<svg>
+    <rect/>
+    <rect/>
+</svg>
+");
+}
+
+#[test]
+fn drain_4() {
+    let doc = Document::from_data(
+                b"<svg>
+                    <rect/>
+                    <g>
+                        <rect/>
+                    </g>
+                    <rect/>
+                </svg>").unwrap();
+
+    assert_eq!(doc.root().drain(|n| n.is_tag_id(EId::Rect)), 3);
+
+    assert_eq_text!(doc.to_string(),
+"<svg>
+    <g/>
+</svg>
+");
 }

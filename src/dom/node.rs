@@ -250,6 +250,36 @@ impl Node {
         }
     }
 
+    /// Removes only the children nodes specified by the predicate.
+    ///
+    /// Current node ignored.
+    pub fn drain<P>(&self, f: P) -> usize
+        where P: Fn(&Node) -> bool
+    {
+        let mut count = 0;
+        Node::_drain(self, &f, &mut count);
+        count
+    }
+
+    fn _drain<P>(parent: &Node, f: &P, count: &mut usize)
+        where P: Fn(&Node) -> bool
+    {
+        let mut node = parent.first_child();
+        while let Some(n) = node {
+            if f(&n) {
+                node = n.next_sibling();
+                n.remove();
+                *count += 1;
+            } else {
+                if n.has_children() {
+                    Node::_drain(&n, f, count);
+                }
+
+                node = n.next_sibling();
+            }
+        }
+    }
+
     /// Appends a new child to this node, after existing children.
     ///
     /// # Panics

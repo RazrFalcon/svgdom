@@ -166,6 +166,8 @@ impl Attributes {
     }
 
     /// Returns an iterator over SVG attributes.
+    ///
+    /// Shorthand for: `iter().filter(|a| a.is_svg()).map(|a| (a.id().unwrap(), a)`
     #[inline]
     pub fn iter_svg<'a>(&'a self)
         -> Map<SvgAttrFilter, fn(&'a Attribute) -> (AttributeId, &'a Attribute)>

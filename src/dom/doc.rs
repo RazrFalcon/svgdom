@@ -158,6 +158,15 @@ impl Document {
         self.root.children()
     }
 
+    /// Removes only the children nodes specified by the predicate.
+    ///
+    /// The root node ignored.
+    pub fn drain<P>(&self, f: P) -> usize
+        where P: Fn(&Node) -> bool
+    {
+        self.root().drain(f)
+    }
+
     fn new_node(doc: Option<Link>, node_type: NodeType, tag_name: Option<TagName>,
                 text: Option<String>)
                 -> Node {
