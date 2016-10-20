@@ -346,7 +346,8 @@ impl Attribute {
     }
 
     /// Returns `true` if the current attribute is part of
-    /// [conditional processing attributes](https://www.w3.org/TR/SVG/intro.html#TermConditionalProcessingAttribute).
+    /// [conditional processing attributes
+    /// ](https://www.w3.org/TR/SVG/intro.html#TermConditionalProcessingAttribute).
     pub fn is_conditional_processing(&self) -> bool {
         self.list_contains(CONDITIONAL_PROCESSING_ATTRIBUTES)
     }
@@ -401,11 +402,7 @@ impl Attribute {
 }
 
 fn write_quote(opt: &WriteOptions, out: &mut Vec<u8>) {
-    if opt.use_single_quote {
-        out.push(b'\'');
-    } else {
-        out.push(b'"');
-    }
+    out.push(if opt.use_single_quote { b'\'' } else { b'"' });
 }
 
 impl WriteBuffer for Attribute {

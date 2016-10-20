@@ -20,9 +20,9 @@ use types::{
 };
 use types::path;
 
-/// Representation of the `<list-of-numbers>`.
+/// Representation of the `<list-of-numbers>` type.
 pub type NumberList = Vec<f64>;
-/// Representation of the `<list-of-lengths>`.
+/// Representation of the `<list-of-lengths>` type.
 pub type LengthList = Vec<Length>;
 
 /// Value of the SVG attribute.
@@ -44,39 +44,35 @@ pub enum AttributeValue {
     Transform(Transform),
 }
 
+macro_rules! impl_from {
+    ($vt:ty, $vtn:ident) => (
+        impl From<$vt> for AttributeValue {
+            fn from(value: $vt) -> AttributeValue {
+                AttributeValue::$vtn(value)
+            }
+        }
+    )
+}
+
+impl_from!(String, String);
+impl_from!(f64, Number);
+impl_from!(NumberList, NumberList);
+impl_from!(Length, Length);
+impl_from!(LengthList, LengthList);
+impl_from!(Transform, Transform);
+impl_from!(Color, Color);
+impl_from!(ValueId, PredefValue);
+impl_from!(path::Path, Path);
+
 impl<'a> From<&'a str> for AttributeValue {
     fn from(value: &str) -> AttributeValue {
         AttributeValue::String(value.to_owned())
     }
 }
 
-impl From<String> for AttributeValue {
-    fn from(value: String) -> AttributeValue {
-        AttributeValue::String(value)
-    }
-}
-
 impl From<i32> for AttributeValue {
     fn from(value: i32) -> AttributeValue {
         AttributeValue::Number(value as f64)
-    }
-}
-
-impl From<f64> for AttributeValue {
-    fn from(value: f64) -> AttributeValue {
-        AttributeValue::Number(value)
-    }
-}
-
-impl From<NumberList> for AttributeValue {
-    fn from(value: NumberList) -> AttributeValue {
-        AttributeValue::NumberList(value)
-    }
-}
-
-impl From<Length> for AttributeValue {
-    fn from(value: Length) -> AttributeValue {
-        AttributeValue::Length(value)
     }
 }
 
@@ -89,36 +85,6 @@ impl From<(i32, LengthUnit)> for AttributeValue {
 impl From<(f64, LengthUnit)> for AttributeValue {
     fn from(value: (f64, LengthUnit)) -> AttributeValue {
         AttributeValue::Length(Length::new(value.0, value.1))
-    }
-}
-
-impl From<LengthList> for AttributeValue {
-    fn from(value: LengthList) -> AttributeValue {
-        AttributeValue::LengthList(value)
-    }
-}
-
-impl From<Transform> for AttributeValue {
-    fn from(value: Transform) -> AttributeValue {
-        AttributeValue::Transform(value)
-    }
-}
-
-impl From<path::Path> for AttributeValue {
-    fn from(value: path::Path) -> AttributeValue {
-        AttributeValue::Path(value)
-    }
-}
-
-impl From<Color> for AttributeValue {
-    fn from(value: Color) -> AttributeValue {
-        AttributeValue::Color(value)
-    }
-}
-
-impl From<ValueId> for AttributeValue {
-    fn from(value: ValueId) -> AttributeValue {
-        AttributeValue::PredefValue(value)
     }
 }
 

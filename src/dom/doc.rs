@@ -17,16 +17,11 @@ use {
     WriteOptions,
     WriteToString,
 };
+
+use super::iterators::{Children, Descendants};
 use super::node::Node;
-use super::node_data::{
-    Link,
-    NodeData,
-};
+use super::node_data::{Link, NodeData};
 use super::node_type::NodeType;
-use super::iterators::{
-    Descendants,
-    Children,
-};
 use super::tag_name::TagName;
 
 /// Container of [`Node`](struct.Node.html)s.
@@ -200,30 +195,3 @@ impl WriteBuffer for Document {
 }
 
 impl_display!(Document);
-
-/// Cloning a `Node` only increments a reference count. It does not copy the data.
-impl Clone for Node {
-    fn clone(&self) -> Node {
-        Node(self.0.clone())
-    }
-}
-
-impl PartialEq for Node {
-    fn eq(&self, other: &Node) -> bool {
-        self.same_node(other)
-    }
-}
-
-// TODO: write better messages
-impl fmt::Debug for Node {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self.node_type() {
-            NodeType::Root => write!(f, "Root node"),
-            NodeType::Element => write!(f, "<{:?} id={:?}>", self.tag_name().unwrap(), self.id()),
-            NodeType::Declaration => write!(f, "Declaration node"),
-            NodeType::Comment => write!(f, "Comment node"),
-            NodeType::Cdata => write!(f, "CDATA node"),
-            NodeType::Text => write!(f, "Text node"),
-        }
-    }
-}

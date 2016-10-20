@@ -7,6 +7,8 @@ use std::str::FromStr;
 
 use ElementId;
 
+// TODO: add TagNameRef like AttributeNameRef
+
 /// Wrapper arrow element tag name.
 #[derive(Clone,PartialEq)]
 pub enum TagName {

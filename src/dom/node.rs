@@ -4,6 +4,7 @@
 
 use std::cell::{RefCell, Ref, RefMut};
 use std::rc::Rc;
+use std::fmt;
 
 use attribute::*;
 use {
@@ -18,10 +19,10 @@ use super::tag_name::TagName;
 use super::node_data::NodeData;
 use super::node_type::NodeType;
 use super::iterators::{
-    Traverse,
-    Descendants,
     Children,
+    Descendants,
     LinkedNodes,
+    Traverse,
 };
 
 macro_rules! try_opt {
@@ -188,9 +189,16 @@ impl Node {
         Some(Node(try_opt!(self.0.borrow().next_sibling.as_ref()).clone()))
     }
 
-    /// Returns `true` if two `Node`s are the same node.
-    pub fn same_node(&self, other: &Node) -> bool {
-        same_rc(&self.0, &other.0)
+    /// Returns an iterator over descendant nodes.
+    pub fn descendants(&self) -> Descendants {
+        Descendants::new(self)
+    }
+
+    /// Returns an iterator over descendant nodes.
+    ///
+    /// More complex alternative of the `Node::descendant_nodes()`.
+    pub fn traverse(&self) -> Traverse {
+        Traverse::new(self)
     }
 
     /// Detaches a node from its parent and siblings. Children are not affected.
@@ -656,6 +664,50 @@ impl Node {
         self.children().svg().any(|n| n.is_tag_name(tag_name))
     }
 
+    /// Returns a child `Node` with selected `TagName`.
+    ///
+    /// This function is recursive. Current node excluded.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use svgdom::{Document, TagName, ElementId};
+    ///
+    /// let doc = Document::from_data(
+    /// b"<svg>
+    ///     <g>
+    ///         <rect/>
+    ///     </g>
+    ///     <myelem/>
+    /// </svg>").unwrap();
+    ///
+    /// let svg = doc.first_child().unwrap();
+    /// // current node will be skipped
+    /// assert_eq!(svg.child_by_tag_name(&TagName::Id(ElementId::Svg)).is_some(), false);
+    /// // we'll get true since current method is recursive
+    /// assert_eq!(svg.child_by_tag_name(&TagName::Id(ElementId::Rect)).is_some(), true);
+    /// // check for not existing element
+    /// assert_eq!(svg.child_by_tag_name(&TagName::Id(ElementId::Path)).is_some(), false);
+    /// // check for non-svg element
+    /// assert_eq!(svg.child_by_tag_name(&TagName::from("myelem")).is_some(), true);
+    /// ```
+    pub fn child_by_tag_name(&self, tag_name: &TagName) -> Option<Node> {
+        let iter = self.descendants().skip(1);
+        for node in iter {
+            if node.is_tag_name(tag_name) {
+                return Some(node.clone());
+            }
+        }
+        None
+    }
+
+    /// Returns `Node` if the current node contains child with selected `ElementId`.
+    ///
+    /// Shorthand for `Node::child_by_tag_name(&TagName::Id(id))`.
+    pub fn child_by_tag_id(&self, id: ElementId) -> Option<Node> {
+        self.child_by_tag_name(&TagName::Id(id))
+    }
+
     /// Inserts a new SVG attribute into attributes list.
     ///
     /// This method will overwrite an existing attribute with the same id.
@@ -876,7 +928,8 @@ impl Node {
     ///     </g>
     /// </svg>").unwrap();
     ///
-    /// let rect = doc.first_child().unwrap().child_by_tag_name(&TagName::Id(ElementId::Rect)).unwrap();
+    /// let rect = doc.first_child().unwrap().child_by_tag_name(&TagName::Id(ElementId::Rect))
+    ///               .unwrap();
     /// assert_eq!(rect.parent_attribute(AttributeId::Fill).unwrap(),
     ///            Attribute::new(AttributeId::Fill, Color::new(255, 0, 0)));
     /// assert_eq!(rect.parent_attribute(AttributeId::Stroke).unwrap(),
@@ -1124,66 +1177,36 @@ impl Node {
             false
         }
     }
-
-    /// Returns a child `Node` with selected `TagName`.
-    ///
-    /// This function is recursive. Current node excluded.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use svgdom::{Document, TagName, ElementId};
-    ///
-    /// let doc = Document::from_data(
-    /// b"<svg>
-    ///     <g>
-    ///         <rect/>
-    ///     </g>
-    ///     <myelem/>
-    /// </svg>").unwrap();
-    ///
-    /// let svg = doc.first_child().unwrap();
-    /// // current node will be skipped
-    /// assert_eq!(svg.child_by_tag_name(&TagName::Id(ElementId::Svg)).is_some(), false);
-    /// // we'll get true since current method is recursive
-    /// assert_eq!(svg.child_by_tag_name(&TagName::Id(ElementId::Rect)).is_some(), true);
-    /// // check for not existing element
-    /// assert_eq!(svg.child_by_tag_name(&TagName::Id(ElementId::Path)).is_some(), false);
-    /// // check for non-svg element
-    /// assert_eq!(svg.child_by_tag_name(&TagName::from("myelem")).is_some(), true);
-    /// ```
-    pub fn child_by_tag_name(&self, tag_name: &TagName) -> Option<Node> {
-        let iter = self.descendants().skip(1);
-        for node in iter {
-            if node.is_tag_name(tag_name) {
-                return Some(node.clone());
-            }
-        }
-        None
-    }
-
-    /// Returns `Node` if the current node contains child with selected `ElementId`.
-    ///
-    /// Shorthand for `Node::child_by_tag_name(&TagName::Id(id))`.
-    pub fn child_by_tag_id(&self, id: ElementId) -> Option<Node> {
-        self.child_by_tag_name(&TagName::Id(id))
-    }
-
-    /// Returns an iterator over descendant nodes.
-    pub fn descendants(&self) -> Descendants {
-        Descendants::new(self)
-    }
-
-    /// Returns an iterator over descendant nodes.
-    ///
-    /// More complex alternative of the `Node::descendant_nodes()`.
-    pub fn traverse(&self) -> Traverse {
-        Traverse::new(self)
-    }
 }
 
 fn same_rc<T>(a: &Rc<T>, b: &Rc<T>) -> bool {
     let a: *const T = &**a;
     let b: *const T = &**b;
     a == b
+}
+
+/// Cloning a `Node` only increments a reference count. It does not copy the data.
+impl Clone for Node {
+    fn clone(&self) -> Node {
+        Node(self.0.clone())
+    }
+}
+
+impl PartialEq for Node {
+    fn eq(&self, other: &Node) -> bool {
+        same_rc(&self.0, &other.0)
+    }
+}
+
+impl fmt::Debug for Node {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self.node_type() {
+            NodeType::Root => write!(f, "Root node"),
+            NodeType::Element => write!(f, "<{:?} id={:?}>", self.tag_name().unwrap(), self.id()),
+            NodeType::Declaration => write!(f, "<?{}?>", *self.text().unwrap()),
+            NodeType::Comment => write!(f, "<!--{}-->", *self.text().unwrap()),
+            NodeType::Cdata => write!(f, "<![CDATA[{}]]>", *self.text().unwrap()),
+            NodeType::Text => write!(f, "{}", *self.text().unwrap()),
+        }
+    }
 }

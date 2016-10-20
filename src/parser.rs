@@ -212,7 +212,7 @@ fn process_token<'a>(doc: &Document,
             match end {
                 svg::ElementEnd::Empty => {}
                 svg::ElementEnd::Close(_) => {
-                    if !parent.same_node(&doc.root()) {
+                    if *parent != doc.root {
                         *parent = parent.parent().unwrap();
                     }
                 }
