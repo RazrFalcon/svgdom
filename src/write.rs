@@ -31,7 +31,7 @@ impl Depth {
 
     fn gen_indent(len: i8) -> Vec<u8> {
         match len {
-            -1...0 => Vec::new(),
+            -1 | 0 => Vec::new(),
             _ => {
                 let mut v = Vec::with_capacity(len as usize);
                 for _ in 0..len {
@@ -70,7 +70,7 @@ pub fn write_dom(doc: &Document, opt: &WriteOptions, out: &mut Vec<u8>) {
 
                         depth.write_indent(out);
 
-                        if node.is_tag_id(ElementId::Text) && node.has_children() {
+                        if node.is_tag_name(ElementId::Text) && node.has_children() {
                             write_element_start(&node, opt, out);
                             process_text(&mut iter, opt, &node, &depth, out);
                             write_newline(opt.indent, out);

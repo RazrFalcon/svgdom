@@ -15,7 +15,7 @@ use {
     Error,
 };
 use super::doc::Document;
-use super::tag_name::TagName;
+use super::tag_name::{TagName, TagNameRef};
 use super::node_data::NodeData;
 use super::node_type::NodeType;
 use super::iterators::{
@@ -87,13 +87,13 @@ impl Node {
     /// # Panics
     ///
     /// Panics if any of the parent nodes is currently mutability borrowed.
-    pub fn parent_element<T>(&self, tag_name: T) -> Option<Node>
-        where TagName: From<T>
+    pub fn parent_element<'a, T>(&self, tag_name: T) -> Option<Node>
+        where TagNameRef<'a>: From<T>, T: Copy
     {
-        let tg = TagName::from(tag_name);
+        // TODO: create parents iterator
         let mut parent = self.parent();
         while let Some(p) = parent {
-            if p.is_tag_name(&tg) {
+            if p.is_tag_name(tag_name) {
                 return Some(p.clone());
             }
             parent = p.parent();
@@ -440,21 +440,6 @@ impl Node {
         self.0.borrow().node_type
     }
 
-    /// Returns a text data of the node, if there are any.
-    ///
-    /// Nodes with `Element` type can't contain text data.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the node is currently mutability borrowed.
-    pub fn text(&self) -> Option<Ref<String>> {
-        let b = self.0.borrow();
-        match b.text {
-            Some(_) => Some(Ref::map(self.0.borrow(), |n| n.text.as_ref().unwrap())),
-            None => None,
-        }
-    }
-
     /// Sets a text data to the node.
     ///
     /// # Panics
@@ -466,43 +451,18 @@ impl Node {
         b.text = Some(text.to_owned());
     }
 
-    /// Returns `true` if there are any children text nodes.
+    /// Returns a text data of the node, if there are any.
     ///
-    /// This method is recursive.
+    /// Nodes with `Element` type can't contain text data.
     ///
     /// # Panics
     ///
-    /// Panics if the node or any descendants nodes are currently mutability borrowed.
-    ///
-    /// # Examples
-    /// ```
-    /// use svgdom::Document;
-    ///
-    /// let doc = Document::from_data(
-    /// b"<svg>
-    ///     <g>
-    ///         <text>Some text</text>
-    ///     </g>
-    ///     <rect/>
-    /// </svg>").unwrap();
-    ///
-    /// let svg = doc.first_child().unwrap();
-    /// let g = svg.first_child().unwrap();
-    /// assert_eq!(g.has_text_children(), true);
-    ///
-    /// let text = g.first_child().unwrap();
-    /// assert_eq!(text.has_text_children(), true);
-    ///
-    /// let rect = g.next_sibling().unwrap();
-    /// assert_eq!(rect.has_text_children(), false);
-    /// ```
-    pub fn has_text_children(&self) -> bool {
-        for node in self.descendants() {
-            if node.node_type() == NodeType::Text {
-                return true;
-            }
+    /// Panics if the node is currently mutability borrowed.
+    pub fn text(&self) -> Option<Ref<String>> {
+        match self.0.borrow().text {
+            Some(_) => Some(Ref::map(self.0.borrow(), |n| n.text.as_ref().unwrap())),
+            None => None,
         }
-        false
     }
 
     /// Sets an ID of the element.
@@ -555,20 +515,6 @@ impl Node {
         }
     }
 
-    /// Sets a tag id of the element node.
-    ///
-    /// Only element nodes can contain tag name.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the node is currently borrowed.
-    pub fn set_tag_id(&self, eid: ElementId) {
-        debug_assert!(self.node_type() == NodeType::Element);
-
-        let mut self_borrow = self.0.borrow_mut();
-        self_borrow.tag_name = Some(TagName::Id(eid));
-    }
-
     /// Sets a tag name of the element node.
     ///
     /// Only element nodes can contain tag name.
@@ -579,18 +525,22 @@ impl Node {
     ///
     /// # Panics
     ///
-    /// Panics if the node is currently borrowed.
-    pub fn set_tag_name(&self, tag_name: &str) -> Result<(), Error> {
+    /// - Panics if the node is currently borrowed.
+    /// - Panics if a string tag name is empty.
+    pub fn set_tag_name<'a, T>(&self, tag_name: T)
+        where TagNameRef<'a>: From<T>
+    {
         debug_assert!(self.node_type() == NodeType::Element);
 
-        if tag_name.is_empty() {
-            return Err(Error::EmptyTagName);
+        let tn = TagNameRef::from(tag_name);
+        if let TagNameRef::Name(ref name) = tn {
+            if name.is_empty() {
+                panic!("supplied tag name is empty");
+            }
         }
 
         let mut self_borrow = self.0.borrow_mut();
-        self_borrow.tag_name = Some(TagName::Name(tag_name.to_owned()));
-
-        Ok(())
+        self_borrow.tag_name = Some(TagName::from(tn));
     }
 
     /// Returns a tag name of the element node.
@@ -599,6 +549,7 @@ impl Node {
     ///
     /// Panics if the node is currently mutability borrowed.
     pub fn tag_name(&self) -> Option<Ref<TagName>> {
+        // TODO: return TagNameRef somehow
         let b = self.0.borrow();
         match b.tag_name {
             Some(_) => Some(Ref::map(self.0.borrow(), |n| n.tag_name.as_ref().unwrap())),
@@ -624,88 +575,19 @@ impl Node {
         }
     }
 
-    /// Returns `true` if node has the same tag name id as supplied.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the node is currently mutability borrowed.
-    pub fn is_tag_id(&self, eid: ElementId) -> bool {
-        let b = self.0.borrow();
-        match b.tag_name {
-            Some(ref v) => {
-                match *v {
-                    TagName::Id(ref id) => *id == eid,
-                    TagName::Name(_) => false,
-                }
-            }
-            None => false,
-        }
-    }
-
     /// Returns `true` if node has the same tag name as supplied.
     ///
     /// # Panics
     ///
     /// Panics if the node is currently mutability borrowed.
-    pub fn is_tag_name(&self, tag_name: &TagName) -> bool {
+    pub fn is_tag_name<'a, T>(&self, tag_name: T) -> bool
+        where TagNameRef<'a>: From<T>
+    {
         let b = self.0.borrow();
         match b.tag_name {
-            Some(ref v) => v == tag_name,
+            Some(ref v) => v.into_ref() == TagNameRef::from(tag_name),
             None => false,
         }
-    }
-
-    /// Returns `true` if node has a direct child with the same tag name as supplied.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the node is currently mutability borrowed.
-    pub fn has_child_with_tag_name(&self, tag_name: &TagName) -> bool {
-        self.children().svg().any(|n| n.is_tag_name(tag_name))
-    }
-
-    /// Returns a child `Node` with selected `TagName`.
-    ///
-    /// This function is recursive. Current node excluded.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use svgdom::{Document, TagName, ElementId};
-    ///
-    /// let doc = Document::from_data(
-    /// b"<svg>
-    ///     <g>
-    ///         <rect/>
-    ///     </g>
-    ///     <myelem/>
-    /// </svg>").unwrap();
-    ///
-    /// let svg = doc.first_child().unwrap();
-    /// // current node will be skipped
-    /// assert_eq!(svg.child_by_tag_name(&TagName::Id(ElementId::Svg)).is_some(), false);
-    /// // we'll get true since current method is recursive
-    /// assert_eq!(svg.child_by_tag_name(&TagName::Id(ElementId::Rect)).is_some(), true);
-    /// // check for not existing element
-    /// assert_eq!(svg.child_by_tag_name(&TagName::Id(ElementId::Path)).is_some(), false);
-    /// // check for non-svg element
-    /// assert_eq!(svg.child_by_tag_name(&TagName::from("myelem")).is_some(), true);
-    /// ```
-    pub fn child_by_tag_name(&self, tag_name: &TagName) -> Option<Node> {
-        let iter = self.descendants().skip(1);
-        for node in iter {
-            if node.is_tag_name(tag_name) {
-                return Some(node.clone());
-            }
-        }
-        None
-    }
-
-    /// Returns `Node` if the current node contains child with selected `ElementId`.
-    ///
-    /// Shorthand for `Node::child_by_tag_name(&TagName::Id(id))`.
-    pub fn child_by_tag_id(&self, id: ElementId) -> Option<Node> {
-        self.child_by_tag_name(&TagName::Id(id))
     }
 
     /// Inserts a new SVG attribute into attributes list.
@@ -856,15 +738,6 @@ impl Node {
         Ok(())
     }
 
-    /// Returns an iterator over linked nodes.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the node is currently mutability borrowed.
-    pub fn linked_nodes(&self) -> LinkedNodes {
-        LinkedNodes::new(Ref::map(self.0.borrow(), |n| &n.linked_nodes))
-    }
-
     /// Returns a copy of the attribute value by `id`.
     ///
     /// Use it only for simple `AttributeValue` types, and not for `String` and `Path`,
@@ -918,7 +791,7 @@ impl Node {
     /// # Examples
     ///
     /// ```
-    /// use svgdom::{Document, TagName, ElementId, AttributeId, Attribute};
+    /// use svgdom::{Document, ElementId, AttributeId, Attribute};
     /// use svgdom::types::Color;
     ///
     /// let doc = Document::from_data(
@@ -928,8 +801,7 @@ impl Node {
     ///     </g>
     /// </svg>").unwrap();
     ///
-    /// let rect = doc.first_child().unwrap().child_by_tag_name(&TagName::Id(ElementId::Rect))
-    ///               .unwrap();
+    /// let rect = doc.descendants().filter(|n| n.is_tag_name(ElementId::Rect)).nth(0).unwrap();
     /// assert_eq!(rect.parent_attribute(AttributeId::Fill).unwrap(),
     ///            Attribute::new(AttributeId::Fill, Color::new(255, 0, 0)));
     /// assert_eq!(rect.parent_attribute(AttributeId::Stroke).unwrap(),
@@ -1042,6 +914,15 @@ impl Node {
         for id in ids {
             self.remove_attribute(*id);
         }
+    }
+
+    /// Returns an iterator over linked nodes.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the node is currently mutability borrowed.
+    pub fn linked_nodes(&self) -> LinkedNodes {
+        LinkedNodes::new(Ref::map(self.0.borrow(), |n| &n.linked_nodes))
     }
 
     /// Returns `true` if the current node is linked to any of the DOM nodes.

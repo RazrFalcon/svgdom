@@ -5,7 +5,16 @@
 #[macro_use]
 extern crate svgdom;
 
-use svgdom::{Document, ParseOptions, Error, ErrorPos, NodeType, TagName, ValueId, WriteToString};
+use svgdom::{
+    Document,
+    ParseOptions,
+    Error,
+    ErrorPos,
+    NodeType,
+    TagName,
+    ValueId,
+    WriteToString
+};
 use svgdom::types::Color;
 use svgdom::AttributeValue;
 use svgdom::AttributeId as AId;

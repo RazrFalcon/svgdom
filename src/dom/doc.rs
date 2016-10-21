@@ -22,7 +22,7 @@ use super::iterators::{Children, Descendants};
 use super::node::Node;
 use super::node_data::{Link, NodeData};
 use super::node_type::NodeType;
-use super::tag_name::TagName;
+use super::tag_name::{TagName, TagNameRef};
 
 /// Container of [`Node`](struct.Node.html)s.
 pub struct Document {
@@ -51,21 +51,21 @@ impl Document {
     /// Constructs a new `Node` with `Element` type.
     ///
     /// Constructed node do belong to this document, but not added to it tree structure.
-    pub fn create_element(&self, eid: ElementId) -> Node {
-        Document::new_node(Some(self.root.0.clone()), NodeType::Element,
-                           Some(TagName::Id(eid)), None)
-    }
-
-    /// Constructs a new `Node` with `Element` type and non-SVG tag name.
     ///
-    /// Constructed node do belong to this document, but not added to it tree structure.
-    pub fn create_nonsvg_element(&self, tag_name: &str) -> Result<Node, Error> {
-        if tag_name.is_empty() {
-            return Err(Error::EmptyTagName);
+    /// # Panics
+    ///
+    /// Panics if a string tag name is empty.
+    pub fn create_element<'a, T>(&self, tag_name: T) -> Node
+        where TagNameRef<'a>: From<T>
+    {
+        let tn = TagNameRef::from(tag_name);
+        if let TagNameRef::Name(ref name) = tn {
+            if name.is_empty() {
+                panic!("supplied tag name is empty");
+            }
         }
 
-        Ok(Document::new_node(Some(self.root.0.clone()), NodeType::Element,
-                              Some(TagName::Name(tag_name.to_owned())), None))
+        Document::new_node(Some(self.root.0.clone()), NodeType::Element, Some(tn), None)
     }
 
     /// Constructs a new `Node` using the supplied `NodeType`.
@@ -107,11 +107,11 @@ impl Document {
     ///
     /// let doc = Document::from_data(b"<!--comment--><svg/>").unwrap();
     ///
-    /// assert_eq!(doc.svg_element().unwrap().is_tag_id(ElementId::Svg), true);
+    /// assert_eq!(doc.svg_element().unwrap().is_tag_name(ElementId::Svg), true);
     /// ```
     pub fn svg_element(&self) -> Option<Node> {
         for n in self.root.children().svg() {
-            if n.is_tag_id(ElementId::Svg) {
+            if n.is_tag_name(ElementId::Svg) {
                 return Some(n.clone());
             }
         }
@@ -162,7 +162,7 @@ impl Document {
         self.root().drain(f)
     }
 
-    fn new_node(doc: Option<Link>, node_type: NodeType, tag_name: Option<TagName>,
+    fn new_node(doc: Option<Link>, node_type: NodeType, tag_name: Option<TagNameRef>,
                 text: Option<String>)
                 -> Node {
         Node(Rc::new(RefCell::new(NodeData {
@@ -173,7 +173,7 @@ impl Document {
             previous_sibling: None,
             next_sibling: None,
             node_type: node_type,
-            tag_name: tag_name,
+            tag_name: tag_name.map(|a| TagName::from(a)),
             id: String::new(),
             attributes: Attributes::new(),
             linked_nodes: Vec::new(),

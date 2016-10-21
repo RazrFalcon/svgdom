@@ -3,13 +3,35 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 use std::fmt;
-use std::str::FromStr;
 
 use ElementId;
 
-// TODO: add TagNameRef like AttributeNameRef
+// TODO: maybe join with AttributeName(Ref), since they are the same
 
-/// Wrapper arrow element tag name.
+/// A reference-like container for a `TagName` object.
+///
+/// We need this to prevent `String` copy.
+#[derive(Clone,Copy,PartialEq)]
+pub enum TagNameRef<'a> {
+    /// For SVG elements.
+    Id(ElementId),
+    /// For unknown elements.
+    Name(&'a str),
+}
+
+impl<'a> From<ElementId> for TagNameRef<'a> {
+    fn from(value: ElementId) -> TagNameRef<'a> {
+        TagNameRef::Id(value)
+    }
+}
+
+impl<'a> From<&'a str> for TagNameRef<'a> {
+    fn from(value: &'a str) -> TagNameRef<'a> {
+        TagNameRef::Name(value)
+    }
+}
+
+/// A container for an element tag name.
 #[derive(Clone,PartialEq)]
 pub enum TagName {
     /// For SVG elements.
@@ -18,29 +40,36 @@ pub enum TagName {
     Name(String),
 }
 
-impl From<ElementId> for TagName {
-    fn from(value: ElementId) -> TagName {
-        TagName::Id(value)
+impl<'a> From<TagNameRef<'a>> for TagName {
+    fn from(value: TagNameRef) -> TagName {
+        match value {
+            TagNameRef::Id(id) => TagName::Id(id),
+            TagNameRef::Name(ref name) => TagName::Name(name.to_string()),
+        }
     }
 }
 
-impl From<String> for TagName {
-    fn from(value: String) -> TagName {
-        TagName::Name(value)
-    }
-}
-
-impl<'a> From<&'a str> for TagName {
-    fn from(value: &str) -> TagName {
-        TagName::Name(String::from_str(value).unwrap())
+impl<'a> fmt::Debug for TagNameRef<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            TagNameRef::Id(ref id) => write!(f, "{}", id.name()),
+            TagNameRef::Name(ref name) => write!(f, "{}", name),
+        }
     }
 }
 
 impl fmt::Debug for TagName {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}", self.into_ref())
+    }
+}
+
+impl TagName {
+    /// Converts `TagName` into `TagNameRef`.
+    pub fn into_ref(&self) -> TagNameRef {
         match *self {
-            TagName::Id(ref id) => write!(f, "{}", id.name()),
-            TagName::Name(ref name) => write!(f, "{}", name),
+            TagName::Id(id) => TagNameRef::Id(id),
+            TagName::Name(ref name) => TagNameRef::Name(name),
         }
     }
 }

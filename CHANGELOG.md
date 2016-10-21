@@ -17,12 +17,21 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Rename `has_children_nodes` to `has_children`.
 - The `LinkedNodes` iterator contains a reference to nodes vec and not a copy now.
   It will break node modifying while iterating. Less useful, but more correct.
+- The `Document::create_element` accepts `&str` now.
+- The `Document::create_element` will panic now if supplied string-based tag name is empty.
+- The `Node::set_tag_name` will panic now if supplied string-based tag name is empty.
 
 ### Removed
 - `descendant_nodes` and `children_nodes` methods.
 - `Descendants::skip_children`.
 - `ParseOptions::skip_svg_elements`.
 - `Node::same_node`.
+- `Document::create_nonsvg_element`. Use `Document::create_element` instead.
+- `Node::set_tag_id`. Use `Node::set_tag_name` instead.
+- `Node::is_tag_id`. Use `Node::is_tag_name` instead.
+- `Node::has_child_with_tag_name`. Can be easily implemented with iterators.
+- `Node::child_by_tag_name`. Can be easily implemented with iterators.
+- `Node::child_by_tag_id`. Can be easily implemented with iterators.
 
 ### Fixed
 - `ParseOptions::parse_px_unit` now works in `LengthList`.

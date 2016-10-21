@@ -6,7 +6,7 @@ pub use self::doc::Document;
 pub use self::iterators::*;
 pub use self::node::Node;
 pub use self::node_type::NodeType;
-pub use self::tag_name::TagName;
+pub use self::tag_name::{TagName, TagNameRef};
 
 mod doc;
 mod iterators;

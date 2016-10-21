@@ -209,7 +209,7 @@ fn drain_1() {
                     <rect/>
                 </svg>").unwrap();
 
-    assert_eq!(doc.root().drain(|n| n.is_tag_id(EId::Rect)), 1);
+    assert_eq!(doc.root().drain(|n| n.is_tag_name(EId::Rect)), 1);
 
     assert_eq_text!(doc.to_string(), "<svg/>\n");
 }
@@ -225,7 +225,7 @@ fn drain_2() {
                     <rect/>
                 </svg>").unwrap();
 
-    assert_eq!(doc.root().drain(|n| n.is_tag_id(EId::Path)), 1);
+    assert_eq!(doc.root().drain(|n| n.is_tag_name(EId::Path)), 1);
 
     assert_eq_text!(doc.to_string(),
 "<svg>
@@ -247,7 +247,7 @@ fn drain_3() {
                     <rect/>
                 </svg>").unwrap();
 
-    assert_eq!(doc.root().drain(|n| n.is_tag_id(EId::G)), 1);
+    assert_eq!(doc.root().drain(|n| n.is_tag_name(EId::G)), 1);
 
     assert_eq_text!(doc.to_string(),
 "<svg>
@@ -268,7 +268,7 @@ fn drain_4() {
                     <rect/>
                 </svg>").unwrap();
 
-    assert_eq!(doc.root().drain(|n| n.is_tag_id(EId::Rect)), 3);
+    assert_eq!(doc.root().drain(|n| n.is_tag_name(EId::Rect)), 3);
 
     assert_eq_text!(doc.to_string(),
 "<svg>

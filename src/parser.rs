@@ -130,7 +130,7 @@ pub fn parse_svg(data: &[u8], opt: &ParseOptions) -> Result<Document, Error> {
     // first element must be an 'svg'
     match doc.children().svg().nth(0) {
         Some(n) => {
-            if !n.is_tag_id(ElementId::Svg) {
+            if !n.is_tag_name(ElementId::Svg) {
                 return Err(Error::NoSvgElement);
             }
         }
@@ -186,7 +186,7 @@ fn process_token<'a>(doc: &Document,
                         try!(skip_current_element(tokenizer));
                     } else {
                         // create new node
-                        let e = try!(doc.create_nonsvg_element(u8_to_string!(s)));
+                        let e = doc.create_element(u8_to_string!(s));
                         *node = Some(e.clone());
                         parent.append(&e);
                     }
@@ -265,7 +265,7 @@ fn process_token<'a>(doc: &Document,
     if parent.node_type() == NodeType::Root {
         // check that the first element of the doc is 'svg'
         if let Some(n) = doc.children().svg().nth(0) {
-            if !n.is_tag_id(ElementId::Svg) {
+            if !n.is_tag_name(ElementId::Svg) {
                 return Err(Error::NoSvgElement);
             }
         }
@@ -690,7 +690,7 @@ fn resolve_links(links: &Links) -> Result<(), Error> {
                                 // in the svgdom now.
                                 // It's not the best solution, but it works.
 
-                                if d.node.is_tag_id(ElementId::Use) {
+                                if d.node.is_tag_name(ElementId::Use) {
                                     // TODO: find a solution
                                     // For some reasons if we remove attribute with a broken filter
                                     // from 'use' elements - image will become broken.
