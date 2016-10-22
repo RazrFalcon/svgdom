@@ -205,11 +205,11 @@ fn remove_attribute_1() {
 #[test]
 fn drain_1() {
     let doc = Document::from_data(
-                b"<svg>
-                    <rect/>
-                </svg>").unwrap();
+b"<svg>
+    <rect/>
+</svg>").unwrap();
 
-    assert_eq!(doc.root().drain(|n| n.is_tag_name(EId::Rect)), 1);
+    assert_eq!(doc.drain(|n| n.is_tag_name(EId::Rect)), 1);
 
     assert_eq_text!(doc.to_string(), "<svg/>\n");
 }
@@ -217,15 +217,15 @@ fn drain_1() {
 #[test]
 fn drain_2() {
     let doc = Document::from_data(
-                b"<svg>
-                    <rect/>
-                    <g>
-                        <path/>
-                    </g>
-                    <rect/>
-                </svg>").unwrap();
+b"<svg>
+    <rect/>
+    <g>
+        <path/>
+    </g>
+    <rect/>
+</svg>").unwrap();
 
-    assert_eq!(doc.root().drain(|n| n.is_tag_name(EId::Path)), 1);
+    assert_eq!(doc.drain(|n| n.is_tag_name(EId::Path)), 1);
 
     assert_eq_text!(doc.to_string(),
 "<svg>
@@ -239,15 +239,15 @@ fn drain_2() {
 #[test]
 fn drain_3() {
     let doc = Document::from_data(
-                b"<svg>
-                    <rect/>
-                    <g>
-                        <path/>
-                    </g>
-                    <rect/>
-                </svg>").unwrap();
+b"<svg>
+    <rect/>
+    <g>
+        <path/>
+    </g>
+    <rect/>
+</svg>").unwrap();
 
-    assert_eq!(doc.root().drain(|n| n.is_tag_name(EId::G)), 1);
+    assert_eq!(doc.drain(|n| n.is_tag_name(EId::G)), 1);
 
     assert_eq_text!(doc.to_string(),
 "<svg>
@@ -260,19 +260,64 @@ fn drain_3() {
 #[test]
 fn drain_4() {
     let doc = Document::from_data(
-                b"<svg>
-                    <rect/>
-                    <g>
-                        <rect/>
-                    </g>
-                    <rect/>
-                </svg>").unwrap();
+b"<svg>
+    <rect/>
+    <g>
+        <rect/>
+    </g>
+    <rect/>
+</svg>").unwrap();
 
-    assert_eq!(doc.root().drain(|n| n.is_tag_name(EId::Rect)), 3);
+    assert_eq!(doc.drain(|n| n.is_tag_name(EId::Rect)), 3);
 
     assert_eq_text!(doc.to_string(),
 "<svg>
     <g/>
 </svg>
 ");
+}
+
+#[test]
+fn parents_1() {
+    let doc = Document::from_data(
+b"<svg>
+    <rect/>
+    <g>
+        <path/>
+    </g>
+    <rect/>
+</svg>").unwrap();
+
+    let node = doc.descendants().filter(|n| n.is_tag_name(EId::Path)).nth(0).unwrap();
+
+    let mut iter = node.parents();
+    assert_eq!(iter.next().unwrap().is_tag_name(EId::G), true);
+    assert_eq!(iter.next().unwrap().is_tag_name(EId::Svg), true);
+    assert_eq!(iter.next(), None);
+}
+
+#[test]
+fn parents_2() {
+    let doc = Document::from_data(
+b"<svg>
+    <!--comment-->
+    <g>
+        <!--comment-->
+        <g>
+            <text>
+                text1
+                <tspan>text2</tspan>
+            </text>
+        </g>
+    </g>
+</svg>").unwrap();
+
+    let node = doc.descendants().filter(|n| n.is_tag_name(EId::Tspan)).nth(0).unwrap();
+
+    let mut iter = node.parents();
+    assert_eq!(iter.next().unwrap().is_tag_name(EId::Text), true);
+    assert_eq!(iter.next().unwrap().is_tag_name(EId::G), true);
+    assert_eq!(iter.next().unwrap().is_tag_name(EId::G), true);
+    assert_eq!(iter.next().unwrap().is_tag_name(EId::Svg), true);
+    assert_eq!(iter.next(), None);
 }

@@ -701,9 +701,13 @@ fn resolve_links(links: &Links) -> Result<(), Error> {
                                     return Err(Error::BrokenFuncIri(u8_to_str!(d.iri).to_string()));
                                 }
 
-                                if    d.node.parent_element(ElementId::Mask).is_some()
-                                   || d.node.parent_element(ElementId::ClipPath).is_some()
-                                   || d.node.parent_element(ElementId::Marker).is_some() {
+                                let flag = d.node.parents().any(|n| {
+                                       n.is_tag_name(ElementId::Mask)
+                                    || n.is_tag_name(ElementId::ClipPath)
+                                    || n.is_tag_name(ElementId::Marker)
+                                });
+
+                                if flag {
                                     // If our element is inside one of this elements - then do nothing.
                                     // I can't find explanation of this in the SVG spec, but it works.
                                     // Probably because this elements only care about a shape,

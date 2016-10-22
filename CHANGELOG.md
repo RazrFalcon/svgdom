@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 ### Added
 - `Node::drain` method to remove nodes by the predicate without memory allocations.
+- `Node::parents` - an iterator of `Node`s to the parents of a given node.
 
 ### Changed
 - Always add a space after ArcTo flags during the path writing.
@@ -32,6 +33,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - `Node::has_child_with_tag_name`. Can be easily implemented with iterators.
 - `Node::child_by_tag_name`. Can be easily implemented with iterators.
 - `Node::child_by_tag_id`. Can be easily implemented with iterators.
+- `Node::parent_element`. Can be easily implemented with iterators.
 
 ### Fixed
 - `ParseOptions::parse_px_unit` now works in `LengthList`.

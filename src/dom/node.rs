@@ -18,12 +18,7 @@ use super::doc::Document;
 use super::tag_name::{TagName, TagNameRef};
 use super::node_data::NodeData;
 use super::node_type::NodeType;
-use super::iterators::{
-    Children,
-    Descendants,
-    LinkedNodes,
-    Traverse,
-};
+use super::iterators::*;
 
 macro_rules! try_opt {
     ($expr: expr) => {
@@ -75,30 +70,7 @@ impl Node {
     ///
     /// Panics if the node is currently mutability borrowed.
     pub fn parent(&self) -> Option<Node> {
-        // TODO: we actually always have a parent - Root node
         Some(Node(try_opt!(try_opt!(self.0.borrow().parent.as_ref()).upgrade())))
-    }
-
-    /// Returns a parent element with selected tag name.
-    ///
-    /// Returns `None` if this node is the root of the tree or there is no parent
-    /// nodes with such tag name.
-    ///
-    /// # Panics
-    ///
-    /// Panics if any of the parent nodes is currently mutability borrowed.
-    pub fn parent_element<'a, T>(&self, tag_name: T) -> Option<Node>
-        where TagNameRef<'a>: From<T>, T: Copy
-    {
-        // TODO: create parents iterator
-        let mut parent = self.parent();
-        while let Some(p) = parent {
-            if p.is_tag_name(tag_name) {
-                return Some(p.clone());
-            }
-            parent = p.parent();
-        }
-        None
     }
 
     /// Returns `true` if the node has a parent node.
@@ -125,14 +97,14 @@ impl Node {
     /// ```
     pub fn has_parent(&self) -> bool {
         match self.parent() {
-            Some(node) => {
-                match node.node_type() {
-                    NodeType::Root => false,
-                    _ => true,
-                }
-            }
+            Some(node) => node.node_type() != NodeType::Root,
             None => false,
         }
+    }
+
+    /// Returns an iterator over node's parents.
+    pub fn parents(&self) -> Parents {
+        Parents::new(self.parent())
     }
 
     /// Returns an iterator to this node's children nodes.
@@ -196,7 +168,7 @@ impl Node {
 
     /// Returns an iterator over descendant nodes.
     ///
-    /// More complex alternative of the `Node::descendant_nodes()`.
+    /// More complex alternative of the `Node::descendants()`.
     pub fn traverse(&self) -> Traverse {
         Traverse::new(self)
     }

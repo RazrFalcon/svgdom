@@ -7,8 +7,7 @@ use std::iter::Filter;
 
 use super::node::Node;
 use super::node_data::WeakLink;
-
-// TODO: drain iter
+use super::node_type::NodeType;
 
 /// Node type during traverse.
 #[derive(Clone)]
@@ -93,6 +92,7 @@ impl Descendants {
     }
 }
 
+// TODO: svg() method as trait or template
 impl Descendants {
     /// Returns an iterator over descendant SVG elements.
     ///
@@ -152,6 +152,47 @@ impl Children {
     ///
     /// Shorthand for: `filter(|n| n.is_svg_element())`
     pub fn svg(self) -> Filter<Children, fn(&Node) -> bool> {
+        fn is_svg(n: &Node) -> bool { n.is_svg_element() }
+        self.filter(is_svg)
+    }
+}
+
+/// An iterator of `Node`s to the parents of a given node.
+pub struct Parents(Option<Node>);
+
+impl Parents {
+    /// Constructs a new Children iterator.
+    pub fn new(node: Option<Node>) -> Parents {
+        Parents(node)
+    }
+}
+
+impl Iterator for Parents {
+    type Item = Node;
+
+    /// # Panics
+    ///
+    /// Panics if the node about to be yielded is currently mutability borrowed.
+    fn next(&mut self) -> Option<Node> {
+        match self.0.take() {
+            Some(node) => {
+                if node.node_type() == NodeType::Root {
+                    return None;
+                }
+
+                self.0 = node.parent();
+                Some(node)
+            }
+            None => None
+        }
+    }
+}
+
+impl Parents {
+    /// Returns an iterator over children SVG elements.
+    ///
+    /// Shorthand for: `filter(|n| n.is_svg_element())`
+    pub fn svg(self) -> Filter<Parents, fn(&Node) -> bool> {
         fn is_svg(n: &Node) -> bool { n.is_svg_element() }
         self.filter(is_svg)
     }
