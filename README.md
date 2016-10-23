@@ -157,7 +157,7 @@ Add this to your `Cargo.toml`:
 svgdom = "0.1"
 ```
 
-See documentation and [examples](examples/) for details.
+See [documentation](https://docs.rs/svgdom/) and [examples](examples/) for details.
 
 ### Performance
 
@@ -175,9 +175,9 @@ It's still not as fast as I want, but here are some stats using *resave* example
 | [Average image](https://commons.wikimedia.org/wiki/File:Electromagnetic_Radiation_Spectrum_Infographic.svg) (324.4KiB) | ~20ms/~89M instructions. |
 | Small image, like [SVG Logo](https://commons.wikimedia.org/wiki/File:SVG_logo.svg) (8.8KiB) | ~0.45ms/~2M instructions. |
 
-\* At least I don't know.
+\* At least I don't know about them.
 
-\*\* It's not a direct downloads links.
+\*\* It's not direct download links.
 
 Tested on i5-3570k 3.8GHz.
 

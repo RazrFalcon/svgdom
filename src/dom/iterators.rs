@@ -92,16 +92,22 @@ impl Descendants {
     }
 }
 
-// TODO: svg() method as trait or template
-impl Descendants {
-    /// Returns an iterator over descendant SVG elements.
-    ///
-    /// Shorthand for: `filter(|n| n.is_svg_element())`
-    pub fn svg(self) -> Filter<Descendants, fn(&Node) -> bool> {
-        fn is_svg(n: &Node) -> bool { n.is_svg_element() }
-        self.filter(is_svg)
-    }
+// TODO: maybe can be implemented as template or trait
+macro_rules! filter_svg {
+    ($name:ty) => (
+        impl $name {
+            /// Returns an iterator over descendant SVG elements.
+            ///
+            /// Shorthand for: `filter(|n| n.is_svg_element())`
+            pub fn svg(self) -> Filter<$name, fn(&Node) -> bool> {
+                fn is_svg(n: &Node) -> bool { n.is_svg_element() }
+                self.filter(is_svg)
+            }
+        }
+    )
 }
+
+filter_svg!(Descendants);
 
 impl Iterator for Descendants {
     type Item = Node;
@@ -147,15 +153,7 @@ impl Iterator for Children {
     }
 }
 
-impl Children {
-    /// Returns an iterator over children SVG elements.
-    ///
-    /// Shorthand for: `filter(|n| n.is_svg_element())`
-    pub fn svg(self) -> Filter<Children, fn(&Node) -> bool> {
-        fn is_svg(n: &Node) -> bool { n.is_svg_element() }
-        self.filter(is_svg)
-    }
-}
+filter_svg!(Children);
 
 /// An iterator of `Node`s to the parents of a given node.
 pub struct Parents(Option<Node>);
@@ -188,15 +186,7 @@ impl Iterator for Parents {
     }
 }
 
-impl Parents {
-    /// Returns an iterator over children SVG elements.
-    ///
-    /// Shorthand for: `filter(|n| n.is_svg_element())`
-    pub fn svg(self) -> Filter<Parents, fn(&Node) -> bool> {
-        fn is_svg(n: &Node) -> bool { n.is_svg_element() }
-        self.filter(is_svg)
-    }
-}
+filter_svg!(Parents);
 
 /// An iterator over linked nodes.
 pub struct LinkedNodes<'a> {
