@@ -4,12 +4,12 @@
 
 extern crate svgdom;
 
-use svgdom::{Document, AttributeId, AttributeValue};
-use svgdom::types::path::Command;
-
 use std::env;
 use std::io::Read;
 use std::fs::File;
+
+use svgdom::{Document, AttributeId, AttributeValue};
+use svgdom::types::path::Command;
 
 fn main() {
     let args: Vec<_> = env::args().collect();

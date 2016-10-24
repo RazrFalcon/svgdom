@@ -92,7 +92,7 @@ mod dom;
 mod error;
 mod parse_options;
 mod parser;
-mod write;
 mod write_options;
 
 pub mod types;
+pub mod writer;

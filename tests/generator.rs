@@ -257,9 +257,7 @@ b"<svg>
 ");
 
 // TODO: this
-// #[test]
-// fn text_multiline_2() {
-//     let doc = parse_svg(
+// test_resave!(text_mixed_indent_1,
 // b"<svg>
 // <p>
 // Line 1
@@ -267,11 +265,7 @@ b"<svg>
 // Line 3
 // </p>
 // </svg>
-// ").unwrap();
-
-//     println!("{}", dom_to_string(&doc));
-
-//     assert_eq!(dom_to_string(&doc),
+// ",
 // "<svg>
 //     <p>
 //         Line 1
@@ -280,9 +274,8 @@ b"<svg>
 //     </p>
 // </svg>
 // ");
-// }
 
-test_resave!(text_mixed_indent,
+test_resave!(text_mixed_indent_2,
 b"<svg>
   <g>
       <p>
@@ -337,6 +330,60 @@ b"<svg>
 "<svg>
     <text xml:space=\"preserve\"> Text
     </text>
+</svg>
+");
+
+test_resave!(cdata_1,
+b"<svg>
+    <script><![CDATA[
+        js code
+    ]]></script>
+</svg>
+",
+"<svg>
+    <script>
+    <![CDATA[
+        js code
+    ]]>
+    </script>
+</svg>
+");
+
+test_resave!(cdata_2,
+b"<svg>
+    <script><![CDATA[]]></script>
+</svg>
+",
+"<svg>
+    <script>
+    <![CDATA[]]>
+    </script>
+</svg>
+");
+
+test_resave!(cdata_3,
+b"<svg>
+    <script><![CDATA[qwe]]></script>
+</svg>
+",
+"<svg>
+    <script>
+    <![CDATA[qwe]]>
+    </script>
+</svg>
+");
+
+test_resave!(cdata_4,
+b"<svg>
+    <script><![CDATA[qwe]]><![CDATA[qwe]]><![CDATA[qwe]]></script>
+</svg>
+",
+"<svg>
+    <script>
+    <![CDATA[qwe]]>
+    <![CDATA[qwe]]>
+    <![CDATA[qwe]]>
+    </script>
 </svg>
 ");
 

@@ -9,6 +9,21 @@ use super::node::Node;
 use super::node_data::WeakLink;
 use super::node_type::NodeType;
 
+// TODO: maybe can be implemented as template or trait
+macro_rules! filter_svg {
+    ($name:ty) => (
+        impl $name {
+            /// Returns an iterator over descendant SVG elements.
+            ///
+            /// Shorthand for: `filter(|n| n.is_svg_element())`
+            pub fn svg(self) -> Filter<$name, fn(&Node) -> bool> {
+                fn is_svg(n: &Node) -> bool { n.is_svg_element() }
+                self.filter(is_svg)
+            }
+        }
+    )
+}
+
 /// Node type during traverse.
 #[derive(Clone)]
 pub enum NodeEdge {
@@ -92,23 +107,6 @@ impl Descendants {
     }
 }
 
-// TODO: maybe can be implemented as template or trait
-macro_rules! filter_svg {
-    ($name:ty) => (
-        impl $name {
-            /// Returns an iterator over descendant SVG elements.
-            ///
-            /// Shorthand for: `filter(|n| n.is_svg_element())`
-            pub fn svg(self) -> Filter<$name, fn(&Node) -> bool> {
-                fn is_svg(n: &Node) -> bool { n.is_svg_element() }
-                self.filter(is_svg)
-            }
-        }
-    )
-}
-
-filter_svg!(Descendants);
-
 impl Iterator for Descendants {
     type Item = Node;
 
@@ -116,6 +114,7 @@ impl Iterator for Descendants {
     ///
     /// Panics if the node about to be yielded is currently mutability borrowed.
     fn next(&mut self) -> Option<Node> {
+        // TODO: ignore current node
         loop {
             match self.0.next() {
                 Some(NodeEdge::Start(node)) => return Some(node),
@@ -125,6 +124,8 @@ impl Iterator for Descendants {
         }
     }
 }
+
+filter_svg!(Descendants);
 
 /// An iterator of `Node`s to the children of a given node.
 pub struct Children(Option<Node>);

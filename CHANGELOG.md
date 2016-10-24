@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - `Node::drain` method to remove nodes by the predicate without memory allocations.
 - `Node::parents` - an iterator of `Node`s to the parents of a given node.
+- Added support for implementing a custom SVG writer. See the `custom_writer` example for details.
 
 ### Changed
 - Always add a space after ArcTo flags during the path writing.
@@ -21,6 +22,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - The `Document::create_element` accepts `&str` now.
 - The `Document::create_element` will panic now if supplied string-based tag name is empty.
 - The `Node::set_tag_name` will panic now if supplied string-based tag name is empty.
+- The `write` module renamed to `writer` and made public.
 
 ### Removed
 - `descendant_nodes` and `children_nodes` methods.

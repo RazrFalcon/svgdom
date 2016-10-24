@@ -7,7 +7,7 @@ use std::fmt;
 use std::rc::{Rc};
 
 use parser::parse_svg;
-use write;
+use writer;
 use {
     Attributes,
     ElementId,
@@ -190,7 +190,7 @@ impl Default for Document {
 
 impl WriteBuffer for Document {
     fn write_buf_opt(&self, opt: &WriteOptions, buf: &mut Vec<u8>) {
-        write::write_dom(self, opt, buf);
+        writer::write_dom(self, opt, buf);
     }
 }
 

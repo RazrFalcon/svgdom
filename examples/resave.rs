@@ -5,11 +5,11 @@
 extern crate svgdom;
 extern crate time;
 
-use svgdom::{Document, WriteBuffer};
-
 use std::env;
 use std::io::{Read,Write};
 use std::fs::File;
+
+use svgdom::{Document, WriteBuffer};
 
 fn main() {
     let start = time::precise_time_ns();
