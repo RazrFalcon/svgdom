@@ -4,7 +4,7 @@
 
 use std::fmt;
 
-use types::{LengthUnit};
+use types::LengthUnit;
 use {WriteOptions, FromStream, WriteBuffer, WriteToString};
 
 use svgparser::Error as ParseError;

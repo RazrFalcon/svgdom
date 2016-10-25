@@ -11,8 +11,7 @@ Here is simple overview of such structure:
     - root [`Node`](struct.Node.html)
         - user defined [`Node`](struct.Node.html)
             - [`TagName`](struct.TagName.html)
-            - [`Attributes`](struct.Attribute.html)
-            - non-SVG attributes
+            - [`Attributes`](struct.Attributes.html)
             - unique id
         - user defined [`Node`](struct.Node.html)
         - ...
@@ -29,12 +28,8 @@ The [`TagName`](struct.TagName.html) represents a tag name of the element node. 
 SVG element names and `String` used for non-SVG elements. Such separation used for
 performance reasons.
 
-There are two types of attributes, like with tag names: one for SVG attributes and one for unknown.
-Unknown attributes stored in a simple `HashMap<String,String>` structure.
-And SVG attributes stored behind a pretty complex struct.
-See [`Attributes`](struct.Attribute.html) documentation for details.
-Only SVG attributes support [`AttributeValue`](enum.AttributeValue.html), which is used to store
-preprocessed data and not raw strings like usual XML parser.
+The [`Attributes`](struct.Attributes.html) container wraps a `Vec` of
+[`Attribute`](struct.Attribute.html)'s.
 
 At last, the `id` attribute is stored as a separate value and not as part of the `Attributes`.
 

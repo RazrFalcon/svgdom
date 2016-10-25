@@ -25,8 +25,6 @@ pub enum Error {
     /// <linearGradient id="lg1" xlink:href="#lg1"/>
     /// ```
     ElementCrosslink,
-    /// The element can't have an empty tag name.
-    EmptyTagName,
     /// Error from *libsvgparser*.
     ParseError(ParseError),
     /// Parsed document must have an `svg` element.
@@ -56,7 +54,6 @@ impl fmt::Display for Error {
         match *self {
             Error::ElementMustHaveAnId => write!(f, "Element must have an id"),
             Error::ElementCrosslink => write!(f, "Element crosslink"),
-            Error::EmptyTagName => write!(f, "Attempt to set an empty tag name to the element"),
             Error::ParseError(e) => write!(f, "{:?}", e),
             Error::NoSvgElement => write!(f, "Document didn't have an SVG element"),
             Error::EmptyDocument => write!(f, "Document didn't have any nodes"),

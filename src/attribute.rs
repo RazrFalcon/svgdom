@@ -222,10 +222,10 @@ impl<'a> From<&'a str> for AttributeNameRef<'a> {
     }
 }
 
-/// Representation oh the SVG attribute object.
+/// Representation of the SVG attribute object.
 #[derive(PartialEq,Clone,Debug)]
 pub struct Attribute {
-    /// Internal ID of the attribute.
+    /// Attribute name.
     pub name: AttributeName,
     /// Attribute value.
     pub value: AttributeValue,
