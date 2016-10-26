@@ -6,11 +6,15 @@ pub use self::doc::Document;
 pub use self::iterators::*;
 pub use self::node::Node;
 pub use self::node_type::NodeType;
-pub use self::tag_name::{TagName, TagNameRef};
+
+use {Name, NameRef, ElementId};
+/// Type alias for `NameRef<ElementId>`.
+pub type TagNameRef<'a> = NameRef<'a, ElementId>;
+/// Type alias for `Name<ElementId>`.
+pub type TagName = Name<ElementId>;
 
 mod doc;
 mod iterators;
 mod node;
 mod node_data;
 mod node_type;
-mod tag_name;

@@ -13,12 +13,16 @@ use {
     AttributeValue,
     ElementId,
     Error,
+    Name,
+    NameRef,
+    SvgId,
+    TagName,
+    TagNameRef,
 };
 use super::doc::Document;
-use super::tag_name::{TagName, TagNameRef};
+use super::iterators::*;
 use super::node_data::NodeData;
 use super::node_type::NodeType;
-use super::iterators::*;
 
 macro_rules! try_opt {
     ($expr: expr) => {
@@ -27,6 +31,10 @@ macro_rules! try_opt {
             None => return None
         }
     }
+}
+
+impl SvgId for ElementId {
+    fn name(&self) -> &str { self.name() }
 }
 
 /// Representation of the SVG node.
@@ -479,8 +487,8 @@ impl Node {
         match b.tag_name {
             Some(ref tag) => {
                 match *tag {
-                    TagName::Id(_) => true,
-                    TagName::Name(_) => false,
+                    Name::Id(_) => true,
+                    Name::Name(_) => false,
                 }
             }
             None => false,
@@ -505,14 +513,14 @@ impl Node {
         debug_assert!(self.node_type() == NodeType::Element);
 
         let tn = TagNameRef::from(tag_name);
-        if let TagNameRef::Name(ref name) = tn {
+        if let NameRef::Name(ref name) = tn {
             if name.is_empty() {
                 panic!("supplied tag name is empty");
             }
         }
 
         let mut self_borrow = self.0.borrow_mut();
-        self_borrow.tag_name = Some(TagName::from(tn));
+        self_borrow.tag_name = Some(Name::from(tn));
     }
 
     /// Returns a tag name of the element node.
@@ -521,7 +529,7 @@ impl Node {
     ///
     /// Panics if the node is currently mutability borrowed.
     pub fn tag_name(&self) -> Option<Ref<TagName>> {
-        // TODO: return TagNameRef somehow
+        // TODO: return NameRef somehow
         let b = self.0.borrow();
         match b.tag_name {
             Some(_) => Some(Ref::map(self.0.borrow(), |n| n.tag_name.as_ref().unwrap())),
@@ -539,8 +547,8 @@ impl Node {
         match b.tag_name {
             Some(ref t) => {
                 match *t {
-                    TagName::Id(ref id) => Some(*id),
-                    TagName::Name(_) => None,
+                    Name::Id(ref id) => Some(*id),
+                    Name::Name(_) => None,
                 }
             }
             None => None,

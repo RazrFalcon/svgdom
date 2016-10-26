@@ -4,9 +4,12 @@
 
 use std::fmt;
 
-use super::{
+use {
     AttributeId,
     AttributeValue,
+    Name,
+    NameRef,
+    SvgId,
     WriteBuffer,
     WriteOptions,
     WriteToString,
@@ -161,65 +164,13 @@ static STROKE_ATTRIBUTES: &'static [AttributeId] = &[
     AttributeId::StrokeWidth,
 ];
 
-/// An attribute name container.
-#[derive(PartialEq,Clone,Debug)]
-pub enum AttributeName {
-    /// An ID of the SVG attribute.
-    Id(AttributeId),
-    /// Custom attribute name.
-    Name(String),
-}
+/// Type alias for `NameRef<AttributeId>`.
+pub type AttributeNameRef<'a> = NameRef<'a, AttributeId>;
+/// Type alias for `Name<AttributeId>`.
+pub type AttributeName = Name<AttributeId>;
 
-impl AttributeName {
-    /// Converts `AttributeName` into `AttributeNameRef`.
-    pub fn into_ref(&self) -> AttributeNameRef {
-        match *self {
-            AttributeName::Id(id) => AttributeNameRef::Id(id),
-            AttributeName::Name(ref name) => AttributeNameRef::Name(name),
-        }
-    }
-}
-
-/// A temporary container for an attribute name.
-#[derive(PartialEq,Clone,Copy,Debug)]
-pub enum AttributeNameRef<'a> {
-    /// An ID of the SVG attribute.
-    Id(AttributeId),
-    /// Custom attribute name.
-    Name(&'a str),
-}
-
-impl<'a> From<AttributeNameRef<'a>> for AttributeName {
-    fn from(value: AttributeNameRef<'a>) -> AttributeName {
-        match value {
-            AttributeNameRef::Id(id) => AttributeName::Id(id),
-            AttributeNameRef::Name(n) => AttributeName::Name(n.to_string()),
-        }
-    }
-}
-
-impl From<AttributeId> for AttributeName {
-    fn from(value: AttributeId) -> AttributeName {
-        AttributeName::Id(value)
-    }
-}
-
-impl From<String> for AttributeName {
-    fn from(value: String) -> AttributeName {
-        AttributeName::Name(value)
-    }
-}
-
-impl<'a> From<AttributeId> for AttributeNameRef<'a> {
-    fn from(value: AttributeId) -> AttributeNameRef<'a> {
-        AttributeNameRef::Id(value)
-    }
-}
-
-impl<'a> From<&'a str> for AttributeNameRef<'a> {
-    fn from(value: &'a str) -> AttributeNameRef<'a> {
-        AttributeNameRef::Name(value)
-    }
+impl SvgId for AttributeId {
+    fn name(&self) -> &str { self.name() }
 }
 
 /// Representation of the SVG attribute object.
@@ -267,24 +218,24 @@ impl Attribute {
     /// Returns an SVG attribute ID.
     pub fn id(&self) -> Option<AttributeId> {
         match self.name {
-            AttributeName::Id(id) => Some(id),
-            AttributeName::Name(_) => None,
+            Name::Id(id) => Some(id),
+            Name::Name(_) => None,
         }
     }
 
     /// Returns `true` if the attribute has the selected ID.
     pub fn has_id(&self, id: AttributeId) -> bool {
         match self.name {
-            AttributeName::Id(id2) => id2 == id,
-            AttributeName::Name(_) => false,
+            Name::Id(id2) => id2 == id,
+            Name::Name(_) => false,
         }
     }
 
     /// Returns `true` if the attribute is an SVG attribute.
     pub fn is_svg(&self) -> bool {
         match self.name {
-            AttributeName::Id(_) => true,
-            AttributeName::Name(_) => false,
+            Name::Id(_) => true,
+            Name::Name(_) => false,
         }
     }
 
@@ -298,7 +249,7 @@ impl Attribute {
 
     /// Returns `true` if the current attribute's value is equal to a default by the SVG spec.
     pub fn check_is_default(&self) -> bool {
-        if let AttributeName::Id(id) = self.name {
+        if let Name::Id(id) = self.name {
             match AttributeValue::default_value(id) {
                 Some(v) => self.value == v,
                 None => false,
@@ -319,8 +270,8 @@ impl Attribute {
     pub fn is_inheritable(&self) -> bool {
         if self.is_presentation() {
             match self.name {
-                AttributeName::Id(id) => NON_INHERITABLE_ATTRIBUTES.binary_search(&id).is_err(),
-                AttributeName::Name(_) => false,
+                Name::Id(id) => NON_INHERITABLE_ATTRIBUTES.binary_search(&id).is_err(),
+                Name::Name(_) => false,
             }
         } else {
             false
@@ -383,8 +334,8 @@ impl Attribute {
 
     fn list_contains(&self, list: &[AttributeId]) -> bool {
         match self.name {
-            AttributeName::Id(id) => list.binary_search(&id).is_ok(),
-            AttributeName::Name(_) => false,
+            Name::Id(id) => list.binary_search(&id).is_ok(),
+            Name::Name(_) => false,
         }
     }
 
@@ -408,8 +359,8 @@ fn write_quote(opt: &WriteOptions, out: &mut Vec<u8>) {
 impl WriteBuffer for Attribute {
     fn write_buf_opt(&self, opt: &WriteOptions, buf: &mut Vec<u8>) {
         match self.name {
-            AttributeName::Id(id) => buf.extend_from_slice(id.name().as_bytes()),
-            AttributeName::Name(ref name) => buf.extend_from_slice(name.as_bytes()),
+            Name::Id(id) => buf.extend_from_slice(id.name().as_bytes()),
+            Name::Name(ref name) => buf.extend_from_slice(name.as_bytes()),
         }
         buf.push(b'=');
         write_quote(opt, buf);

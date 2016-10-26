@@ -10,8 +10,8 @@ use svgdom::{
     ParseOptions,
     Error,
     ErrorPos,
+    Name,
     NodeType,
-    TagName,
     ValueId,
     WriteToString
 };
@@ -64,7 +64,7 @@ fn parse_single_node_1() {
     let doc = Document::from_data(b"<svg/>").unwrap();
 
     let child = doc.root().first_child().unwrap();
-    assert_eq!(*child.tag_name().unwrap(), TagName::Id(EId::Svg));
+    assert_eq!(*child.tag_name().unwrap(), Name::Id(EId::Svg));
     assert_eq!(doc.root().children().count(), 1);
 }
 
@@ -104,11 +104,11 @@ fn parse_text_2() {
     let mut nodes = doc.root().first_child().unwrap().descendants();
 
     let svg_node = nodes.next().unwrap();
-    assert_eq!(*svg_node.tag_name().unwrap(), TagName::Id(EId::Svg));
+    assert_eq!(*svg_node.tag_name().unwrap(), Name::Id(EId::Svg));
     assert_eq!(svg_node.node_type(), NodeType::Element);
 
     let text_node = nodes.next().unwrap();
-    assert_eq!(*text_node.tag_name().unwrap(), TagName::Id(EId::Text));
+    assert_eq!(*text_node.tag_name().unwrap(), Name::Id(EId::Text));
     assert_eq!(text_node.node_type(), NodeType::Element);
 
     let text_data_node = nodes.next().unwrap();
@@ -116,7 +116,7 @@ fn parse_text_2() {
     assert_eq!(text_data_node.node_type(), NodeType::Text);
 
     let tspan_node = nodes.next().unwrap();
-    assert_eq!(*tspan_node.tag_name().unwrap(), TagName::Id(EId::Tspan));
+    assert_eq!(*tspan_node.tag_name().unwrap(), Name::Id(EId::Tspan));
     assert_eq!(tspan_node.node_type(), NodeType::Element);
 
     let text_data_node_2 = nodes.next().unwrap();

@@ -9,13 +9,12 @@ use std::cell::Ref;
 use super::{
     Attribute,
     AttributeId,
-    AttributeName,
     Document,
     ElementId,
     Node,
     NodeEdge,
     NodeType,
-    TagName,
+    Name,
     Traverse,
     WriteBuffer,
     WriteOptions,
@@ -179,12 +178,12 @@ fn write_node(prefix: &[u8], data: Option<Ref<String>>, suffix: &[u8], out: &mut
 }
 
 /// Writes an element tag name.
-pub fn write_tag_name(tag_name: &TagName, out: &mut Vec<u8>) {
+pub fn write_tag_name(tag_name: &Name<ElementId>, out: &mut Vec<u8>) {
     match *tag_name {
-        TagName::Id(ref id) => {
+        Name::Id(ref id) => {
             out.extend_from_slice(id.name().as_bytes());
         }
-        TagName::Name(ref name) => {
+        Name::Name(ref name) => {
             let n = name.clone();
             out.extend_from_slice(n.as_bytes());
         }
@@ -237,7 +236,7 @@ pub fn write_attributes(node: &Node, opt: &WriteOptions, out: &mut Vec<u8>) {
 
     // write non-SVG attributes
     for attr in attrs.iter() {
-        if let AttributeName::Name(_) = attr.name {
+        if let Name::Name(_) = attr.name {
             out.push(b' ');
             attr.write_buf_opt(opt, out);
         }

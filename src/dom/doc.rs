@@ -12,7 +12,10 @@ use {
     Attributes,
     ElementId,
     Error,
+    NameRef,
     ParseOptions,
+    TagName,
+    TagNameRef,
     WriteBuffer,
     WriteOptions,
     WriteToString,
@@ -22,7 +25,6 @@ use super::iterators::{Children, Descendants};
 use super::node::Node;
 use super::node_data::{Link, NodeData};
 use super::node_type::NodeType;
-use super::tag_name::{TagName, TagNameRef};
 
 /// Container of [`Node`](struct.Node.html)s.
 pub struct Document {
@@ -59,7 +61,7 @@ impl Document {
         where TagNameRef<'a>: From<T>
     {
         let tn = TagNameRef::from(tag_name);
-        if let TagNameRef::Name(ref name) = tn {
+        if let NameRef::Name(ref name) = tn {
             if name.is_empty() {
                 panic!("supplied tag name is empty");
             }

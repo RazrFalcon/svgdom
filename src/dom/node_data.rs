@@ -5,8 +5,7 @@
 use std::cell::RefCell;
 use std::rc::{Rc, Weak};
 
-use Attributes;
-use super::TagName;
+use {Attributes, TagName};
 use super::NodeType;
 
 pub type Link = Rc<RefCell<NodeData>>;
