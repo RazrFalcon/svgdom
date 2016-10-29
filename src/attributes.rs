@@ -14,6 +14,7 @@ use super::{
 };
 
 pub type SvgAttrFilter<'a> = Filter<Iter<'a, Attribute>, fn(&&Attribute) -> bool>;
+pub type SvgAttrFilterMut<'a> = Filter<IterMut<'a, Attribute>, fn(&&mut Attribute) -> bool>;
 
 /// Wrapper around attributes list.
 ///
@@ -118,6 +119,16 @@ impl Attributes {
         }
     }
 
+    /// Creates a new attribute from name and value and inserts it. Previous will be overwritten.
+    ///
+    /// **Warning:** this method did not perform any checks for linked attributes.
+    /// If you want to insert an linked attribute - use `Node::set_link_attribute()`.
+    pub fn insert_from<'a, N, T>(&mut self, name: N, value: T)
+        where AttributeNameRef<'a>: From<N>, N: Copy, AttributeValue: From<T>
+    {
+        self.insert(Attribute::new(name, value));
+    }
+
     /// Removes an existing attribute.
     ///
     /// **Warning:** this method did not perform any checks for linked attributes.
@@ -167,7 +178,7 @@ impl Attributes {
 
     /// Returns an iterator over SVG attributes.
     ///
-    /// Shorthand for: `iter().filter(|a| a.is_svg()).map(|a| (a.id().unwrap(), a)`
+    /// Shorthand for: `iter().filter(|a| a.is_svg()).map(|a| (a.id().unwrap(), a))`
     #[inline]
     pub fn iter_svg<'a>(&'a self)
         -> Map<SvgAttrFilter, fn(&'a Attribute) -> (AttributeId, &'a Attribute)>
@@ -176,10 +187,29 @@ impl Attributes {
         self.filter_svg().map(map_svg)
     }
 
+    /// Returns a mutable iterator over SVG attributes.
+    ///
+    /// Shorthand for: `iter_mut().filter(|a| a.is_svg()).map(|a| (a.id().unwrap(), a))`
+    #[inline]
+    pub fn iter_svg_mut<'a>(&'a mut self)
+        -> Map<SvgAttrFilterMut, fn(&'a mut Attribute) -> (AttributeId, &'a mut Attribute)>
+    {
+        fn map_svg<'a>(a: &'a mut Attribute) -> (AttributeId, &'a mut Attribute)
+        { (a.id().unwrap(), a) }
+
+        self.filter_svg_mut().map(map_svg)
+    }
+
     #[inline]
     fn filter_svg(&self) -> SvgAttrFilter {
         fn is_svg(a: &&Attribute) -> bool { a.is_svg() }
         self.iter().filter(is_svg)
+    }
+
+    #[inline]
+    fn filter_svg_mut(&mut self) -> SvgAttrFilterMut {
+        fn is_svg(a: &&mut Attribute) -> bool { a.is_svg() }
+        self.iter_mut().filter(is_svg)
     }
 
     /// Retains only elements specified by the predicate.

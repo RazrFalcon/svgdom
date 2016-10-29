@@ -789,6 +789,7 @@ impl Node {
     /// assert_eq!(rect.parent_attribute(AttributeId::Filter).is_some(), false);
     /// ```
     pub fn parent_attribute(&self, id: AttributeId) -> Option<Attribute> {
+        // TODO: remove
         let mut parent = self.parent();
         while let Some(p) = parent {
             if p.has_attribute(id) {

@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - `Node::drain` method to remove nodes by the predicate without memory allocations.
 - `Node::parents` - an iterator of `Node`s to the parents of a given node.
 - Added support for implementing a custom SVG writer. See the `custom_writer` example for details.
+- `Attributes::iter_svg_mut`.
+- Default value for `clip` attribute.
 
 ### Changed
 - Always add a space after ArcTo flags during the path writing.

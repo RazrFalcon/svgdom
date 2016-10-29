@@ -25,6 +25,8 @@ pub type NumberList = Vec<f64>;
 /// Representation of the `<list-of-lengths>` type.
 pub type LengthList = Vec<Length>;
 
+// TODO: custom eq for numbers via float-cmp
+
 /// Value of the SVG attribute.
 #[derive(Clone,PartialEq,Debug)]
 #[allow(missing_docs)]
@@ -121,6 +123,7 @@ impl AttributeValue {
 
         match id {
               AttributeId::AlignmentBaseline
+            | AttributeId::Clip
             | AttributeId::ColorProfile
             | AttributeId::ColorRendering
             | AttributeId::Cursor
