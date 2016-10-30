@@ -42,6 +42,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
 - `ParseOptions::parse_px_unit` now works in `LengthList`.
+- CSS processing when style defined multiple times.
 
 ## [0.1.0] - 2016-10-09
 ### Added

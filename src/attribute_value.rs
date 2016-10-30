@@ -90,6 +90,7 @@ impl From<(f64, LengthUnit)> for AttributeValue {
     }
 }
 
+// TODO: maybe remove?
 macro_rules! impl_as_type {
     ($name:ident, $t:ident, $out:ty) => (
         #[allow(missing_docs)]

@@ -5,6 +5,8 @@
 use std::str;
 use std::collections::HashMap;
 
+use multimap::MultiMap;
+
 use super::{
     AttributeId,
     AttributeValue,
@@ -34,8 +36,8 @@ use svgparser::svg;
 use svgparser::style;
 
 struct CssData<'a> {
-    by_tag: HashMap<ElementId, Stream<'a>>,
-    by_class: HashMap<&'a [u8], Stream<'a>>,
+    by_tag: MultiMap<ElementId, Stream<'a>>,
+    by_class: MultiMap<&'a [u8], Stream<'a>>,
 }
 
 struct NodeTextData<'a> {
@@ -99,8 +101,8 @@ pub fn parse_svg(data: &[u8], opt: &ParseOptions) -> Result<Document, Error> {
     // Order is important, otherwise we get rendering error.
     let mut post_data = PostData {
         css: CssData {
-            by_tag: HashMap::new(),
-            by_class: HashMap::new(),
+            by_tag: MultiMap::new(),
+            by_class: MultiMap::new(),
         },
         links: Links {
             list: Vec::new(),
@@ -638,11 +640,13 @@ fn resolve_css<'a>(doc: &Document,
             let len = s.len_to_space_or_end();
             let class = s.read_raw(len);
 
-            match post_data.css.by_class.get(class) {
-                Some(stream) => {
-                    try!(parse_style_attribute(&d.node, stream.clone(),
-                                               &mut post_data.links,
-                                               &post_data.entitis, &opt));
+            match post_data.css.by_class.get_vec(class) {
+                Some(vec) => {
+                    for v in vec {
+                        try!(parse_style_attribute(&d.node, *v,
+                                                   &mut post_data.links,
+                                                   &post_data.entitis, &opt));
+                    }
                 }
                 None => {
                     println!("Warning: Could resolve unknown class: {}.",
@@ -654,11 +658,13 @@ fn resolve_css<'a>(doc: &Document,
         }
     }
 
-    for (k, v) in &post_data.css.by_tag {
+    for (k, vec) in &post_data.css.by_tag {
         for node in doc.descendants().svg() {
             if node.tag_id().unwrap() == *k {
-                try!(parse_style_attribute(&node, v.clone(), &mut post_data.links,
-                                           &post_data.entitis, &opt));
+                for v in vec {
+                    try!(parse_style_attribute(&node, *v, &mut post_data.links,
+                                               &post_data.entitis, &opt));
+                }
             }
         }
     }

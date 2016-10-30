@@ -396,6 +396,23 @@ b"<svg>
 "<svg/>
 ");
 
+test_resave!(parse_css_20,
+b"<svg>
+    <style type='text/css'>
+        .cls-1,.cls-17{fill:red;}
+        .cls-1{stroke:red;}
+        .cls-17{stroke:black;}
+    </style>
+    <g class='cls-1'/>
+    <g class='cls-17'/>
+</svg>
+",
+"<svg>
+    <g fill='#ff0000' stroke='#ff0000'/>
+    <g fill='#ff0000' stroke='#000000'/>
+</svg>
+");
+
 // style must be ungroupped after presentation attributes
 test_resave!(parse_style_1,
 b"<svg>
