@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Added support for implementing a custom SVG writer. See the `custom_writer` example for details.
 - `Attributes::iter_svg_mut`.
 - Default value for `clip` attribute.
+- `path::Path::with_capacity` and `path::Builder::with_capacity`.
 
 ### Changed
 - Always add a space after ArcTo flags during the path writing.

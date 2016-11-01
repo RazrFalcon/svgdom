@@ -237,6 +237,11 @@ impl Path {
         Path { d: Vec::new() }
     }
 
+    /// Constructs a new path with the specified capacity.
+    pub fn with_capacity(capacity: usize) -> Path {
+        Path { d: Vec::with_capacity(capacity) }
+    }
+
     // TODO: append Path
 
     /// Converts path's segments into absolute one.
@@ -444,6 +449,11 @@ impl Builder {
     /// Constructs a new builder.
     pub fn new() -> Builder {
         Builder { path: Path::new() }
+    }
+
+    /// Constructs a new builder with the specified capacity.
+    pub fn with_capacity(capacity: usize) -> Builder {
+        Builder { path: Path::with_capacity(capacity) }
     }
 
     // TODO: from existing Path
