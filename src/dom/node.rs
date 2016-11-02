@@ -764,42 +764,6 @@ impl Node {
         RefMut::map(self.0.borrow_mut(), |n| &mut n.attributes)
     }
 
-    /// Returns first occurrence of the selected `AttributeId` from it's parents.
-    ///
-    /// This function will check all parents, not only direct one.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use svgdom::{Document, ElementId, AttributeId, Attribute};
-    /// use svgdom::types::Color;
-    ///
-    /// let doc = Document::from_data(
-    /// b"<svg stroke='blue'>
-    ///     <g fill='red'>
-    ///         <rect/>
-    ///     </g>
-    /// </svg>").unwrap();
-    ///
-    /// let rect = doc.descendants().filter(|n| n.is_tag_name(ElementId::Rect)).nth(0).unwrap();
-    /// assert_eq!(rect.parent_attribute(AttributeId::Fill).unwrap(),
-    ///            Attribute::new(AttributeId::Fill, Color::new(255, 0, 0)));
-    /// assert_eq!(rect.parent_attribute(AttributeId::Stroke).unwrap(),
-    ///            Attribute::new(AttributeId::Stroke, Color::new(0, 0, 255)));
-    /// assert_eq!(rect.parent_attribute(AttributeId::Filter).is_some(), false);
-    /// ```
-    pub fn parent_attribute(&self, id: AttributeId) -> Option<Attribute> {
-        // TODO: remove
-        let mut parent = self.parent();
-        while let Some(p) = parent {
-            if p.has_attribute(id) {
-                return p.attribute(id);
-            }
-            parent = p.parent();
-        }
-        None
-    }
-
     /// Returns `true` if the node has an attribute with such `id`.
     ///
     /// # Panics

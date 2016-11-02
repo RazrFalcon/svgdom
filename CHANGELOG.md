@@ -39,6 +39,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - `Node::child_by_tag_name`. Can be easily implemented with iterators.
 - `Node::child_by_tag_id`. Can be easily implemented with iterators.
 - `Node::parent_element`. Can be easily implemented with iterators.
+- `Node::parent_attribute`. Can be easily implemented with iterators.
 - The `EmptyTagName` error type.
 
 ### Fixed
