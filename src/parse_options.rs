@@ -22,6 +22,11 @@ pub struct ParseOptions {
     ///
     /// By default we parse it as is, but it can be disabled.
     pub parse_px_unit: bool,
+    /// Skip unresolved references inside the `class` attribute.
+    ///
+    /// It's enabled by default, but if you disable it - all unresolved classes will be kept
+    /// in the `class` attribute.
+    pub skip_unresolved_classes: bool,
 }
 
 impl Default for ParseOptions {
@@ -32,6 +37,7 @@ impl Default for ParseOptions {
             parse_unknown_elements: true,
             parse_unknown_attributes: true,
             parse_px_unit: true,
+            skip_unresolved_classes: true,
         }
     }
 }

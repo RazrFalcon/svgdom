@@ -827,3 +827,25 @@ fn skip_px_unit_off_2() {
     assert_eq_text!(doc.to_string_with_opt(&write_opt_for_tests!()),
                     "<svg stroke-dasharray='10 20'/>\n");
 }
+
+#[test]
+fn skip_unresolved_classes_1() {
+    let mut opt = ParseOptions::default();
+    opt.skip_unresolved_classes = false;
+    let doc = Document::from_data_with_opt(
+b"<svg>
+    <style type='text/css'>
+        .fil1 {fill:blue}
+        .str1 {stroke:blue}
+    </style>
+    <g class='fil1 fil3'/>
+    <g class='fil1 fil4 str1 fil5'/>
+</svg>", &opt).unwrap();
+
+    assert_eq_text!(doc.to_string_with_opt(&write_opt_for_tests!()),
+"<svg>
+    <g class='fil3' fill='#0000ff'/>
+    <g class='fil4 fil5' fill='#0000ff' stroke='#0000ff'/>
+</svg>
+");
+}

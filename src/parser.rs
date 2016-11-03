@@ -649,8 +649,21 @@ fn resolve_css<'a>(doc: &Document,
                     }
                 }
                 None => {
-                    println!("Warning: Could resolve unknown class: {}.",
-                             u8_to_str!(class));
+                    if opt.skip_unresolved_classes {
+                        println!("Warning: Could not resolve an unknown class: {}.",
+                                 u8_to_str!(class));
+                    } else {
+                        if d.node.has_attribute(AttributeId::Class) {
+                            let mut attrs = d.node.attributes_mut();
+                            let mut class_val = attrs.get_value_mut(AttributeId::Class);
+                            if let Some(&mut AttributeValue::String(ref mut text)) = class_val {
+                                text.push(' ');
+                                text.push_str(u8_to_str!(class));
+                            }
+                        } else {
+                            d.node.set_attribute(AttributeId::Class, u8_to_str!(class));
+                        }
+                    }
                 }
             }
 

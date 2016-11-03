@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - `Attributes::iter_svg_mut`.
 - Default value for `clip` attribute.
 - `path::Path::with_capacity` and `path::Builder::with_capacity`.
+- `ParseOptions::skip_unresolved_classes`.
 
 ### Changed
 - Always add a space after ArcTo flags during the path writing.
