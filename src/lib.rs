@@ -50,8 +50,6 @@ extern crate svgparser;
 extern crate multimap;
 
 pub use attribute::*;
-pub use attribute_value::AttributeValue;
-pub use attributes::Attributes;
 pub use dom::*;
 pub use error::Error;
 pub use name::*;
@@ -83,8 +81,6 @@ macro_rules! assert_eq_text {
 }
 
 mod attribute;
-mod attribute_value;
-mod attributes;
 mod dom;
 mod error;
 mod name;

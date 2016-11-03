@@ -164,10 +164,10 @@ static STROKE_ATTRIBUTES: &'static [AttributeId] = &[
     AttributeId::StrokeWidth,
 ];
 
-/// Type alias for `NameRef<AttributeId>`.
-pub type AttributeNameRef<'a> = NameRef<'a, AttributeId>;
 /// Type alias for `Name<AttributeId>`.
 pub type AttributeName = Name<AttributeId>;
+/// Type alias for `NameRef<AttributeId>`.
+pub type AttributeNameRef<'a> = NameRef<'a, AttributeId>;
 
 impl SvgId for AttributeId {
     fn name(&self) -> &str { self.name() }

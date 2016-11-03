@@ -4,7 +4,7 @@
 
 use std::fmt;
 
-use super::{
+use {
     AttributeId,
     Node,
     ValueId,

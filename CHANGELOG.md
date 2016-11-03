@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - The `Document::create_element` will panic now if supplied string-based tag name is empty.
 - The `Node::set_tag_name` will panic now if supplied string-based tag name is empty.
 - The `write` module renamed to `writer` and made public.
+- Attribute modules moved to `attribute` submodule. Doesn't impact API.
 
 ### Removed
 - `descendant_nodes` and `children_nodes` methods.

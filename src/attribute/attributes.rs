@@ -6,7 +6,7 @@ use std::slice::{Iter, IterMut};
 use std::mem;
 use std::iter::{Filter, Map};
 
-use super::{
+use {
     Attribute,
     AttributeNameRef,
     AttributeId,

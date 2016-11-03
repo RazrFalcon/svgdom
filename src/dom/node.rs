@@ -9,8 +9,6 @@ use std::fmt;
 use attribute::*;
 use {
     AttributeId,
-    Attributes,
-    AttributeValue,
     ElementId,
     Error,
     Name,
