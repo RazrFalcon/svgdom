@@ -377,7 +377,7 @@ mod tests {
                 let doc = Document::from_data($text).unwrap();
                 let svg = doc.root().first_child().unwrap();
                 match svg.attribute_value(AId::Transform).unwrap() {
-                    AttributeValue::Transform(v) => assert_eq!(v, $result),
+                    AttributeValue::Transform(v) => assert_eq!(v.to_string(), $result),
                     _ => unreachable!(),
                 }
             }
@@ -386,49 +386,47 @@ mod tests {
 
     test_transform!(parse_transform_1,
         b"<svg transform='matrix(1 0 0 1 10 20)'/>",
-        Transform::new(1.0, 0.0, 0.0, 1.0, 10.0, 20.0)
+         "matrix(1 0 0 1 10 20)"
     );
 
     test_transform!(parse_transform_2,
         b"<svg transform='translate(10 20)'/>",
-        Transform::new(1.0, 0.0, 0.0, 1.0, 10.0, 20.0)
+         "matrix(1 0 0 1 10 20)"
     );
 
     test_transform!(parse_transform_3,
         b"<svg transform='scale(2 3)'/>",
-        Transform::new(2.0, 0.0, 0.0, 3.0, 0.0, 0.0)
+         "matrix(2 0 0 3 0 0)"
     );
 
     test_transform!(parse_transform_4,
         b"<svg transform='rotate(30)'/>",
-        Transform::new(0.8660254037, 0.5, -0.5,
-                       0.8660254037, 0.0, 0.0)
+         "matrix(0.866025403784 0.5 -0.5 0.866025403784 0 0)"
     );
 
     test_transform!(parse_transform_5,
         b"<svg transform='rotate(30 10 20)'/>",
-        Transform::new(0.8660254037, 0.5, -0.5,
-                       0.8660254037, 11.339745962, -2.320508075)
+         "matrix(0.866025403784 0.5 -0.5 0.866025403784 11.339745962156 -2.320508075689)"
     );
 
     test_transform!(parse_transform_6,
         b"<svg transform='translate(10 15) translate(0 5)'/>",
-        Transform::new(1.0, 0.0, 0.0, 1.0, 10.0, 20.0)
+         "matrix(1 0 0 1 10 20)"
     );
 
     test_transform!(parse_transform_7,
         b"<svg transform='translate(10) scale(2)'/>",
-        Transform::new(2.0, 0.0, 0.0, 2.0, 10.0, 0.0)
+         "matrix(2 0 0 2 10 0)"
     );
 
     test_transform!(parse_transform_8,
         b"<svg transform='translate(25 215) scale(2) skewX(45)'/>",
-        Transform::new(2.0, 0.0, 2.0, 2.0, 25.0, 215.0)
+         "matrix(2 0 2 2 25 215)"
     );
 
     test_transform!(parse_transform_9,
         b"<svg transform='skewX(45)'/>",
-        Transform::new(1.0, 0.0, 1.0, 1.0, 0.0, 0.0)
+         "matrix(1 0 1 1 0 0)"
     );
 
     #[test]

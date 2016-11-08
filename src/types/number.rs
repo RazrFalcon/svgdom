@@ -4,13 +4,17 @@
 
 use std::io::Write;
 
+use float_cmp::ApproxEqUlps;
+
 use {WriteOptions, WriteBuffer};
 
 /// The trait for comparing f64 numbers.
 pub trait FuzzyEq {
     /// Returns `true` if numbers are equal.
     fn fuzzy_eq(&self, other: &f64) -> bool;
+
     /// Returns `true` if numbers are not equal.
+    #[inline]
     fn fuzzy_ne(&self, other: &f64) -> bool {
         !self.fuzzy_eq(other)
     }
@@ -19,16 +23,17 @@ pub trait FuzzyEq {
 impl FuzzyEq for f64 {
     #[inline]
     fn fuzzy_eq(&self, other: &f64) -> bool {
-        // we don't use EPSILON, because we only care about 8 digits in a fractional part
-        (*self - *other).abs() < 0.000000001
+        self.approx_eq_ulps(other, 4)
     }
 }
 
 pub fn write_num(num: f64, rm_leading_zero: bool, buf: &mut Vec<u8>) {
-    // We always round a number to 8 digits.
-    // f64 can handle up to 15 numbers, but we still round to 8 top.
-    // It's not really good, but smaller numbers are mostly useless in the SVG.
-    let v = (num * 100000000.0f64).round() / 100000000.0f64;
+    // We always round numbers up to 12 digits
+    // to prevent writing ugly numbers like 29.999999999999996.
+    // It's not 100% correct, but differences are insignificant.
+
+    // TODO: find a faster/more correct method
+    let v = (num * 1_000_000_000_000.0f64).round() / 1_000_000_000_000.0f64;
 
     let start_pos = buf.len();
 
@@ -46,10 +51,10 @@ pub fn write_num(num: f64, rm_leading_zero: bool, buf: &mut Vec<u8>) {
         }
 
         if has_dot && buf[start_pos + pos - 1] == b'0' {
-            if pos == 2 && v.is_sign_negative() {
+            if pos == 2 && num.is_sign_negative() {
                 // -0.1 -> -.1
                 buf.remove(start_pos + 1);
-            } else if pos == 1 && v.is_sign_positive() {
+            } else if pos == 1 && num.is_sign_positive() {
                 // 0.1 -> .1
                 buf.remove(start_pos);
             }
@@ -78,17 +83,17 @@ mod tests {
         )
     }
 
-    test_number!(gen_number_1, 1.0,                 false, "1");
-    test_number!(gen_number_2, 0.0,                 false, "0");
-    test_number!(gen_number_3, -0.0,                false, "0");
-    test_number!(gen_number_4, -1.0,                false, "-1");
-    test_number!(gen_number_5, 12345678.12345678,   false, "12345678.12345678");
-    test_number!(gen_number_6, -0.1,                true,  "-.1");
-    test_number!(gen_number_7, 0.1,                 true,  ".1");
-    test_number!(gen_number_8, 1.0,                 true,  "1");
-    test_number!(gen_number_9, -1.0,                true,  "-1");
-    test_number!(gen_number_10, 1.5,                false, "1.5");
-    test_number!(gen_number_11, 0.14186,            false, "0.14186");
-    test_number!(gen_number_12, 0.4621799999999894, false, "0.46218");
-    test_number!(gen_number_13, 0.0338000000000136, false, "0.0338");
+    test_number!(gen_number_1, 1.0,                  false, "1");
+    test_number!(gen_number_2, 0.0,                  false, "0");
+    test_number!(gen_number_3, -0.0,                 false, "0");
+    test_number!(gen_number_4, -1.0,                 false, "-1");
+    test_number!(gen_number_5, 12345678.12345678,    false, "12345678.12345678");
+    test_number!(gen_number_6, -0.1,                 true,  "-.1");
+    test_number!(gen_number_7, 0.1,                  true,  ".1");
+    test_number!(gen_number_8, 1.0,                  true,  "1");
+    test_number!(gen_number_9, -1.0,                 true,  "-1");
+    test_number!(gen_number_10, 1.5,                 false, "1.5");
+    test_number!(gen_number_11, 0.14186,             false, "0.14186");
+    test_number!(gen_number_12, 29.999999999999996,  false, "30");
+    test_number!(gen_number_13, 0.49999999999999994, false, "0.5");
 }

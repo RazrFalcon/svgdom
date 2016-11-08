@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [Unreleased]
+### Changed
+- Default numeric precision is 12 instead of 8.
+- Float compare is done using [float-cmp](https://crates.io/crates/float-cmp).
+
 ## [0.2.0] - 2016-11-04
 ### Added
 - `Node::drain` method to remove nodes by the predicate without memory allocations.
