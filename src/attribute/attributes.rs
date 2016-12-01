@@ -97,6 +97,7 @@ impl Attributes {
     #[inline]
     pub fn get_value_or<'a>(&'a self, id: AttributeId, def_value: &'a AttributeValue)
                             -> &AttributeValue {
+        // TODO: remove
         match self.get(id) {
             Some(a) => &a.value,
             None => def_value,

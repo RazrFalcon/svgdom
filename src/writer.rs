@@ -21,16 +21,16 @@ use super::{
 };
 
 /// An indent counter.
-pub struct Depth {
+struct Depth {
     /// Current depth.
-    pub value: u32,
+    value: u32,
     block: Vec<u8>,
 }
 
 impl Depth {
     /// Creates a new `Depth`.
     #[inline]
-    pub fn new(indent: i8) -> Depth {
+    fn new(indent: i8) -> Depth {
         Depth {
             value: 0,
             block: Depth::gen_indent(indent),
@@ -52,7 +52,7 @@ impl Depth {
 
     /// Writes an indent to the buffer.
     #[inline]
-    pub fn write_indent(&self, buf: &mut Vec<u8>) {
+    fn write_indent(&self, buf: &mut Vec<u8>) {
         for _ in 0..self.value {
             buf.extend_from_slice(&self.block);
         }
@@ -60,7 +60,7 @@ impl Depth {
 
     /// Writes a relative indent to the buffer.
     #[inline]
-    pub fn write_indent_with_step(&self, step: i8, buf: &mut Vec<u8>) {
+    fn write_indent_with_step(&self, step: i8, buf: &mut Vec<u8>) {
         let v = (self.value as i32 + step as i32) as u32;
         for _ in 0..v {
             buf.extend_from_slice(&self.block);
@@ -88,7 +88,7 @@ pub fn write_dom(doc: &Document, opt: &WriteOptions, out: &mut Vec<u8>) {
 }
 
 /// Writes node's start edge.
-pub fn write_start_edge(node: &Node, iter: &mut Traverse, depth: &mut Depth, opt: &WriteOptions,
+fn write_start_edge(node: &Node, iter: &mut Traverse, depth: &mut Depth, opt: &WriteOptions,
                         out: &mut Vec<u8>) {
     match node.node_type() {
         NodeType::Root => {}
@@ -97,7 +97,7 @@ pub fn write_start_edge(node: &Node, iter: &mut Traverse, depth: &mut Depth, opt
             write_element_start(&node, opt, out);
 
             if node.is_tag_name(ElementId::Text) && node.has_children() {
-                process_text(iter, opt, &node, &depth, out);
+                write_text_elem(iter, opt, &node, &depth, out);
                 write_newline(opt.indent, out);
                 return;
             }
@@ -131,27 +131,10 @@ pub fn write_start_edge(node: &Node, iter: &mut Traverse, depth: &mut Depth, opt
     }
 }
 
-/// Writes node's end edge.
-pub fn write_end_edge(node: &Node, depth: &mut Depth, indent: i8, out: &mut Vec<u8>) {
-    match node.node_type() {
-        NodeType::Element => {
-            if node.has_children() {
-                if depth.value > 0 {
-                    depth.value -= 1;
-                }
-                depth.write_indent(out);
-            }
-            write_element_end(&node, out);
-            write_newline(indent, out);
-        }
-        _ => {}
-    }
-}
-
 /// Writes a non element node.
 ///
 /// Specifically: Declaration, Comment, Cdata and Text.
-pub fn write_non_element_node(node: &Node, out: &mut Vec<u8>) {
+fn write_non_element_node(node: &Node, out: &mut Vec<u8>) {
     match node.node_type() {
         NodeType::Declaration => {
             write_node(b"<?xml ", node.text(), b"?>", out);
@@ -177,8 +160,26 @@ fn write_node(prefix: &[u8], data: Option<Ref<String>>, suffix: &[u8], out: &mut
     out.extend_from_slice(suffix);
 }
 
+/// Writes an element start.
+///
+/// Order:
+/// - `<`
+/// - tag name
+/// - attributes
+/// - closing tag, if a node has children
+fn write_element_start(node: &Node, opt: &WriteOptions, out: &mut Vec<u8>) {
+    out.push(b'<');
+
+    write_tag_name(&node.tag_name().unwrap(), out);
+    write_attributes(node, opt, out);
+
+    if node.has_children() {
+        out.push(b'>');
+    }
+}
+
 /// Writes an element tag name.
-pub fn write_tag_name(tag_name: &Name<ElementId>, out: &mut Vec<u8>) {
+fn write_tag_name(tag_name: &Name<ElementId>, out: &mut Vec<u8>) {
     match *tag_name {
         Name::Id(ref id) => {
             out.extend_from_slice(id.name().as_bytes());
@@ -190,23 +191,13 @@ pub fn write_tag_name(tag_name: &Name<ElementId>, out: &mut Vec<u8>) {
     }
 }
 
-/// Writes a new line.
-///
-/// If `indent` is equal to `-1` - nothing will be written.
-#[inline]
-pub fn write_newline(indent: i8, out: &mut Vec<u8>) {
-    if indent >= 0 {
-        out.push(b'\n');
-    }
-}
-
 /// Writes attributes.
 ///
 /// Order:
 /// - 'id'
 /// - sorted SVG attributes
 /// - unsorted non-SVG attributes
-pub fn write_attributes(node: &Node, opt: &WriteOptions, out: &mut Vec<u8>) {
+fn write_attributes(node: &Node, opt: &WriteOptions, out: &mut Vec<u8>) {
     // write 'id'
     if node.has_id() {
         out.push(b' ');
@@ -243,39 +234,10 @@ pub fn write_attributes(node: &Node, opt: &WriteOptions, out: &mut Vec<u8>) {
     }
 }
 
-/// Writes an element start.
-///
-/// Order:
-/// - `<`
-/// - tag name
-/// - attributes
-/// - closing tag, if a node has children
-pub fn write_element_start(node: &Node, opt: &WriteOptions, out: &mut Vec<u8>) {
-    out.push(b'<');
-
-    write_tag_name(&node.tag_name().unwrap(), out);
-    write_attributes(node, opt, out);
-
-    if node.has_children() {
-        out.push(b'>');
-    }
-}
-
-/// Writes an element closing tag.
-pub fn write_element_end(node: &Node, out: &mut Vec<u8>) {
-    if node.has_children() {
-        out.extend_from_slice(b"</");
-        write_tag_name(&node.tag_name().unwrap(), out);
-        out.push(b'>');
-    } else {
-        out.extend_from_slice(b"/>");
-    }
-}
-
 /// Writes a `text` element node and it's children.
 ///
 /// This method will check for the `xml:space` attribute and will properly write indented text.
-pub fn process_text(iter: &mut Traverse, opt: &WriteOptions, root: &Node, depth: &Depth,
+fn write_text_elem(iter: &mut Traverse, opt: &WriteOptions, root: &Node, depth: &Depth,
                     out: &mut Vec<u8>) {
     let is_root_preserve = root.has_attribute_with_value(AttributeId::XmlSpace, "preserve");
 
@@ -330,5 +292,43 @@ pub fn process_text(iter: &mut Traverse, opt: &WriteOptions, root: &Node, depth:
                 }
             }
         }
+    }
+}
+
+/// Writes an element closing tag.
+fn write_element_end(node: &Node, out: &mut Vec<u8>) {
+    if node.has_children() {
+        out.extend_from_slice(b"</");
+        write_tag_name(&node.tag_name().unwrap(), out);
+        out.push(b'>');
+    } else {
+        out.extend_from_slice(b"/>");
+    }
+}
+
+/// Writes node's end edge.
+fn write_end_edge(node: &Node, depth: &mut Depth, indent: i8, out: &mut Vec<u8>) {
+    match node.node_type() {
+        NodeType::Element => {
+            if node.has_children() {
+                if depth.value > 0 {
+                    depth.value -= 1;
+                }
+                depth.write_indent(out);
+            }
+            write_element_end(&node, out);
+            write_newline(indent, out);
+        }
+        _ => {}
+    }
+}
+
+/// Writes a new line.
+///
+/// If `indent` is equal to `-1` - nothing will be written.
+#[inline]
+fn write_newline(indent: i8, out: &mut Vec<u8>) {
+    if indent >= 0 {
+        out.push(b'\n');
     }
 }

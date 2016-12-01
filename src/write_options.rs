@@ -40,6 +40,18 @@ pub struct WriteOptionsPaths {
     ///
     /// Default: disabled
     pub remove_duplicated_commands: bool,
+
+    /// Use implicit LineTo commands.
+    ///
+    /// 'If a MoveTo is followed by multiple pairs of coordinates,
+    /// the subsequent pairs are treated as implicit LineTo commands.'
+    ///
+    /// Example:
+    ///
+    /// `M 10 10 L 20 20 L 30 30` -> `M 10 10 20 20 30 30`
+    ///
+    /// Default: disabled
+    pub use_implicit_lineto_commands : bool,
 }
 
 /// Options that defines SVG writing.
@@ -144,6 +156,7 @@ impl Default for WriteOptions {
                 use_compact_notation: false,
                 join_arc_to_flags: false,
                 remove_duplicated_commands: false,
+                use_implicit_lineto_commands: false,
             },
             simplify_transform_matrices: false,
         }

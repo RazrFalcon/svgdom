@@ -25,7 +25,7 @@ pub type NumberList = Vec<f64>;
 /// Representation of the `<list-of-lengths>` type.
 pub type LengthList = Vec<Length>;
 
-// TODO: custom eq for numbers via float-cmp
+// TODO: custom debug
 
 /// Value of the SVG attribute.
 #[derive(Clone,PartialEq,Debug)]
@@ -186,6 +186,23 @@ impl AttributeValue {
             AttributeId::Visibility =>                  some!(ValueId::Visible),
             AttributeId::WritingMode =>                 some!(ValueId::LrTb),
             _ => None,
+        }
+    }
+
+    /// Returns type's name.
+    pub fn name(&self) -> &str {
+        match *self {
+            AttributeValue::Color(_) => "Color",
+            AttributeValue::Length(_) => "Length",
+            AttributeValue::LengthList(_) => "LengthList",
+            AttributeValue::Link(_) => "Link",
+            AttributeValue::FuncLink(_) => "FuncLink",
+            AttributeValue::Number(_) => "Number",
+            AttributeValue::NumberList(_) => "NumberList",
+            AttributeValue::Path(_) => "Path",
+            AttributeValue::PredefValue(_) => "PredefValue",
+            AttributeValue::String(_) => "String",
+            AttributeValue::Transform(_) => "Transform",
         }
     }
 }

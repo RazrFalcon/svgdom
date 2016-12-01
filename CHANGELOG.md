@@ -5,9 +5,16 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Added
+- `AttributeValue::name` method.
+- `WriteOptions::paths::use_implicit_lineto_commands`.
+
 ### Changed
 - Default numeric precision is 12 instead of 8.
 - Float compare is done using [float-cmp](https://crates.io/crates/float-cmp).
+
+### Removed
+- Custom SVG writer support and custom_writer example.
 
 ## [0.2.0] - 2016-11-04
 ### Added
