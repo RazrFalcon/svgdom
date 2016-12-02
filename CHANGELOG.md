@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - `AttributeValue::name` method.
 - `WriteOptions::paths::use_implicit_lineto_commands`.
+- `FuzzyOrd` trait for `f64`.
 
 ### Changed
 - Default numeric precision is 12 instead of 8.

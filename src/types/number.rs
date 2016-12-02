@@ -3,6 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 use std::io::Write;
+use std::cmp;
 
 use float_cmp::ApproxEqUlps;
 
@@ -24,6 +25,25 @@ impl FuzzyEq for f64 {
     #[inline]
     fn fuzzy_eq(&self, other: &f64) -> bool {
         self.approx_eq_ulps(other, 4)
+    }
+}
+
+/// The trait for `Ordering` f64 numbers.
+pub trait FuzzyOrd {
+    /// This method returns an `Ordering` between `self` and `other`.
+    fn fuzzy_cmp(&self, other: &f64) -> cmp::Ordering;
+}
+
+impl FuzzyOrd for f64 {
+    #[inline]
+    fn fuzzy_cmp(&self, other: &f64) -> cmp::Ordering {
+        if self.fuzzy_eq(other) {
+            return cmp::Ordering::Equal;
+        } else if self > other {
+            return cmp::Ordering::Greater;
+        }
+
+        cmp::Ordering::Less
     }
 }
 
