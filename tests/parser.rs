@@ -4,6 +4,7 @@
 
 #[macro_use]
 extern crate svgdom;
+extern crate simplecss;
 
 use svgdom::{
     Document,
@@ -19,6 +20,8 @@ use svgdom::types::Color;
 use svgdom::AttributeValue;
 use svgdom::AttributeId as AId;
 use svgdom::ElementId as EId;
+
+use simplecss::Error as CssParseError;
 
 macro_rules! write_opt_for_tests {
     () => ({
@@ -226,8 +229,7 @@ b"<svg>
     </style>
     <radialGradient id='lg1'/>
     <rect class='fil1'/>
-</svg>
-",
+</svg>",
 "<svg>
     <radialGradient id='lg1'/>
     <rect fill='url(#lg1)'/>
@@ -243,8 +245,7 @@ b"<svg>
     ]]>
     </style>
     <g fill='red' style='fill:green' class='fil1'/>
-</svg>
-",
+</svg>",
 "<svg>
     <g fill='#008000'/>
 </svg>
@@ -259,8 +260,7 @@ b"<svg>
     ]]>
     </style>
     <g fill='red' class='fil1'/>
-</svg>
-",
+</svg>",
 "<svg>
     <g fill='#0000ff'/>
 </svg>
@@ -273,8 +273,7 @@ b"<svg>
         .fil1 {fill:blue}
     </style>
     <g fill='red' class='fil1'/>
-</svg>
-",
+</svg>",
 "<svg>
     <g fill='#0000ff'/>
 </svg>
@@ -290,21 +289,24 @@ b"<svg>
     </style>
 </svg>");
 
-    assert_eq!(res.err().unwrap(), Error::UnsupportedCSS(ErrorPos::new(3,9)));
+    // super ugly error
+    assert_eq!(res.err().unwrap(), Error::CssParseError(
+                                     CssParseError::UnsupportedToken(
+                                       simplecss::ErrorPos::new(3,9))));
 }
 
-#[test]
-fn parse_css_12() {
-    let res = Document::from_data(
+test_resave!(parse_css_12,
 b"<svg>
     <style type='text/css'><![CDATA[
-        #c {fill: red }
+        #c { fill: red }
         ]]>
     </style>
-</svg>");
-
-    assert_eq!(res.err().unwrap(), Error::UnsupportedCSS(ErrorPos::new(3,9)));
-}
+    <g id='c'/>
+</svg>",
+"<svg>
+    <g id='c' fill='#ff0000'/>
+</svg>
+");
 
 #[test]
 fn parse_css_13() {
@@ -319,18 +321,24 @@ b"<svg>
     assert_eq!(res.err().unwrap(), Error::UnsupportedCSS(ErrorPos::new(3,9)));
 }
 
-#[test]
-fn parse_css_14() {
-    let res = Document::from_data(
+test_resave!(parse_css_14,
 b"<svg>
     <style type='text/css'><![CDATA[
-        * { fill: green}
+        * { fill: red }
         ]]>
     </style>
-</svg>");
-
-    assert_eq!(res.err().unwrap(), Error::UnsupportedCSS(ErrorPos::new(3,9)));
-}
+    <g>
+        <rect/>
+    </g>
+    <path/>
+</svg>",
+"<svg fill='#ff0000'>
+    <g fill='#ff0000'>
+        <rect fill='#ff0000'/>
+    </g>
+    <path fill='#ff0000'/>
+</svg>
+");
 
 #[test]
 fn parse_css_15() {
@@ -342,7 +350,7 @@ b"<svg>
     </style>
 </svg>");
 
-    assert_eq!(res.err().unwrap(), Error::UnsupportedCSS(ErrorPos::new(3,9)));
+    assert_eq!(res.err().unwrap(), Error::UnsupportedCSS(ErrorPos::new(3,10)));
 }
 
 #[test]
@@ -355,7 +363,7 @@ b"<svg>
     </style>
 </svg>");
 
-    assert_eq!(res.err().unwrap(), Error::UnsupportedCSS(ErrorPos::new(3,9)));
+    assert_eq!(res.err().unwrap(), Error::UnsupportedCSS(ErrorPos::new(3,10)));
 }
 
 // empty style
@@ -363,8 +371,7 @@ test_resave!(parse_css_17,
 b"<svg>
     <style type='text/css'/>
     <g fill='#0000ff'/>
-</svg>
-",
+</svg>",
 "<svg>
     <g fill='#0000ff'/>
 </svg>
@@ -377,8 +384,7 @@ b"<svg>
     </style>
     <g class='fil1'/>
     <g class='fil2'/>
-</svg>
-",
+</svg>",
 "<svg>
     <g fill='#0000ff'/>
     <g fill='#0000ff'/>
@@ -391,8 +397,7 @@ b"<svg>
     <![CDATA[
     ]]>
     </style>
-</svg>
-",
+</svg>",
 "<svg/>
 ");
 
@@ -405,11 +410,22 @@ b"<svg>
     </style>
     <g class='cls-1'/>
     <g class='cls-17'/>
-</svg>
-",
+</svg>",
 "<svg>
     <g fill='#ff0000' stroke='#ff0000'/>
     <g fill='#ff0000' stroke='#000000'/>
+</svg>
+");
+
+test_resave!(parse_css_21,
+b"<svg>
+    <style>#g1 { fill:red }</style>
+    <style type='text/css'>#g1 { fill:blue }</style>
+    <style type='blah'>#g1 { fill:red }</style>
+    <g id='g1'/>
+</svg>",
+"<svg>
+    <g id='g1' fill='#0000ff'/>
 </svg>
 ");
 
@@ -417,8 +433,7 @@ b"<svg>
 test_resave!(parse_style_1,
 b"<svg>
     <g style='fill:green' fill='red'/>
-</svg>
-",
+</svg>",
 "<svg>
     <g fill='#008000'/>
 </svg>
@@ -428,8 +443,7 @@ b"<svg>
 test_resave!(parse_style_2,
 b"<svg>
     <g style='fill:none; color:cyan; stroke-width:4.00'/>
-</svg>
-",
+</svg>",
 "<svg>
     <g color='#00ffff' fill='none' stroke-width='4'/>
 </svg>
@@ -804,7 +818,7 @@ xmlns:xlink='http://www.w3.org/1999/xlink'/>
 }
 
 #[test]
-fn skip_px_unit_on_1() {
+fn parse_px_unit_on_1() {
     let mut opt = ParseOptions::default();
     opt.parse_px_unit = true;
     let doc = Document::from_data_with_opt(b"<svg x='10px'/>", &opt).unwrap();
@@ -812,7 +826,7 @@ fn skip_px_unit_on_1() {
 }
 
 #[test]
-fn skip_px_unit_off_1() {
+fn parse_px_unit_off_1() {
     let mut opt = ParseOptions::default();
     opt.parse_px_unit = false;
     let doc = Document::from_data_with_opt(b"<svg x='10px'/>", &opt).unwrap();
@@ -820,7 +834,7 @@ fn skip_px_unit_off_1() {
 }
 
 #[test]
-fn skip_px_unit_off_2() {
+fn parse_px_unit_off_2() {
     let mut opt = ParseOptions::default();
     opt.parse_px_unit = false;
     let doc = Document::from_data_with_opt(b"<svg stroke-dasharray='10px 20px'/>", &opt).unwrap();
@@ -849,3 +863,6 @@ b"<svg>
 </svg>
 ");
 }
+
+// TODO: this
+// p { font-family: "Font 1", "Font 2", Georgia, Times, serif; }

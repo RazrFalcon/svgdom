@@ -8,20 +8,25 @@
 pub struct ParseOptions {
     /// Add comment nodes to the DOM during parsing.
     pub parse_comments: bool,
+
     /// Add declaration nodes to the DOM during parsing.
     pub parse_declarations: bool,
+
     /// Add unknown elements to the DOM during parsing.
     ///
     /// All elements which is not defined in `ElementId` are unknown.
     pub parse_unknown_elements: bool,
+
     /// Add unknown attributes to elements during parsing.
     ///
     /// All attributes which is not defined in `AttributeId` are unknown.
     pub parse_unknown_attributes: bool,
+
     /// `px` unit in the `<length>` type is rudimentary, since it's the same as none.
     ///
     /// By default we parse it as is, but it can be disabled.
     pub parse_px_unit: bool,
+
     /// Skip unresolved references inside the `class` attribute.
     ///
     /// It's enabled by default, but if you disable it - all unresolved classes will be kept

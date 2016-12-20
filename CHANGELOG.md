@@ -6,9 +6,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 ### Added
-- `AttributeValue::name` method.
+- `AttributeValue::name`.
 - `WriteOptions::paths::use_implicit_lineto_commands`.
 - `FuzzyOrd` trait for `f64`.
+- An external CSS parser, which brings support for universal and id selectors.
+- Check that `style` element has a valid `type` attribute value.
 
 ### Changed
 - Default numeric precision is 12 instead of 8.

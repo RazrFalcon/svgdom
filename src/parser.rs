@@ -5,14 +5,13 @@
 use std::str;
 use std::collections::HashMap;
 
-use multimap::MultiMap;
-
 use super::{
     AttributeId,
     AttributeValue,
     Document,
     ElementId,
     Error,
+    ErrorPos,
     FromStream,
     Node,
     NodeType,
@@ -35,14 +34,16 @@ use svgparser::{
 use svgparser::svg;
 use svgparser::style;
 
-struct CssData<'a> {
-    by_tag: MultiMap<ElementId, Stream<'a>>,
-    by_class: MultiMap<&'a [u8], Stream<'a>>,
+use simplecss;
+
+struct NodeStreamData<'a> {
+    node: Node,
+    stream: Stream<'a>,
 }
 
 struct NodeTextData<'a> {
     node: Node,
-    stream: Stream<'a>,
+    text: &'a str,
 }
 
 struct LinkData<'a> {
@@ -53,9 +54,11 @@ struct LinkData<'a> {
 }
 
 struct Links<'a> {
-    // List of unresolved IRI.
+    /// List of all parsed IRI and FuncIRI.
     list: Vec<LinkData<'a>>,
-    // Store all nodes with id's.
+    /// Store all nodes with id's.
+    ///
+    /// For performance reasons only.
     elems_with_id: HashMap<&'a [u8], Node>,
 }
 
@@ -74,14 +77,14 @@ impl<'a> Links<'a> {
 type Entities<'a> = HashMap<&'a [u8], &'a [u8]>;
 
 struct PostData<'a> {
-    css: CssData<'a>,
+    css_list: Vec<Stream<'a>>,
     links: Links<'a>,
     entitis: Entities<'a>,
     // List of element with 'class' attribute.
     // We can't process it inplace, because styles can be set after usage.
-    classes: Vec<NodeTextData<'a>>,
+    class_attrs: Vec<NodeTextData<'a>>,
     // List of style attributes.
-    styles: Vec<NodeTextData<'a>>,
+    style_attrs: Vec<NodeStreamData<'a>>,
 }
 
 macro_rules! u8_to_string {
@@ -100,17 +103,14 @@ pub fn parse_svg(data: &[u8], opt: &ParseOptions) -> Result<Document, Error> {
     // Than apply CSS. And then ungroup style attributes.
     // Order is important, otherwise we get rendering error.
     let mut post_data = PostData {
-        css: CssData {
-            by_tag: MultiMap::new(),
-            by_class: MultiMap::new(),
-        },
+        css_list: Vec::new(),
         links: Links {
             list: Vec::new(),
             elems_with_id: HashMap::new(),
         },
         entitis: HashMap::new(),
-        classes: Vec::new(),
-        styles: Vec::new(),
+        class_attrs: Vec::new(),
+        style_attrs: Vec::new(),
     };
 
     // process SVG tokens
@@ -144,7 +144,7 @@ pub fn parse_svg(data: &[u8], opt: &ParseOptions) -> Result<Document, Error> {
     try!(resolve_css(&doc, &mut post_data, &opt));
 
     // resolve styles
-    for d in &post_data.styles {
+    for d in &post_data.style_attrs {
         try!(parse_style_attribute(&d.node, d.stream.clone(), &mut post_data.links,
                                    &post_data.entitis, &opt));
     }
@@ -176,7 +176,7 @@ fn process_token<'a>(doc: &Document,
             match ElementId::from_name(u8_to_str!(s)) {
                 Some(eid) => {
                     let res = try!(parse_svg_element(&doc, tokenizer, eid,
-                                                     &mut post_data.css));
+                                                     &mut post_data.css_list));
 
                     if let Some(n) = res {
                         *node = Some(n.clone());
@@ -279,7 +279,7 @@ fn process_token<'a>(doc: &Document,
 fn parse_svg_element<'a>(doc: &Document,
                          tokenizer: &mut svg::Tokenizer<'a>,
                          id: ElementId,
-                         css: &mut CssData<'a>)
+                         styles: &mut Vec<Stream<'a>>)
                          -> Result<Option<Node>, Error> {
     // We never create 'style' element.
     // If 'style' element is empty - we skip it.
@@ -289,11 +289,19 @@ fn parse_svg_element<'a>(doc: &Document,
         // TODO: process only style with 'type='text/css'' or no 'type' attr.
 
         // skip attributes, since we only interested in CDATA.
+        let mut is_valid_type = true;
         while let Some(subitem) = tokenizer.next() {
             match subitem {
                 Ok(st) => {
                     match st {
-                        svg::Token::Attribute(_, _) => {}
+                        svg::Token::Attribute(name, value) => {
+                            if name == b"type" {
+                                if value.slice() != b"text/css" {
+                                    is_valid_type = false;
+                                    break;
+                                }
+                            }
+                        }
                         svg::Token::ElementEnd(svg::ElementEnd::Empty) => {
                             // if 'style' do not have children - return
                             return Ok(None);
@@ -307,6 +315,11 @@ fn parse_svg_element<'a>(doc: &Document,
             }
         }
 
+        if !is_valid_type {
+            try!(skip_current_element(tokenizer));
+            return Ok(None);
+        }
+
         // TODO: check if two or more style elements can exist and how to
         // process them.
 
@@ -318,7 +331,7 @@ fn parse_svg_element<'a>(doc: &Document,
                 Ok(st) => {
                     match st {
                           svg::Token::Cdata(s)
-                        | svg::Token::Text(s) => try!(parse_css(&mut s.clone(), css)),
+                        | svg::Token::Text(s) => styles.push(s.clone()),
                         svg::Token::Whitespace(_) => {}
                         _ => break,
                     }
@@ -351,7 +364,8 @@ fn parse_attribute<'a>(node: &Node,
                     post_data.links.elems_with_id.insert(value.slice(), node.clone());
                 }
                 AttributeId::Style => {
-                    post_data.styles.push(NodeTextData {
+                    // we store 'class' attributes for later use
+                    post_data.style_attrs.push(NodeStreamData {
                         node: node.clone(),
                         stream: *value,
                     })
@@ -367,10 +381,23 @@ fn parse_attribute<'a>(node: &Node,
                     node.set_attribute(AttributeId::D, AttributeValue::Path(p));
                 }
                 AttributeId::Class => {
-                    post_data.classes.push(NodeTextData {
-                        node: node.clone(),
-                        stream: *value,
-                    })
+                    // we store 'class' attributes for later use
+
+                    let mut s = value.clone();
+                    while !s.at_end() {
+                        s.skip_spaces();
+
+                        let len = s.len_to_space_or_end();
+                        let class_raw = s.read_raw(len);
+                        let class = str::from_utf8(class_raw).unwrap();
+
+                        post_data.class_attrs.push(NodeTextData {
+                            node: node.clone(),
+                            text: class,
+                        });
+
+                        s.skip_spaces();
+                    }
                 }
                 _ => {
                     try!(parse_svg_attribute(&node, id, value, &mut post_data.links,
@@ -419,7 +446,9 @@ fn parse_svg_attribute<'a>(node: &Node,
     let tag_id = node.tag_id().unwrap();
 
     let val = match try!(ParserAttributeValue::from_stream(tag_id, id, stream)) {
-        ParserAttributeValue::String(v) => Some(AttributeValue::String(u8_to_str!(v).to_string())),
+        ParserAttributeValue::String(v) => {
+            Some(AttributeValue::String(u8_to_str!(v).to_string()))
+        }
         ParserAttributeValue::IRI(link) | ParserAttributeValue::FuncIRI(link) => {
             // collect links for later processing
             links.append(id, link, None, node);
@@ -430,7 +459,9 @@ fn parse_svg_attribute<'a>(node: &Node,
             links.append(id, link, Some(fallback.clone()), node);
             None
         }
-        ParserAttributeValue::Number(v) => Some(AttributeValue::Number(v)),
+        ParserAttributeValue::Number(v) => {
+            Some(AttributeValue::Number(v))
+        }
         ParserAttributeValue::NumberList(list) => {
             let mut vec = Vec::new();
             for number in list {
@@ -442,13 +473,13 @@ fn parse_svg_attribute<'a>(node: &Node,
             Some(AttributeValue::NumberList(vec))
         }
         ParserAttributeValue::Length(v) => {
-            Some(AttributeValue::Length(Length::new(v.num, prepare_length(v.unit, opt))))
+            Some(AttributeValue::Length(Length::new(v.num, prepare_length_unit(v.unit, opt))))
         }
         ParserAttributeValue::LengthList(list) => {
             let mut vec = Vec::new();
             for number in list {
                 match number {
-                    Ok(n) => vec.push(Length::new(n.num, prepare_length(n.unit, opt))),
+                    Ok(n) => vec.push(Length::new(n.num, prepare_length_unit(n.unit, opt))),
                     Err(e) => return Err(Error::ParseError(e)),
                 }
             }
@@ -457,7 +488,9 @@ fn parse_svg_attribute<'a>(node: &Node,
         ParserAttributeValue::Color(v) => {
             Some(AttributeValue::Color(Color::new(v.red, v.green, v.blue)))
         }
-        ParserAttributeValue::PredefValue(v) => Some(AttributeValue::PredefValue(v)),
+        ParserAttributeValue::PredefValue(v) => {
+            Some(AttributeValue::PredefValue(v))
+        }
         ParserAttributeValue::EntityRef(link) => {
             match entitis.get(link) {
                 Some(link_value) => {
@@ -489,103 +522,13 @@ fn parse_svg_attribute<'a>(node: &Node,
     Ok(())
 }
 
-fn prepare_length(unit: LengthUnit, opt: &ParseOptions) -> LengthUnit {
-    // replace 'px' with none if 'parse_px_unit' option is disabled
+fn prepare_length_unit(unit: LengthUnit, opt: &ParseOptions) -> LengthUnit {
+    // replace 'px' with 'none' if 'parse_px_unit' option is disabled
     if !opt.parse_px_unit && unit == LengthUnit::Px {
         return LengthUnit::None;
     }
 
     unit
-}
-
-fn parse_css<'a>(stream: &mut Stream<'a>, css: &mut CssData<'a>) -> Result<(), Error> {
-    // we support only tiny subset of the CSS2 spec
-    fn is_valid_css_char(c: u8) -> bool {
-        match c {
-            b'#' | b'@' | b':' | b'+' | b'[' | b']' | b'*' | b'>' => false,
-            _ => true,
-        }
-    }
-
-    while !stream.at_end() {
-        stream.skip_spaces();
-
-        if stream.at_end() {
-            break;
-        }
-
-        // skip comments
-        if try!(stream.is_char_eq(b'/')) {
-            try!(stream.advance(2)); // skip /*
-            while !stream.at_end() {
-                try!(stream.jump_to(b'*'));
-                try!(stream.advance(1));
-                if try!(stream.is_char_eq(b'/')) {
-                    stream.advance_raw(1);
-                    break;
-                }
-            }
-            stream.skip_spaces();
-            continue;
-        }
-
-        if !is_valid_css_char(try!(stream.curr_char())) {
-            return Err(Error::UnsupportedCSS(stream.gen_error_pos()));
-        }
-
-        let pos = stream.pos();
-
-        // parse selectors
-        let selectors = try!(stream.read_to_trimmed(b'{'));
-
-        if let Some(_) = selectors.iter().position(|c| !is_valid_css_char(*c)) {
-            stream.set_pos_raw(pos);
-            return Err(Error::UnsupportedCSS(stream.gen_error_pos()));
-        }
-
-        stream.advance_raw(1);
-        stream.skip_spaces();
-
-        // parse declaration
-        let decl_len = try!(stream.len_to(b'}'));
-        let substream = Stream::sub_stream(stream, stream.pos(), stream.pos() + decl_len);
-
-        // split selectors
-        //
-        // we support only tag and class selectors
-        let mut s = Stream::new(selectors);
-        while !s.at_end() {
-            let is_class = s.is_char_eq_raw(b'.');
-            if is_class {
-                s.advance_raw(1);
-            }
-
-            let l = s.len_to_or_end(b',');
-            let name = s.read_raw(l);
-
-            if is_class {
-                css.by_class.insert(name, substream);
-            } else {
-                if let Some(eid) = ElementId::from_name(u8_to_str!(name)) {
-                    css.by_tag.insert(eid, substream);
-                } else {
-                    // CSS for a non-SVG element is not supported
-                    stream.set_pos_raw(pos);
-                    return Err(Error::UnsupportedCSS(stream.gen_error_pos()));
-                }
-            }
-
-            if !s.at_end() && s.is_char_eq_raw(b',') {
-                s.advance_raw(1);
-            }
-            s.skip_spaces();
-        }
-
-        stream.advance_raw(decl_len + 1); // }
-        stream.skip_spaces();
-    }
-
-    Ok(())
 }
 
 fn parse_style_attribute<'a>(node: &Node,
@@ -632,51 +575,201 @@ fn resolve_css<'a>(doc: &Document,
                    post_data: &mut PostData<'a>,
                    opt: &ParseOptions)
                    -> Result<(), Error> {
-    for d in &post_data.classes {
-        let mut s = d.stream;
+    use simplecss::Token as CssToken;
+    use simplecss::ErrorPos as CssErrorPos;
 
-        while !s.at_end() {
+    #[derive(Clone,Copy,Debug)]
+    enum CssSelector<'a> {
+        Universal,
+        Type(&'a str),
+        Id(&'a str),
+        Class(&'a str),
+    }
+
+    fn conv_err_pos(pos: CssErrorPos) -> ErrorPos {
+        ErrorPos::new(pos.row, pos.col)
+    }
+
+    let mut selectors: Vec<CssSelector> = Vec::new();
+    let mut values: Vec<(&str,&str)> = Vec::with_capacity(16);
+
+    // remember all resolved classes
+    let mut resolved_classes: Vec<&str> = Vec::with_capacity(16);
+
+    // we have to make a copy to allow passing mutable 'post_data'
+    // it's cheap, because in a 99.9% cases we have only one style
+    let styles = post_data.css_list.clone();
+
+    for style in &styles {
+        // get global position of the CSS data
+        let (start_pos, end_pos) = {
+            let mut s = style.clone();
+
+            // check for a empty string
             s.skip_spaces();
-            let len = s.len_to_space_or_end();
-            let class = s.read_raw(len);
+            if s.at_end() {
+                // ignore such CSS
+                continue;
+            }
 
-            match post_data.css.by_class.get_vec(class) {
-                Some(vec) => {
-                    for v in vec {
-                        try!(parse_style_attribute(&d.node, *v,
-                                                   &mut post_data.links,
-                                                   &post_data.entitis, &opt));
+            let start = s.global_pos();
+            let end = start + s.left();
+            (start, end)
+        };
+
+        let mut tokenizer = {
+            // we use 'new_bound' method to get absolute error positions
+            let text = style.parent_text().unwrap();
+            simplecss::Tokenizer::new_bound(u8_to_str!(text), start_pos, end_pos)
+        };
+
+        'root: loop {
+            selectors.clear();
+            values.clear();
+
+            // get list of selectors
+            loop {
+                // remember position before next token
+                let last_pos = tokenizer.gen_curr_pos();
+
+                let token = try!(tokenizer.parse_next());
+
+                match token {
+                    CssToken::EndOfStream => {
+                        // parsing finished
+                        break 'root;
                     }
+                    CssToken::BlockStart => {
+                        // stop selectors parsing
+                        break;
+                    }
+                    CssToken::Comma => {
+                        // we ignore 'comma' token
+                        continue;
+                    }
+                    _ => {}
                 }
-                None => {
-                    if opt.skip_unresolved_classes {
-                        println!("Warning: Could not resolve an unknown class: {}.",
-                                 u8_to_str!(class));
-                    } else {
-                        if d.node.has_attribute(AttributeId::Class) {
-                            let mut attrs = d.node.attributes_mut();
-                            let mut class_val = attrs.get_value_mut(AttributeId::Class);
-                            if let Some(&mut AttributeValue::String(ref mut text)) = class_val {
-                                text.push(' ');
-                                text.push_str(u8_to_str!(class));
+
+                // currently we support only simple selectors
+                let selector = match token {
+                    CssToken::UniversalSelector     => CssSelector::Universal,
+                    CssToken::TypeSelector(name)    => CssSelector::Type(name),
+                    CssToken::IdSelector(name)      => CssSelector::Id(name),
+                    CssToken::ClassSelector(name)   => CssSelector::Class(name),
+
+                      CssToken::AttributeSelector(_)
+                    | CssToken::PseudoClass(_)
+                    | CssToken::LangPseudoClass(_)
+                    | CssToken::Combinator(_) =>
+                        return Err(Error::UnsupportedCSS(conv_err_pos(last_pos))),
+
+                    _ => return Err(Error::InvalidCSS(conv_err_pos(last_pos))),
+                };
+
+                selectors.push(selector);
+            }
+
+            // get list of declarations
+            loop {
+                // remember position before next token
+                let last_pos = tokenizer.gen_curr_pos();
+
+                match try!(tokenizer.parse_next()) {
+                    CssToken::Declaration(name, value) => values.push((name, value)),
+                    CssToken::BlockEnd => break,
+                    CssToken::EndOfStream => break 'root,
+                    _ => return Err(Error::InvalidCSS(conv_err_pos(last_pos))),
+                }
+            }
+
+            // process selectors
+            for selector in &selectors {
+                match *selector {
+                    CssSelector::Universal => {
+                        for node in doc.descendants().svg() {
+                            try!(apply_css_attributes(&values, &node, &mut post_data.links,
+                                                      &post_data.entitis, opt));
+                        }
+                    }
+                    CssSelector::Type(name) => {
+                        if let Some(eid) = ElementId::from_name(name) {
+                            for node in doc.descendants().svg().filter(|n| n.is_tag_name(eid)) {
+                                try!(apply_css_attributes(&values, &node, &mut post_data.links,
+                                                          &post_data.entitis, opt));
                             }
                         } else {
-                            d.node.set_attribute(AttributeId::Class, u8_to_str!(class));
+                            println!("Warning: CSS styles for a non-SVG element ('{}') are ignored.",
+                                     name);
+                        }
+                    }
+                    CssSelector::Id(name) => {
+                        if let Some(node) = doc.descendants().svg().find(|n| *n.id() == name) {
+                            try!(apply_css_attributes(&values, &node, &mut post_data.links,
+                                                      &post_data.entitis, opt));
+                        }
+                    }
+                    CssSelector::Class(name) => {
+                        // we use already collected list of 'class' attributes
+                        for d in post_data.class_attrs.iter().filter(|n| n.text == name) {
+                            try!(apply_css_attributes(&values, &d.node, &mut post_data.links,
+                                                      &post_data.entitis, opt));
+
+                            resolved_classes.push(name);
                         }
                     }
                 }
             }
-
-            s.skip_spaces();
         }
     }
 
-    for (k, vec) in &post_data.css.by_tag {
-        for node in doc.descendants().svg() {
-            if node.tag_id().unwrap() == *k {
-                for v in vec {
-                    try!(parse_style_attribute(&node, *v, &mut post_data.links,
-                                               &post_data.entitis, &opt));
+    postprocess_class_selector(&resolved_classes, &mut post_data.class_attrs, opt);
+
+    Ok(())
+}
+
+fn postprocess_class_selector<'a>(resolved_classes: &Vec<&str>,
+                                  class_attrs: &mut Vec<NodeTextData<'a>>,
+                                  opt: &ParseOptions) {
+    // remove resolved classes
+    class_attrs.retain(|n| !resolved_classes.contains(&n.text));
+
+    if opt.skip_unresolved_classes {
+        for d in class_attrs {
+            println!("Warning: Could not resolve an unknown class: {}.", d.text);
+        }
+    } else {
+        // create 'class' attributes with unresolved classes
+        for d in class_attrs {
+            if d.node.has_attribute(AttributeId::Class) {
+                let mut attrs = d.node.attributes_mut();
+                let mut class_val = attrs.get_value_mut(AttributeId::Class);
+                if let Some(&mut AttributeValue::String(ref mut text)) = class_val {
+                    text.push(' ');
+                    text.push_str(d.text);
+                }
+            } else {
+                d.node.set_attribute(AttributeId::Class, d.text);
+            }
+        }
+    }
+}
+
+fn apply_css_attributes<'a>(values: &Vec<(&str,&'a str)>,
+                            node: &Node,
+                            links: &mut Links<'a>,
+                            entitis: &Entities<'a>,
+                            opt: &ParseOptions)
+                            -> Result<(), Error> {
+    for &(aname, avalue) in values {
+        match AttributeId::from_name(aname) {
+            Some(aid) => {
+                // TODO: to a proper stream
+                try!(parse_svg_attribute(node, aid, &mut Stream::new(avalue.as_bytes()),
+                     links, entitis, opt));
+            }
+            None => {
+                if opt.parse_unknown_attributes {
+                    node.set_attribute(aname, avalue);
                 }
             }
         }
@@ -689,14 +782,23 @@ fn resolve_links(links: &Links) -> Result<(), Error> {
     for d in &links.list {
         match links.elems_with_id.get(d.iri) {
             Some(node) => {
-                try!(resolve_link(&d.node, node, d.attr_id, d.iri, &d.fallback));
+                // The SVG uses a fallback paint value not only when the FuncIRI is invalid,
+                // but also when a referenced element is invalid.
+                // And we don't know is it invalid or not.
+                // It will take tonnes of code to validate all supported referenced elements,
+                // so we just show an error.
+                match d.fallback {
+                    Some(_) => return Err(Error::UnsupportedPaintFallback(u8_to_str!(d.iri).to_string())),
+                    None => try!(d.node.set_link_attribute(d.attr_id, node.clone())),
+                }
             }
             None => {
                 // check that <paint> contains a fallback value before showing a warning
                 match d.fallback {
                     Some(fallback) => {
                         match fallback {
-                            PaintFallback::PredefValue(v) => d.node.set_attribute(d.attr_id, v),
+                            PaintFallback::PredefValue(v) =>
+                                d.node.set_attribute(d.attr_id, v),
                             PaintFallback::Color(c) =>
                                 d.node.set_attribute(d.attr_id, Color::new(c.red, c.green, c.blue)),
                         }
@@ -758,23 +860,6 @@ fn resolve_links(links: &Links) -> Result<(), Error> {
         }
     }
 
-    Ok(())
-}
-
-fn resolve_link(node: &Node,
-                ref_node: &Node,
-                aid: AttributeId,
-                iri: &[u8],
-                fallback: &Option<PaintFallback>)
-                -> Result<(), Error> {
-    // The SVG uses a fallback paint value not only when the FuncIRI is invalid, but also when
-    // a referenced element is invalid. And we don't now is it invalid or not.
-    // It will take tonnes of code to validate all supported referenced elements.
-    // So we just show an error.
-    match *fallback {
-        Some(_) => return Err(Error::UnsupportedPaintFallback(u8_to_str!(iri).to_string())),
-        None => try!(node.set_link_attribute(aid, ref_node.clone())),
-    }
     Ok(())
 }
 
