@@ -6,6 +6,7 @@
 
 use std::fmt;
 
+use super::number;
 use {WriteOptions, FromStream, WriteBuffer, WriteToString};
 
 pub use svgparser::path::SegmentData;
@@ -726,7 +727,8 @@ fn write_coords(coords: &[f64], is_explicit_cmd: bool, prev_coord_has_dot: &mut 
         for (i, num) in coords.iter().enumerate() {
             let start_pos = buf.len() - 1;
 
-            num.write_buf_opt(opt, buf);
+            number::write_num(num, opt.paths.coordinates_precision,
+                              opt.remove_leading_zero, buf);
 
             let c = buf[start_pos + 1];
 
@@ -755,7 +757,8 @@ fn write_coords(coords: &[f64], is_explicit_cmd: bool, prev_coord_has_dot: &mut 
         }
     } else {
         for num in coords.iter() {
-            num.write_buf_opt(opt, buf);
+            number::write_num(num, opt.paths.coordinates_precision,
+                              opt.remove_leading_zero, buf);
             buf.push(b' ');
         }
     }
@@ -914,6 +917,28 @@ mod tests {
         opt.paths.remove_duplicated_commands = true;
 
         assert_eq_text!(path.to_string_with_opt(&opt), "M 10 20 30 40 50 60 M 10 20 30 40 50 60");
+    }
+
+    #[test]
+    fn gen_path_19() {
+        let path = Path::from_data(b"M 10.00000001 10.00002 L 20.123456789 20.9999999").unwrap();
+
+        let mut opt = WriteOptions::default();
+
+        assert_eq_text!(path.to_string_with_opt(&opt),
+            "M 10.00000001 10.00002 L 20.123456789 20.9999999");
+
+        opt.paths.coordinates_precision = 8;
+        assert_eq_text!(path.to_string_with_opt(&opt),
+            "M 10.00000001 10.00002 L 20.12345679 20.9999999");
+
+        opt.paths.coordinates_precision = 4;
+        assert_eq_text!(path.to_string_with_opt(&opt),
+            "M 10 10 L 20.1235 21");
+
+        opt.paths.coordinates_precision = 1;
+        assert_eq_text!(path.to_string_with_opt(&opt),
+            "M 10 10 L 20.1 21");
     }
 }
 

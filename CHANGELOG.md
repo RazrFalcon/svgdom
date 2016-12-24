@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - `AttributeValue::name`.
 - `WriteOptions::paths::use_implicit_lineto_commands`.
+- `WriteOptions::paths::coordinates_precision`.
 - `FuzzyOrd` trait for `f64`.
 - An external CSS parser, which brings support for universal and id selectors.
 - Check that `style` element has a valid `type` attribute value.

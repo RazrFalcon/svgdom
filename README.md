@@ -30,8 +30,8 @@ and complex CSS styling.
 Parser will convert as much as possible data to a simple doc->elements->attributes structure.
 
 For example, the `fill` parameter of an element can be set: as an element's attribute,
-as part of the `style` attribute, inside CDATA of the `style` element as CSS2, inside the `ENTITY`,
-using the JS code and probably with lots of other methods.
+as part of a `style` attribute, inside a `style` element as CSS2, inside an `ENTITY`,
+using a JS code and probably with lots of other methods.
 
 Not to mention, that the `fill` attribute supports 4 different types of data.
 
@@ -117,7 +117,7 @@ And even though the file is a bit different now - it will be rendered exactly th
  - Compressed SVG (.svgz). You should decompress it by yourself.
  - XML text escape is not implemented yet. Parsed text will be stored as is.
  - Not supported (mostly rare cases, but still valid by the SVG spec):
-   - Complex CSS. Only simple *class* and *group* selectors are supported.
+   - Complex CSS. Only simple selectors are supported.
    - Whitespacing using a numerical Unicode references, aka `&#x0020;`.
    - Custom namespaces, like:
 

@@ -7,7 +7,7 @@ use std::ops::Mul;
 use std::f64;
 
 use {WriteOptions, FromStream, WriteBuffer, WriteToString};
-use super::number::{write_num, FuzzyEq};
+use super::number::{write_num, FuzzyEq, DEFAULT_PRECISION};
 
 use svgparser::Error as ParseError;
 use svgparser::Stream;
@@ -266,42 +266,44 @@ impl WriteBuffer for Transform {
 
 fn write_matrix_transform(ts: &Transform, opt: &WriteOptions, out: &mut Vec<u8>) {
     let rm = opt.remove_leading_zero;
+    let dp = DEFAULT_PRECISION;
 
     out.extend_from_slice(b"matrix(");
-    write_num(ts.a, rm, out);
+    write_num(&ts.a, dp, rm, out);
     out.push(b' ');
-    write_num(ts.b, rm, out);
+    write_num(&ts.b, dp, rm, out);
     out.push(b' ');
-    write_num(ts.c, rm, out);
+    write_num(&ts.c, dp, rm, out);
     out.push(b' ');
-    write_num(ts.d, rm, out);
+    write_num(&ts.d, dp, rm, out);
     out.push(b' ');
-    write_num(ts.e, rm, out);
+    write_num(&ts.e, dp, rm, out);
     out.push(b' ');
-    write_num(ts.f, rm, out);
+    write_num(&ts.f, dp, rm, out);
     out.push(b')');
 }
 
 fn write_simplified_transform(ts: &Transform, opt: &WriteOptions, out: &mut Vec<u8>) {
     let rm = opt.remove_leading_zero;
+    let dp = DEFAULT_PRECISION;
 
     if ts.is_translate() {
         out.extend_from_slice(b"translate(");
-        write_num(ts.e, rm, out);
+        write_num(&ts.e, dp, rm, out);
 
         if ts.f.fuzzy_ne(&0.0) {
             out.push(b' ');
-            write_num(ts.f, rm, out);
+            write_num(&ts.f, dp, rm, out);
         }
 
         out.push(b')');
     } else if ts.is_scale() {
         out.extend_from_slice(b"scale(");
-        write_num(ts.a, rm, out);
+        write_num(&ts.a, dp, rm, out);
 
         if ts.a.fuzzy_ne(&ts.d) {
             out.push(b' ');
-            write_num(ts.d, rm, out);
+            write_num(&ts.d, dp, rm, out);
         }
 
         out.push(b')');
@@ -312,7 +314,7 @@ fn write_simplified_transform(ts: &Transform, opt: &WriteOptions, out: &mut Vec<
 
         if a.fuzzy_eq(&skx) && a.fuzzy_eq(&sky) && sx.fuzzy_eq(&1.0) && sy.fuzzy_eq(&1.0) {
             out.extend_from_slice(b"rotate(");
-            write_num(a, rm, out);
+            write_num(&a, dp, rm, out);
             out.push(b')');
         } else {
             write_matrix_transform(ts, opt, out);
