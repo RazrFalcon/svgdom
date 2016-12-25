@@ -93,17 +93,6 @@ impl Attributes {
         None
     }
 
-    /// Returns an existing attribute or `def_value`.
-    #[inline]
-    pub fn get_value_or<'a>(&'a self, id: AttributeId, def_value: &'a AttributeValue)
-                            -> &AttributeValue {
-        // TODO: remove
-        match self.get(id) {
-            Some(a) => &a.value,
-            None => def_value,
-        }
-    }
-
     /// Inserts a new attribute. Previous will be overwritten.
     ///
     /// **Warning:** this method did not perform any checks for linked attributes.

@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 ### Added
 - `AttributeValue::name`.
+- `Length::zero`.
 - `WriteOptions::paths::use_implicit_lineto_commands`.
 - `WriteOptions::paths::coordinates_precision`.
 - `FuzzyOrd` trait for `f64`.
@@ -19,6 +20,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Removed
 - Custom SVG writer support and custom_writer example.
+- `Attributes::get_value_or`. Use `Attributes::get_value().unwrap_or()` instead.
 
 ## [0.2.0] - 2016-11-04
 ### Added

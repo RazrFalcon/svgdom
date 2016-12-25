@@ -854,6 +854,7 @@ impl Node {
     ///
     /// Panics if the node is currently borrowed.
     pub fn remove_attributes(&self, ids: &[AttributeId]) {
+        // TODO: to AttributeNameRef
         for id in ids {
             self.remove_attribute(*id);
         }

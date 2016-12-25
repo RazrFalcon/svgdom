@@ -23,10 +23,22 @@ pub struct Length {
 
 impl Length {
     /// Constructs a new length.
+    #[inline]
     pub fn new(num: f64, unit: LengthUnit) -> Length {
         Length {
             num: num,
             unit: unit,
+        }
+    }
+
+    /// Constructs a new length with a zero value.
+    ///
+    /// Shorthand for: `Length::new(0.0, Unit::None)`.
+    #[inline]
+    pub fn zero() -> Length {
+        Length {
+            num: 0.0,
+            unit: LengthUnit::None,
         }
     }
 }
