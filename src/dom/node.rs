@@ -599,20 +599,24 @@ impl Node {
     /// # Panics
     ///
     /// - Panics if the node is currently borrowed.
-    /// - Panics if attribute has a Link value.
-    ///   Use `Node::set_link_attribute()` for such attributes.
+    /// - Panics if the attribute cause an ElementCrosslink error.
     pub fn set_attribute_object(&self, attr: Attribute) {
         // TODO: fix stupid name
         // TODO: do not panic on invalid attribute type
 
-        match attr.value {
-            AttributeValue::Link(_) | AttributeValue::FuncLink(_) =>
-                panic!("Link attributes must be set via set_link_attribute()"),
-            _ => {}
-        }
-
         // we must remove existing attribute to prevent dangling links
         self.remove_attribute(attr.name.into_ref());
+
+        if attr.is_svg() {
+            match attr.value {
+                AttributeValue::Link(ref iri) | AttributeValue::FuncLink(ref iri) => {
+                    let aid = attr.id().unwrap();
+                    self.set_link_attribute(aid, iri.clone()).unwrap();
+                    return;
+                }
+                _ => {}
+            }
+        }
 
         let mut attrs = self.attributes_mut();
         attrs.insert(attr);

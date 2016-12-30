@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 - Default numeric precision is 12 instead of 8.
 - Float compare is done using [float-cmp](https://crates.io/crates/float-cmp).
+- `Node::set_attribute_object` now handles links.
 
 ### Removed
 - Custom SVG writer support and custom_writer example.
