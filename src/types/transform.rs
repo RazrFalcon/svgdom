@@ -38,37 +38,40 @@ impl Transform {
     }
 
     /// Translates the current transform.
-    pub fn translate(mut self, x: f64, y: f64) -> Transform {
+    pub fn translate(&mut self, x: f64, y: f64) {
         self.append(&Transform::new(1.0, 0.0, 0.0, 1.0, x, y));
-        self
     }
 
     /// Scales the current transform.
-    pub fn scale(mut self, sx: f64, sy: f64) -> Transform {
+    pub fn scale(&mut self, sx: f64, sy: f64) {
         self.append(&Transform::new(sx, 0.0, 0.0, sy, 0.0, 0.0));
-        self
     }
 
     /// Rotates the current transform.
-    pub fn rotate(mut self, angle: f64) -> Transform {
-        self.append(&Transform::new(angle.cos(), angle.sin(), -angle.sin(), angle.cos(), 0.0, 0.0));
-        self
+    pub fn rotate(&mut self, angle: f64) {
+        let v = (angle / 180.0) * f64::consts::PI;
+        let a =  v.cos();
+        let b =  v.sin();
+        let c = -b;
+        let d =  a;
+        self.append(&Transform::new(a, b, c, d, 0.0, 0.0));
     }
 
     /// Skews the current transform along the X axis.
-    pub fn skew_x(mut self, angle: f64) -> Transform {
-        self.append(&Transform::new(1.0, 0.0, angle.tan(), 1.0, 0.0, 0.0));
-        self
+    pub fn skew_x(&mut self, angle: f64) {
+        let c = ((angle / 180.0) * f64::consts::PI).tan();
+        self.append(&Transform::new(1.0, 0.0, c, 1.0, 0.0, 0.0));
     }
 
     /// Skews the current transform along the Y axis.
-    pub fn skew_y(mut self, angle: f64) -> Transform {
-        self.append(&Transform::new(1.0, angle.tan(), 0.0, 1.0, 0.0, 0.0));
-        self
+    pub fn skew_y(&mut self, angle: f64) {
+        let b = ((angle / 180.0) * f64::consts::PI).tan();
+        self.append(&Transform::new(1.0, b, 0.0, 1.0, 0.0, 0.0));
     }
 
     /// Appends transform to the current transform.
     pub fn append(&mut self, t: &Transform) {
+        // TODO: optimize. No need to create TransformMatrix each time.
         let tm = self.to_matrix() * t.to_matrix();
         self.a = tm.d[0][0];
         self.c = tm.d[1][0];
@@ -183,6 +186,14 @@ impl Transform {
         let new_y = self.b * x + self.d * y + self.f;
         (new_x, new_y)
     }
+
+    /// Applies transform to selected coordinates.
+    pub fn apply_ref(&self, x: &mut f64, y: &mut f64) {
+        let tx = *x;
+        let ty = *y;
+        *x = self.a * tx + self.c * ty + self.e;
+        *y = self.b * tx + self.d * ty + self.f;
+    }
 }
 
 impl Default for Transform {
@@ -206,47 +217,28 @@ impl FromStream for Transform {
     type Err = ParseError;
 
     fn from_stream(s: Stream) -> Result<Transform, ParseError> {
-        use svgparser::transform::Tokenizer as TransformTokenizer;
-        use svgparser::transform::Transform as ParserTransform;
+        use svgparser::transform::Tokenizer;
+        use svgparser::transform::TransformToken;
 
-        let ts = TransformTokenizer::new(s);
-        let mut matrix = Transform::default();
+        let mut ts = Tokenizer::new(s);
+        let mut transform = Transform::default();
 
-        let pi = f64::consts::PI;
-
-        for n in ts {
-            match n {
-                Ok(v) => {
-                    match v {
-                        ParserTransform::Matrix { a, b, c, d, e, f }
-                            => matrix.append(&Transform::new(a, b, c, d, e, f)),
-                        ParserTransform::Translate { tx, ty }
-                            => matrix.append(&Transform::new(1.0, 0.0, 0.0, 1.0, tx, ty)),
-                        ParserTransform::Scale { sx, sy }
-                            => matrix.append(&Transform::new(sx, 0.0, 0.0, sy, 0.0, 0.0)),
-                        ParserTransform::Rotate { angle } => {
-                            let v = (angle / 180.0) * pi;
-                            let a =  v.cos();
-                            let b =  v.sin();
-                            let c = -b;
-                            let d =  a;
-                            matrix.append(&Transform::new(a, b, c, d, 0.0, 0.0))
-                        }
-                        ParserTransform::SkewX { angle } => {
-                            let c = ((angle / 180.0 ) * pi).tan();
-                            matrix.append(&Transform::new(1.0, 0.0, c, 1.0, 0.0, 0.0))
-                        },
-                        ParserTransform::SkewY { angle } => {
-                            let b = ((angle / 180.0) * pi).tan();
-                            matrix.append(&Transform::new(1.0, b, 0.0, 1.0, 0.0, 0.0))
-                        }
-                    }
-                }
-                Err(e) => return Err(e),
+        loop {
+            match try!(ts.parse_next()) {
+                TransformToken::Matrix { a, b, c, d, e, f } =>
+                    { transform.append(&Transform::new(a, b, c, d, e, f)); }
+                TransformToken::Translate { tx, ty } => { transform.translate(tx, ty); }
+                TransformToken::Scale { sx, sy } => { transform.scale(sx, sy); }
+                TransformToken::Rotate { angle } => { transform.rotate(angle); }
+                TransformToken::SkewX { angle } => { transform.skew_x(angle); }
+                TransformToken::SkewY { angle } => { transform.skew_y(angle); }
+                TransformToken::EndOfStream => break,
             }
         }
 
-        Ok(matrix)
+        // TODO: do nothing if the transform is default
+
+        Ok(transform)
     }
 }
 
@@ -432,15 +424,38 @@ mod tests {
     );
 
     #[test]
-    fn from_data_1() {
-        assert_eq!(Transform::from_data(b"translate(10 20)").unwrap(),
-            Transform::default().translate(10.0, 20.0));
+    fn api_1() {
+        let mut ts = Transform::default();
+        ts.translate(10.0, 20.0);
+        assert_eq!(Transform::from_data(b"translate(10 20)").unwrap(), ts);
     }
 
     #[test]
-    fn from_data_2() {
-        assert_eq!(Transform::from_data(b"translate(10 20) scale(2, 3)").unwrap(),
-            Transform::default().translate(10.0, 20.0).scale(2.0, 3.0));
+    fn api_2() {
+        let mut ts = Transform::default();
+        ts.scale(2.0, 3.0);
+        assert_eq!(Transform::from_data(b"scale(2 3)").unwrap(), ts);
+    }
+
+    #[test]
+    fn api_3() {
+        let mut ts = Transform::default();
+        ts.skew_x(20.0);
+        assert_eq!(Transform::from_data(b"skewX(20)").unwrap(), ts);
+    }
+
+    #[test]
+    fn api_4() {
+        let mut ts = Transform::default();
+        ts.skew_y(20.0);
+        assert_eq!(Transform::from_data(b"skewY(20)").unwrap(), ts);
+    }
+
+    #[test]
+    fn api_5() {
+        let mut ts = Transform::default();
+        ts.rotate(20.0);
+        assert_eq!(Transform::from_data(b"rotate(20)").unwrap(), ts);
     }
 
     macro_rules! test_ts {

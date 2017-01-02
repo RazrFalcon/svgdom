@@ -528,19 +528,22 @@ impl Builder {
 
 impl FromStream for Path {
     type Err = ParseError;
+
     fn from_stream(s: Stream) -> Result<Path, ParseError> {
-        let t = svgparser::path::Tokenizer::new(s);
+        let mut t = svgparser::path::Tokenizer::new(s);
         let mut p = Path::new();
 
-        for n in t {
-            match n {
-                Ok(segment) => p.d.push({
-                    Segment {
-                        absolute: svgparser::path::is_absolute(segment.cmd),
-                        data: segment.data,
-                    }
-                }),
-                Err(e) => return Err(e),
+        loop {
+            match try!(t.parse_next()) {
+                svgparser::path::SegmentToken::Segment(segment) => {
+                    p.d.push({
+                        Segment {
+                            absolute: svgparser::path::is_absolute(segment.cmd),
+                            data: segment.data,
+                        }
+                    })
+                }
+                svgparser::path::SegmentToken::EndOfStream => break,
             }
         }
 

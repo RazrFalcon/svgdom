@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - `WriteOptions::paths::use_implicit_lineto_commands`.
 - `WriteOptions::paths::coordinates_precision`.
 - `FuzzyOrd` trait for `f64`.
+- `Transform::apply_ref`.
 - An external CSS parser, which brings support for universal and id selectors.
 - Check that `style` element has a valid `type` attribute value.
 
@@ -18,6 +19,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Default numeric precision is 12 instead of 8.
 - Float compare is done using [float-cmp](https://crates.io/crates/float-cmp).
 - `Node::set_attribute_object` now handles links.
+- `Transform`'s `translate`, `scale`, `rotate`, `skew_x` and `skew_y` methods no longer
+  consuming and modifies itself.
+
+### Fixed
+- `Transform`'s `rotate`, `skew_x` and `skew_y` methods doesn't worked correctly.
 
 ### Removed
 - Custom SVG writer support and custom_writer example.

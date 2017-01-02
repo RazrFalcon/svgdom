@@ -109,6 +109,12 @@ impl Node {
     }
 
     /// Returns an iterator over node's parents.
+    ///
+    /// Current node is not included.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the node is currently mutability borrowed.
     pub fn parents(&self) -> Parents {
         Parents::new(self.parent())
     }
