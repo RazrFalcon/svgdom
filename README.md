@@ -14,8 +14,8 @@ which allows you to parse, manipulate and generate SVG content.
    - [Non-goal](#non-goal)
    - [Differences between libsvgdom and SVG spec](#differences-between-libsvgdom-and-svg-spec)
    - [Usage](#usage)
+   - [Build features](#build-features)
    - [Performance](#performance)
-   - [Roadmap](#roadmap)
    - [Contributing](#contributing)
    - [License](#license)
 

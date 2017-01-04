@@ -3,6 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 pub use self::doc::Document;
+pub use self::element_type::ElementType;
 pub use self::iterators::*;
 pub use self::node::Node;
 pub use self::node_type::NodeType;
@@ -14,6 +15,7 @@ pub type TagNameRef<'a> = NameRef<'a, ElementId>;
 pub type TagName = Name<ElementId>;
 
 mod doc;
+mod element_type;
 mod iterators;
 mod node;
 mod node_data;

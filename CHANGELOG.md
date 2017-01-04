@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - An external CSS parser, which brings support for universal and id selectors.
 - Check that `style` element has a valid `type` attribute value.
 - `parsing` build feature.
+- `ElementType` trait for `Node`.
+- `AttributeType` trait for `Attribute`.
 
 ### Changed
 - Default numeric precision is 12 instead of 8.
@@ -22,6 +24,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - `Node::set_attribute_object` now handles links.
 - `Transform`'s `translate`, `scale`, `rotate`, `skew_x` and `skew_y` methods no longer
   consuming and modifies itself.
+- `Node::is_referenced`, `Node::is_basic_shape` and `Node::is_container` moved
+  to `ElementType` trait.
+- Most of the `Attribute`'s `is_*` methods moved to `AttributeType` trait.
 
 ### Fixed
 - `Transform`'s `rotate`, `skew_x` and `skew_y` methods doesn't worked correctly.
