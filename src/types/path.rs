@@ -7,12 +7,16 @@
 use std::fmt;
 
 use super::number;
-use {WriteOptions, FromStream, WriteBuffer, WriteToString};
+use {WriteOptions, WriteBuffer, WriteToString};
+
+#[cfg(feature = "parsing")]
+use FromStream;
+#[cfg(feature = "parsing")]
+use svgparser;
+#[cfg(feature = "parsing")]
+use svgparser::{Stream, Error as ParseError};
 
 pub use svgparser::path::SegmentData;
-use svgparser;
-use svgparser::Error as ParseError;
-use svgparser::Stream;
 
 /// List of all path commands.
 #[derive(Copy,Clone,Debug,PartialEq)]
@@ -526,6 +530,7 @@ impl Builder {
     }
 }
 
+#[cfg(feature = "parsing")]
 impl FromStream for Path {
     type Err = ParseError;
 

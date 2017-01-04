@@ -6,11 +6,13 @@ use std::fmt;
 use std::ops::Mul;
 use std::f64;
 
-use {WriteOptions, FromStream, WriteBuffer, WriteToString};
+use {WriteOptions, WriteBuffer, WriteToString};
 use super::number::{write_num, FuzzyEq, DEFAULT_PRECISION};
 
-use svgparser::Error as ParseError;
-use svgparser::Stream;
+#[cfg(feature = "parsing")]
+use FromStream;
+#[cfg(feature = "parsing")]
+use svgparser::{Stream, Error as ParseError};
 
 /// Representation of the`<transform>` type.
 #[derive(Debug,Clone,Copy)]
@@ -213,6 +215,7 @@ impl PartialEq for Transform {
     }
 }
 
+#[cfg(feature = "parsing")]
 impl FromStream for Transform {
     type Err = ParseError;
 

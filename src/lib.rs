@@ -54,6 +54,7 @@ pub use attribute::*;
 pub use dom::*;
 pub use error::Error;
 pub use name::*;
+#[cfg(feature = "parsing")]
 pub use parse_options::*;
 pub use traits::*;
 pub use write_options::*;
@@ -85,7 +86,9 @@ mod attribute;
 mod dom;
 mod error;
 mod name;
+#[cfg(feature = "parsing")]
 mod parse_options;
+#[cfg(feature = "parsing")]
 mod parser;
 mod write_options;
 

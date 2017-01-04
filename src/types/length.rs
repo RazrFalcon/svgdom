@@ -5,10 +5,12 @@
 use std::fmt;
 
 use types::LengthUnit;
-use {WriteOptions, FromStream, WriteBuffer, WriteToString};
+use {WriteOptions, WriteBuffer, WriteToString};
 
-use svgparser::Error as ParseError;
-use svgparser::Stream;
+#[cfg(feature = "parsing")]
+use FromStream;
+#[cfg(feature = "parsing")]
+use svgparser::{Stream, Error as ParseError};
 
 /// Representation of the [`<length>`] type.
 /// [`<length>`]: https://www.w3.org/TR/SVG/types.html#DataTypeLength
@@ -43,6 +45,7 @@ impl Length {
     }
 }
 
+#[cfg(feature = "parsing")]
 impl FromStream for Length {
     type Err = ParseError;
 

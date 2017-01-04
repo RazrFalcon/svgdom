@@ -4,10 +4,12 @@
 
 use std::fmt;
 
-use {WriteOptions, FromStream, WriteBuffer, WriteToString};
-use svgparser::Error as ParseError;
-use svgparser::Stream;
-use svgparser::RgbColor;
+use {WriteOptions, WriteBuffer, WriteToString};
+
+#[cfg(feature = "parsing")]
+use FromStream;
+#[cfg(feature = "parsing")]
+use svgparser::{Stream, RgbColor, Error as ParseError};
 
 /// Representation of the `<color>` type.
 #[derive(Clone,Copy,PartialEq,Debug)]
@@ -28,6 +30,7 @@ impl Color {
     }
 }
 
+#[cfg(feature = "parsing")]
 impl FromStream for Color {
     type Err = ParseError;
 

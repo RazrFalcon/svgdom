@@ -31,16 +31,8 @@ fn main() {
 
     for node in doc.descendants().svg() {
         let attrs = node.attributes();
-        match attrs.get(AttributeId::D) {
-            Some(attr) => {
-                match attr.value {
-                    AttributeValue::Path(ref path) => {
-                        count += path.d.iter().filter(|seg| seg.cmd() == Command::CurveTo).count();
-                    }
-                    _ => {}
-                }
-            }
-            None => {}
+        if let Some(&AttributeValue::Path(ref path)) = attrs.get_value(AttributeId::D) {
+            count += path.d.iter().filter(|seg| seg.cmd() == Command::CurveTo).count();
         }
     }
 

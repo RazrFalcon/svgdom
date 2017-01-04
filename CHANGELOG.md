@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - `Transform::apply_ref`.
 - An external CSS parser, which brings support for universal and id selectors.
 - Check that `style` element has a valid `type` attribute value.
+- `parsing` build feature.
 
 ### Changed
 - Default numeric precision is 12 instead of 8.

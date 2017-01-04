@@ -159,6 +159,15 @@ svgdom = "0.2.0"
 
 See [documentation](https://docs.rs/svgdom/) and [examples](examples/) for details.
 
+### Build features
+
+All features are enabled by default.
+
+ - `parsing` - enables SVG parsing from a string.
+   It enables `FromStream` trait, `parse_options` struct and `Document::from_data` methods.
+
+   Disabling it doesn't disable `svgparser` dependency, because we export a lot of types from it.
+
 ### Performance
 
 There will be no comparisons with other XML parsers since they do not parse SVG data.

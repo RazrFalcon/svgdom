@@ -3,8 +3,11 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 use super::WriteOptions;
+
+#[cfg(feature = "parsing")]
 use svgparser::Stream;
 
+#[cfg(feature = "parsing")]
 /// The trait for parsing data from the data stream.
 pub trait FromStream: Sized {
     /// Error type.

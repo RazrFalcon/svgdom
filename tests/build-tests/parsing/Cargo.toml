@@ -1,0 +1,7 @@
+[package]
+name = "parsing-build-test"
+version = "0.0.1"
+
+[dependencies.svgdom]
+path = "../../../../svgdom"
+default-features = false

@@ -6,14 +6,16 @@ use std::cell::RefCell;
 use std::fmt;
 use std::rc::Rc;
 
+#[cfg(feature = "parsing")]
 use parser::parse_svg;
+#[cfg(feature = "parsing")]
+use {ParseOptions, Error};
+
 use writer;
 use {
     Attributes,
     ElementId,
-    Error,
     NameRef,
-    ParseOptions,
     TagName,
     TagNameRef,
     WriteBuffer,
@@ -40,11 +42,13 @@ impl Document {
         }
     }
 
+    #[cfg(feature = "parsing")]
     /// Constructs a new `Document` from the `data` using a default `ParseOptions`.
     pub fn from_data(data: &[u8]) -> Result<Document, Error> {
         Document::from_data_with_opt(data, &ParseOptions::default())
     }
 
+    #[cfg(feature = "parsing")]
     /// Constructs a new `Document` from the `data` using a supplied `ParseOptions`.
     pub fn from_data_with_opt(data: &[u8], opt: &ParseOptions) -> Result<Document, Error> {
         parse_svg(data, opt)
