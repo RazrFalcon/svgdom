@@ -54,10 +54,10 @@ pub use attribute::*;
 pub use dom::*;
 pub use error::Error;
 pub use name::*;
-#[cfg(feature = "parsing")]
-pub use parse_options::*;
 pub use traits::*;
 pub use write_options::*;
+#[cfg(feature = "parsing")]
+pub use parse_options::*;
 
 pub use svgparser::AttributeId;
 pub use svgparser::ElementId;
