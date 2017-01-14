@@ -679,6 +679,36 @@ b"<svg unicode='&#x3b2;'/>",
 "<svg unicode='&#x3b2;'/>
 ");
 
+// ignore empty LengthList
+test_resave!(parse_empty_attribute_1,
+b"<svg>
+    <rect stroke-dasharray=''/>
+</svg>",
+"<svg>
+    <rect/>
+</svg>
+");
+
+// ignore empty NumberList
+test_resave!(parse_empty_attribute_2,
+b"<svg>
+    <rect stdDeviation=''/>
+</svg>",
+"<svg>
+    <rect/>
+</svg>
+");
+
+// ignore empty Transform
+test_resave!(parse_empty_attribute_3,
+b"<svg>
+    <rect transform=''/>
+</svg>",
+"<svg>
+    <rect/>
+</svg>
+");
+
 test_resave!(parse_script_1,
 b"<svg>
     <script><![CDATA[

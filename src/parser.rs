@@ -367,7 +367,9 @@ fn parse_attribute<'a>(node: &Node,
                 | AttributeId::GradientTransform
                 | AttributeId::PatternTransform => {
                     let ts = try!(Transform::from_stream(value.clone()));
-                    node.set_attribute(id, AttributeValue::Transform(ts));
+                    if !ts.is_default() {
+                        node.set_attribute(id, AttributeValue::Transform(ts));
+                    }
                 }
                 AttributeId::D => {
                     let p = try!(path::Path::from_stream(value.clone()));
@@ -463,7 +465,12 @@ fn parse_svg_attribute<'a>(node: &Node,
                     Err(e) => return Err(Error::ParseError(e)),
                 }
             }
-            Some(AttributeValue::NumberList(vec))
+
+            if !vec.is_empty() {
+                Some(AttributeValue::NumberList(vec))
+            } else {
+                None
+            }
         }
         ParserAttributeValue::Length(v) => {
             Some(AttributeValue::Length(Length::new(v.num, prepare_length_unit(v.unit, opt))))
@@ -476,7 +483,12 @@ fn parse_svg_attribute<'a>(node: &Node,
                     Err(e) => return Err(Error::ParseError(e)),
                 }
             }
-            Some(AttributeValue::LengthList(vec))
+
+            if !vec.is_empty() {
+                Some(AttributeValue::LengthList(vec))
+            } else {
+                None
+            }
         }
         ParserAttributeValue::Color(v) => {
             Some(AttributeValue::Color(Color::new(v.red, v.green, v.blue)))

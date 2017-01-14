@@ -27,6 +27,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - `Node::is_referenced`, `Node::is_basic_shape` and `Node::is_container` moved
   to `ElementType` trait.
 - Most of the `Attribute`'s `is_*` methods moved to `AttributeType` trait.
+- Default transform matrices are not added to the DOM anymore.
+- Empty list-based attributes are not added to the DOM anymore.
 
 ### Fixed
 - `Transform`'s `rotate`, `skew_x` and `skew_y` methods doesn't worked correctly.
