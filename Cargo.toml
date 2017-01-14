@@ -11,15 +11,16 @@ readme = "README.md"
 
 [dependencies]
 float-cmp = "0.2.3"
-simplecss = { git = "https://github.com/RazrFalcon/simplecss.git" }
+# simplecss = { git = "https://github.com/RazrFalcon/simplecss.git" }
+simplecss = "0.1.0"
 
 [dependencies.svgparser]
 # latest public
-git = "https://github.com/RazrFalcon/libsvgparser.git"
+# git = "https://github.com/RazrFalcon/libsvgparser.git"
 # local copy
 # path = "../svgparser"
 # from crates
-# version = "0.1.0"
+version = "0.2.0"
 
 [dev-dependencies]
 time = "0.1"

@@ -578,7 +578,6 @@ fn resolve_css<'a>(doc: &Document,
                    opt: &ParseOptions)
                    -> Result<(), Error> {
     use simplecss::Token as CssToken;
-    use simplecss::ErrorPos as CssErrorPos;
 
     #[derive(Clone,Copy,Debug)]
     enum CssSelector<'a> {
@@ -588,8 +587,10 @@ fn resolve_css<'a>(doc: &Document,
         Class(&'a str),
     }
 
-    fn conv_err_pos(pos: CssErrorPos) -> ErrorPos {
-        ErrorPos::new(pos.row, pos.col)
+    fn gen_err_pos(stream: &Stream, pos: usize) -> ErrorPos {
+        let mut s = stream.clone();
+        s.set_pos_raw(pos - stream.global_pos());
+        s.gen_error_pos()
     }
 
     let mut selectors: Vec<CssSelector> = Vec::new();
@@ -632,7 +633,7 @@ fn resolve_css<'a>(doc: &Document,
             // get list of selectors
             loop {
                 // remember position before next token
-                let last_pos = tokenizer.gen_curr_pos();
+                let last_pos = tokenizer.pos();
 
                 let token = try!(tokenizer.parse_next());
 
@@ -662,10 +663,12 @@ fn resolve_css<'a>(doc: &Document,
                       CssToken::AttributeSelector(_)
                     | CssToken::PseudoClass(_)
                     | CssToken::LangPseudoClass(_)
-                    | CssToken::Combinator(_) =>
-                        return Err(Error::UnsupportedCSS(conv_err_pos(last_pos))),
-
-                    _ => return Err(Error::InvalidCSS(conv_err_pos(last_pos))),
+                    | CssToken::Combinator(_) => {
+                        return Err(Error::UnsupportedCSS(gen_err_pos(style, last_pos)));
+                    }
+                    _ => {
+                        return Err(Error::InvalidCSS(gen_err_pos(style, last_pos)));
+                    }
                 };
 
                 selectors.push(selector);
@@ -674,14 +677,15 @@ fn resolve_css<'a>(doc: &Document,
             // get list of declarations
             loop {
                 // remember position before next token
-                // TODO: 'gen_curr_pos' is slow
-                let last_pos = tokenizer.gen_curr_pos();
+                let last_pos = tokenizer.pos();
 
                 match try!(tokenizer.parse_next()) {
                     CssToken::Declaration(name, value) => values.push((name, value)),
                     CssToken::BlockEnd => break,
                     CssToken::EndOfStream => break 'root,
-                    _ => return Err(Error::InvalidCSS(conv_err_pos(last_pos))),
+                    _ => {
+                        return Err(Error::InvalidCSS(gen_err_pos(style, last_pos)));
+                    }
                 }
             }
 

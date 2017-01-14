@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [Unreleased]
+## [0.3.0] - 2017-01-14
 ### Added
 - `AttributeValue::name`.
 - `Length::zero`.
@@ -19,8 +19,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - `AttributeType` trait for `Attribute`.
 
 ### Changed
-- Default numeric precision is 12 instead of 8.
-- Float compare is done using [float-cmp](https://crates.io/crates/float-cmp).
+- Default numeric precision is 12 instead of 8 now.
+- Float comparison is done using [float-cmp](https://crates.io/crates/float-cmp).
 - `Node::set_attribute_object` now handles links.
 - `Transform`'s `translate`, `scale`, `rotate`, `skew_x` and `skew_y` methods no longer
   consuming and modifies itself.
