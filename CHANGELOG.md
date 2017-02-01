@@ -163,7 +163,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/RazrFalcon/libsvgdom/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/RazrFalcon/libsvgdom/compare/v0.3.0...HEAD
+[0.2.0]: https://github.com/RazrFalcon/libsvgdom/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/RazrFalcon/libsvgdom/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/RazrFalcon/libsvgdom/compare/0.0.3...v0.1.0
 [0.0.3]: https://github.com/RazrFalcon/libsvgdom/compare/0.0.2...0.0.3

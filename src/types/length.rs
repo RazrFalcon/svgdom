@@ -81,7 +81,7 @@ impl_display!(Length);
 #[cfg(test)]
 mod tests {
     use super::*;
-    use types::{LengthUnit};
+    use types::LengthUnit;
 
     macro_rules! test_length {
         ($name:ident, $len:expr, $unit:expr, $result:expr) => (

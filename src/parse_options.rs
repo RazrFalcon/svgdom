@@ -4,7 +4,7 @@
 
 // TODO: option to disable path parsing
 
-/// Options that defines parsing.
+/// Options that defines SVG parsing.
 pub struct ParseOptions {
     /// Add comment nodes to the DOM during parsing.
     pub parse_comments: bool,
