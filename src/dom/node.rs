@@ -272,6 +272,32 @@ impl Node {
         }
     }
 
+    /// Returns a copy of a current node without children.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the node is currently mutability borrowed.
+    // TODO: add a deep copy support
+    pub fn make_copy(&self) -> Node {
+        match self.node_type() {
+            NodeType::Element => {
+                let elem = self.document().create_element(self.tag_name().unwrap().into_ref());
+
+                elem.set_id(self.id().clone());
+                // TODO: test links
+                let attrs = self.attributes();
+                for attr in attrs.iter() {
+                    elem.set_attribute_object(attr.clone());
+                }
+
+                elem
+            }
+            _ => {
+                self.document().create_node(self.node_type(), &*self.text().unwrap())
+            }
+        }
+    }
+
     /// Appends a new child to this node, after existing children.
     ///
     /// # Panics

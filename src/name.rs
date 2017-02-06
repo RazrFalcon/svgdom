@@ -72,6 +72,7 @@ impl<T: SvgId> Name<T> {
     }
 }
 
+// TODO: add Display
 impl<T: SvgId> fmt::Debug for Name<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{:?}", self.into_ref())
