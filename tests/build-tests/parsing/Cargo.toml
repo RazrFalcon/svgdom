@@ -1,0 +1,8 @@
+[package]
+name = "parsing-build-test"
+version = "0.0.1"
+
+[dependencies.svgdom]
+git = "https://github.com/RazrFalcon/libsvgdom.git"
+# version = "=0.3.1"
+default-features = false
