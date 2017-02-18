@@ -539,7 +539,7 @@ impl FromStream for Path {
         let mut p = Path::new();
 
         loop {
-            match try!(t.parse_next()) {
+            match t.parse_next()? {
                 svgparser::path::SegmentToken::Segment(segment) => {
                     p.d.push({
                         Segment {

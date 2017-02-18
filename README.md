@@ -150,6 +150,8 @@ And even though the file is a bit different now - it will be rendered exactly th
 
 ### Usage
 
+Dependency: Rust >= 1.13
+
 Add this to your `Cargo.toml`:
 
 ```toml

@@ -10,20 +10,20 @@ Here is simple overview of such structure:
 - [`Document`](struct.Document.html)
     - root [`Node`](struct.Node.html)
         - user defined [`Node`](struct.Node.html)
-            - [`TagName`](struct.TagName.html)
+            - [`TagName`](type.TagName.html)
             - [`Attributes`](struct.Attributes.html)
             - unique id
         - user defined [`Node`](struct.Node.html)
         - ...
 
-The [`Document`](struct.Document.html) itself is just a container of the `Node`s.
-You can create new `Node`s only by the `Document`. Parsing and generating of the SVG data also
+The [`Document`](struct.Document.html) itself is just a container of `Node`s.
+You can create new `Node`s only through the `Document`. Parsing and generating of the SVG data also
 done through it.
 
 The [`Node`](struct.Node.html) represents any kind of an XML node.
 It can be an element, a comment, a text, etc. There are no different structs for each type.
 
-The [`TagName`](struct.TagName.html) represents a tag name of the element node. It's an enum of
+The [`TagName`](type.TagName.html) represents a tag name of the element node. It's an enum of
 [`ElementId`](enum.ElementId.html) and `String` types. The `ElementId` contains all possible
 SVG element names and `String` used for non-SVG elements. Such separation used for
 performance reasons.

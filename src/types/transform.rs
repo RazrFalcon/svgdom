@@ -227,7 +227,7 @@ impl FromStream for Transform {
         let mut transform = Transform::default();
 
         loop {
-            match try!(ts.parse_next()) {
+            match ts.parse_next()? {
                 TransformToken::Matrix { a, b, c, d, e, f } =>
                     { transform.append(&Transform::new(a, b, c, d, e, f)); }
                 TransformToken::Translate { tx, ty } => { transform.translate(tx, ty); }

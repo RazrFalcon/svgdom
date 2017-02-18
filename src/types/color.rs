@@ -35,7 +35,7 @@ impl FromStream for Color {
     type Err = ParseError;
 
     fn from_stream(s: Stream) -> Result<Color, ParseError> {
-        let c = try!(RgbColor::from_stream(&mut s.clone()));
+        let c = RgbColor::from_stream(&mut s.clone())?;
         Ok(Color::new(c.red, c.green, c.blue))
     }
 }

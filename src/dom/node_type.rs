@@ -7,7 +7,7 @@
 pub enum NodeType {
     /// Root node of the `Document`.
     ///
-    /// Constructed with `Document`. Unavailable to user.
+    /// Constructed with `Document`. Unavailable to the user.
     Root,
     /// Element node.
     ///

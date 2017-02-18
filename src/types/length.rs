@@ -50,7 +50,7 @@ impl FromStream for Length {
     type Err = ParseError;
 
     fn from_stream(mut s: Stream) -> Result<Length, ParseError> {
-        let l = try!(s.parse_length());
+        let l = s.parse_length()?;
         Ok(Length::new(l.num, l.unit))
     }
 }

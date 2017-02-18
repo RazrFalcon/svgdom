@@ -118,13 +118,13 @@ pub fn parse_svg(data: &[u8], opt: &ParseOptions) -> Result<Document, Error> {
     let mut node: Option<Node> = None;
 
     loop {
-        let t = try!(tokenizer.parse_next());
+        let t = tokenizer.parse_next()?;
         match t {
             svg::Token::EndOfStream => break,
             _ => {
-                try!(process_token(&doc, t, &mut tokenizer,
-                                            &mut node, &mut parent,
-                                            &mut post_data, &opt))
+                process_token(&doc, t, &mut tokenizer,
+                              &mut node, &mut parent,
+                              &mut post_data, &opt)?
             }
         }
     }
@@ -146,15 +146,15 @@ pub fn parse_svg(data: &[u8], opt: &ParseOptions) -> Result<Document, Error> {
         }
     }
 
-    try!(resolve_css(&doc, &mut post_data, &opt));
+    resolve_css(&doc, &mut post_data, &opt)?;
 
     // resolve styles
     for d in &post_data.style_attrs {
-        try!(parse_style_attribute(&d.node, d.stream.clone(), &mut post_data.links,
-                                   &post_data.entitis, &opt));
+        parse_style_attribute(&d.node, d.stream.clone(), &mut post_data.links,
+                              &post_data.entitis, &opt)?;
     }
 
-    try!(resolve_links(&post_data.links));
+    resolve_links(&post_data.links)?;
 
     Ok(doc)
 }
@@ -180,8 +180,7 @@ fn process_token<'a>(doc: &Document,
         svg::Token::ElementStart(s) => {
             match ElementId::from_name(str::from_utf8(s)?) {
                 Some(eid) => {
-                    let res = try!(parse_svg_element(&doc, tokenizer, eid,
-                                                     &mut post_data.css_list));
+                    let res = parse_svg_element(&doc, tokenizer, eid, &mut post_data.css_list)?;
 
                     if let Some(n) = res {
                         *node = Some(n.clone());
@@ -190,7 +189,7 @@ fn process_token<'a>(doc: &Document,
                 }
                 None => {
                     if !opt.parse_unknown_elements {
-                        try!(skip_current_element(tokenizer));
+                        skip_current_element(tokenizer)?;
                     } else {
                         // create new node
                         let e = doc.create_element(str::from_utf8(s)?);
@@ -203,11 +202,11 @@ fn process_token<'a>(doc: &Document,
         svg::Token::Attribute(name, val) => {
             let n = node.as_ref().unwrap();
             if n.is_svg_element() {
-                try!(parse_attribute(&n,
-                                     &name,
-                                     &mut val.clone(),
-                                     post_data,
-                                     &opt));
+                parse_attribute(&n,
+                                &name,
+                                &mut val.clone(),
+                                post_data,
+                                &opt)?;
             } else {
                 // TODO: store as &str not String
                 if opt.parse_unknown_attributes {
@@ -298,7 +297,7 @@ fn parse_svg_element<'a>(doc: &Document,
         let mut is_valid_type = true;
 
         loop {
-            match try!(tokenizer.parse_next()) {
+            match tokenizer.parse_next()? {
                 svg::Token::Attribute(name, value) => {
                     if name == b"type" {
                         if value.slice() != b"text/css" {
@@ -316,7 +315,7 @@ fn parse_svg_element<'a>(doc: &Document,
         }
 
         if !is_valid_type {
-            try!(skip_current_element(tokenizer));
+            skip_current_element(tokenizer)?;
             return Ok(None);
         }
 
@@ -328,7 +327,7 @@ fn parse_svg_element<'a>(doc: &Document,
         // Also style node can contain only text.
 
         loop {
-            match try!(tokenizer.parse_next()) {
+            match tokenizer.parse_next()? {
                   svg::Token::Cdata(s)
                 | svg::Token::Text(s) => styles.push(s.clone()),
                 svg::Token::Whitespace(_) => {}
@@ -367,13 +366,13 @@ fn parse_attribute<'a>(node: &Node,
                   AttributeId::Transform
                 | AttributeId::GradientTransform
                 | AttributeId::PatternTransform => {
-                    let ts = try!(Transform::from_stream(value.clone()));
+                    let ts = Transform::from_stream(value.clone())?;
                     if !ts.is_default() {
                         node.set_attribute(id, AttributeValue::Transform(ts));
                     }
                 }
                 AttributeId::D => {
-                    let p = try!(path::Path::from_stream(value.clone()));
+                    let p = path::Path::from_stream(value.clone())?;
                     node.set_attribute(AttributeId::D, AttributeValue::Path(p));
                 }
                 AttributeId::Class => {
@@ -396,8 +395,8 @@ fn parse_attribute<'a>(node: &Node,
                     }
                 }
                 _ => {
-                    try!(parse_svg_attribute(&node, id, value, &mut post_data.links,
-                                             &post_data.entitis, opt));
+                    parse_svg_attribute(&node, id, value, &mut post_data.links,
+                                        &post_data.entitis, opt)?;
                 }
             }
         }
@@ -441,7 +440,7 @@ fn parse_svg_attribute<'a>(node: &Node,
                            -> Result<(), Error> {
     let tag_id = node.tag_id().unwrap();
 
-    let val = match try!(ParserAttributeValue::from_stream(tag_id, id, stream)) {
+    let val = match ParserAttributeValue::from_stream(tag_id, id, stream)? {
         ParserAttributeValue::String(v) => {
             Some(AttributeValue::String(str::from_utf8(v)?.to_string()))
         }
@@ -501,8 +500,7 @@ fn parse_svg_attribute<'a>(node: &Node,
             match entitis.get(link) {
                 Some(link_value) => {
                     let mut s = Stream::new(link_value);
-                    try!(parse_svg_attribute(node, id, &mut s,
-                                             links, entitis, opt));
+                    parse_svg_attribute(node, id, &mut s, links, entitis, opt)?;
                     None
                 }
                 None => {
@@ -546,12 +544,12 @@ fn parse_style_attribute<'a>(node: &Node,
     let mut s = style::Tokenizer::new(stream);
 
     loop {
-        match try!(s.parse_next()) {
+        match s.parse_next()? {
             style::Token::Attribute(name, substream) => {
                 match AttributeId::from_name(str::from_utf8(name)?) {
                     Some(id) => {
-                        try!(parse_svg_attribute(&node, id, &mut substream.clone(),
-                            links, entitis, opt));
+                        parse_svg_attribute(&node, id, &mut substream.clone(),
+                                            links, entitis, opt)?;
                     }
                     None => {
                         if opt.parse_unknown_attributes {
@@ -565,7 +563,7 @@ fn parse_style_attribute<'a>(node: &Node,
                 if let Some(value) = entitis.get(name) {
                     // TODO: to proper stream
                     let ss = Stream::new(value);
-                    try!(parse_style_attribute(&node, ss, links, entitis, opt));
+                    parse_style_attribute(&node, ss, links, entitis, opt)?;
                 }
             }
             style::Token::EndOfStream => break,
@@ -637,7 +635,7 @@ fn resolve_css<'a>(doc: &Document,
                 // remember position before next token
                 let last_pos = tokenizer.pos();
 
-                let token = try!(tokenizer.parse_next());
+                let token = tokenizer.parse_next()?;
 
                 match token {
                     CssToken::EndOfStream => {
@@ -681,7 +679,7 @@ fn resolve_css<'a>(doc: &Document,
                 // remember position before next token
                 let last_pos = tokenizer.pos();
 
-                match try!(tokenizer.parse_next()) {
+                match tokenizer.parse_next()? {
                     CssToken::Declaration(name, value) => values.push((name, value)),
                     CssToken::BlockEnd => break,
                     CssToken::EndOfStream => break 'root,
@@ -696,15 +694,15 @@ fn resolve_css<'a>(doc: &Document,
                 match *selector {
                     CssSelector::Universal => {
                         for node in doc.descendants().svg() {
-                            try!(apply_css_attributes(&values, &node, &mut post_data.links,
-                                                      &post_data.entitis, opt));
+                            apply_css_attributes(&values, &node, &mut post_data.links,
+                                                 &post_data.entitis, opt)?;
                         }
                     }
                     CssSelector::Type(name) => {
                         if let Some(eid) = ElementId::from_name(name) {
                             for node in doc.descendants().svg().filter(|n| n.is_tag_name(eid)) {
-                                try!(apply_css_attributes(&values, &node, &mut post_data.links,
-                                                          &post_data.entitis, opt));
+                                apply_css_attributes(&values, &node, &mut post_data.links,
+                                                     &post_data.entitis, opt)?;
                             }
                         } else {
                             println!("Warning: CSS styles for a non-SVG element ('{}') are ignored.",
@@ -713,15 +711,15 @@ fn resolve_css<'a>(doc: &Document,
                     }
                     CssSelector::Id(name) => {
                         if let Some(node) = doc.descendants().svg().find(|n| *n.id() == name) {
-                            try!(apply_css_attributes(&values, &node, &mut post_data.links,
-                                                      &post_data.entitis, opt));
+                            apply_css_attributes(&values, &node, &mut post_data.links,
+                                                 &post_data.entitis, opt)?;
                         }
                     }
                     CssSelector::Class(name) => {
                         // we use already collected list of 'class' attributes
                         for d in post_data.class_attrs.iter().filter(|n| n.text == name) {
-                            try!(apply_css_attributes(&values, &d.node, &mut post_data.links,
-                                                      &post_data.entitis, opt));
+                            apply_css_attributes(&values, &d.node, &mut post_data.links,
+                                                 &post_data.entitis, opt)?;
 
                             resolved_classes.push(name);
                         }
@@ -773,8 +771,8 @@ fn apply_css_attributes<'a>(values: &Vec<(&str,&'a str)>,
         match AttributeId::from_name(aname) {
             Some(aid) => {
                 // TODO: to a proper stream
-                try!(parse_svg_attribute(node, aid, &mut Stream::new(avalue.as_bytes()),
-                     links, entitis, opt));
+                parse_svg_attribute(node, aid, &mut Stream::new(avalue.as_bytes()),
+                                    links, entitis, opt)?;
             }
             None => {
                 if opt.parse_unknown_attributes {
@@ -801,7 +799,7 @@ fn resolve_links(links: &Links) -> Result<(), Error> {
                         let s = str::from_utf8(d.iri)?.to_string();
                         return Err(Error::UnsupportedPaintFallback(s))
                     }
-                    None => try!(d.node.set_link_attribute(d.attr_id, node.clone())),
+                    None => d.node.set_link_attribute(d.attr_id, node.clone())?,
                 }
             }
             None => {
@@ -880,7 +878,7 @@ fn skip_current_element(p: &mut svg::Tokenizer) -> Result<(), Error> {
     let mut local_depth = 0;
 
     loop {
-        match try!(p.parse_next()) {
+        match p.parse_next()? {
             svg::Token::ElementEnd(end) => {
                 match end {
                     svg::ElementEnd::Empty => {

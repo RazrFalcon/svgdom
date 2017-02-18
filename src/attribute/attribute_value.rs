@@ -189,7 +189,7 @@ impl AttributeValue {
         }
     }
 
-    /// Returns type's name.
+    /// Returns type's name. For the debug purposes.
     pub fn name(&self) -> &str {
         match *self {
             AttributeValue::Color(_) => "Color",

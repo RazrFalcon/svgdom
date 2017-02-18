@@ -4,7 +4,7 @@
 
 use { AttributeId, Attribute, Name };
 
-/// This trait contains methods that check attributes's type according to the
+/// This trait contains methods that check attribute's type according to the
 /// [SVG spec](https://www.w3.org/TR/SVG/intro.html#Definitions).
 pub trait AttributeType {
     /// Returns `true` if the current attribute is part of
@@ -35,8 +35,8 @@ pub trait AttributeType {
     /// Returns `true` if the current attribute is part of
     /// [core attributes](https://www.w3.org/TR/SVG/intro.html#TermCoreAttributes).
     ///
-    /// **NOTE:** the `id` attribute is part of core attributes, but we don't store it here
-    /// since it's part of the `Node` struct.
+    /// **NOTE:** the `id` attribute is part of core attributes, but we don't store
+    /// it in `Attributes` since it's part of the `Node` struct.
     fn is_core(&self) -> bool;
 
     /// Returns `true` if the current attribute is part of fill attributes.
