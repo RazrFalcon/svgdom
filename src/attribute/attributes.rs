@@ -2,9 +2,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use std::slice::{Iter, IterMut};
 use std::mem;
 use std::iter::{Filter, Map};
+use std::slice::{Iter, IterMut};
 
 use {
     Attribute,
@@ -21,7 +21,7 @@ pub type SvgAttrFilterMut<'a> = Filter<IterMut<'a, Attribute>, fn(&&mut Attribut
 /// More low level API than in `Node`, but it supports getting a reference to the attribute,
 /// and not only copy like `Node`'s API.
 ///
-/// Use with care, since it didn't perform many check from `Node`'s API.
+/// Use with care, since it didn't perform many checks from `Node`'s API.
 pub struct Attributes(Vec<Attribute>);
 
 impl Attributes {

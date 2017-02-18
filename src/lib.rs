@@ -46,7 +46,6 @@ DOM structure itself based on: https://github.com/SimonSapin/rust-forest/tree/ma
 #![warn(missing_docs)]
 #![deny(unused_import_braces)]
 
-#[macro_use]
 extern crate svgparser;
 extern crate simplecss;
 extern crate float_cmp;
@@ -68,6 +67,7 @@ pub use svgparser::ValueId;
 #[macro_use]
 mod traits;
 
+// TODO: #[cfg(test)]
 #[macro_export]
 macro_rules! assert_eq_text {
     ($left:expr, $right:expr) => ({

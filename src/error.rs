@@ -3,6 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 use std::fmt;
+use std::str;
 
 use svgparser::Error as ParseError;
 use svgparser::ErrorPos;
@@ -51,6 +52,10 @@ pub enum Error {
     UnsupportedPaintFallback(String), // FuncIRI name
     /// We don't support `use` elements with a broken filter attribute.
     BrokenFuncIri(String), // FuncIRI name
+    /// UTF-8 processing error.
+    InvalidEncoding,
+    /// UTF-8 processing error.
+    Utf8Error(str::Utf8Error),
 }
 
 impl fmt::Display for Error {
@@ -61,7 +66,7 @@ impl fmt::Display for Error {
             Error::ElementCrosslink =>
                 write!(f, "Element crosslink"),
             Error::ParseError(e) =>
-                write!(f, "{:?}", e),
+                write!(f, "{}", e),
             Error::CssParseError(e) =>
                 write!(f, "{:?}", e),
             Error::NoSvgElement =>
@@ -69,20 +74,25 @@ impl fmt::Display for Error {
             Error::EmptyDocument =>
                 write!(f, "Document didn't have any nodes"),
             Error::UnsupportedCSS(ref pos) =>
-                write!(f, "Unsupported CSS at {:?}", pos),
+                write!(f, "Unsupported CSS at {}", pos),
             Error::InvalidCSS(ref pos) =>
-                write!(f, "Invalid CSS at {:?}", pos),
+                write!(f, "Invalid CSS at {}", pos),
             Error::UnsupportedEntity(ref pos) =>
-                write!(f, "Unsupported ENTITY data at {:?}", pos),
+                write!(f, "Unsupported ENTITY data at {}", pos),
             Error::UnsupportedPaintFallback(ref iri) =>
                 write!(f, "Valid FuncIRI(#{}) with fallback value is not supported", iri),
             Error::BrokenFuncIri(ref iri) =>
                 write!(f, "The 'use' element with a broken filter attribute('#{}') \
                            is not supported", iri),
+            Error::InvalidEncoding =>
+                write!(f, "The input data is not a valid UTF-8 string"),
+            Error::Utf8Error(e) =>
+                write!(f, "{}", e),
         }
     }
 }
 
+// TODO: is needed?
 impl fmt::Debug for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", &self)
@@ -98,5 +108,11 @@ impl From<ParseError> for Error {
 impl From<CssParseError> for Error {
     fn from(value: CssParseError) -> Error {
         Error::CssParseError(value)
+    }
+}
+
+impl From<str::Utf8Error> for Error {
+    fn from(value: str::Utf8Error) -> Error {
+        Error::Utf8Error(value)
     }
 }

@@ -164,7 +164,7 @@ See [documentation](https://docs.rs/svgdom/) and [examples](examples/) for detai
 All features are enabled by default.
 
  - `parsing` - enables SVG parsing from a string.
-   It enables `FromStream` trait, `parse_options` struct and `Document::from_data` methods.
+   It enables `FromStream` trait, `ParseOptions` struct and `Document::from_data` methods.
 
    Disabling it doesn't disable `svgparser` dependency, because we export a lot of types from it.
 

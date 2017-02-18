@@ -7,10 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 ### Added
 - `Node::make_copy`.
+- `Error::InvalidEncoding` and `Error::Utf8Error`.
+- Input stream encoding validation.
 
 ## [0.3.1] - 2017-02-01
 ### Changed
-- Use specific versions of dependencies.
+- Use specific version of dependencies.
 
 ## [0.3.0] - 2017-01-14
 ### Added
