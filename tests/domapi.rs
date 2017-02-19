@@ -5,7 +5,7 @@
 #[macro_use]
 extern crate svgdom;
 
-use svgdom::{Document, AttributeValue, Error};
+use svgdom::{Document, AttributeValue, Error, WriteToString, WriteOptions};
 use svgdom::AttributeId as AId;
 use svgdom::ElementId as EId;
 
@@ -320,4 +320,99 @@ b"<svg>
     assert_eq!(iter.next().unwrap().is_tag_name(EId::G), true);
     assert_eq!(iter.next().unwrap().is_tag_name(EId::Svg), true);
     assert_eq!(iter.next(), None);
+}
+
+#[test]
+fn deep_copy_1() {
+    let doc = Document::from_data(
+b"<svg>
+    <g id='g1'>
+        <rect id='rect1'/>
+    </g>
+</svg>").unwrap();
+
+    let svg = doc.svg_element().unwrap();
+    let g = doc.descendants().find(|n| n.is_tag_name(EId::G)).unwrap();
+
+    // simple copy
+    svg.append(&g.make_deep_copy());
+
+    let mut opt = WriteOptions::default();
+    opt.use_single_quote = true;
+    assert_eq_text!(doc.to_string_with_opt(&opt),
+"<svg>
+    <g id='g1'>
+        <rect id='rect1'/>
+    </g>
+    <g>
+        <rect/>
+    </g>
+</svg>
+");
+}
+
+#[test]
+fn deep_copy_2() {
+    let doc = Document::from_data(
+b"<svg>
+    <g id='g1'>
+        <rect id='rect1'/>
+    </g>
+</svg>").unwrap();
+
+    let g = doc.descendants().find(|n| n.is_tag_name(EId::G)).unwrap();
+
+    // copy itself
+    g.append(&g.make_deep_copy());
+    g.append(&g.make_deep_copy());
+
+    let mut opt = WriteOptions::default();
+    opt.use_single_quote = true;
+    assert_eq_text!(doc.to_string_with_opt(&opt),
+"<svg>
+    <g id='g1'>
+        <rect id='rect1'/>
+        <g>
+            <rect/>
+        </g>
+        <g>
+            <rect/>
+            <g>
+                <rect/>
+            </g>
+        </g>
+    </g>
+</svg>
+");
+}
+
+#[test]
+fn deep_copy_3() {
+    let doc = Document::from_data(
+b"<svg>
+    <linearGradient id='lg1'/>
+    <g id='g1' stroke-width='5'>
+        <rect id='rect1' fill='url(#lg1)'/>
+    </g>
+</svg>").unwrap();
+
+    let svg = doc.svg_element().unwrap();
+    let g = doc.descendants().find(|n| n.is_tag_name(EId::G)).unwrap();
+
+    // test attributes copying
+    svg.append(&g.make_deep_copy());
+
+    let mut opt = WriteOptions::default();
+    opt.use_single_quote = true;
+    assert_eq_text!(doc.to_string_with_opt(&opt),
+"<svg>
+    <linearGradient id='lg1'/>
+    <g id='g1' stroke-width='5'>
+        <rect id='rect1' fill='url(#lg1)'/>
+    </g>
+    <g stroke-width='5'>
+        <rect fill='url(#lg1)'/>
+    </g>
+</svg>
+");
 }

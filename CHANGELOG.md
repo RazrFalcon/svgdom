@@ -6,9 +6,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 ### Added
-- `Node::make_copy`.
+- `Node::make_copy` and `Node::make_deep_copy`.
 - `Error::InvalidEncoding` and `Error::Utf8Error`.
 - Input stream encoding validation.
+
+### Changed
+- `Node::prepend`, `Node::insert_after`, `Node::insert_before` accepts `&Node` now.
 
 ## [0.3.1] - 2017-02-01
 ### Changed

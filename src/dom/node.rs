@@ -274,19 +274,17 @@ impl Node {
 
     /// Returns a copy of a current node without children.
     ///
+    /// All attributes except 'id' will be copied.
+    ///
     /// # Panics
     ///
     /// Panics if the node is currently mutability borrowed.
-    // TODO: add a deep copy support
     pub fn make_copy(&self) -> Node {
         match self.node_type() {
             NodeType::Element => {
                 let elem = self.document().create_element(self.tag_name().unwrap().into_ref());
 
-                elem.set_id(self.id().clone());
-                // TODO: test links
-                let attrs = self.attributes();
-                for attr in attrs.iter() {
+                for attr in self.attributes().iter() {
                     elem.set_attribute_object(attr.clone());
                 }
 
@@ -294,6 +292,30 @@ impl Node {
             }
             _ => {
                 self.document().create_node(self.node_type(), &*self.text().unwrap())
+            }
+        }
+    }
+
+    /// Returns a deep copy of a current node without children.
+    ///
+    /// All attributes except 'id' will be copied.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the node or any children node are currently mutability borrowed.
+    pub fn make_deep_copy(&self) -> Node {
+        let root = self.make_copy();
+        Node::_make_deep_copy(&root, self);
+        return root;
+    }
+
+    fn _make_deep_copy(parent: &Node, node: &Node) {
+        for child in node.children() {
+            let new_node = child.make_copy();
+            parent.append(&new_node);
+
+            if child.has_children() {
+                Node::_make_deep_copy(&new_node, &child);
             }
         }
     }
@@ -336,7 +358,7 @@ impl Node {
     /// # Panics
     ///
     /// Panics if the node, the new child, or one of their adjoining nodes is currently borrowed.
-    pub fn prepend(&self, new_child: Node) {
+    pub fn prepend(&self, new_child: &Node) {
         let mut self_borrow = self.0.borrow_mut();
         {
             let mut new_child_borrow = new_child.0.borrow_mut();
@@ -357,7 +379,7 @@ impl Node {
                 }
             }
         }
-        self_borrow.first_child = Some(new_child.0);
+        self_borrow.first_child = Some(new_child.clone().0);
     }
 
     /// Insert a new sibling after this node.
@@ -365,7 +387,7 @@ impl Node {
     /// # Panics
     ///
     /// Panics if the node, the new sibling, or one of their adjoining nodes is currently borrowed.
-    pub fn insert_after(&self, new_sibling: Node) {
+    pub fn insert_after(&self, new_sibling: &Node) {
         // TODO: add an example, since we need to detach 'new_sibling'
         //       before passing it to this method
         let mut self_borrow = self.0.borrow_mut();
@@ -396,7 +418,7 @@ impl Node {
                 }
             }
         }
-        self_borrow.next_sibling = Some(new_sibling.0);
+        self_borrow.next_sibling = Some(new_sibling.clone().0);
     }
 
     /// Insert a new sibling before this node.
@@ -404,7 +426,7 @@ impl Node {
     /// # Panics
     ///
     /// Panics if the node, the new sibling, or one of their adjoining nodes is currently borrowed.
-    pub fn insert_before(&self, new_sibling: Node) {
+    pub fn insert_before(&self, new_sibling: &Node) {
         let mut self_borrow = self.0.borrow_mut();
         let mut previous_sibling_opt = None;
         {
@@ -427,13 +449,13 @@ impl Node {
                 let rc = previous_sibling_borrow.next_sibling.as_ref().unwrap();
                 same_rc(rc, &self.0)
             });
-            previous_sibling_borrow.next_sibling = Some(new_sibling.0);
+            previous_sibling_borrow.next_sibling = Some(new_sibling.clone().0);
         } else {
             // No previous sibling.
             if let Some(parent_ref) = self_borrow.parent.as_ref() {
                 if let Some(parent_strong) = parent_ref.upgrade() {
                     let mut parent_borrow = parent_strong.borrow_mut();
-                    parent_borrow.first_child = Some(new_sibling.0);
+                    parent_borrow.first_child = Some(new_sibling.clone().0);
                 }
             }
         }
