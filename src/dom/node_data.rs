@@ -13,7 +13,7 @@ pub type WeakLink = Weak<RefCell<NodeData>>;
 
 pub struct NodeData {
     // TODO: check that doc is equal in append, insert, etc.
-    pub doc: Option<Link>,
+    pub doc: Option<WeakLink>,
 
     pub parent: Option<WeakLink>,
     pub first_child: Option<Link>,

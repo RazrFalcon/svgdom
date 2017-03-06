@@ -17,7 +17,7 @@ use {
     TagName,
     TagNameRef,
 };
-use super::doc::Document;
+use super::document::Document;
 use super::iterators::*;
 use super::node_data::NodeData;
 use super::node_type::NodeType;
@@ -65,7 +65,7 @@ impl Node {
     /// - Panics if the node is a root node.
     pub fn document(&self) -> Document {
         // TODO: will fail on root node
-        Document { root: Node(self.0.borrow().doc.as_ref().unwrap().clone()) }
+        Document { root: Node(self.0.borrow().doc.as_ref().unwrap().upgrade().unwrap()) }
     }
 
     /// Returns a parent node, unless this node is the root of the tree.

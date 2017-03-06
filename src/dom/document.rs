@@ -172,7 +172,7 @@ impl Document {
                 text: Option<String>)
                 -> Node {
         Node(Rc::new(RefCell::new(NodeData {
-            doc: doc,
+            doc: doc.map(|a| Rc::downgrade(&a)),
             parent: None,
             first_child: None,
             last_child: None,

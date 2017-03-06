@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 - `Node::prepend`, `Node::insert_after`, `Node::insert_before` accepts `&Node` now.
 
+### Fixed
+- Memory leak in `Document`. `Document` children were never deleted because of `Rc` crosslink.
+
 ## [0.3.1] - 2017-02-01
 ### Changed
 - Use specific version of dependencies.
