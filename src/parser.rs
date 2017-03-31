@@ -414,7 +414,7 @@ fn parse_attribute<'a>(node: &Node,
                 match post_data.entitis.get(link) {
                     Some(link_value) => value2 = Some(*link_value),
                     None => {
-                        println!("Warning: Could not resolve ENTITY: '{}'.", str::from_utf8(link)?);
+                        warnln!("Could not resolve ENTITY: '{}'.", str::from_utf8(link)?);
                         value2 = None;
                     }
                 }
@@ -510,7 +510,7 @@ fn parse_svg_attribute<'a>(node: &Node,
                     if link[0] != b'#' {
                         // If link starts with # - than it's probably a Unicode code point.
                         // Otherwise - unknown reference.
-                        println!("Warning: Unresolved ENTITY reference: '{}'.", s);
+                        warnln!("Unresolved ENTITY reference: '{}'.", s);
                     }
 
                     Some(AttributeValue::String(s))
@@ -705,7 +705,7 @@ fn resolve_css<'a>(doc: &Document,
                                                      &post_data.entitis, opt)?;
                             }
                         } else {
-                            println!("Warning: CSS styles for a non-SVG element ('{}') are ignored.",
+                            warnln!("CSS styles for a non-SVG element ('{}') are ignored.",
                                      name);
                         }
                     }
@@ -742,7 +742,7 @@ fn postprocess_class_selector<'a>(resolved_classes: &Vec<&str>,
 
     if opt.skip_unresolved_classes {
         for d in class_attrs {
-            println!("Warning: Could not resolve an unknown class: {}.", d.text);
+            warnln!("Could not resolve an unknown class: {}.", d.text);
         }
     } else {
         // create 'class' attributes with unresolved classes
@@ -844,24 +844,24 @@ fn resolve_links(links: &Links) -> Result<(), Error> {
                                     // I can't find explanation of this in the SVG spec, but it works.
                                     // Probably because this elements only care about a shape,
                                     // not a style.
-                                    println!("Warning: Could not resolve IRI reference: {}.",
+                                    warnln!("Could not resolve IRI reference: {}.",
                                              str::from_utf8(d.iri)?);
                                 } else {
                                     // Imitate invisible element.
-                                    println!("Warning: Unresolved 'filter' link: '{}'. \
+                                    warnln!("Unresolved 'filter' link: '{}'. \
                                               Marking the element as invisible.",
                                              str::from_utf8(d.iri)?);
                                     d.node.set_attribute(AttributeId::Visibility, ValueId::Hidden);
                                 }
                             }
                             AttributeId::Fill => {
-                                println!("Warning: Could not resolve the 'fill' IRI reference '{}'. \
+                                warnln!("Could not resolve the 'fill' IRI reference '{}'. \
                                           Fallback to 'none'.",
                                          str::from_utf8(d.iri)?);
                                 d.node.set_attribute(AttributeId::Fill, ValueId::None);
                             }
                             _ => {
-                                println!("Warning: Could not resolve IRI reference: {}.",
+                                warnln!("Could not resolve IRI reference: {}.",
                                          str::from_utf8(d.iri)?);
                             }
                         }

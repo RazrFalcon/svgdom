@@ -46,7 +46,7 @@ DOM structure itself based on: https://github.com/SimonSapin/rust-forest/tree/ma
 #![warn(missing_docs)]
 #![deny(unused_import_braces)]
 
-extern crate svgparser;
+#[macro_use] extern crate svgparser;
 extern crate simplecss;
 extern crate float_cmp;
 

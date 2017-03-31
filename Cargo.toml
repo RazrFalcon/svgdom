@@ -16,11 +16,11 @@ simplecss = "0.1.0"
 
 [dependencies.svgparser]
 # latest public
-# git = "https://github.com/RazrFalcon/libsvgparser.git"
+git = "https://github.com/RazrFalcon/libsvgparser.git"
 # local copy
 # path = "../svgparser"
 # from crates
-version = "0.3"
+# version = "0.3"
 
 [dev-dependencies]
 time = "0.1"
