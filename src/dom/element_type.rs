@@ -72,7 +72,6 @@ pub trait ElementType {
     /// Details: https://www.w3.org/TR/SVG/intro.html#TermTextContentChildElement
     fn is_text_content_child(&self) -> bool;
 
-
     /// Returns true if the current node is a graphic element.
     ///
     /// List: `circle`, `ellipse`, `image`, `line`, `path`, `polygon`, `polyline`, `rect`,
@@ -80,6 +79,11 @@ pub trait ElementType {
     ///
     /// Details: https://www.w3.org/TR/SVG/intro.html#TermGraphicsElement
     fn is_graphic(&self) -> bool;
+
+    /// Returns true if the current node is a gradient element.
+    ///
+    /// List: `linearGradient`, `radialGradient`.
+    fn is_gradient(&self) -> bool;
 }
 
 macro_rules! is_func {
@@ -164,4 +168,8 @@ impl ElementType for Node {
         | ElementId::Rect
         | ElementId::Text
         | ElementId::Use);
+
+    is_func!(is_gradient,
+          ElementId::LinearGradient
+        | ElementId::RadialGradient);
 }

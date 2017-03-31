@@ -56,6 +56,10 @@ pub enum Error {
     InvalidEncoding,
     /// UTF-8 processing error.
     Utf8Error(str::Utf8Error),
+    /// Failed to resolve an attribute during post-processing.
+    UnresolvedAttribute(String), // attribute name
+    /// Failed to find an attribute, which must be set, during post-processing.
+    MissingAttribute(String, String), // tag name, attribute name
 }
 
 impl fmt::Display for Error {
@@ -88,6 +92,10 @@ impl fmt::Display for Error {
                 write!(f, "The input data is not a valid UTF-8 string"),
             Error::Utf8Error(e) =>
                 write!(f, "{}", e),
+            Error::UnresolvedAttribute(ref name) =>
+                write!(f, "Failed to resolved attribute '{}'", name),
+            Error::MissingAttribute(ref tag_name, ref attr_name) =>
+                write!(f, "The attribute '{}' is missing in the '{}' element", attr_name, tag_name),
         }
     }
 }

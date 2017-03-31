@@ -95,3 +95,4 @@ mod write_options;
 
 pub mod types;
 pub mod writer;
+pub mod postproc;
