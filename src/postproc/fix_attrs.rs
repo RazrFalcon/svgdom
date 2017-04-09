@@ -37,7 +37,7 @@ mod test_rect {
         ($name:ident, $in_text:expr, $out_text:expr) => (
             #[test]
             fn $name() {
-                let doc = Document::from_data($in_text).unwrap();
+                let doc = Document::from_str($in_text).unwrap();
                 for node in doc.descendants().svg().filter(|n| n.is_tag_name(ElementId::Rect)) {
                     fix_rect_attributes(&node);
                 }
@@ -130,7 +130,7 @@ mod test_poly {
         ($name:ident, $in_text:expr, $out_text:expr) => (
             #[test]
             fn $name() {
-                let doc = Document::from_data($in_text).unwrap();
+                let doc = Document::from_str($in_text).unwrap();
                 for node in doc.descendants().svg()
                     .filter(|n| n.is_tag_name(ElementId::Polygon) || n.is_tag_name(ElementId::Polyline)) {
                     fix_poly_attributes(&node);
@@ -204,7 +204,7 @@ mod test_stop {
         ($name:ident, $in_text:expr, $out_text:expr) => (
             #[test]
             fn $name() {
-                let doc = Document::from_data($in_text).unwrap();
+                let doc = Document::from_str($in_text).unwrap();
                 resolve_stop_attributes(&doc).unwrap();
                 for node in doc.descendants().svg().filter(|n| n.is_gradient()) {
                     fix_stop_attributes(&node);

@@ -42,16 +42,16 @@ impl Document {
         }
     }
 
-    /// Constructs a new `Document` from the `data` using a default `ParseOptions`.
+    /// Constructs a new `Document` from the text using a default `ParseOptions`.
     #[cfg(feature = "parsing")]
-    pub fn from_data(data: &str) -> Result<Document, Error> {
-        Document::from_data_with_opt(data, &ParseOptions::default())
+    pub fn from_str(text: &str) -> Result<Document, Error> {
+        Document::from_str_with_opt(text, &ParseOptions::default())
     }
 
-    /// Constructs a new `Document` from the `data` using a supplied `ParseOptions`.
+    /// Constructs a new `Document` from the text using a supplied `ParseOptions`.
     #[cfg(feature = "parsing")]
-    pub fn from_data_with_opt(data: &str, opt: &ParseOptions) -> Result<Document, Error> {
-        parse_svg(data, opt)
+    pub fn from_str_with_opt(text: &str, opt: &ParseOptions) -> Result<Document, Error> {
+        parse_svg(text, opt)
     }
 
     /// Constructs a new `Node` with `Element` type.
@@ -111,7 +111,7 @@ impl Document {
     /// ```
     /// use svgdom::{Document, ElementId};
     ///
-    /// let doc = Document::from_data("<!--comment--><svg/>").unwrap();
+    /// let doc = Document::from_str("<!--comment--><svg/>").unwrap();
     ///
     /// assert_eq!(doc.svg_element().unwrap().is_tag_name(ElementId::Svg), true);
     /// ```

@@ -16,7 +16,7 @@ macro_rules! test_resave {
     ($name:ident, $in_text:expr, $out_text:expr) => (
         #[test]
         fn $name() {
-            let doc = Document::from_data($in_text).unwrap();
+            let doc = Document::from_str($in_text).unwrap();
             assert_eq_text!(doc.to_string(), $out_text);
         }
     )
@@ -391,7 +391,7 @@ test_resave!(cdata_4,
 fn indent_1() {
     // default indent is 4
 
-    let doc = Document::from_data(
+    let doc = Document::from_str(
 "<svg>
     <g>
         <rect/>
@@ -410,7 +410,7 @@ fn indent_1() {
 
 #[test]
 fn indent_2() {
-    let doc = Document::from_data(
+    let doc = Document::from_str(
 "<svg>
     <g>
         <rect/>
@@ -431,7 +431,7 @@ fn indent_2() {
 
 #[test]
 fn indent_3() {
-    let doc = Document::from_data(
+    let doc = Document::from_str(
 "<svg>
     <g>
         <rect/>
@@ -452,7 +452,7 @@ fn indent_3() {
 
 #[test]
 fn indent_4() {
-    let doc = Document::from_data(
+    let doc = Document::from_str(
 "<svg>
     <g>
         <rect/>
@@ -468,7 +468,7 @@ fn indent_4() {
 
 #[test]
 fn single_quote_1() {
-    let doc = Document::from_data(
+    let doc = Document::from_str(
 "<svg id=\"svg1\"/>").unwrap();
 
     let mut opt = WriteOptions::default();

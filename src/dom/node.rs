@@ -91,7 +91,7 @@ impl Node {
     /// ```
     /// use svgdom::Document;
     ///
-    /// let doc = Document::from_data(
+    /// let doc = Document::from_str(
     /// "<svg>
     ///     <rect/>
     /// </svg>").unwrap();

@@ -23,7 +23,7 @@ fn main() {
     let mut input_data = String::with_capacity(length + 1);
     file.read_to_string(&mut input_data).unwrap();
 
-    let doc = Document::from_data(&input_data).unwrap();
+    let doc = Document::from_str(&input_data).unwrap();
 
     let mut ouput_data = Vec::new();
     doc.write_buf(&mut ouput_data);

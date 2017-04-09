@@ -800,13 +800,13 @@ mod tests {
 
     #[test]
     fn gen_path_2() {
-        let path = Path::from_data("M 10 20 l 10 20").unwrap();
+        let path = Path::from_str("M 10 20 l 10 20").unwrap();
         assert_eq!(path.to_string(), "M 10 20 l 10 20");
     }
 
     #[test]
     fn gen_path_3() {
-        let path = Path::from_data(
+        let path = Path::from_str(
             "M 10 20 L 30 40 H 50 V 60 C 70 80 90 100 110 120 \
              S 130 140 150 160 Q 170 180 190 200 T 210 220 \
              A 50 50 30 1 1 230 240 Z").unwrap();
@@ -818,7 +818,7 @@ mod tests {
 
     #[test]
     fn gen_path_4() {
-        let path = Path::from_data(
+        let path = Path::from_str(
             "m 10 20 l 30 40 h 50 v 60 c 70 80 90 100 110 120 \
              s 130 140 150 160 q 170 180 190 200 t 210 220 \
              a 50 50 30 1 1 230 240 z").unwrap();
@@ -830,7 +830,7 @@ mod tests {
 
     #[test]
     fn gen_path_5() {
-        let path = Path::from_data("").unwrap();
+        let path = Path::from_str("").unwrap();
         assert_eq_text!(path.to_string(), "");
     }
 
@@ -838,7 +838,7 @@ mod tests {
         ($name:ident, $in_text:expr, $out_text:expr, $flag:ident) => (
             #[test]
             fn $name() {
-                let path = Path::from_data($in_text).unwrap();
+                let path = Path::from_str($in_text).unwrap();
 
                 let mut opt = WriteOptions::default();
                 opt.paths.$flag = true;
@@ -870,7 +870,7 @@ mod tests {
 
     #[test]
     fn gen_path_10() {
-        let path = Path::from_data("M 10 -20 A 5.5 0.3 -4 1 1 0 -0.1").unwrap();
+        let path = Path::from_str("M 10 -20 A 5.5 0.3 -4 1 1 0 -0.1").unwrap();
 
         let mut opt = WriteOptions::default();
         opt.paths.use_compact_notation = true;
@@ -918,7 +918,7 @@ mod tests {
 
     #[test]
     fn gen_path_18() {
-        let path = Path::from_data("M 10 20 L 30 40 L 50 60 M 10 20 L 30 40 L 50 60").unwrap();
+        let path = Path::from_str("M 10 20 L 30 40 L 50 60 M 10 20 L 30 40 L 50 60").unwrap();
 
         let mut opt = WriteOptions::default();
         opt.paths.use_implicit_lineto_commands = true;
@@ -929,7 +929,7 @@ mod tests {
 
     #[test]
     fn gen_path_19() {
-        let path = Path::from_data("M 10.00000001 10.00002 L 20.123456789 20.9999999").unwrap();
+        let path = Path::from_str("M 10.00000001 10.00002 L 20.123456789 20.9999999").unwrap();
 
         let mut opt = WriteOptions::default();
 
@@ -959,7 +959,7 @@ mod to_absolute {
         ($name:ident, $in_text:expr, $out_text:expr) => (
             #[test]
             fn $name() {
-                let mut path = path::Path::from_data($in_text).unwrap();
+                let mut path = path::Path::from_str($in_text).unwrap();
                 path.conv_to_absolute();
                 assert_eq_text!(path.to_string(), $out_text);
             }
@@ -1023,7 +1023,7 @@ mod to_relative {
         ($name:ident, $in_text:expr, $out_text:expr) => (
             #[test]
             fn $name() {
-                let mut path = path::Path::from_data($in_text).unwrap();
+                let mut path = path::Path::from_str($in_text).unwrap();
                 path.conv_to_relative();
                 assert_eq_text!(path.to_string(), $out_text);
             }

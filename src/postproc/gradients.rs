@@ -185,7 +185,7 @@ macro_rules! base_test {
     ($name:ident, $functor:expr, $in_text:expr, $out_text:expr) => (
         #[test]
         fn $name() {
-            let doc = Document::from_data($in_text).unwrap();
+            let doc = Document::from_str($in_text).unwrap();
             $functor(&doc);
             let mut opt = write_opt_for_tests!();
             opt.write_hidden_attributes = true;
@@ -341,7 +341,7 @@ mod stop_tests {
         ($name:ident, $in_text:expr, $out_text:expr) => (
             #[test]
             fn $name() {
-                let doc = Document::from_data($in_text).unwrap();
+                let doc = Document::from_str($in_text).unwrap();
                 resolve_stop_attributes(&doc).unwrap();
                 let mut opt = write_opt_for_tests!();
                 opt.write_hidden_attributes = true;

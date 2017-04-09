@@ -17,7 +17,7 @@ pub trait FromStream: Sized {
     fn from_stream(s: Stream) -> Result<Self, Self::Err>;
 
     /// Parses data from a string.
-    fn from_data(data: &str) -> Result<Self, Self::Err> {
+    fn from_str(data: &str) -> Result<Self, Self::Err> {
         FromStream::from_stream(Stream::new(data))
     }
 }

@@ -371,7 +371,7 @@ mod tests {
         ($name:ident, $text:expr, $result:expr) => (
             #[test]
             fn $name() {
-                let doc = Document::from_data($text).unwrap();
+                let doc = Document::from_str($text).unwrap();
                 let svg = doc.root().first_child().unwrap();
                 match svg.attribute_value(AId::Transform).unwrap() {
                     AttributeValue::Transform(v) => assert_eq!(v.to_string(), $result),
@@ -430,35 +430,35 @@ mod tests {
     fn api_1() {
         let mut ts = Transform::default();
         ts.translate(10.0, 20.0);
-        assert_eq!(Transform::from_data("translate(10 20)").unwrap(), ts);
+        assert_eq!(Transform::from_str("translate(10 20)").unwrap(), ts);
     }
 
     #[test]
     fn api_2() {
         let mut ts = Transform::default();
         ts.scale(2.0, 3.0);
-        assert_eq!(Transform::from_data("scale(2 3)").unwrap(), ts);
+        assert_eq!(Transform::from_str("scale(2 3)").unwrap(), ts);
     }
 
     #[test]
     fn api_3() {
         let mut ts = Transform::default();
         ts.skew_x(20.0);
-        assert_eq!(Transform::from_data("skewX(20)").unwrap(), ts);
+        assert_eq!(Transform::from_str("skewX(20)").unwrap(), ts);
     }
 
     #[test]
     fn api_4() {
         let mut ts = Transform::default();
         ts.skew_y(20.0);
-        assert_eq!(Transform::from_data("skewY(20)").unwrap(), ts);
+        assert_eq!(Transform::from_str("skewY(20)").unwrap(), ts);
     }
 
     #[test]
     fn api_5() {
         let mut ts = Transform::default();
         ts.rotate(20.0);
-        assert_eq!(Transform::from_data("rotate(20)").unwrap(), ts);
+        assert_eq!(Transform::from_str("rotate(20)").unwrap(), ts);
     }
 
     macro_rules! test_ts {
@@ -502,32 +502,32 @@ mod tests {
     );
 
     test_ts!(write_buf_7,
-        Transform::from_data("rotate(30)").unwrap(), true,
+        Transform::from_str("rotate(30)").unwrap(), true,
         "rotate(30)"
     );
 
     test_ts!(write_buf_8,
-        Transform::from_data("rotate(-45)").unwrap(), true,
+        Transform::from_str("rotate(-45)").unwrap(), true,
         "rotate(-45)"
     );
 
     test_ts!(write_buf_9,
-        Transform::from_data("rotate(33)").unwrap(), true,
+        Transform::from_str("rotate(33)").unwrap(), true,
         "rotate(33)"
     );
 
     test_ts!(write_buf_10,
-        Transform::from_data("scale(-1)").unwrap(), true,
+        Transform::from_str("scale(-1)").unwrap(), true,
         "scale(-1)"
     );
 
     test_ts!(write_buf_11,
-        Transform::from_data("scale(-1 1)").unwrap(), true,
+        Transform::from_str("scale(-1 1)").unwrap(), true,
         "scale(-1 1)"
     );
 
     test_ts!(write_buf_12,
-        Transform::from_data("scale(1 -1)").unwrap(), true,
+        Transform::from_str("scale(1 -1)").unwrap(), true,
         "scale(1 -1)"
     );
 }
