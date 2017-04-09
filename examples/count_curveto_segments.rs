@@ -18,8 +18,8 @@ fn main() {
     let mut file = File::open(&args[1]).unwrap();
     let length = file.metadata().unwrap().len() as usize;
 
-    let mut input_data = Vec::with_capacity(length + 1);
-    file.read_to_end(&mut input_data).unwrap();
+    let mut input_data = String::with_capacity(length + 1);
+    file.read_to_string(&mut input_data).unwrap();
 
     let doc = Document::from_data(&input_data).unwrap();
 

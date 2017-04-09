@@ -44,27 +44,27 @@ macro_rules! test_resave {
 
 #[test]
 fn parse_empty_1() {
-    assert_eq!(Document::from_data(b"").err().unwrap(), Error::EmptyDocument);
+    assert_eq!(Document::from_data("").err().unwrap(), Error::EmptyDocument);
 }
 
 #[test]
 fn parse_empty_2() {
-    assert_eq!(Document::from_data(b"\n \t").err().unwrap(), Error::EmptyDocument);
+    assert_eq!(Document::from_data("\n \t").err().unwrap(), Error::EmptyDocument);
 }
 
 #[test]
 fn parse_empty_3() {
-    assert_eq!(Document::from_data(b"<rect/>").err().unwrap(), Error::NoSvgElement);
+    assert_eq!(Document::from_data("<rect/>").err().unwrap(), Error::NoSvgElement);
 }
 
 #[test]
 fn parse_empty_4() {
-    assert_eq!(Document::from_data(b"<?xml version='1.0'?>").err().unwrap(), Error::NoSvgElement);
+    assert_eq!(Document::from_data("<?xml version='1.0'?>").err().unwrap(), Error::NoSvgElement);
 }
 
 #[test]
 fn parse_single_node_1() {
-    let doc = Document::from_data(b"<svg/>").unwrap();
+    let doc = Document::from_data("<svg/>").unwrap();
 
     let child = doc.root().first_child().unwrap();
     assert_eq!(*child.tag_name().unwrap(), Name::Id(EId::Svg));
@@ -73,7 +73,7 @@ fn parse_single_node_1() {
 
 #[test]
 fn parse_declaration_1() {
-    let doc = Document::from_data(b"<?xml version='1.0' encoding='UTF-8' standalone='no'?><svg/>").unwrap();
+    let doc = Document::from_data("<?xml version='1.0' encoding='UTF-8' standalone='no'?><svg/>").unwrap();
 
     let child = doc.root().first_child().unwrap();
     assert_eq!(child.node_type(), NodeType::Declaration);
@@ -83,7 +83,7 @@ fn parse_declaration_1() {
 
 #[test]
 fn parse_comment_1() {
-    let doc = Document::from_data(b"<svg/><!--comment-->").unwrap();
+    let doc = Document::from_data("<svg/><!--comment-->").unwrap();
 
     let child = doc.root().children().nth(1).unwrap();
     assert_eq!(child.node_type(), NodeType::Comment);
@@ -93,7 +93,7 @@ fn parse_comment_1() {
 
 #[test]
 fn parse_text_1() {
-    let doc = Document::from_data(b"<svg>text</svg>").unwrap();
+    let doc = Document::from_data("<svg>text</svg>").unwrap();
 
     let child = doc.root().first_child().unwrap().first_child().unwrap();
     assert_eq!(child.node_type(), NodeType::Text);
@@ -102,7 +102,7 @@ fn parse_text_1() {
 
 #[test]
 fn parse_text_2() {
-    let doc = Document::from_data(b"<svg><text>Some<tspan>complex</tspan>text</text></svg>").unwrap();
+    let doc = Document::from_data("<svg><text>Some<tspan>complex</tspan>text</text></svg>").unwrap();
 
     let mut nodes = doc.root().first_child().unwrap().descendants();
 
@@ -132,7 +132,7 @@ fn parse_text_2() {
 }
 
 test_resave!(parse_css_1,
-b"<svg>
+"<svg>
     <style type='text/css'>
         <![CDATA[
             .fil1 {fill:#00913f}
@@ -152,7 +152,7 @@ b"<svg>
 
 // style can be set after usage
 test_resave!(parse_css_2,
-b"<svg>
+"<svg>
     <g class='fil1'/>
     <style type='text/css'>
         <![CDATA[ .fil1 {fill:#00913f} ]]>
@@ -165,7 +165,7 @@ b"<svg>
 ");
 
 test_resave!(parse_css_4,
-b"<svg>
+"<svg>
     <style type='text/css'>
     <![CDATA[
         rect {fill:red;}
@@ -183,7 +183,7 @@ b"<svg>
 
 // empty data
 test_resave!(parse_css_5,
-b"<svg>
+"<svg>
     <style type='text/css'>
     </style>
 </svg>
@@ -193,7 +193,7 @@ b"<svg>
 
 // multiline comments and styles
 test_resave!(parse_css_6,
-b"<svg>
+"<svg>
     <style type='text/css'>
     <![CDATA[
         /*
@@ -221,7 +221,7 @@ b"<svg>
 
 // links should be properly linked
 test_resave!(parse_css_7,
-b"<svg>
+"<svg>
     <style type='text/css'>
     <![CDATA[
         .fil1 {fill:url(#lg1)}
@@ -238,7 +238,7 @@ b"<svg>
 
 // order of styles ungrouping is important
 test_resave!(parse_css_8,
-b"<svg>
+"<svg>
     <style type='text/css'>
     <![CDATA[
         .fil1 {fill:blue}
@@ -253,7 +253,7 @@ b"<svg>
 
 // order of styles ungrouping is important
 test_resave!(parse_css_9,
-b"<svg>
+"<svg>
     <style type='text/css'>
     <![CDATA[
         .fil1 {fill:blue}
@@ -268,7 +268,7 @@ b"<svg>
 
 // style can be set without CDATA block
 test_resave!(parse_css_10,
-b"<svg>
+"<svg>
     <style type='text/css'>
         .fil1 {fill:blue}
     </style>
@@ -282,7 +282,7 @@ b"<svg>
 #[test]
 fn parse_css_11() {
     let res = Document::from_data(
-b"<svg>
+"<svg>
     <style type='text/css'><![CDATA[
         @import url('../some.css');
         ]]>
@@ -296,7 +296,7 @@ b"<svg>
 }
 
 test_resave!(parse_css_12,
-b"<svg>
+"<svg>
     <style type='text/css'><![CDATA[
         #c { fill: red }
         ]]>
@@ -311,7 +311,7 @@ b"<svg>
 #[test]
 fn parse_css_13() {
     let res = Document::from_data(
-b"<svg>
+"<svg>
     <style type='text/css'><![CDATA[
         :lang(en) { fill: green}
         ]]>
@@ -322,7 +322,7 @@ b"<svg>
 }
 
 test_resave!(parse_css_14,
-b"<svg>
+"<svg>
     <style type='text/css'><![CDATA[
         * { fill: red }
         ]]>
@@ -343,7 +343,7 @@ b"<svg>
 #[test]
 fn parse_css_15() {
     let res = Document::from_data(
-b"<svg>
+"<svg>
     <style type='text/css'><![CDATA[
         a > b { fill: green}
         ]]>
@@ -356,7 +356,7 @@ b"<svg>
 #[test]
 fn parse_css_16() {
     let res = Document::from_data(
-b"<svg>
+"<svg>
     <style type='text/css'><![CDATA[
         g rect { fill: green }
         ]]>
@@ -368,7 +368,7 @@ b"<svg>
 
 // empty style
 test_resave!(parse_css_17,
-b"<svg>
+"<svg>
     <style type='text/css'/>
     <g fill='#0000ff'/>
 </svg>",
@@ -378,7 +378,7 @@ b"<svg>
 ");
 
 test_resave!(parse_css_18,
-b"<svg>
+"<svg>
     <style type='text/css'>
         .fil1, .fil2 {fill:blue}
     </style>
@@ -392,7 +392,7 @@ b"<svg>
 ");
 
 test_resave!(parse_css_19,
-b"<svg>
+"<svg>
     <style type='text/css'>
     <![CDATA[
     ]]>
@@ -402,7 +402,7 @@ b"<svg>
 ");
 
 test_resave!(parse_css_20,
-b"<svg>
+"<svg>
     <style type='text/css'>
         .cls-1,.cls-17{fill:red;}
         .cls-1{stroke:red;}
@@ -418,7 +418,7 @@ b"<svg>
 ");
 
 test_resave!(parse_css_21,
-b"<svg>
+"<svg>
     <style>#g1 { fill:red }</style>
     <style type='text/css'>#g1 { fill:blue }</style>
     <style type='blah'>#g1 { fill:red }</style>
@@ -431,7 +431,7 @@ b"<svg>
 
 // style must be ungroupped after presentation attributes
 test_resave!(parse_style_1,
-b"<svg>
+"<svg>
     <g style='fill:green' fill='red'/>
 </svg>",
 "<svg>
@@ -441,7 +441,7 @@ b"<svg>
 
 // style must be ungroupped after presentation attributes
 test_resave!(parse_style_2,
-b"<svg>
+"<svg>
     <g style='fill:none; color:cyan; stroke-width:4.00'/>
 </svg>",
 "<svg>
@@ -451,7 +451,7 @@ b"<svg>
 
 // style must be ungroupped after presentation attributes
 test_resave!(parse_style_3,
-b"<svg>
+"<svg>
     <text style=\"font-size:24px;font-style:normal;font-variant:normal;font-weight:normal;\
                   font-stretch:normal;line-height:125%;writing-mode:lr-tb;\
                   text-anchor:middle;font-family:'Arial Bold'\"/>
@@ -467,7 +467,7 @@ b"<svg>
 
 // comments inside attribute are ignored
 test_resave!(parse_style_4,
-b"<svg>
+"<svg>
     <text style='font-size:24px; /* comment */ font-style:normal;'/>
 </svg>
 ",
@@ -478,7 +478,7 @@ b"<svg>
 
 // all attributes must begin with a letter
 test_resave!(parse_style_5,
-b"<svg>
+"<svg>
     <text style='font-size:24px;-font-style:normal;font-stretch:normal;'/>
 </svg>
 ",
@@ -489,7 +489,7 @@ b"<svg>
 
 // keep unknown attributes
 test_resave!(parse_style_6,
-b"<svg>
+"<svg>
     <g style='qwe:none; color:cyan;'/>
 </svg>
 ",
@@ -500,7 +500,7 @@ b"<svg>
 
 // remove unknown linked styles
 test_resave!(parse_style_8,
-b"<svg>
+"<svg>
     <g style='&st0; &st1;'/>
 </svg>
 ",
@@ -512,7 +512,7 @@ b"<svg>
 #[test]
 fn parse_iri_1() {
     let doc = Document::from_data(
-b"<svg>
+"<svg>
     <radialGradient id='rg1'/>
     <rect fill='url(#rg1)'/>
 </svg>").unwrap();
@@ -530,7 +530,7 @@ fn parse_iri_2() {
     // reversed order
 
     let doc = Document::from_data(
-b"<svg>
+"<svg>
     <rect fill='url(#rg1)'/>
     <radialGradient id='rg1'/>
 </svg>").unwrap();
@@ -546,7 +546,7 @@ b"<svg>
 #[test]
 fn parse_iri_with_fallback_1() {
     let doc = Document::from_data(
-b"<svg>
+"<svg>
     <rect fill='url(#lg1) none'/>
 </svg>").unwrap();
 
@@ -560,7 +560,7 @@ b"<svg>
 #[test]
 fn parse_iri_with_fallback_2() {
     let doc = Document::from_data(
-b"<svg>
+"<svg>
     <rect fill='url(#lg1) red'/>
 </svg>").unwrap();
 
@@ -576,7 +576,7 @@ fn parse_iri_with_fallback_3() {
     // unsupported case
 
     let doc = Document::from_data(
-b"<svg>
+"<svg>
     <radialGradient id='rg1'/>
     <rect fill='url(#rg1) none'/>
 </svg>");
@@ -589,7 +589,7 @@ fn parse_iri_with_fallback_4() {
     // unsupported case
 
     let doc = Document::from_data(
-b"<svg>
+"<svg>
     <rect fill='url(#rg1) none'/>
     <radialGradient id='rg1'/>
 </svg>");
@@ -598,7 +598,7 @@ b"<svg>
 }
 
 test_resave!(parse_filter_iri_1,
-b"<svg>
+"<svg>
     <rect filter='url(#rg1)'/>
 </svg>",
 "<svg>
@@ -607,7 +607,7 @@ b"<svg>
 ");
 
 test_resave!(parse_filter_iri_2,
-b"<svg>
+"<svg>
     <mask>
         <rect filter='url(#rg1)'/>
     </mask>
@@ -620,7 +620,7 @@ b"<svg>
 ");
 
 test_resave!(parse_entity_1,
-b"<!DOCTYPE svg [
+"<!DOCTYPE svg [
     <!ENTITY st1 \"font-size:12;\">
 ]>
 <svg style='&st1;'/>",
@@ -629,7 +629,7 @@ b"<!DOCTYPE svg [
 
 // inside svg attribute
 test_resave!(parse_entity_2,
-b"<!DOCTYPE svg [
+"<!DOCTYPE svg [
     <!ENTITY ns_svg \"http://www.w3.org/2000/svg\">
     <!ENTITY ns_xlink \"http://www.w3.org/1999/xlink\">
 ]>
@@ -639,7 +639,7 @@ b"<!DOCTYPE svg [
 
 // inside external attribute
 test_resave!(parse_entity_3,
-b"<!DOCTYPE svg [
+"<!DOCTYPE svg [
     <!ENTITY ns_extend \"http://ns.adobe.com/Extensibility/1.0/\">
 ]>
 <svg xmlns:x='&ns_extend;'/>",
@@ -647,7 +647,7 @@ b"<!DOCTYPE svg [
 ");
 
 test_resave!(parse_entity_4,
-b"<!DOCTYPE svg [
+"<!DOCTYPE svg [
     <!ENTITY st1 \"red\">
 ]>
 <svg fill='&st1;'/>",
@@ -657,7 +657,7 @@ b"<!DOCTYPE svg [
 #[test]
 fn parse_entity_5() {
     let doc = Document::from_data(
-b"<!DOCTYPE svg [
+"<!DOCTYPE svg [
     <!ENTITY Viewport1 \"<rect/>\">
 ]>
 <svg fill='&st1;'/>");
@@ -667,7 +667,7 @@ b"<!DOCTYPE svg [
 #[test]
 fn parse_entity_6() {
     let doc = Document::from_data(
-b"<!DOCTYPE svg [
+"<!DOCTYPE svg [
     <!ENTITY Viewport1 \" \t\n<rect/>\">
 ]>
 <svg fill='&st1;'/>");
@@ -675,13 +675,13 @@ b"<!DOCTYPE svg [
 }
 
 test_resave!(skip_unknown_refs_1,
-b"<svg unicode='&#x3b2;'/>",
+"<svg unicode='&#x3b2;'/>",
 "<svg unicode='&#x3b2;'/>
 ");
 
 // ignore empty LengthList
 test_resave!(parse_empty_attribute_1,
-b"<svg>
+"<svg>
     <rect stroke-dasharray=''/>
 </svg>",
 "<svg>
@@ -691,7 +691,7 @@ b"<svg>
 
 // ignore empty NumberList
 test_resave!(parse_empty_attribute_2,
-b"<svg>
+"<svg>
     <rect stdDeviation=''/>
 </svg>",
 "<svg>
@@ -701,7 +701,7 @@ b"<svg>
 
 // ignore empty Transform
 test_resave!(parse_empty_attribute_3,
-b"<svg>
+"<svg>
     <rect transform=''/>
 </svg>",
 "<svg>
@@ -710,7 +710,7 @@ b"<svg>
 ");
 
 test_resave!(parse_script_1,
-b"<svg>
+"<svg>
     <script><![CDATA[
         var i, ids = 'a1 a2 a3 a4 a5 a6 r1 r2 r3 r4 r5 r6 r7 r8'.split(' ');
         for (i in ids) {
@@ -735,7 +735,7 @@ fn skip_comments_1() {
     let mut opt = ParseOptions::default();
     opt.parse_comments = false;
     let doc = Document::from_data_with_opt(
-b"<!--comment-->
+"<!--comment-->
 <svg/>", &opt).unwrap();
 
     assert_eq_text!(doc.to_string_with_opt(&write_opt_for_tests!()),
@@ -748,7 +748,7 @@ fn skip_declaration_1() {
     let mut opt = ParseOptions::default();
     opt.parse_declarations = false;
     let doc = Document::from_data_with_opt(
-b"<?xml version='1.0'?>
+"<?xml version='1.0'?>
 <svg/>", &opt).unwrap();
 
     assert_eq_text!(doc.to_string_with_opt(&write_opt_for_tests!()),
@@ -761,7 +761,7 @@ fn skip_unknown_elements_1() {
     let mut opt = ParseOptions::default();
     opt.parse_unknown_elements = false;
     let doc = Document::from_data_with_opt(
-b"<svg>
+"<svg>
     <qwe id='q'/>
     <rect/>
 </svg>", &opt).unwrap();
@@ -778,7 +778,7 @@ fn skip_unknown_elements_2() {
     let mut opt = ParseOptions::default();
     opt.parse_unknown_elements = false;
     let doc = Document::from_data_with_opt(
-b"<svg>
+"<svg>
     <qwe>
         <qwe>
             <rect/>
@@ -799,7 +799,7 @@ fn skip_unknown_elements_3() {
     let mut opt = ParseOptions::default();
     opt.parse_unknown_elements = false;
     let doc = Document::from_data_with_opt(
-b"<svg>
+"<svg>
     <qwe>
         <rect/>
         <rect/>
@@ -820,7 +820,7 @@ fn skip_unknown_elements_4() {
     let mut opt = ParseOptions::default();
     opt.parse_unknown_elements = false;
     let doc = Document::from_data_with_opt(
-b"<svg>
+"<svg>
     <qwe>
     </qwe>
     <rect/>
@@ -838,7 +838,7 @@ fn skip_unknown_attributes_1() {
     let mut opt = ParseOptions::default();
     opt.parse_unknown_attributes = false;
     let doc = Document::from_data_with_opt(
-b"<svg fill='#ff0000' test='1' qwe='zzz' xmlns='http://www.w3.org/2000/svg' \
+"<svg fill='#ff0000' test='1' qwe='zzz' xmlns='http://www.w3.org/2000/svg' \
 xmlns:xlink='http://www.w3.org/1999/xlink'/>", &opt).unwrap();
 
     assert_eq_text!(doc.to_string_with_opt(&write_opt_for_tests!()),
@@ -851,7 +851,7 @@ xmlns:xlink='http://www.w3.org/1999/xlink'/>
 fn parse_px_unit_on_1() {
     let mut opt = ParseOptions::default();
     opt.parse_px_unit = true;
-    let doc = Document::from_data_with_opt(b"<svg x='10px'/>", &opt).unwrap();
+    let doc = Document::from_data_with_opt("<svg x='10px'/>", &opt).unwrap();
     assert_eq_text!(doc.to_string_with_opt(&write_opt_for_tests!()), "<svg x='10px'/>\n");
 }
 
@@ -859,7 +859,7 @@ fn parse_px_unit_on_1() {
 fn parse_px_unit_off_1() {
     let mut opt = ParseOptions::default();
     opt.parse_px_unit = false;
-    let doc = Document::from_data_with_opt(b"<svg x='10px'/>", &opt).unwrap();
+    let doc = Document::from_data_with_opt("<svg x='10px'/>", &opt).unwrap();
     assert_eq_text!(doc.to_string_with_opt(&write_opt_for_tests!()), "<svg x='10'/>\n");
 }
 
@@ -867,7 +867,7 @@ fn parse_px_unit_off_1() {
 fn parse_px_unit_off_2() {
     let mut opt = ParseOptions::default();
     opt.parse_px_unit = false;
-    let doc = Document::from_data_with_opt(b"<svg stroke-dasharray='10px 20px'/>", &opt).unwrap();
+    let doc = Document::from_data_with_opt("<svg stroke-dasharray='10px 20px'/>", &opt).unwrap();
     assert_eq_text!(doc.to_string_with_opt(&write_opt_for_tests!()),
                     "<svg stroke-dasharray='10 20'/>\n");
 }
@@ -877,7 +877,7 @@ fn skip_unresolved_classes_1() {
     let mut opt = ParseOptions::default();
     opt.skip_unresolved_classes = false;
     let doc = Document::from_data_with_opt(
-b"<svg>
+"<svg>
     <style type='text/css'>
         .fil1 {fill:blue}
         .str1 {stroke:blue}

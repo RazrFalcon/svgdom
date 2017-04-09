@@ -382,83 +382,83 @@ mod tests {
     }
 
     test_transform!(parse_transform_1,
-        b"<svg transform='matrix(1 0 0 1 10 20)'/>",
-         "matrix(1 0 0 1 10 20)"
+        "<svg transform='matrix(1 0 0 1 10 20)'/>",
+        "matrix(1 0 0 1 10 20)"
     );
 
     test_transform!(parse_transform_2,
-        b"<svg transform='translate(10 20)'/>",
-         "matrix(1 0 0 1 10 20)"
+        "<svg transform='translate(10 20)'/>",
+        "matrix(1 0 0 1 10 20)"
     );
 
     test_transform!(parse_transform_3,
-        b"<svg transform='scale(2 3)'/>",
-         "matrix(2 0 0 3 0 0)"
+        "<svg transform='scale(2 3)'/>",
+        "matrix(2 0 0 3 0 0)"
     );
 
     test_transform!(parse_transform_4,
-        b"<svg transform='rotate(30)'/>",
-         "matrix(0.866025403784 0.5 -0.5 0.866025403784 0 0)"
+        "<svg transform='rotate(30)'/>",
+        "matrix(0.866025403784 0.5 -0.5 0.866025403784 0 0)"
     );
 
     test_transform!(parse_transform_5,
-        b"<svg transform='rotate(30 10 20)'/>",
-         "matrix(0.866025403784 0.5 -0.5 0.866025403784 11.339745962156 -2.320508075689)"
+        "<svg transform='rotate(30 10 20)'/>",
+        "matrix(0.866025403784 0.5 -0.5 0.866025403784 11.339745962156 -2.320508075689)"
     );
 
     test_transform!(parse_transform_6,
-        b"<svg transform='translate(10 15) translate(0 5)'/>",
-         "matrix(1 0 0 1 10 20)"
+        "<svg transform='translate(10 15) translate(0 5)'/>",
+        "matrix(1 0 0 1 10 20)"
     );
 
     test_transform!(parse_transform_7,
-        b"<svg transform='translate(10) scale(2)'/>",
-         "matrix(2 0 0 2 10 0)"
+        "<svg transform='translate(10) scale(2)'/>",
+        "matrix(2 0 0 2 10 0)"
     );
 
     test_transform!(parse_transform_8,
-        b"<svg transform='translate(25 215) scale(2) skewX(45)'/>",
-         "matrix(2 0 2 2 25 215)"
+        "<svg transform='translate(25 215) scale(2) skewX(45)'/>",
+        "matrix(2 0 2 2 25 215)"
     );
 
     test_transform!(parse_transform_9,
-        b"<svg transform='skewX(45)'/>",
-         "matrix(1 0 1 1 0 0)"
+        "<svg transform='skewX(45)'/>",
+        "matrix(1 0 1 1 0 0)"
     );
 
     #[test]
     fn api_1() {
         let mut ts = Transform::default();
         ts.translate(10.0, 20.0);
-        assert_eq!(Transform::from_data(b"translate(10 20)").unwrap(), ts);
+        assert_eq!(Transform::from_data("translate(10 20)").unwrap(), ts);
     }
 
     #[test]
     fn api_2() {
         let mut ts = Transform::default();
         ts.scale(2.0, 3.0);
-        assert_eq!(Transform::from_data(b"scale(2 3)").unwrap(), ts);
+        assert_eq!(Transform::from_data("scale(2 3)").unwrap(), ts);
     }
 
     #[test]
     fn api_3() {
         let mut ts = Transform::default();
         ts.skew_x(20.0);
-        assert_eq!(Transform::from_data(b"skewX(20)").unwrap(), ts);
+        assert_eq!(Transform::from_data("skewX(20)").unwrap(), ts);
     }
 
     #[test]
     fn api_4() {
         let mut ts = Transform::default();
         ts.skew_y(20.0);
-        assert_eq!(Transform::from_data(b"skewY(20)").unwrap(), ts);
+        assert_eq!(Transform::from_data("skewY(20)").unwrap(), ts);
     }
 
     #[test]
     fn api_5() {
         let mut ts = Transform::default();
         ts.rotate(20.0);
-        assert_eq!(Transform::from_data(b"rotate(20)").unwrap(), ts);
+        assert_eq!(Transform::from_data("rotate(20)").unwrap(), ts);
     }
 
     macro_rules! test_ts {
@@ -502,32 +502,32 @@ mod tests {
     );
 
     test_ts!(write_buf_7,
-        Transform::from_data(b"rotate(30)").unwrap(), true,
+        Transform::from_data("rotate(30)").unwrap(), true,
         "rotate(30)"
     );
 
     test_ts!(write_buf_8,
-        Transform::from_data(b"rotate(-45)").unwrap(), true,
+        Transform::from_data("rotate(-45)").unwrap(), true,
         "rotate(-45)"
     );
 
     test_ts!(write_buf_9,
-        Transform::from_data(b"rotate(33)").unwrap(), true,
+        Transform::from_data("rotate(33)").unwrap(), true,
         "rotate(33)"
     );
 
     test_ts!(write_buf_10,
-        Transform::from_data(b"scale(-1)").unwrap(), true,
+        Transform::from_data("scale(-1)").unwrap(), true,
         "scale(-1)"
     );
 
     test_ts!(write_buf_11,
-        Transform::from_data(b"scale(-1 1)").unwrap(), true,
+        Transform::from_data("scale(-1 1)").unwrap(), true,
         "scale(-1 1)"
     );
 
     test_ts!(write_buf_12,
-        Transform::from_data(b"scale(1 -1)").unwrap(), true,
+        Transform::from_data("scale(1 -1)").unwrap(), true,
         "scale(1 -1)"
     );
 }

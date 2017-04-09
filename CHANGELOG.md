@@ -11,6 +11,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 - All warnings will be printed to stderr now.
+- `FromStream::from_data`, `Document::from_data`, `Document::from_data_with_opt`
+  accepts `&str` instead of `&[u8]` now.
+
+### Removed
+- `Error::Utf8Error`, because `Document::from_data` accepts `&str` now.
 
 ## [0.4.0] - 2017-03-15
 ### Added

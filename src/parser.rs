@@ -48,7 +48,7 @@ struct NodeTextData<'a> {
 
 struct LinkData<'a> {
     attr_id: AttributeId,
-    iri: &'a [u8],
+    iri: &'a str,
     fallback: Option<PaintFallback>,
     node: Node,
 }
@@ -59,11 +59,11 @@ struct Links<'a> {
     /// Store all nodes with id's.
     ///
     /// For performance reasons only.
-    elems_with_id: HashMap<&'a [u8], Node>,
+    elems_with_id: HashMap<&'a str, Node>,
 }
 
 impl<'a> Links<'a> {
-    fn append(&mut self, id: AttributeId, iri: &'a [u8], fallback: Option<PaintFallback>,
+    fn append(&mut self, id: AttributeId, iri: &'a str, fallback: Option<PaintFallback>,
               node: &Node) {
         self.list.push(LinkData {
             attr_id: id,
@@ -74,7 +74,7 @@ impl<'a> Links<'a> {
     }
 }
 
-type Entities<'a> = HashMap<&'a [u8], &'a [u8]>;
+type Entities<'a> = HashMap<&'a str, &'a str>;
 
 struct PostData<'a> {
     css_list: Vec<Stream<'a>>,
@@ -87,16 +87,11 @@ struct PostData<'a> {
     style_attrs: Vec<NodeStreamData<'a>>,
 }
 
-pub fn parse_svg(data: &[u8], opt: &ParseOptions) -> Result<Document, Error> {
-    // check that input data is a valid UTF-8 string
-    if let Err(_) = str::from_utf8(data) {
-        return Err(Error::InvalidEncoding);
-    }
-
+pub fn parse_svg(text: &str, opt: &ParseOptions) -> Result<Document, Error> {
     let doc = Document::new();
     let mut parent = doc.root();
 
-    let mut tokenizer = svg::Tokenizer::new(data);
+    let mut tokenizer = svg::Tokenizer::new(text);
 
     // Since we not only parsing, but also converting an SVG structure,
     // we can't do everything in one take.
@@ -170,7 +165,7 @@ fn process_token<'a>(doc: &Document,
 
     macro_rules! create_node {
         ($nodetype:expr, $buf:expr) => ({
-            let e = doc.create_node($nodetype, str::from_utf8($buf)?);
+            let e = doc.create_node($nodetype, $buf);
             *node = Some(e.clone());
             parent.append(&e);
         })
@@ -178,7 +173,7 @@ fn process_token<'a>(doc: &Document,
 
     match token {
         svg::Token::ElementStart(s) => {
-            match ElementId::from_name(str::from_utf8(s)?) {
+            match ElementId::from_name(s) {
                 Some(eid) => {
                     let res = parse_svg_element(&doc, tokenizer, eid, &mut post_data.css_list)?;
 
@@ -192,7 +187,7 @@ fn process_token<'a>(doc: &Document,
                         skip_current_element(tokenizer)?;
                     } else {
                         // create new node
-                        let e = doc.create_element(str::from_utf8(s)?);
+                        let e = doc.create_element(s);
                         *node = Some(e.clone());
                         parent.append(&e);
                     }
@@ -203,14 +198,14 @@ fn process_token<'a>(doc: &Document,
             let n = node.as_ref().unwrap();
             if n.is_svg_element() {
                 parse_attribute(&n,
-                                &name,
+                                name,
                                 &mut val.clone(),
                                 post_data,
                                 &opt)?;
             } else {
                 // TODO: store as &str not String
                 if opt.parse_unknown_attributes {
-                    n.set_attribute(str::from_utf8(name)?, str::from_utf8(val.slice())?);
+                    n.set_attribute(name, val.slice());
                 }
             }
         }
@@ -299,8 +294,8 @@ fn parse_svg_element<'a>(doc: &Document,
         loop {
             match tokenizer.parse_next()? {
                 svg::Token::Attribute(name, value) => {
-                    if name == b"type" {
-                        if value.slice() != b"text/css" {
+                    if name == "type" {
+                        if value.slice() != "text/css" {
                             is_valid_type = false;
                             break;
                         }
@@ -344,16 +339,16 @@ fn parse_svg_element<'a>(doc: &Document,
 }
 
 fn parse_attribute<'a>(node: &Node,
-                       name: &'a [u8],
+                       name: &'a str,
                        value: &mut Stream<'a>,
                        post_data: &mut PostData<'a>,
                        opt: &ParseOptions)
                        -> Result<(), Error> {
-    match AttributeId::from_name(str::from_utf8(name)?) {
+    match AttributeId::from_name(name) {
         Some(id) => {
             match id {
                 AttributeId::Id => {
-                    node.set_id(str::from_utf8(value.slice())?);
+                    node.set_id(value.slice());
                     post_data.links.elems_with_id.insert(value.slice(), node.clone());
                 }
                 AttributeId::Style => {
@@ -384,7 +379,7 @@ fn parse_attribute<'a>(node: &Node,
 
                         let len = s.len_to_space_or_end();
                         let class_raw = s.read_raw(len);
-                        let class = str::from_utf8(class_raw).unwrap();
+                        let class = class_raw;
 
                         post_data.class_attrs.push(NodeTextData {
                             node: node.clone(),
@@ -414,7 +409,7 @@ fn parse_attribute<'a>(node: &Node,
                 match post_data.entitis.get(link) {
                     Some(link_value) => value2 = Some(*link_value),
                     None => {
-                        warnln!("Could not resolve ENTITY: '{}'.", str::from_utf8(link)?);
+                        warnln!("Could not resolve ENTITY: '{}'.", link);
                         value2 = None;
                     }
                 }
@@ -423,7 +418,7 @@ fn parse_attribute<'a>(node: &Node,
             }
 
             if let Some(val) = value2 {
-                node.set_attribute(str::from_utf8(name)?, str::from_utf8(val)?);
+                node.set_attribute(name, val);
             }
         }
     }
@@ -442,7 +437,7 @@ fn parse_svg_attribute<'a>(node: &Node,
 
     let val = match ParserAttributeValue::from_stream(tag_id, id, stream)? {
         ParserAttributeValue::String(v) => {
-            Some(AttributeValue::String(str::from_utf8(v)?.to_string()))
+            Some(AttributeValue::String(v.to_string()))
         }
         ParserAttributeValue::IRI(link) | ParserAttributeValue::FuncIRI(link) => {
             // collect links for later processing
@@ -505,9 +500,9 @@ fn parse_svg_attribute<'a>(node: &Node,
                 }
                 None => {
                     // keep original link
-                    let s = format!("&{};", str::from_utf8(link)?);
+                    let s = format!("&{};", link);
 
-                    if link[0] != b'#' {
+                    if link.as_bytes()[0] != b'#' {
                         // If link starts with # - than it's probably a Unicode code point.
                         // Otherwise - unknown reference.
                         warnln!("Unresolved ENTITY reference: '{}'.", s);
@@ -546,15 +541,14 @@ fn parse_style_attribute<'a>(node: &Node,
     loop {
         match s.parse_next()? {
             style::Token::Attribute(name, substream) => {
-                match AttributeId::from_name(str::from_utf8(name)?) {
+                match AttributeId::from_name(name) {
                     Some(id) => {
                         parse_svg_attribute(&node, id, &mut substream.clone(),
                                             links, entitis, opt)?;
                     }
                     None => {
                         if opt.parse_unknown_attributes {
-                            node.set_attribute(str::from_utf8(name)?,
-                                               str::from_utf8(substream.slice())?);
+                            node.set_attribute(name, substream.slice());
                         }
                     }
                 }
@@ -623,7 +617,7 @@ fn resolve_css<'a>(doc: &Document,
         let mut tokenizer = {
             // we use 'new_bound' method to get absolute error positions
             let text = style.parent_text().unwrap();
-            simplecss::Tokenizer::new_bound(str::from_utf8(text)?, start_pos, end_pos)
+            simplecss::Tokenizer::new_bound(text, start_pos, end_pos)
         };
 
         'root: loop {
@@ -771,7 +765,7 @@ fn apply_css_attributes<'a>(values: &Vec<(&str,&'a str)>,
         match AttributeId::from_name(aname) {
             Some(aid) => {
                 // TODO: to a proper stream
-                parse_svg_attribute(node, aid, &mut Stream::new(avalue.as_bytes()),
+                parse_svg_attribute(node, aid, &mut Stream::new(avalue),
                                     links, entitis, opt)?;
             }
             None => {
@@ -796,7 +790,7 @@ fn resolve_links(links: &Links) -> Result<(), Error> {
                 // so we just show an error.
                 match d.fallback {
                     Some(_) => {
-                        let s = str::from_utf8(d.iri)?.to_string();
+                        let s = d.iri.to_string();
                         return Err(Error::UnsupportedPaintFallback(s))
                     }
                     None => d.node.set_link_attribute(d.attr_id, node.clone())?,
@@ -829,7 +823,7 @@ fn resolve_links(links: &Links) -> Result<(), Error> {
                                     //
                                     // You can test this issue on:
                                     // breeze-icons/icons/actions/22/color-management.svg
-                                    let s = str::from_utf8(d.iri)?.to_string();
+                                    let s = d.iri.to_string();
                                     return Err(Error::BrokenFuncIri(s));
                                 }
 
@@ -844,25 +838,23 @@ fn resolve_links(links: &Links) -> Result<(), Error> {
                                     // I can't find explanation of this in the SVG spec, but it works.
                                     // Probably because this elements only care about a shape,
                                     // not a style.
-                                    warnln!("Could not resolve IRI reference: {}.",
-                                             str::from_utf8(d.iri)?);
+                                    warnln!("Could not resolve IRI reference: {}.", d.iri);
                                 } else {
                                     // Imitate invisible element.
                                     warnln!("Unresolved 'filter' link: '{}'. \
-                                              Marking the element as invisible.",
-                                             str::from_utf8(d.iri)?);
+                                             Marking the element as invisible.",
+                                             d.iri);
                                     d.node.set_attribute(AttributeId::Visibility, ValueId::Hidden);
                                 }
                             }
                             AttributeId::Fill => {
                                 warnln!("Could not resolve the 'fill' IRI reference '{}'. \
-                                          Fallback to 'none'.",
-                                         str::from_utf8(d.iri)?);
+                                         Fallback to 'none'.",
+                                         d.iri);
                                 d.node.set_attribute(AttributeId::Fill, ValueId::None);
                             }
                             _ => {
-                                warnln!("Could not resolve IRI reference: {}.",
-                                         str::from_utf8(d.iri)?);
+                                warnln!("Could not resolve IRI reference: {}.", d.iri);
                             }
                         }
                     }

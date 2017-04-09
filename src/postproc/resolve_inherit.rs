@@ -89,7 +89,7 @@ mod tests {
     }
 
     test!(inherit_1,
-b"<svg fill='#ff0000'>
+"<svg fill='#ff0000'>
     <rect fill='inherit'/>
 </svg>",
 "<svg fill='#ff0000'>
@@ -98,7 +98,7 @@ b"<svg fill='#ff0000'>
 ");
 
     test!(inherit_2,
-b"<svg fill='#ff0000'>
+"<svg fill='#ff0000'>
     <g>
         <rect fill='inherit'/>
     </g>
@@ -111,7 +111,7 @@ b"<svg fill='#ff0000'>
 ");
 
     test!(inherit_3,
-b"<svg fill='#ff0000' stroke='#00ff00'>
+"<svg fill='#ff0000' stroke='#00ff00'>
     <rect fill='inherit' stroke='inherit'/>
 </svg>",
 "<svg fill='#ff0000' stroke='#00ff00'>
@@ -120,7 +120,7 @@ b"<svg fill='#ff0000' stroke='#00ff00'>
 ");
 
     test!(inherit_4,
-b"<svg>
+"<svg>
     <rect fill='inherit'/>
 </svg>",
 "<svg>
@@ -129,7 +129,7 @@ b"<svg>
 ");
 
     test!(current_color_1,
-b"<svg color='#ff0000'>
+"<svg color='#ff0000'>
     <rect fill='currentColor'/>
 </svg>",
 "<svg color='#ff0000'>
@@ -138,7 +138,7 @@ b"<svg color='#ff0000'>
 ");
 
     test!(current_color_2,
-b"<svg>
+"<svg>
     <rect color='#ff0000' fill='currentColor'/>
 </svg>",
 "<svg>
@@ -147,7 +147,7 @@ b"<svg>
 ");
 
     test!(current_color_3,
-b"<svg color='#ff0000'>
+"<svg color='#ff0000'>
     <rect fill='currentColor' stroke='currentColor'/>
 </svg>",
 "<svg color='#ff0000'>
@@ -156,7 +156,7 @@ b"<svg color='#ff0000'>
 ");
 
     test!(default_1,
-b"<svg>
+"<svg>
     <rect fill='currentColor'/>
     <rect fill='inherit'/>
 </svg>",

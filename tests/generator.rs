@@ -197,7 +197,7 @@ fn text_1() {
 }
 
 test_resave!(text_2,
-b"<svg>
+"<svg>
     <p>
         text
     </p>
@@ -212,7 +212,7 @@ b"<svg>
 
 // 'text' element has different behavior
 test_resave!(text_3,
-b"<svg>
+"<svg>
     <text>
         text
     </text>
@@ -226,7 +226,7 @@ b"<svg>
 ");
 
 test_resave!(text_4,
-b"<svg>
+"<svg>
     <p>
         text</p>
 </svg>
@@ -239,7 +239,7 @@ b"<svg>
 ");
 
 test_resave!(text_multiline_1,
-b"<svg>
+"<svg>
     <p>
         Line 1
         Line 2
@@ -258,7 +258,7 @@ b"<svg>
 
 // TODO: this
 // test_resave!(text_mixed_indent_1,
-// b"<svg>
+// "<svg>
 // <p>
 // Line 1
 // Line 2
@@ -276,7 +276,7 @@ b"<svg>
 // ");
 
 test_resave!(text_mixed_indent_2,
-b"<svg>
+"<svg>
   <g>
       <p>
         text
@@ -294,7 +294,7 @@ b"<svg>
 ");
 
 test_resave!(text_tspan_1,
-b"<svg>
+"<svg>
     <text>
       Some  <tspan> complex </tspan>  text \t
     </text>
@@ -308,7 +308,7 @@ b"<svg>
 ");
 
 test_resave!(text_tspan_3,
-b"<svg>
+"<svg>
     <text>
         <tspan>Text</tspan>
     </text>
@@ -322,7 +322,7 @@ b"<svg>
 ");
 
 test_resave!(text_space_preserve,
-b"<svg>
+"<svg>
     <text xml:space='preserve'> Text
     </text>
 </svg>
@@ -334,7 +334,7 @@ b"<svg>
 ");
 
 test_resave!(cdata_1,
-b"<svg>
+"<svg>
     <script><![CDATA[
         js code
     ]]></script>
@@ -350,7 +350,7 @@ b"<svg>
 ");
 
 test_resave!(cdata_2,
-b"<svg>
+"<svg>
     <script><![CDATA[]]></script>
 </svg>
 ",
@@ -362,7 +362,7 @@ b"<svg>
 ");
 
 test_resave!(cdata_3,
-b"<svg>
+"<svg>
     <script><![CDATA[qwe]]></script>
 </svg>
 ",
@@ -374,7 +374,7 @@ b"<svg>
 ");
 
 test_resave!(cdata_4,
-b"<svg>
+"<svg>
     <script><![CDATA[qwe]]><![CDATA[qwe]]><![CDATA[qwe]]></script>
 </svg>
 ",
@@ -392,7 +392,7 @@ fn indent_1() {
     // default indent is 4
 
     let doc = Document::from_data(
-b"<svg>
+"<svg>
     <g>
         <rect/>
     </g>
@@ -411,7 +411,7 @@ b"<svg>
 #[test]
 fn indent_2() {
     let doc = Document::from_data(
-b"<svg>
+"<svg>
     <g>
         <rect/>
     </g>
@@ -432,7 +432,7 @@ b"<svg>
 #[test]
 fn indent_3() {
     let doc = Document::from_data(
-b"<svg>
+"<svg>
     <g>
         <rect/>
     </g>
@@ -453,7 +453,7 @@ b"<svg>
 #[test]
 fn indent_4() {
     let doc = Document::from_data(
-b"<svg>
+"<svg>
     <g>
         <rect/>
     </g>
@@ -469,7 +469,7 @@ b"<svg>
 #[test]
 fn single_quote_1() {
     let doc = Document::from_data(
-b"<svg id=\"svg1\"/>").unwrap();
+"<svg id=\"svg1\"/>").unwrap();
 
     let mut opt = WriteOptions::default();
     opt.indent = -1;

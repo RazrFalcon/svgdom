@@ -42,15 +42,15 @@ impl Document {
         }
     }
 
-    #[cfg(feature = "parsing")]
     /// Constructs a new `Document` from the `data` using a default `ParseOptions`.
-    pub fn from_data(data: &[u8]) -> Result<Document, Error> {
+    #[cfg(feature = "parsing")]
+    pub fn from_data(data: &str) -> Result<Document, Error> {
         Document::from_data_with_opt(data, &ParseOptions::default())
     }
 
-    #[cfg(feature = "parsing")]
     /// Constructs a new `Document` from the `data` using a supplied `ParseOptions`.
-    pub fn from_data_with_opt(data: &[u8], opt: &ParseOptions) -> Result<Document, Error> {
+    #[cfg(feature = "parsing")]
+    pub fn from_data_with_opt(data: &str, opt: &ParseOptions) -> Result<Document, Error> {
         parse_svg(data, opt)
     }
 
@@ -111,7 +111,7 @@ impl Document {
     /// ```
     /// use svgdom::{Document, ElementId};
     ///
-    /// let doc = Document::from_data(b"<!--comment--><svg/>").unwrap();
+    /// let doc = Document::from_data("<!--comment--><svg/>").unwrap();
     ///
     /// assert_eq!(doc.svg_element().unwrap().is_tag_name(ElementId::Svg), true);
     /// ```

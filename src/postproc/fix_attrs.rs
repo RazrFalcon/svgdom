@@ -47,7 +47,7 @@ mod test_rect {
     }
 
     test!(fix_rect_1,
-b"<svg>
+"<svg>
     <rect/>
     <rect width='-1' height='-1'/>
     <rect width='30'/>
@@ -70,7 +70,7 @@ b"<svg>
 ");
 
     test!(fix_rect_2,
-b"<svg>
+"<svg>
     <rect height='50' width='40'/>
     <rect height='50' rx='-5' width='40'/>
     <rect height='50' ry='-5' width='40'/>
@@ -141,7 +141,7 @@ mod test_poly {
     }
 
     test!(fix_polyline_1,
-b"<svg>
+"<svg>
     <polyline points='5 6 7'/>
     <polyline points='5'/>
     <polyline points=''/>
@@ -215,7 +215,7 @@ mod test_stop {
     }
 
     test!(fix_stop_1,
-b"<svg>
+"<svg>
     <linearGradient>
         <stop offset='-1'/>
         <stop offset='0.4'/>

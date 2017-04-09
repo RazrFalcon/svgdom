@@ -206,7 +206,7 @@ mod lg_tests {
     }
 
     test!(resolve_1,
-b"<svg>
+"<svg>
     <linearGradient id='lg1'/>
 </svg>",
 "<svg>
@@ -229,7 +229,7 @@ mod rg_tests {
     }
 
     test_rg!(resolve_1,
-b"<svg>
+"<svg>
     <radialGradient id='rg1'/>
 </svg>",
 "<svg>
@@ -239,7 +239,7 @@ b"<svg>
 ");
 
     test_rg!(resolve_2,
-b"<svg>
+"<svg>
     <radialGradient id='rg1' cx='10' cy='20'/>
 </svg>",
 "<svg>
@@ -249,7 +249,7 @@ b"<svg>
 ");
 
     test_rg!(resolve_3,
-b"<svg>
+"<svg>
     <radialGradient id='rg1' cx='10' cy='20' fx='30' fy='40' \
         gradientTransform='matrix(1 0 0 1 10 20)' gradientUnits='userSpaceOnUse' r='5' \
         spreadMethod='repeat'/>
@@ -266,7 +266,7 @@ b"<svg>
 ");
 
     test_rg!(resolve_4,
-b"<svg>
+"<svg>
     <radialGradient id='rg1' cx='10' cy='20' fx='30' fy='40' \
         gradientTransform='matrix(1 0 0 1 10 20)' gradientUnits='userSpaceOnUse' r='5' \
         spreadMethod='repeat'/>
@@ -287,7 +287,7 @@ b"<svg>
 ");
 
     test_rg!(resolve_5,
-b"<svg>
+"<svg>
     <radialGradient id='rg1' cx='10' cy='20' r='5'/>
     <radialGradient id='rg2' cy='30' xlink:href='#rg1'/>
 </svg>",
@@ -301,7 +301,7 @@ b"<svg>
 
     // This is the main test, because it check resolving order correctness.
     test_rg!(resolve_6,
-b"<svg>
+"<svg>
     <radialGradient id='rg2' cy='30' xlink:href='#rg1'/>
     <radialGradient id='rg3' cx='30' xlink:href='#rg2'/>
     <radialGradient id='rg4' cx='40' xlink:href='#rg2'/>
@@ -320,7 +320,7 @@ b"<svg>
 ");
 
     test_rg!(resolve_7,
-b"<svg>
+"<svg>
     <linearGradient id='lg1' gradientUnits='userSpaceOnUse' spreadMethod='repeat' x='5' y='5'/>
     <radialGradient id='rg2' cy='30' r='5' xlink:href='#lg1'/>
 </svg>",
@@ -351,7 +351,7 @@ mod stop_tests {
     }
 
     test!(resolve_1,
-b"<svg>
+"<svg>
     <linearGradient>
         <stop offset='50%'/>
     </linearGradient>

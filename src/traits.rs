@@ -13,11 +13,11 @@ pub trait FromStream: Sized {
     /// Error type.
     type Err;
 
-    /// Parses data from the `Stream`.
+    /// Parses data from a `Stream`.
     fn from_stream(s: Stream) -> Result<Self, Self::Err>;
 
-    /// Parses data from the `&[u8]`.
-    fn from_data(data: &[u8]) -> Result<Self, Self::Err> {
+    /// Parses data from a string.
+    fn from_data(data: &str) -> Result<Self, Self::Err> {
         FromStream::from_stream(Stream::new(data))
     }
 }

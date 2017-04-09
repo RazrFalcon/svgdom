@@ -205,7 +205,7 @@ fn remove_attribute_1() {
 #[test]
 fn drain_1() {
     let doc = Document::from_data(
-b"<svg>
+"<svg>
     <rect/>
 </svg>").unwrap();
 
@@ -217,7 +217,7 @@ b"<svg>
 #[test]
 fn drain_2() {
     let doc = Document::from_data(
-b"<svg>
+"<svg>
     <rect/>
     <g>
         <path/>
@@ -239,7 +239,7 @@ b"<svg>
 #[test]
 fn drain_3() {
     let doc = Document::from_data(
-b"<svg>
+"<svg>
     <rect/>
     <g>
         <path/>
@@ -260,7 +260,7 @@ b"<svg>
 #[test]
 fn drain_4() {
     let doc = Document::from_data(
-b"<svg>
+"<svg>
     <rect/>
     <g>
         <rect/>
@@ -280,7 +280,7 @@ b"<svg>
 #[test]
 fn parents_1() {
     let doc = Document::from_data(
-b"<svg>
+"<svg>
     <rect/>
     <g>
         <path/>
@@ -299,7 +299,7 @@ b"<svg>
 #[test]
 fn parents_2() {
     let doc = Document::from_data(
-b"<svg>
+"<svg>
     <!--comment-->
     <g>
         <!--comment-->
@@ -325,7 +325,7 @@ b"<svg>
 #[test]
 fn deep_copy_1() {
     let doc = Document::from_data(
-b"<svg>
+"<svg>
     <g id='g1'>
         <rect id='rect1'/>
     </g>
@@ -354,7 +354,7 @@ b"<svg>
 #[test]
 fn deep_copy_2() {
     let doc = Document::from_data(
-b"<svg>
+"<svg>
     <g id='g1'>
         <rect id='rect1'/>
     </g>
@@ -389,7 +389,7 @@ b"<svg>
 #[test]
 fn deep_copy_3() {
     let doc = Document::from_data(
-b"<svg>
+"<svg>
     <linearGradient id='lg1'/>
     <g id='g1' stroke-width='5'>
         <rect id='rect1' fill='url(#lg1)'/>
