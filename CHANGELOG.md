@@ -7,7 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 ### Added
 - `postproc` module.
-- `ElementType::is_gradient`
+- `ElementType::is_gradient`.
+- `Indent` enum instead of `i8` for `WriteOptions::indent`.
 
 ### Changed
 - All warnings will be printed to stderr now.

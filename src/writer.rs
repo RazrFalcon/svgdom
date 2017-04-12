@@ -18,6 +18,7 @@ use super::{
     Traverse,
     WriteBuffer,
     WriteOptions,
+    Indent,
 };
 
 /// An indent counter.
@@ -30,23 +31,24 @@ struct Depth {
 impl Depth {
     /// Creates a new `Depth`.
     #[inline]
-    fn new(indent: i8) -> Depth {
+    fn new(indent: Indent) -> Depth {
         Depth {
             value: 0,
             block: Depth::gen_indent(indent),
         }
     }
 
-    fn gen_indent(len: i8) -> Vec<u8> {
-        match len {
-            -1 | 0 => Vec::new(),
-            _ => {
-                let mut v = Vec::with_capacity(len as usize);
-                for _ in 0..len {
+    fn gen_indent(indent: Indent) -> Vec<u8> {
+        match indent {
+            Indent::None => Vec::new(),
+            Indent::Spaces(n) => {
+                let mut v = Vec::with_capacity(n as usize);
+                for _ in 0..n {
                     v.push(b' ');
                 }
                 v
             }
+            Indent::Tabs => vec![b'\t'],
         }
     }
 
@@ -87,7 +89,7 @@ pub fn write_dom(doc: &Document, opt: &WriteOptions, out: &mut Vec<u8>) {
 
 /// Writes node's start edge.
 fn write_start_edge(node: &Node, iter: &mut Traverse, depth: &mut Depth, opt: &WriteOptions,
-                        out: &mut Vec<u8>) {
+                    out: &mut Vec<u8>) {
     match node.node_type() {
         NodeType::Root => {}
         NodeType::Element => {
@@ -305,7 +307,7 @@ fn write_element_end(node: &Node, out: &mut Vec<u8>) {
 }
 
 /// Writes node's end edge.
-fn write_end_edge(node: &Node, depth: &mut Depth, indent: i8, out: &mut Vec<u8>) {
+fn write_end_edge(node: &Node, depth: &mut Depth, indent: Indent, out: &mut Vec<u8>) {
     match node.node_type() {
         NodeType::Element => {
             if node.has_children() {
@@ -322,11 +324,9 @@ fn write_end_edge(node: &Node, depth: &mut Depth, indent: i8, out: &mut Vec<u8>)
 }
 
 /// Writes a new line.
-///
-/// If `indent` is equal to `-1` - nothing will be written.
 #[inline]
-fn write_newline(indent: i8, out: &mut Vec<u8>) {
-    if indent >= 0 {
+fn write_newline(indent: Indent, out: &mut Vec<u8>) {
+    if indent != Indent::None {
         out.push(b'\n');
     }
 }

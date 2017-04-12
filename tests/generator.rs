@@ -5,7 +5,7 @@
 #[macro_use]
 extern crate svgdom;
 
-use svgdom::{Document, WriteOptions, WriteToString, NodeType};
+use svgdom::{Document, WriteOptions, WriteToString, NodeType, Indent};
 use svgdom::AttributeId as AId;
 use svgdom::ElementId as EId;
 use svgdom::types::{Transform, Length, LengthUnit, Color};
@@ -419,7 +419,7 @@ fn indent_2() {
 ").unwrap();
 
     let mut opt = WriteOptions::default();
-    opt.indent = 2;
+    opt.indent = Indent::Spaces(2);
     assert_eq_text!(doc.to_string_with_opt(&opt),
 "<svg>
   <g>
@@ -440,7 +440,7 @@ fn indent_3() {
 ").unwrap();
 
     let mut opt = WriteOptions::default();
-    opt.indent = 0;
+    opt.indent = Indent::Spaces(0);
     assert_eq_text!(doc.to_string_with_opt(&opt),
 "<svg>
 <g>
@@ -461,9 +461,30 @@ fn indent_4() {
 ").unwrap();
 
     let mut opt = WriteOptions::default();
-    opt.indent = -1;
+    opt.indent = Indent::None;
     assert_eq_text!(doc.to_string_with_opt(&opt),
 "<svg><g><rect/></g></svg>");
+}
+
+#[test]
+fn indent_5() {
+    let doc = Document::from_str(
+"<svg>
+    <g>
+        <rect/>
+    </g>
+</svg>
+").unwrap();
+
+    let mut opt = WriteOptions::default();
+    opt.indent = Indent::Tabs;
+    assert_eq_text!(doc.to_string_with_opt(&opt),
+"<svg>
+\t<g>
+\t\t<rect/>
+\t</g>
+</svg>
+");
 }
 
 #[test]
@@ -472,7 +493,7 @@ fn single_quote_1() {
 "<svg id=\"svg1\"/>").unwrap();
 
     let mut opt = WriteOptions::default();
-    opt.indent = -1;
+    opt.indent = Indent::None;
     opt.use_single_quote = true;
     assert_eq_text!(doc.to_string_with_opt(&opt), "<svg id='svg1'/>");
 }

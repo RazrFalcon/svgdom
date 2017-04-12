@@ -4,6 +4,17 @@
 
 use types::DEFAULT_PRECISION;
 
+/// XML node indention
+#[derive(Clone,Copy,PartialEq)]
+pub enum Indent {
+    /// Disable indention and new lines.
+    None,
+    /// Indent with spaces. Prefer range 0..4.
+    Spaces(u8),
+    /// Indent with tabs.
+    Tabs,
+}
+
 /// Options that defines SVG paths writing.
 pub struct WriteOptionsPaths {
     /// Use compact path notation.
@@ -75,8 +86,6 @@ pub struct WriteOptionsPaths {
 pub struct WriteOptions {
     /// Set XML nodes indention.
     ///
-    /// Range: -1..4 (-1 indicates no spaces and new lines)
-    ///
     /// Example:
     ///
     /// Before:
@@ -94,8 +103,8 @@ pub struct WriteOptions {
     ///     <svg><rect fill="red"/></svg>
     /// ```
     ///
-    /// Default: 4
-    pub indent: i8,
+    /// Default: 4 spaces
+    pub indent: Indent,
 
     /// Use single quote marks instead of double quote.
     ///
@@ -164,7 +173,7 @@ pub struct WriteOptions {
 impl Default for WriteOptions {
     fn default() -> WriteOptions {
         WriteOptions {
-            indent: 4,
+            indent: Indent::Spaces(4),
             use_single_quote: false,
             trim_hex_colors: false,
             write_hidden_attributes: false,
