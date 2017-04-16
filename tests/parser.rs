@@ -429,6 +429,22 @@ test_resave!(parse_css_21,
 </svg>
 ");
 
+// space before closing tag
+test_resave!(parse_css_22,
+"<svg>
+<style type='text/css' >
+<![CDATA[
+rect {fill:red;}
+]]>
+</style>
+<rect/>
+</svg>
+",
+"<svg>
+    <rect fill='#ff0000'/>
+</svg>
+");
+
 // style must be ungroupped after presentation attributes
 test_resave!(parse_style_1,
 "<svg>

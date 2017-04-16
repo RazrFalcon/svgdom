@@ -4,7 +4,7 @@
 
 //! This module contains all struct's for manipulating SVG paths data.
 
-use std::fmt;
+use std::{fmt, str};
 
 use super::number;
 use {WriteOptions, WriteBuffer, WriteToString};
@@ -43,10 +43,14 @@ pub enum Command {
 pub struct Segment {
     /// Indicate that segment is absolute.
     pub absolute: bool,
+    // TODO: use float-cmp instead of PartialEq
     data: SegmentData,
 }
 
 impl Segment {
+    // TODO: to_relative
+    // TODO: to_absolute
+
     /// Constructs a new MoveTo `Segment`.
     pub fn new_move_to(x: f64, y: f64) -> Segment {
         Segment {
@@ -226,6 +230,62 @@ impl Segment {
               SegmentData::HorizontalLineTo { .. }
             | SegmentData::ClosePath => None,
         }
+    }
+}
+
+impl fmt::Display for Segment {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let mut buf: Vec<u8> = Vec::new();
+        let mut flag = false;
+        let opt = WriteOptions::default();
+
+        write_cmd_char(self, &mut buf);
+        buf.push(b' ');
+
+        match *self.data() {
+              SegmentData::MoveTo { x, y }
+            | SegmentData::LineTo { x, y }
+            | SegmentData::SmoothQuadratic { x, y } => {
+                write_coords(&[x, y], true, &mut flag, &opt, &mut buf);
+            }
+
+            SegmentData::HorizontalLineTo { x } => {
+                write_coords(&[x], true, &mut flag, &opt, &mut buf);
+            }
+
+            SegmentData::VerticalLineTo { y } => {
+                write_coords(&[y], true, &mut flag, &opt, &mut buf);
+            }
+
+            SegmentData::CurveTo { x1, y1, x2, y2, x, y } => {
+                write_coords(&[x1, y1, x2, y2, x, y], true, &mut flag, &opt, &mut buf);
+            }
+
+            SegmentData::SmoothCurveTo { x2, y2, x, y } => {
+                write_coords(&[x2, y2, x, y], true, &mut flag, &opt, &mut buf);
+            }
+
+            SegmentData::Quadratic { x1, y1, x, y } => {
+                write_coords(&[x1, y1, x, y], true, &mut flag, &opt, &mut buf);
+            }
+
+            SegmentData::EllipticalArc { rx, ry, x_axis_rotation, large_arc, sweep, x, y } => {
+                write_coords(&[rx, ry, x_axis_rotation], true, &mut flag, &opt, &mut buf);
+                buf.push(b' ');
+                write_flag(large_arc, &mut buf);
+                buf.push(b' ');
+                write_flag(sweep, &mut buf);
+                buf.push(b' ');
+
+                write_coords(&[x, y], true, &mut flag, &opt, &mut buf);
+            }
+            SegmentData::ClosePath => {},
+        }
+
+        // remove trailing space
+        buf.pop();
+
+        write!(f, "{}", str::from_utf8(&buf).unwrap())
     }
 }
 
@@ -619,7 +679,7 @@ impl WriteBuffer for Path {
                         buf.push(b' ');
                     }
 
-                    // reset, because flags cna't have dots
+                    // reset, because flags can't have dots
                     prev_coord_has_dot = false;
 
                     write_coords(&[x, y], is_written, &mut prev_coord_has_dot, opt, buf);
@@ -692,6 +752,16 @@ fn write_cmd(seg: &Segment, prev_cmd: &mut Option<PrevCmd>,
         return false;
     }
 
+    write_cmd_char(seg, buf);
+
+    if !(seg.cmd() == Command::ClosePath || opt.paths.use_compact_notation) {
+        buf.push(b' ');
+    }
+
+    true
+}
+
+fn write_cmd_char(seg: &Segment, buf: &mut Vec<u8>) {
     let cmd: u8 = if seg.is_absolute() {
         match seg.cmd() {
             Command::MoveTo => b'M',
@@ -720,12 +790,6 @@ fn write_cmd(seg: &Segment, prev_cmd: &mut Option<PrevCmd>,
         }
     };
     buf.push(cmd);
-
-    if !(seg.cmd() == Command::ClosePath || opt.paths.use_compact_notation) {
-        buf.push(b' ');
-    }
-
-    true
 }
 
 fn write_coords(coords: &[f64], is_explicit_cmd: bool, prev_coord_has_dot: &mut bool,
@@ -947,6 +1011,17 @@ mod tests {
         opt.paths.coordinates_precision = 1;
         assert_eq_text!(path.to_string_with_opt(&opt),
             "M 10 10 L 20.1 21");
+    }
+
+    #[test]
+    fn test_seg_display_1() {
+        let mut seg = path::Segment::new_move_to(10.0, 20.0);
+        assert_eq_text!(format!("{}", seg), "M 10 20");
+
+        seg.absolute = false;
+        assert_eq_text!(format!("{}", seg), "m 10 20");
+
+        assert_eq_text!(format!("{}", path::Segment::new_close_path()), "Z");
     }
 }
 

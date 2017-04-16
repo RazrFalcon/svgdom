@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - `postproc` module.
 - `ElementType::is_gradient`.
 - `Indent` enum instead of `i8` for `WriteOptions::indent`.
+- Implemented `Display` trait for `path::Segment`.
 
 ### Changed
 - All warnings will be printed to stderr now.
