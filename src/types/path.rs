@@ -6,7 +6,7 @@
 
 use std::{fmt, str};
 
-use super::number;
+use super::{number, FuzzyEq};
 use {WriteOptions, WriteBuffer, WriteToString};
 
 #[cfg(feature = "parsing")]
@@ -43,7 +43,6 @@ pub enum Command {
 pub struct Segment {
     /// Indicate that segment is absolute.
     pub absolute: bool,
-    // TODO: use float-cmp instead of PartialEq
     data: SegmentData,
 }
 
@@ -231,6 +230,61 @@ impl Segment {
             | SegmentData::ClosePath => None,
         }
     }
+
+    /// Compares two segments using fuzzy float compare algorithm.
+    ///
+    /// Use it instead of `==`.
+    ///
+    /// It's not very fast.
+    pub fn fuzzy_eq(&self, other: &Segment) -> bool {
+        if self.absolute != other.absolute {
+            return false;
+        }
+
+        use svgparser::path::SegmentData as Seg;
+
+        // TODO: find a way to wrap it in macro
+        match (self.data, other.data) {
+            (Seg::MoveTo { x, y }, Seg::MoveTo { x: ox, y: oy }) |
+            (Seg::LineTo { x, y }, Seg::LineTo { x: ox, y: oy }) |
+            (Seg::SmoothQuadratic { x, y }, Seg::SmoothQuadratic { x: ox, y: oy }) => {
+                x.fuzzy_eq(&ox) && y.fuzzy_eq(&oy)
+            }
+            (Seg::HorizontalLineTo { x }, Seg::HorizontalLineTo { x: ox }) => {
+                x.fuzzy_eq(&ox)
+            }
+            (Seg::VerticalLineTo { y }, Seg::VerticalLineTo { y: oy }) => {
+                y.fuzzy_eq(&oy)
+            }
+            (Seg::CurveTo { x1, y1, x2, y2, x, y },
+                Seg::CurveTo { x1: ox1, y1: oy1, x2: ox2, y2: oy2, x: ox, y: oy }) => {
+                   x.fuzzy_eq(&ox)   && y.fuzzy_eq(&oy)
+                && x1.fuzzy_eq(&ox1) && y1.fuzzy_eq(&oy1)
+                && x2.fuzzy_eq(&ox2) && y2.fuzzy_eq(&oy2)
+            }
+            (Seg::SmoothCurveTo { x2, y2, x, y },
+                Seg::SmoothCurveTo { x2: ox2, y2: oy2, x: ox, y: oy }) => {
+                   x.fuzzy_eq(&ox)   && y.fuzzy_eq(&oy)
+                && x2.fuzzy_eq(&ox2) && y2.fuzzy_eq(&oy2)
+            }
+            (Seg::Quadratic { x1, y1, x, y },
+                Seg::Quadratic { x1: ox1, y1: oy1, x: ox, y: oy }) => {
+                   x.fuzzy_eq(&ox)   && y.fuzzy_eq(&oy)
+                && x1.fuzzy_eq(&ox1) && y1.fuzzy_eq(&oy1)
+            }
+            (Seg::EllipticalArc { rx, ry, x_axis_rotation, large_arc, sweep, x, y },
+                Seg::EllipticalArc { rx: orx, ry: ory, x_axis_rotation: ox_axis_rotation,
+                                     large_arc: olarge_arc, sweep: osweep, x: ox, y: oy }) => {
+                   x.fuzzy_eq(&ox)   && y.fuzzy_eq(&oy)
+                && rx.fuzzy_eq(&orx) && ry.fuzzy_eq(&ory)
+                && x_axis_rotation == ox_axis_rotation
+                && large_arc == olarge_arc
+                && sweep == osweep
+            }
+            (Seg::ClosePath, Seg::ClosePath) => true,
+            _ => false,
+        }
+    }
 }
 
 impl fmt::Display for Segment {
@@ -288,6 +342,76 @@ impl fmt::Display for Segment {
         write!(f, "{}", str::from_utf8(&buf).unwrap())
     }
 }
+
+#[cfg(test)]
+mod segment_tests {
+    use super::*;
+    use types::path::Segment;
+
+    macro_rules! test_seg {
+        ($name:ident,  $seg1:expr, $seg2:expr) => (
+        #[test]
+        fn $name() {
+            assert!($seg1 != $seg2);
+            assert!($seg1.fuzzy_eq(&$seg2));
+        })
+    }
+
+    test_seg!(test_fuzzy_eq_m,
+        Segment::new_move_to(10.0, 10.1 + 10.2),
+        Segment::new_move_to(10.0, 20.3)
+    );
+
+    test_seg!(test_fuzzy_eq_l,
+        Segment::new_line_to(10.0, 10.1 + 10.2),
+        Segment::new_line_to(10.0, 20.3)
+    );
+
+    test_seg!(test_fuzzy_eq_h,
+        Segment::new_hline_to(10.1 + 10.2),
+        Segment::new_hline_to(20.3)
+    );
+
+    test_seg!(test_fuzzy_eq_v,
+        Segment::new_vline_to(10.1 + 10.2),
+        Segment::new_vline_to(20.3)
+    );
+
+    test_seg!(test_fuzzy_eq_c,
+        Segment::new_curve_to(10.0, 10.1 + 10.2, 10.0, 10.0, 10.0, 10.0),
+        Segment::new_curve_to(10.0, 20.3, 10.0, 10.0, 10.0, 10.0)
+    );
+
+    test_seg!(test_fuzzy_eq_s,
+        Segment::new_smooth_curve_to(10.0, 10.1 + 10.2, 10.0, 10.0),
+        Segment::new_smooth_curve_to(10.0, 20.3, 10.0, 10.0)
+    );
+
+    test_seg!(test_fuzzy_eq_q,
+        Segment::new_smooth_curve_to(10.0, 10.1 + 10.2, 10.0, 10.0),
+        Segment::new_smooth_curve_to(10.0, 20.3, 10.0, 10.0)
+    );
+
+    test_seg!(test_fuzzy_eq_t,
+        Segment::new_smooth_quad_to(10.0, 10.1 + 10.2),
+        Segment::new_smooth_quad_to(10.0, 20.3)
+    );
+
+    test_seg!(test_fuzzy_eq_a,
+        Segment::new_arc_to(10.0, 10.0, 0.0, true, true, 10.0, 10.1 + 10.2),
+        Segment::new_arc_to(10.0, 10.0, 0.0, true, true, 10.0, 20.3)
+    );
+
+    #[test]
+    fn test_fuzzy_ne_1() {
+        let seg1 = Segment::new_move_to(10.0, 10.0);
+        let seg2 = Segment::new_move_to(10.0, 20.0);
+
+        assert!(seg1 != seg2);
+        assert!(!seg1.fuzzy_eq(&seg2));
+    }
+}
+
 
 /// Representation of the SVG path data.
 #[derive(Default,PartialEq,Clone)]

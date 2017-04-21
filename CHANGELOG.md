@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - `ElementType::is_gradient`.
 - `Indent` enum instead of `i8` for `WriteOptions::indent`.
 - Implemented `Display` trait for `path::Segment`.
+- `path::Segment::fuzzy_eq`.
 
 ### Changed
 - All warnings will be printed to stderr now.
