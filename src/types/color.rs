@@ -9,7 +9,7 @@ use {WriteOptions, WriteBuffer, WriteToString};
 #[cfg(feature = "parsing")]
 use FromStream;
 #[cfg(feature = "parsing")]
-use svgparser::{Stream, RgbColor, Error as ParseError};
+use svgparser::{Stream, Color as ParserColor, Error as ParseError};
 
 /// Representation of the `<color>` type.
 #[derive(Clone,Copy,PartialEq,Debug)]
@@ -35,7 +35,7 @@ impl FromStream for Color {
     type Err = ParseError;
 
     fn from_stream(s: Stream) -> Result<Color, ParseError> {
-        let c = RgbColor::from_stream(&mut s.clone())?;
+        let c = ParserColor::from_stream(&mut s.clone())?;
         Ok(Color::new(c.red, c.green, c.blue))
     }
 }

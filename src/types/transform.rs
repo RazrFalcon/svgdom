@@ -204,6 +204,7 @@ impl Default for Transform {
     }
 }
 
+// TODO: to fuzzy_eq method
 impl PartialEq for Transform {
     fn eq(&self, other: &Transform) -> bool {
            self.a.fuzzy_eq(&other.a)
