@@ -30,6 +30,7 @@ use svgparser::{
     AttributeValue as ParserAttributeValue,
     PaintFallback,
     Stream,
+    TextFrame,
 };
 use svgparser::svg;
 use svgparser::style;
@@ -38,7 +39,7 @@ use simplecss;
 
 struct NodeStreamData<'a> {
     node: Node,
-    stream: Stream<'a>,
+    stream: TextFrame<'a>,
 }
 
 struct NodeTextData<'a> {
@@ -74,10 +75,11 @@ impl<'a> Links<'a> {
     }
 }
 
+// TODO: to TextFrame
 type Entities<'a> = HashMap<&'a str, &'a str>;
 
 struct PostData<'a> {
-    css_list: Vec<Stream<'a>>,
+    css_list: Vec<TextFrame<'a>>,
     links: Links<'a>,
     entitis: Entities<'a>,
     // List of element with 'class' attribute.
@@ -91,7 +93,7 @@ pub fn parse_svg(text: &str, opt: &ParseOptions) -> Result<Document, Error> {
     let doc = Document::new();
     let mut parent = doc.root();
 
-    let mut tokenizer = svg::Tokenizer::new(text);
+    let mut tokenizer = svg::Tokenizer::from_str(text);
 
     // Since we not only parsing, but also converting an SVG structure,
     // we can't do everything in one take.
@@ -145,7 +147,7 @@ pub fn parse_svg(text: &str, opt: &ParseOptions) -> Result<Document, Error> {
 
     // resolve styles
     for d in &post_data.style_attrs {
-        parse_style_attribute(&d.node, d.stream.clone(), &mut post_data.links,
+        parse_style_attribute(&d.node, d.stream, &mut post_data.links,
                               &post_data.entitis, &opt)?;
     }
 
@@ -199,7 +201,7 @@ fn process_token<'a>(doc: &Document,
             if n.is_svg_element() {
                 parse_attribute(&n,
                                 name,
-                                &mut val.clone(),
+                                val,
                                 post_data,
                                 &opt)?;
             } else {
@@ -243,7 +245,7 @@ fn process_token<'a>(doc: &Document,
         }
         svg::Token::Entity(name, value) => {
             // check that ENTITY does not contain an element(s)
-            let mut s = value;
+            let mut s = Stream::from_frame(value);
             s.skip_spaces();
             if !s.at_end() {
                 if s.curr_char_raw() == b'<' {
@@ -279,7 +281,7 @@ fn process_token<'a>(doc: &Document,
 fn parse_svg_element<'a>(doc: &Document,
                          tokenizer: &mut svg::Tokenizer<'a>,
                          id: ElementId,
-                         styles: &mut Vec<Stream<'a>>)
+                         styles: &mut Vec<TextFrame<'a>>)
                          -> Result<Option<Node>, Error> {
     // We never create 'style' element.
     // If 'style' element is empty - we skip it.
@@ -324,7 +326,7 @@ fn parse_svg_element<'a>(doc: &Document,
         loop {
             match tokenizer.parse_next()? {
                   svg::Token::Cdata(s)
-                | svg::Token::Text(s) => styles.push(s.clone()),
+                | svg::Token::Text(s) => styles.push(s),
                 svg::Token::Whitespace(_) => {}
                 _ => break,
             }
@@ -340,7 +342,7 @@ fn parse_svg_element<'a>(doc: &Document,
 
 fn parse_attribute<'a>(node: &Node,
                        name: &'a str,
-                       value: &mut Stream<'a>,
+                       value: TextFrame<'a>,
                        post_data: &mut PostData<'a>,
                        opt: &ParseOptions)
                        -> Result<(), Error> {
@@ -355,13 +357,13 @@ fn parse_attribute<'a>(node: &Node,
                     // we store 'class' attributes for later use
                     post_data.style_attrs.push(NodeStreamData {
                         node: node.clone(),
-                        stream: *value,
+                        stream: value,
                     })
                 }
                   AttributeId::Transform
                 | AttributeId::GradientTransform
                 | AttributeId::PatternTransform => {
-                    let ts = Transform::from_stream(value.clone())?;
+                    let ts = Transform::from_stream(value)?;
                     if !ts.is_default() {
                         node.set_attribute(id, AttributeValue::Transform(ts));
                     }
@@ -373,7 +375,7 @@ fn parse_attribute<'a>(node: &Node,
                 AttributeId::Class => {
                     // we store 'class' attributes for later use
 
-                    let mut s = value.clone();
+                    let mut s = Stream::from_frame(value);
                     while !s.at_end() {
                         s.skip_spaces();
 
@@ -402,9 +404,10 @@ fn parse_attribute<'a>(node: &Node,
 
             let value2;
 
-            if !value.at_end() && value.is_char_eq_raw(b'&') {
-                value.advance_raw(1);
-                let link = value.slice_next_raw(value.len_to_or_end(b';'));
+            let mut stream = Stream::from_frame(value);
+            if !stream.at_end() && stream.is_char_eq_raw(b'&') {
+                stream.advance_raw(1);
+                let link = stream.slice_next_raw(stream.len_to_or_end(b';'));
 
                 match post_data.entitis.get(link) {
                     Some(link_value) => value2 = Some(*link_value),
@@ -414,7 +417,7 @@ fn parse_attribute<'a>(node: &Node,
                     }
                 }
             } else {
-                value2 = Some(value.slice());
+                value2 = Some(stream.slice());
             }
 
             if let Some(val) = value2 {
@@ -428,14 +431,15 @@ fn parse_attribute<'a>(node: &Node,
 
 fn parse_svg_attribute<'a>(node: &Node,
                            id: AttributeId,
-                           stream: &mut Stream<'a>,
+                           frame: TextFrame<'a>,
                            links: &mut Links<'a>,
                            entitis: &Entities<'a>,
                            opt: &ParseOptions)
                            -> Result<(), Error> {
     let tag_id = node.tag_id().unwrap();
 
-    let val = match ParserAttributeValue::from_stream(tag_id, id, stream)? {
+    let mut stream = Stream::from_frame(frame);
+    let val = match ParserAttributeValue::from_stream(tag_id, id, &mut stream)? {
         ParserAttributeValue::String(v) => {
             Some(AttributeValue::String(v.to_string()))
         }
@@ -494,8 +498,8 @@ fn parse_svg_attribute<'a>(node: &Node,
         ParserAttributeValue::EntityRef(link) => {
             match entitis.get(link) {
                 Some(link_value) => {
-                    let mut s = Stream::new(link_value);
-                    parse_svg_attribute(node, id, &mut s, links, entitis, opt)?;
+                    let frame = TextFrame::from_str(link_value);
+                    parse_svg_attribute(node, id, frame, links, entitis, opt)?;
                     None
                 }
                 None => {
@@ -531,24 +535,24 @@ fn prepare_length_unit(unit: LengthUnit, opt: &ParseOptions) -> LengthUnit {
 }
 
 fn parse_style_attribute<'a>(node: &Node,
-                             stream: Stream<'a>,
+                             frame: TextFrame<'a>,
                              links: &mut Links<'a>,
                              entitis: &Entities<'a>,
                              opt: &ParseOptions)
                              -> Result<(), Error> {
-    let mut s = style::Tokenizer::new(stream);
+    let mut s = style::Tokenizer::from_frame(frame);
 
     loop {
         match s.parse_next()? {
-            style::Token::Attribute(name, substream) => {
+            style::Token::Attribute(name, attr_frame) => {
                 match AttributeId::from_name(name) {
                     Some(id) => {
-                        parse_svg_attribute(&node, id, &mut substream.clone(),
+                        parse_svg_attribute(&node, id, attr_frame,
                                             links, entitis, opt)?;
                     }
                     None => {
                         if opt.parse_unknown_attributes {
-                            node.set_attribute(name, substream.slice());
+                            node.set_attribute(name, attr_frame.slice());
                         }
                     }
                 }
@@ -556,7 +560,7 @@ fn parse_style_attribute<'a>(node: &Node,
             style::Token::EntityRef(name) => {
                 if let Some(value) = entitis.get(name) {
                     // TODO: to proper stream
-                    let ss = Stream::new(value);
+                    let ss = TextFrame::from_str(value);
                     parse_style_attribute(&node, ss, links, entitis, opt)?;
                 }
             }
@@ -581,9 +585,9 @@ fn resolve_css<'a>(doc: &Document,
         Class(&'a str),
     }
 
-    fn gen_err_pos(stream: &Stream, pos: usize) -> ErrorPos {
-        let mut s = stream.clone();
-        s.set_pos_raw(pos - stream.global_pos());
+    fn gen_err_pos(frame: TextFrame, pos: usize) -> ErrorPos {
+        let mut s = Stream::from_str(frame.full_slice());
+        s.set_pos_raw(pos);
         s.gen_error_pos()
     }
 
@@ -598,9 +602,8 @@ fn resolve_css<'a>(doc: &Document,
     let styles = post_data.css_list.clone();
 
     for style in &styles {
-        // get global position of the CSS data
-        let (start_pos, end_pos) = {
-            let mut s = style.clone();
+        let mut tokenizer = {
+            let mut s = Stream::from_frame(*style);
 
             // check for a empty string
             s.skip_spaces();
@@ -609,15 +612,10 @@ fn resolve_css<'a>(doc: &Document,
                 continue;
             }
 
-            let start = s.global_pos();
-            let end = start + s.left();
-            (start, end)
-        };
+            let text = style.full_slice();
 
-        let mut tokenizer = {
             // we use 'new_bound' method to get absolute error positions
-            let text = style.parent_text().unwrap();
-            simplecss::Tokenizer::new_bound(text, start_pos, end_pos)
+            simplecss::Tokenizer::new_bound(text, style.start() + s.pos(), style.end())
         };
 
         'root: loop {
@@ -658,10 +656,10 @@ fn resolve_css<'a>(doc: &Document,
                     | CssToken::PseudoClass(_)
                     | CssToken::LangPseudoClass(_)
                     | CssToken::Combinator(_) => {
-                        return Err(Error::UnsupportedCSS(gen_err_pos(style, last_pos)));
+                        return Err(Error::UnsupportedCSS(gen_err_pos(*style, last_pos)));
                     }
                     _ => {
-                        return Err(Error::InvalidCSS(gen_err_pos(style, last_pos)));
+                        return Err(Error::InvalidCSS(gen_err_pos(*style, last_pos)));
                     }
                 };
 
@@ -678,7 +676,7 @@ fn resolve_css<'a>(doc: &Document,
                     CssToken::BlockEnd => break,
                     CssToken::EndOfStream => break 'root,
                     _ => {
-                        return Err(Error::InvalidCSS(gen_err_pos(style, last_pos)));
+                        return Err(Error::InvalidCSS(gen_err_pos(*style, last_pos)));
                     }
                 }
             }
@@ -765,7 +763,7 @@ fn apply_css_attributes<'a>(values: &Vec<(&str,&'a str)>,
         match AttributeId::from_name(aname) {
             Some(aid) => {
                 // TODO: to a proper stream
-                parse_svg_attribute(node, aid, &mut Stream::new(avalue),
+                parse_svg_attribute(node, aid, TextFrame::from_str(avalue),
                                     links, entitis, opt)?;
             }
             None => {

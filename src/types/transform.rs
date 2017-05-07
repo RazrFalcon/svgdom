@@ -12,7 +12,7 @@ use super::number::{write_num, FuzzyEq, DEFAULT_PRECISION};
 #[cfg(feature = "parsing")]
 use FromStream;
 #[cfg(feature = "parsing")]
-use svgparser::{Stream, Error as ParseError};
+use svgparser::{TextFrame, Error as ParseError};
 
 /// Representation of the`<transform>` type.
 #[derive(Debug,Clone,Copy,PartialEq)]
@@ -222,11 +222,11 @@ impl Default for Transform {
 impl FromStream for Transform {
     type Err = ParseError;
 
-    fn from_stream(s: Stream) -> Result<Transform, ParseError> {
+    fn from_stream(s: TextFrame) -> Result<Transform, ParseError> {
         use svgparser::transform::Tokenizer;
         use svgparser::transform::TransformToken;
 
-        let mut ts = Tokenizer::new(s);
+        let mut ts = Tokenizer::from_frame(s);
         let mut transform = Transform::default();
 
         loop {

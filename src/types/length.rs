@@ -10,7 +10,7 @@ use {WriteOptions, WriteBuffer, WriteToString};
 #[cfg(feature = "parsing")]
 use FromStream;
 #[cfg(feature = "parsing")]
-use svgparser::{Stream, Error as ParseError};
+use svgparser::{Stream, TextFrame, Error as ParseError};
 
 /// Representation of the [`<length>`] type.
 /// [`<length>`]: https://www.w3.org/TR/SVG/types.html#DataTypeLength
@@ -49,8 +49,9 @@ impl Length {
 impl FromStream for Length {
     type Err = ParseError;
 
-    fn from_stream(mut s: Stream) -> Result<Length, ParseError> {
-        let l = s.parse_length()?;
+    fn from_stream(s: TextFrame) -> Result<Length, ParseError> {
+        let mut ss = Stream::from_frame(s);
+        let l = ss.parse_length()?;
         Ok(Length::new(l.num, l.unit))
     }
 }

@@ -5,7 +5,7 @@
 use super::WriteOptions;
 
 #[cfg(feature = "parsing")]
-use svgparser::Stream;
+use svgparser::TextFrame;
 
 #[cfg(feature = "parsing")]
 /// The trait for parsing data from the data stream.
@@ -14,11 +14,11 @@ pub trait FromStream: Sized {
     type Err;
 
     /// Parses data from a `Stream`.
-    fn from_stream(s: Stream) -> Result<Self, Self::Err>;
+    fn from_stream(s: TextFrame) -> Result<Self, Self::Err>;
 
     /// Parses data from a string.
     fn from_str(data: &str) -> Result<Self, Self::Err> {
-        FromStream::from_stream(Stream::new(data))
+        FromStream::from_stream(TextFrame::from_str(data))
     }
 }
 

@@ -10,6 +10,8 @@ use svgparser::ErrorPos;
 
 use simplecss::Error as CssParseError;
 
+// TODO: split to Dom errors and Parser errors
+
 /// List of all errors that can occur during processing of the SVG DOM.
 #[derive(PartialEq)]
 pub enum Error {

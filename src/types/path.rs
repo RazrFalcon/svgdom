@@ -14,7 +14,7 @@ use FromStream;
 #[cfg(feature = "parsing")]
 use svgparser;
 #[cfg(feature = "parsing")]
-use svgparser::{Stream, Error as ParseError};
+use svgparser::{TextFrame, Error as ParseError};
 
 pub use svgparser::path::SegmentData;
 
@@ -718,8 +718,8 @@ impl Builder {
 impl FromStream for Path {
     type Err = ParseError;
 
-    fn from_stream(s: Stream) -> Result<Path, ParseError> {
-        let mut t = svgparser::path::Tokenizer::new(s);
+    fn from_stream(s: TextFrame) -> Result<Path, ParseError> {
+        let mut t = svgparser::path::Tokenizer::from_frame(s);
         let mut p = Path::new();
 
         loop {
