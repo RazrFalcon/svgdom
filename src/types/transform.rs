@@ -12,7 +12,7 @@ use super::number::{write_num, FuzzyEq, DEFAULT_PRECISION};
 #[cfg(feature = "parsing")]
 use FromStream;
 #[cfg(feature = "parsing")]
-use svgparser::{TextFrame, Error as ParseError};
+use svgparser::{TextFrame, Tokenize, Error as ParseError};
 
 /// Representation of the`<transform>` type.
 #[derive(Debug,Clone,Copy,PartialEq)]

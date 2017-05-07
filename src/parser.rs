@@ -31,6 +31,7 @@ use svgparser::{
     PaintFallback,
     Stream,
     TextFrame,
+    Tokenize,
 };
 use svgparser::svg;
 use svgparser::style;

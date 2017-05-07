@@ -14,7 +14,7 @@ use FromStream;
 #[cfg(feature = "parsing")]
 use svgparser;
 #[cfg(feature = "parsing")]
-use svgparser::{TextFrame, Error as ParseError};
+use svgparser::{TextFrame, Tokenize, Error as ParseError};
 
 pub use svgparser::path::SegmentData;
 
