@@ -15,7 +15,7 @@ use FromStream;
 use svgparser::{Stream, Error as ParseError};
 
 /// Representation of the`<transform>` type.
-#[derive(Debug,Clone,Copy)]
+#[derive(Debug,Clone,Copy,PartialEq)]
 #[allow(missing_docs)]
 pub struct Transform {
     pub a: f64,
@@ -196,23 +196,25 @@ impl Transform {
         *x = self.a * tx + self.c * ty + self.e;
         *y = self.b * tx + self.d * ty + self.f;
     }
-}
 
-impl Default for Transform {
-    fn default() -> Transform {
-        Transform::new(1.0, 0.0, 0.0, 1.0, 0.0, 0.0)
-    }
-}
-
-// TODO: to fuzzy_eq method
-impl PartialEq for Transform {
-    fn eq(&self, other: &Transform) -> bool {
+    /// Compares two transforms using fuzzy float compare algorithm.
+    ///
+    /// Use it instead of `==`.
+    ///
+    /// It's not very fast.
+    pub fn fuzzy_eq(&self, other: &Transform) -> bool {
            self.a.fuzzy_eq(&other.a)
         && self.b.fuzzy_eq(&other.b)
         && self.c.fuzzy_eq(&other.c)
         && self.d.fuzzy_eq(&other.d)
         && self.e.fuzzy_eq(&other.e)
         && self.f.fuzzy_eq(&other.f)
+    }
+}
+
+impl Default for Transform {
+    fn default() -> Transform {
+        Transform::new(1.0, 0.0, 0.0, 1.0, 0.0, 0.0)
     }
 }
 
@@ -323,7 +325,7 @@ fn write_simplified_transform(ts: &Transform, opt: &WriteOptions, out: &mut Vec<
 impl_display!(Transform);
 
 struct TransformMatrix {
-    d: [[f64; 3]; 3] ,
+    d: [[f64; 3]; 3]
 }
 
 impl Default for TransformMatrix {

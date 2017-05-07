@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - `Indent` enum instead of `i8` for `WriteOptions::indent`.
 - Implemented `Display` trait for `path::Segment`.
 - `path::Segment::fuzzy_eq`.
+- `Transform::fuzzy_eq`.
 
 ### Changed
 - All warnings will be printed to stderr now.
@@ -19,6 +20,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Rename `FromStream::from_data` to `FromStream::from_str`.
 - Rename `Document::from_data` to `Document::from_str`.
 - Rename `Document::from_str_with_opt` to `Document::from_str_with_opt`.
+- `Transform` uses default `PartialEq` implementation and not one with `FuzzyEq` now.
+  Use `Transform::fuzzy_eq` method to get old result.
 
 ### Removed
 - `Error::Utf8Error`, because `Document::from_data` accepts `&str` now.
