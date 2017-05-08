@@ -439,8 +439,7 @@ fn parse_svg_attribute<'a>(node: &Node,
                            -> Result<(), Error> {
     let tag_id = node.tag_id().unwrap();
 
-    let mut stream = Stream::from_frame(frame);
-    let val = match ParserAttributeValue::from_stream(tag_id, id, &mut stream)? {
+    let val = match ParserAttributeValue::from_frame(tag_id, id, frame)? {
         ParserAttributeValue::String(v) => {
             Some(AttributeValue::String(v.to_string()))
         }
