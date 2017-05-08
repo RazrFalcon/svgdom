@@ -175,47 +175,43 @@ fn process_token<'a>(doc: &Document,
     }
 
     match token {
-        svg::Token::ElementStart(s) => {
-            match ElementId::from_name(s) {
-                Some(eid) => {
-                    let res = parse_svg_element(&doc, tokenizer, eid, &mut post_data.css_list)?;
+        svg::Token::XmlElementStart(name) => {
+            if !opt.parse_unknown_elements {
+                skip_current_element(tokenizer)?;
+            } else {
+                // create new node
+                let e = doc.create_element(name);
+                *node = Some(e.clone());
+                parent.append(&e);
+            }
+        }
+        svg::Token::SvgElementStart(eid) => {
+            let res = parse_svg_element(&doc, tokenizer, eid, &mut post_data.css_list)?;
 
-                    if let Some(n) = res {
-                        *node = Some(n.clone());
-                        parent.append(&n);
-                    }
-                }
-                None => {
-                    if !opt.parse_unknown_elements {
-                        skip_current_element(tokenizer)?;
-                    } else {
-                        // create new node
-                        let e = doc.create_element(s);
-                        *node = Some(e.clone());
-                        parent.append(&e);
-                    }
+            if let Some(n) = res {
+                *node = Some(n.clone());
+                parent.append(&n);
+            }
+        }
+        svg::Token::XmlAttribute(name, value) => {
+            if opt.parse_unknown_attributes {
+                let n = node.as_ref().unwrap();
+                if n.is_svg_element() {
+                    parse_non_svg_attribute(&n, name, value, post_data);
+                } else {
+                    n.set_attribute(name, value);
                 }
             }
         }
-        svg::Token::Attribute(name, val) => {
+        svg::Token::SvgAttribute(aid, value) => {
             let n = node.as_ref().unwrap();
-            if n.is_svg_element() {
-                parse_attribute(&n,
-                                name,
-                                val,
-                                post_data,
-                                &opt)?;
-            } else {
-                // TODO: store as &str not String
-                if opt.parse_unknown_attributes {
-                    n.set_attribute(name, val.slice());
-                }
-            }
+            parse_svg_attribute(&n, aid, value, post_data, &opt)?;
         }
         svg::Token::ElementEnd(end) => {
             match end {
                 svg::ElementEnd::Empty => {}
-                svg::ElementEnd::Close(_) => {
+                svg::ElementEnd::CloseXml(_) |
+                svg::ElementEnd::CloseSvg(_) => {
                     if *parent != doc.root {
                         *parent = parent.parent().unwrap();
                     }
@@ -296,8 +292,8 @@ fn parse_svg_element<'a>(doc: &Document,
 
         loop {
             match tokenizer.parse_next()? {
-                svg::Token::Attribute(name, value) => {
-                    if name == "type" {
+                svg::Token::SvgAttribute(aid, value) => {
+                    if aid == AttributeId::Type {
                         if value.slice() != "text/css" {
                             is_valid_type = false;
                             break;
@@ -341,102 +337,71 @@ fn parse_svg_element<'a>(doc: &Document,
     }
 }
 
-fn parse_attribute<'a>(node: &Node,
-                       name: &'a str,
-                       value: TextFrame<'a>,
-                       post_data: &mut PostData<'a>,
-                       opt: &ParseOptions)
-                       -> Result<(), Error> {
-    match AttributeId::from_name(name) {
-        Some(id) => {
-            match id {
-                AttributeId::Id => {
-                    node.set_id(value.slice());
-                    post_data.links.elems_with_id.insert(value.slice(), node.clone());
-                }
-                AttributeId::Style => {
-                    // we store 'class' attributes for later use
-                    post_data.style_attrs.push(NodeStreamData {
-                        node: node.clone(),
-                        stream: value,
-                    })
-                }
-                  AttributeId::Transform
-                | AttributeId::GradientTransform
-                | AttributeId::PatternTransform => {
-                    let ts = Transform::from_stream(value)?;
-                    if !ts.is_default() {
-                        node.set_attribute(id, AttributeValue::Transform(ts));
-                    }
-                }
-                AttributeId::D => {
-                    let p = path::Path::from_stream(value.clone())?;
-                    node.set_attribute(AttributeId::D, AttributeValue::Path(p));
-                }
-                AttributeId::Class => {
-                    // we store 'class' attributes for later use
-
-                    let mut s = Stream::from_frame(value);
-                    while !s.at_end() {
-                        s.skip_spaces();
-
-                        let len = s.len_to_space_or_end();
-                        let class_raw = s.read_raw(len);
-                        let class = class_raw;
-
-                        post_data.class_attrs.push(NodeTextData {
-                            node: node.clone(),
-                            text: class,
-                        });
-
-                        s.skip_spaces();
-                    }
-                }
-                _ => {
-                    parse_svg_attribute(&node, id, value, &mut post_data.links,
-                                        &post_data.entitis, opt)?;
-                }
+fn parse_svg_attribute<'a>(node: &Node,
+                           id: AttributeId,
+                           value: TextFrame<'a>,
+                           post_data: &mut PostData<'a>,
+                           opt: &ParseOptions)
+                           -> Result<(), Error> {
+    match id {
+        AttributeId::Id => {
+            node.set_id(value.slice());
+            post_data.links.elems_with_id.insert(value.slice(), node.clone());
+        }
+        AttributeId::Style => {
+            // we store 'class' attributes for later use
+            post_data.style_attrs.push(NodeStreamData {
+                node: node.clone(),
+                stream: value,
+            })
+        }
+          AttributeId::Transform
+        | AttributeId::GradientTransform
+        | AttributeId::PatternTransform => {
+            let ts = Transform::from_stream(value)?;
+            if !ts.is_default() {
+                node.set_attribute(id, AttributeValue::Transform(ts));
             }
         }
-        None => {
-            if !opt.parse_unknown_attributes {
-                return Ok(());
+        AttributeId::D => {
+            let p = path::Path::from_stream(value.clone())?;
+            node.set_attribute(AttributeId::D, AttributeValue::Path(p));
+        }
+        AttributeId::Class => {
+            // we store 'class' attributes for later use
+
+            let mut s = Stream::from_frame(value);
+            while !s.at_end() {
+                s.skip_spaces();
+
+                let len = s.len_to_space_or_end();
+                let class_raw = s.read_raw(len);
+                let class = class_raw;
+
+                post_data.class_attrs.push(NodeTextData {
+                    node: node.clone(),
+                    text: class,
+                });
+
+                s.skip_spaces();
             }
-
-            let value2;
-
-            let mut stream = Stream::from_frame(value);
-            if !stream.at_end() && stream.is_char_eq_raw(b'&') {
-                stream.advance_raw(1);
-                let link = stream.slice_next_raw(stream.len_to_or_end(b';'));
-
-                match post_data.entitis.get(link) {
-                    Some(link_value) => value2 = Some(*link_value),
-                    None => {
-                        warnln!("Could not resolve ENTITY: '{}'.", link);
-                        value2 = None;
-                    }
-                }
-            } else {
-                value2 = Some(stream.slice());
-            }
-
-            if let Some(val) = value2 {
-                node.set_attribute(name, val);
-            }
+        }
+        _ => {
+            parse_svg_attribute_value(&node, id, value, &mut post_data.links,
+                                      &post_data.entitis, opt)?;
         }
     }
 
     Ok(())
 }
 
-fn parse_svg_attribute<'a>(node: &Node,
-                           id: AttributeId,
-                           frame: TextFrame<'a>,
-                           links: &mut Links<'a>,
-                           entitis: &Entities<'a>,
-                           opt: &ParseOptions)
-                           -> Result<(), Error> {
+fn parse_svg_attribute_value<'a>(node: &Node,
+                                 id: AttributeId,
+                                 frame: TextFrame<'a>,
+                                 links: &mut Links<'a>,
+                                 entitis: &Entities<'a>,
+                                 opt: &ParseOptions)
+                                 -> Result<(), Error> {
     let tag_id = node.tag_id().unwrap();
 
     let val = match ParserAttributeValue::from_frame(tag_id, id, frame)? {
@@ -499,7 +464,7 @@ fn parse_svg_attribute<'a>(node: &Node,
             match entitis.get(link) {
                 Some(link_value) => {
                     let frame = TextFrame::from_str(link_value);
-                    parse_svg_attribute(node, id, frame, links, entitis, opt)?;
+                    parse_svg_attribute_value(node, id, frame, links, entitis, opt)?;
                     None
                 }
                 None => {
@@ -525,6 +490,33 @@ fn parse_svg_attribute<'a>(node: &Node,
     Ok(())
 }
 
+fn parse_non_svg_attribute<'a>(node: &Node,
+                               name: &str,
+                               value: &str,
+                               post_data: &PostData<'a>) {
+    let new_value;
+
+    let mut stream = Stream::from_str(value);
+    if !stream.at_end() && stream.is_char_eq_raw(b'&') {
+        stream.advance_raw(1);
+        let link = stream.slice_next_raw(stream.len_to_or_end(b';'));
+
+        match post_data.entitis.get(link) {
+            Some(link_value) => new_value = Some(*link_value),
+            None => {
+                warnln!("Could not resolve ENTITY: '{}'.", link);
+                new_value = None;
+            }
+        }
+    } else {
+        new_value = Some(stream.slice());
+    }
+
+    if let Some(val) = new_value {
+        node.set_attribute(name, val);
+    }
+}
+
 fn prepare_length_unit(unit: LengthUnit, opt: &ParseOptions) -> LengthUnit {
     // replace 'px' with 'none' if 'parse_px_unit' option is disabled
     if !opt.parse_px_unit && unit == LengthUnit::Px {
@@ -544,18 +536,14 @@ fn parse_style_attribute<'a>(node: &Node,
 
     loop {
         match s.parse_next()? {
-            style::Token::Attribute(name, attr_frame) => {
-                match AttributeId::from_name(name) {
-                    Some(id) => {
-                        parse_svg_attribute(&node, id, attr_frame,
-                                            links, entitis, opt)?;
-                    }
-                    None => {
-                        if opt.parse_unknown_attributes {
-                            node.set_attribute(name, attr_frame.slice());
-                        }
-                    }
+            style::Token::XmlAttribute(name, value) => {
+                if opt.parse_unknown_attributes {
+                    node.set_attribute(name, value);
                 }
+            }
+            style::Token::SvgAttribute(id, value) => {
+                parse_svg_attribute_value(&node, id, value,
+                                    links, entitis, opt)?;
             }
             style::Token::EntityRef(name) => {
                 if let Some(value) = entitis.get(name) {
@@ -763,8 +751,8 @@ fn apply_css_attributes<'a>(values: &Vec<(&str,&'a str)>,
         match AttributeId::from_name(aname) {
             Some(aid) => {
                 // TODO: to a proper stream
-                parse_svg_attribute(node, aid, TextFrame::from_str(avalue),
-                                    links, entitis, opt)?;
+                parse_svg_attribute_value(node, aid, TextFrame::from_str(avalue),
+                                          links, entitis, opt)?;
             }
             None => {
                 if opt.parse_unknown_attributes {
@@ -876,7 +864,8 @@ fn skip_current_element(p: &mut svg::Tokenizer) -> Result<(), Error> {
                             break;
                         }
                     }
-                    svg::ElementEnd::Close(_) => {
+                    svg::ElementEnd::CloseXml(_) |
+                    svg::ElementEnd::CloseSvg(_) => {
                         local_depth -= 1;
                         if local_depth == 0 {
                             break;
