@@ -224,21 +224,21 @@ impl FromStream for Transform {
 
     fn from_stream(s: TextFrame) -> Result<Transform, ParseError> {
         use svgparser::transform::Tokenizer;
-        use svgparser::transform::TransformToken;
+        use svgparser::transform::Token;
 
         let mut ts = Tokenizer::from_frame(s);
         let mut transform = Transform::default();
 
         loop {
             match ts.parse_next()? {
-                TransformToken::Matrix { a, b, c, d, e, f } =>
+                Token::Matrix { a, b, c, d, e, f } =>
                     { transform.append(&Transform::new(a, b, c, d, e, f)); }
-                TransformToken::Translate { tx, ty } => { transform.translate(tx, ty); }
-                TransformToken::Scale { sx, sy } => { transform.scale(sx, sy); }
-                TransformToken::Rotate { angle } => { transform.rotate(angle); }
-                TransformToken::SkewX { angle } => { transform.skew_x(angle); }
-                TransformToken::SkewY { angle } => { transform.skew_y(angle); }
-                TransformToken::EndOfStream => break,
+                Token::Translate { tx, ty } => { transform.translate(tx, ty); }
+                Token::Scale { sx, sy } => { transform.scale(sx, sy); }
+                Token::Rotate { angle } => { transform.rotate(angle); }
+                Token::SkewX { angle } => { transform.skew_x(angle); }
+                Token::SkewY { angle } => { transform.skew_y(angle); }
+                Token::EndOfStream => break,
             }
         }
 
