@@ -857,6 +857,7 @@ impl Node {
         false
     }
 
+    // TODO: remove
     /// Returns `true` if node has an attribute with such `id` and such `value`.
     ///
     /// # Panics
