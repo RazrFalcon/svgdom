@@ -31,7 +31,7 @@ pub fn fix_rect_attributes(node: &Node) {
 #[cfg(test)]
 mod test_rect {
     use super::*;
-    use {Document, WriteToString};
+    use {Document, ElementId, WriteToString};
 
     macro_rules! test {
         ($name:ident, $in_text:expr, $out_text:expr) => (
@@ -124,7 +124,7 @@ pub fn fix_poly_attributes(node: &Node) {
 #[cfg(test)]
 mod test_poly {
     use super::*;
-    use {Document, WriteToString};
+    use {Document, ElementId, WriteToString};
 
     macro_rules! test {
         ($name:ident, $in_text:expr, $out_text:expr) => (

@@ -397,7 +397,6 @@ impl fmt::Display for Segment {
 #[cfg(test)]
 mod segment_tests {
     use super::*;
-    use types::path::Segment;
 
     macro_rules! test_seg {
         ($name:ident,  $seg1:expr, $seg2:expr) => (
