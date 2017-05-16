@@ -48,7 +48,7 @@ impl<'a, T: SvgId> From<NameRef<'a, T>> for Name<T> {
     fn from(value: NameRef<T>) -> Name<T> {
         match value {
             NameRef::Id(id) => Name::Id(id),
-            NameRef::Name(ref name) => Name::Name(name.to_string()),
+            NameRef::Name(name) => Name::Name(name.to_string()),
         }
     }
 }
@@ -57,7 +57,7 @@ impl<'a, T: SvgId> fmt::Debug for NameRef<'a, T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             NameRef::Id(id) => write!(f, "{}", id.name()),
-            NameRef::Name(ref name) => write!(f, "{}", name),
+            NameRef::Name(name) => write!(f, "{}", name),
         }
     }
 }

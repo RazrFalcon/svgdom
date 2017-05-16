@@ -64,7 +64,7 @@ pub struct WriteOptionsPaths {
     /// `M 10 10 L 20 20 L 30 30` -> `M 10 10 20 20 30 30`
     ///
     /// Default: disabled
-    pub use_implicit_lineto_commands : bool,
+    pub use_implicit_lineto_commands: bool,
 
     /// Specify a numeric precision for coordinates.
     ///
@@ -79,7 +79,7 @@ pub struct WriteOptionsPaths {
     /// Default: 12
     ///
     /// **Note:** Values less than 5 will probably break your file.
-    pub coordinates_precision : u8,
+    pub coordinates_precision: u8,
 }
 
 /// Options that defines SVG writing.

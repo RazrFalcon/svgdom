@@ -306,7 +306,7 @@ impl Node {
     pub fn make_deep_copy(&self) -> Node {
         let root = self.make_copy();
         Node::_make_deep_copy(&root, self);
-        return root;
+        root
     }
 
     fn _make_deep_copy(parent: &Node, node: &Node) {
@@ -478,7 +478,7 @@ impl Node {
     ///
     /// Panics if the node is currently mutability borrowed.
     pub fn set_text(&self, text: &str) {
-        debug_assert!(self.node_type() != NodeType::Element);
+        debug_assert_ne!(self.node_type(), NodeType::Element);
         let mut b = self.0.borrow_mut();
         b.text = Some(text.to_owned());
     }
@@ -506,7 +506,7 @@ impl Node {
     /// Panics if the node is currently borrowed.
     pub fn set_id<S: Into<String>>(&self, id: S) {
         // TODO: check that it's unique.
-        debug_assert!(self.node_type() == NodeType::Element);
+        debug_assert_eq!(self.node_type(), NodeType::Element);
         let mut self_borrow = self.0.borrow_mut();
         self_borrow.id = id.into();
     }
@@ -562,10 +562,10 @@ impl Node {
     pub fn set_tag_name<'a, T>(&self, tag_name: T)
         where TagNameRef<'a>: From<T>
     {
-        debug_assert!(self.node_type() == NodeType::Element);
+        debug_assert_eq!(self.node_type(), NodeType::Element);
 
         let tn = TagNameRef::from(tag_name);
-        if let NameRef::Name(ref name) = tn {
+        if let NameRef::Name(name) = tn {
             if name.is_empty() {
                 panic!("supplied tag name is empty");
             }

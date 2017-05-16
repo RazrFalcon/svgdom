@@ -45,6 +45,7 @@ impl Document {
     /// Constructs a new `Document` from the text using a default `ParseOptions`.
     #[cfg(feature = "parsing")]
     pub fn from_str(text: &str) -> Result<Document, Error> {
+        // TODO: to FromStr trait
         Document::from_str_with_opt(text, &ParseOptions::default())
     }
 
@@ -65,7 +66,7 @@ impl Document {
         where TagNameRef<'a>: From<T>
     {
         let tn = TagNameRef::from(tag_name);
-        if let NameRef::Name(ref name) = tn {
+        if let NameRef::Name(name) = tn {
             if name.is_empty() {
                 panic!("supplied tag name is empty");
             }
@@ -179,7 +180,7 @@ impl Document {
             previous_sibling: None,
             next_sibling: None,
             node_type: node_type,
-            tag_name: tag_name.map(|a| TagName::from(a)),
+            tag_name: tag_name.map(TagName::from),
             id: String::new(),
             attributes: Attributes::new(),
             linked_nodes: Vec::new(),

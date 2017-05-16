@@ -94,10 +94,10 @@ fn write_start_edge(node: &Node, iter: &mut Traverse, depth: &mut Depth, opt: &W
         NodeType::Root => {}
         NodeType::Element => {
             depth.write_indent(out);
-            write_element_start(&node, opt, out);
+            write_element_start(node, opt, out);
 
             if node.is_tag_name(ElementId::Text) && node.has_children() {
-                write_text_elem(iter, opt, &node, &depth, out);
+                write_text_elem(iter, opt, node, depth, out);
                 write_newline(opt.indent, out);
                 return;
             }
@@ -107,25 +107,17 @@ fn write_start_edge(node: &Node, iter: &mut Traverse, depth: &mut Depth, opt: &W
                 write_newline(opt.indent, out);
             }
         }
-        NodeType::Declaration => {
-            depth.write_indent(out);
-            write_non_element_node(&node, out);
-            write_newline(opt.indent, out);
-        }
-        NodeType::Comment => {
-            depth.write_indent(out);
-            write_non_element_node(&node, out);
-            write_newline(opt.indent, out);
-        }
         NodeType::Cdata => {
             depth.write_indent_with_step(-1, out);
-            write_non_element_node(&node, out);
+            write_non_element_node(node, out);
             write_newline(opt.indent, out);
         }
+        NodeType::Declaration |
+        NodeType::Comment |
         NodeType::Text => {
             // TODO: implement xml escape
             depth.write_indent(out);
-            write_non_element_node(&node, out);
+            write_non_element_node(node, out);
             write_newline(opt.indent, out);
         }
     }
@@ -308,18 +300,15 @@ fn write_element_end(node: &Node, out: &mut Vec<u8>) {
 
 /// Writes node's end edge.
 fn write_end_edge(node: &Node, depth: &mut Depth, indent: Indent, out: &mut Vec<u8>) {
-    match node.node_type() {
-        NodeType::Element => {
-            if node.has_children() {
-                if depth.value > 0 {
-                    depth.value -= 1;
-                }
-                depth.write_indent(out);
+    if let NodeType::Element = node.node_type() {
+        if node.has_children() {
+            if depth.value > 0 {
+                depth.value -= 1;
             }
-            write_element_end(&node, out);
-            write_newline(indent, out);
+            depth.write_indent(out);
         }
-        _ => {}
+        write_element_end(node, out);
+        write_newline(indent, out);
     }
 }
 

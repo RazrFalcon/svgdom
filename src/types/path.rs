@@ -4,6 +4,8 @@
 
 //! This module contains all struct's for manipulating SVG paths data.
 
+// TODO: split into submodules
+
 use std::{fmt, str};
 
 use super::{number, FuzzyEq};

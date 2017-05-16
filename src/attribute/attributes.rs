@@ -173,7 +173,7 @@ impl Attributes {
     pub fn iter_svg<'a>(&'a self)
         -> Map<SvgAttrFilter, fn(&'a Attribute) -> (AttributeId, &'a Attribute)>
     {
-        fn map_svg<'a>(a: &'a Attribute) -> (AttributeId, &'a Attribute) { (a.id().unwrap(), a) }
+        fn map_svg(a: &Attribute) -> (AttributeId, &Attribute) { (a.id().unwrap(), a) }
         self.filter_svg().map(map_svg)
     }
 
@@ -184,7 +184,7 @@ impl Attributes {
     pub fn iter_svg_mut<'a>(&'a mut self)
         -> Map<SvgAttrFilterMut, fn(&'a mut Attribute) -> (AttributeId, &'a mut Attribute)>
     {
-        fn map_svg<'a>(a: &'a mut Attribute) -> (AttributeId, &'a mut Attribute)
+        fn map_svg(a: &mut Attribute) -> (AttributeId, &mut Attribute)
         { (a.id().unwrap(), a) }
 
         self.filter_svg_mut().map(map_svg)

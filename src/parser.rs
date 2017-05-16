@@ -122,7 +122,7 @@ pub fn parse_svg(text: &str, opt: &ParseOptions) -> Result<Document, Error> {
             _ => {
                 process_token(&doc, t, &mut tokenizer,
                               &mut node, &mut parent,
-                              &mut post_data, &opt)?
+                              &mut post_data, opt)?
             }
         }
     }
@@ -144,12 +144,12 @@ pub fn parse_svg(text: &str, opt: &ParseOptions) -> Result<Document, Error> {
         }
     }
 
-    resolve_css(&doc, &mut post_data, &opt)?;
+    resolve_css(&doc, &mut post_data, opt)?;
 
     // resolve styles
     for d in &post_data.style_attrs {
         parse_style_attribute(&d.node, d.stream, &mut post_data.links,
-                              &post_data.entitis, &opt)?;
+                              &post_data.entitis, opt)?;
     }
 
     resolve_links(&post_data.links)?;
@@ -186,7 +186,7 @@ fn process_token<'a>(doc: &Document,
             }
         }
         svg::Token::SvgElementStart(eid) => {
-            let res = parse_svg_element(&doc, tokenizer, eid, &mut post_data.css_list)?;
+            let res = parse_svg_element(doc, tokenizer, eid, &mut post_data.css_list)?;
 
             if let Some(n) = res {
                 *node = Some(n.clone());
@@ -197,7 +197,7 @@ fn process_token<'a>(doc: &Document,
             if opt.parse_unknown_attributes {
                 let n = node.as_ref().unwrap();
                 if n.is_svg_element() {
-                    parse_non_svg_attribute(&n, name, value, post_data);
+                    parse_non_svg_attribute(n, name, value, post_data);
                 } else {
                     n.set_attribute(name, value);
                 }
@@ -205,9 +205,10 @@ fn process_token<'a>(doc: &Document,
         }
         svg::Token::SvgAttribute(aid, value) => {
             let n = node.as_ref().unwrap();
-            parse_svg_attribute(&n, aid, value, post_data, &opt)?;
+            parse_svg_attribute(n, aid, value, post_data, opt)?;
         }
         svg::Token::ElementEnd(end) => {
+            // TODO: validate ending tag
             match end {
                 svg::ElementEnd::Empty => {}
                 svg::ElementEnd::CloseXml(_) |
@@ -364,7 +365,7 @@ fn parse_svg_attribute<'a>(node: &Node,
             }
         }
         AttributeId::D => {
-            let p = path::Path::from_stream(value.clone())?;
+            let p = path::Path::from_stream(value)?;
             node.set_attribute(AttributeId::D, AttributeValue::Path(p));
         }
         AttributeId::Class => {
@@ -387,7 +388,7 @@ fn parse_svg_attribute<'a>(node: &Node,
             }
         }
         _ => {
-            parse_svg_attribute_value(&node, id, value, &mut post_data.links,
+            parse_svg_attribute_value(node, id, value, &mut post_data.links,
                                       &post_data.entitis, opt)?;
         }
     }
@@ -413,9 +414,9 @@ fn parse_svg_attribute_value<'a>(node: &Node,
             links.append(id, link, None, node);
             None
         }
-        ParserAttributeValue::FuncIRIWithFallback(link, ref fallback) => {
+        ParserAttributeValue::FuncIRIWithFallback(link, fallback) => {
             // collect links for later processing
-            links.append(id, link, Some(fallback.clone()), node);
+            links.append(id, link, Some(fallback), node);
             None
         }
         ParserAttributeValue::Number(v) => {
@@ -542,14 +543,13 @@ fn parse_style_attribute<'a>(node: &Node,
                 }
             }
             style::Token::SvgAttribute(id, value) => {
-                parse_svg_attribute_value(&node, id, value,
-                                    links, entitis, opt)?;
+                parse_svg_attribute_value(node, id, value, links, entitis, opt)?;
             }
             style::Token::EntityRef(name) => {
                 if let Some(value) = entitis.get(name) {
-                    // TODO: to proper stream
+                    // TODO: to a proper stream
                     let ss = TextFrame::from_str(value);
-                    parse_style_attribute(&node, ss, links, entitis, opt)?;
+                    parse_style_attribute(node, ss, links, entitis, opt)?;
                 }
             }
             style::Token::EndOfStream => break,
@@ -714,7 +714,7 @@ fn resolve_css<'a>(doc: &Document,
     Ok(())
 }
 
-fn postprocess_class_selector<'a>(resolved_classes: &Vec<&str>,
+fn postprocess_class_selector<'a>(resolved_classes: &[&str],
                                   class_attrs: &mut Vec<NodeTextData<'a>>,
                                   opt: &ParseOptions) {
     // remove resolved classes
@@ -741,7 +741,7 @@ fn postprocess_class_selector<'a>(resolved_classes: &Vec<&str>,
     }
 }
 
-fn apply_css_attributes<'a>(values: &Vec<(&str,&'a str)>,
+fn apply_css_attributes<'a>(values: &[(&str,&'a str)],
                             node: &Node,
                             links: &mut Links<'a>,
                             entitis: &Entities<'a>,
