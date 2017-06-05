@@ -1,6 +1,6 @@
 [package]
 name = "svgdom"
-version = "0.4.0"
+version = "0.5.0"
 authors = ["Evgeniy Reizner <razrfalcon@gmail.com>"]
 keywords = ["svg", "dom"]
 license = "MPL-2.0"
