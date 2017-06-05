@@ -9,9 +9,6 @@ use float_cmp::ApproxEqUlps;
 
 use {WriteOptions, WriteBuffer};
 
-/// A default numeric precision.
-pub const DEFAULT_PRECISION: u8 = 12;
-
 /// The trait for comparing f64 numbers.
 pub trait FuzzyEq {
     /// Returns `true` if numbers are equal.
@@ -50,33 +47,12 @@ impl FuzzyOrd for f64 {
     }
 }
 
-static POW_VEC: &'static [f64] = &[
-                    0.0,
-                   10.0,
-                  100.0,
-                1_000.0,
-               10_000.0,
-              100_000.0,
-            1_000_000.0,
-           10_000_000.0,
-          100_000_000.0,
-        1_000_000_000.0,
-       10_000_000_000.0,
-      100_000_000_000.0,
-    1_000_000_000_000.0,
-];
-
-pub fn write_num(num: &f64, precision: u8, rm_leading_zero: bool, buf: &mut Vec<u8>) {
-    debug_assert!(precision > 0 && precision <= 12);
-
-    let prec = precision as usize;
-
+pub fn write_num(num: &f64, rm_leading_zero: bool, buf: &mut Vec<u8>) {
     // By default it will round numbers up to 12 digits
     // to prevent writing ugly numbers like 29.999999999999996.
     // It's not 100% correct, but differences are insignificant.
 
-    // TODO: find a faster/more correct method
-    let v = (num * POW_VEC[prec]).round() / POW_VEC[prec];
+    let v = (num * 1_000_000_000_000.0).round() / 1_000_000_000_000.0;
 
     let start_pos = buf.len();
 
@@ -107,7 +83,7 @@ pub fn write_num(num: &f64, precision: u8, rm_leading_zero: bool, buf: &mut Vec<
 
 impl WriteBuffer for f64 {
     fn write_buf_opt(&self, opt: &WriteOptions, buf: &mut Vec<u8>) {
-        write_num(self, DEFAULT_PRECISION, opt.remove_leading_zero, buf);
+        write_num(self, opt.remove_leading_zero, buf);
     }
 }
 
@@ -120,7 +96,7 @@ mod tests {
             #[test]
             fn $name() {
                 let mut v = Vec::new();
-                write_num(&$num, DEFAULT_PRECISION, $rm_zero, &mut v);
+                write_num(&$num, $rm_zero, &mut v);
                 assert_eq!(String::from_utf8(v).unwrap(), $result);
             }
         )

@@ -2,8 +2,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use types::DEFAULT_PRECISION;
-
 /// XML node indention
 #[derive(Clone,Copy,PartialEq)]
 pub enum Indent {
@@ -65,21 +63,6 @@ pub struct WriteOptionsPaths {
     ///
     /// Default: disabled
     pub use_implicit_lineto_commands: bool,
-
-    /// Specify a numeric precision for coordinates.
-    ///
-    /// Range: 1..12
-    ///
-    /// Example:
-    ///
-    /// Set to 4:
-    ///
-    /// `M 10.00000001 10.00002 L 20.123456789 20.9999999` -> `M 10 10 L 20.1235 21`
-    ///
-    /// Default: 12
-    ///
-    /// **Note:** Values less than 5 will probably break your file.
-    pub coordinates_precision: u8,
 }
 
 /// Options that defines SVG writing.
@@ -183,7 +166,6 @@ impl Default for WriteOptions {
                 join_arc_to_flags: false,
                 remove_duplicated_commands: false,
                 use_implicit_lineto_commands: false,
-                coordinates_precision: DEFAULT_PRECISION,
             },
             simplify_transform_matrices: false,
         }

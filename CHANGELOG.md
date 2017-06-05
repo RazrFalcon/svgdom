@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Removed
 - `Error::Utf8Error`, because `Document::from_data` accepts `&str` now.
+- `WriteOptions::paths::coordinates_precision`.
 
 ## [0.4.0] - 2017-03-15
 ### Added
