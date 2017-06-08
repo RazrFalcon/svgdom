@@ -905,7 +905,7 @@ impl WriteBuffer for Path {
                                  &mut prev_coord_has_dot, opt, buf);
 
                     if opt.paths.use_compact_notation {
-                        // flag must always have space before it
+                        // flags must always have a space before it
                         buf.push(b' ');
                     }
 
@@ -921,7 +921,9 @@ impl WriteBuffer for Path {
                     // reset, because flags can't have dots
                     prev_coord_has_dot = false;
 
-                    write_coords(&[x, y], is_written, &mut prev_coord_has_dot, opt, buf);
+                    // 'is_explicit_cmd' is always 'true'
+                    // because it's relevant only for first coordinate of the segment
+                    write_coords(&[x, y], true, &mut prev_coord_has_dot, opt, buf);
                 }
                 SegmentData::ClosePath => {
                     if !opt.paths.use_compact_notation {
@@ -1226,6 +1228,20 @@ mod tests {
         opt.paths.remove_duplicated_commands = true;
 
         assert_eq_text!(path.to_string_with_opt(&opt), "M 10 20 30 40 50 60 M 10 20 30 40 50 60");
+    }
+
+    #[test]
+    fn gen_path_19() {
+        let path = Path::from_str("m10 20 A 10 10 0 1 0 0 0 A 2 2 0 1 0 2 0").unwrap();
+
+        let mut opt = WriteOptions::default();
+        opt.paths.use_compact_notation = true;
+        opt.paths.remove_duplicated_commands = true;
+        opt.remove_leading_zero = true;
+
+        // may generate as 'm10 20A10 10 0 1 0 0 0 2 2 0 1 0  2 0' <- two spaces
+
+        assert_eq_text!(path.to_string_with_opt(&opt), "m10 20A10 10 0 1 0 0 0 2 2 0 1 0 2 0");
     }
 
     #[test]
