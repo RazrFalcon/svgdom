@@ -953,6 +953,7 @@ impl Node {
     }
 }
 
+// TODO: move to Rc::ptr_eq (since 1.17) when we drop 1.13 version support
 fn same_rc<T>(a: &Rc<T>, b: &Rc<T>) -> bool {
     let a: *const T = &**a;
     let b: *const T = &**b;

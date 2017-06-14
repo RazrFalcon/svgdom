@@ -4,8 +4,6 @@
 
 use {Document, Node, AttributeId, Attribute, AttributeValue, ValueId};
 
-use error::Error;
-
 // TODO: split
 /// Resolve `inherit` and `currentColor` attributes.
 ///
@@ -15,7 +13,7 @@ use error::Error;
 ///
 /// Will return `Error::UnresolvedAttribute` if an attribute
 /// can't be resolved and didn't have a default value.
-pub fn resolve_inherit(doc: &Document) -> Result<(), Error> {
+pub fn resolve_inherit(doc: &Document) {
     let mut vec_inherit = Vec::new();
     let mut vec_curr_color = Vec::new();
 
@@ -41,22 +39,20 @@ pub fn resolve_inherit(doc: &Document) -> Result<(), Error> {
         }
 
         for id in &vec_inherit {
-            try!(resolve_impl(&node, *id, *id));
+            resolve_impl(&node, *id, *id);
         }
 
         for id in &vec_curr_color {
             if let Some(av) = node.attribute_value(AttributeId::Color) {
                 node.set_attribute(*id, av);
             } else {
-                try!(resolve_impl(&node, *id, AttributeId::Color));
+                resolve_impl(&node, *id, AttributeId::Color);
             }
         }
     }
-
-    Ok(())
 }
 
-fn resolve_impl(node: &Node, curr_attr: AttributeId, parent_attr: AttributeId) -> Result<(), Error> {
+fn resolve_impl(node: &Node, curr_attr: AttributeId, parent_attr: AttributeId) {
     if let Some(n) = node.parents().find(|n| n.has_attribute(parent_attr)) {
         let av = n.attribute_value(parent_attr).unwrap();
         node.set_attribute(curr_attr, av);
@@ -64,12 +60,12 @@ fn resolve_impl(node: &Node, curr_attr: AttributeId, parent_attr: AttributeId) -
         match Attribute::default(curr_attr) {
             Some(a) => node.set_attribute(curr_attr, a.value),
             None => {
-                return Err(Error::UnresolvedAttribute(curr_attr.name().to_string()));
+                warnln!("Failed to resolve attribute: {}. Removing it.",
+                        node.attribute(curr_attr).unwrap());
+                node.remove_attribute(curr_attr);
             }
         }
     }
-
-    Ok(())
 }
 
 #[cfg(test)]
@@ -79,12 +75,7 @@ mod tests {
 
     macro_rules! test {
         ($name:ident, $in_text:expr, $out_text:expr) => (
-            #[test]
-            fn $name() {
-                let doc = Document::from_str($in_text).unwrap();
-                resolve_inherit(&doc).unwrap();
-                assert_eq_text!(doc.to_string_with_opt(&write_opt_for_tests!()), $out_text);
-            }
+            base_test!($name, resolve_inherit, $in_text, $out_text);
         )
     }
 
@@ -164,5 +155,10 @@ mod tests {
     <rect fill='#000000'/>
     <rect fill='#000000'/>
 </svg>
+");
+
+    test!(unresolved_1,
+"<svg font-family='inherit'/>",
+"<svg/>
 ");
 }

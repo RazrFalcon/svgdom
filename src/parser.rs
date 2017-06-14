@@ -827,14 +827,14 @@ fn resolve_links(links: &Links) -> Result<(), Error> {
                                     warnln!("Could not resolve IRI reference: {}.", d.iri);
                                 } else {
                                     // Imitate invisible element.
-                                    warnln!("Unresolved 'filter' link: '{}'. \
+                                    warnln!("Unresolved 'filter' IRI reference: {}. \
                                              Marking the element as invisible.",
                                              d.iri);
                                     d.node.set_attribute(AttributeId::Visibility, ValueId::Hidden);
                                 }
                             }
                             AttributeId::Fill => {
-                                warnln!("Could not resolve the 'fill' IRI reference '{}'. \
+                                warnln!("Could not resolve the 'fill' IRI reference: {}. \
                                          Fallback to 'none'.",
                                          d.iri);
                                 d.node.set_attribute(AttributeId::Fill, ValueId::None);

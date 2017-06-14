@@ -5,6 +5,15 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Changed
+- `postproc::resolve_inherit` doesn't return `Result` now.
+  Any unresolved attributes will trigger a warning now.
+
+### Removed
+- `Error::UnresolvedAttribute`.
+
+### Fixed
+- Additional whitespace during ArcTo writing.
 
 ## [0.5.0] - 2017-06-05
 ### Added

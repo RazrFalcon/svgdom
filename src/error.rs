@@ -56,8 +56,6 @@ pub enum Error {
     BrokenFuncIri(String), // FuncIRI name
     /// UTF-8 processing error.
     InvalidEncoding,
-    /// Failed to resolve an attribute during post-processing.
-    UnresolvedAttribute(String), // attribute name
     /// Failed to find an attribute, which must be set, during post-processing.
     MissingAttribute(String, String), // tag name, attribute name
 }
@@ -90,8 +88,6 @@ impl fmt::Display for Error {
                            is not supported", iri),
             Error::InvalidEncoding =>
                 write!(f, "The input data is not a valid UTF-8 string"),
-            Error::UnresolvedAttribute(ref name) =>
-                write!(f, "Failed to resolved attribute '{}'", name),
             Error::MissingAttribute(ref tag_name, ref attr_name) =>
                 write!(f, "The attribute '{}' is missing in the '{}' element", attr_name, tag_name),
         }
