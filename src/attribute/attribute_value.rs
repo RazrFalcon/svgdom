@@ -66,6 +66,7 @@ impl_from!(Color, Color);
 impl_from!(ValueId, PredefValue);
 impl_from!(path::Path, Path);
 
+// TODO: bad, hidden allocation
 impl<'a> From<&'a str> for AttributeValue {
     fn from(value: &str) -> AttributeValue {
         AttributeValue::String(value.to_owned())

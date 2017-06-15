@@ -42,7 +42,6 @@ See modules and structs documentation for details.
 DOM structure itself based on: https://github.com/SimonSapin/rust-forest/tree/master/rctree
 */
 
-#![forbid(unsafe_code)]
 #![warn(missing_docs)]
 #![deny(unused_import_braces)]
 

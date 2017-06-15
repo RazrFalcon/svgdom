@@ -5,9 +5,17 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Added
+- `Node::text_mut`.
+- New text processing algorithm. Better `xml:space` support.
+
 ### Changed
 - `postproc::resolve_inherit` doesn't return `Result` now.
   Any unresolved attributes will trigger a warning now.
+- Node's text is stored as `String` and not as `Option<String>` now.
+- `Node::text` returns `Ref<String>` now.
+- Text will be preprocessed according to the
+  [spec](https://www.w3.org/TR/SVG11/text.html#WhiteSpace) now.
 
 ### Removed
 - `Error::UnresolvedAttribute`.

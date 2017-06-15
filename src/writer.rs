@@ -11,14 +11,14 @@ use super::{
     AttributeId,
     Document,
     ElementId,
+    Indent,
+    Name,
     Node,
     NodeEdge,
     NodeType,
-    Name,
     Traverse,
     WriteBuffer,
     WriteOptions,
-    Indent,
 };
 
 /// An indent counter.
@@ -97,14 +97,23 @@ fn write_start_edge(node: &Node, iter: &mut Traverse, depth: &mut Depth, opt: &W
             write_element_start(node, opt, out);
 
             if node.is_tag_name(ElementId::Text) && node.has_children() {
-                write_text_elem(iter, opt, node, depth, out);
+                write_text_elem(iter, opt, node, out);
                 write_newline(opt.indent, out);
                 return;
             }
 
             if node.has_children() {
-                depth.value += 1;
-                write_newline(opt.indent, out);
+                let mut has_text = false;
+                if let Some(c) = node.first_child() {
+                    if c.node_type() == NodeType::Text {
+                        has_text = true;
+                    }
+                }
+
+                if !has_text {
+                    depth.value += 1;
+                    write_newline(opt.indent, out);
+                }
             }
         }
         NodeType::Cdata => {
@@ -113,12 +122,13 @@ fn write_start_edge(node: &Node, iter: &mut Traverse, depth: &mut Depth, opt: &W
             write_newline(opt.indent, out);
         }
         NodeType::Declaration |
-        NodeType::Comment |
-        NodeType::Text => {
-            // TODO: implement xml escape
+        NodeType::Comment => {
             depth.write_indent(out);
             write_non_element_node(node, out);
             write_newline(opt.indent, out);
+        }
+        NodeType::Text => {
+            write_non_element_node(node, out);
         }
     }
 }
@@ -138,17 +148,16 @@ fn write_non_element_node(node: &Node, out: &mut Vec<u8>) {
             write_node(b"<![CDATA[", node.text(), b"]]>", out);
         }
         NodeType::Text => {
-            // TODO: implement xml escape
-            out.extend_from_slice(node.text().unwrap().trim().as_bytes());
+            out.extend_from_slice(node.text().as_bytes());
         }
         _ => unreachable!(),
     }
 }
 
 #[inline]
-fn write_node(prefix: &[u8], data: Option<Ref<String>>, suffix: &[u8], out: &mut Vec<u8>) {
+fn write_node(prefix: &[u8], data: Ref<String>, suffix: &[u8], out: &mut Vec<u8>) {
     out.extend_from_slice(prefix);
-    out.extend_from_slice(data.unwrap().as_bytes());
+    out.extend_from_slice(data.as_bytes());
     out.extend_from_slice(suffix);
 }
 
@@ -227,23 +236,7 @@ fn write_attributes(node: &Node, opt: &WriteOptions, out: &mut Vec<u8>) {
 }
 
 /// Writes a `text` element node and it's children.
-///
-/// This method will check for the `xml:space` attribute and will properly write indented text.
-fn write_text_elem(iter: &mut Traverse, opt: &WriteOptions, root: &Node, depth: &Depth,
-                    out: &mut Vec<u8>) {
-    let is_root_preserve = root.has_attribute_with_value(AttributeId::XmlSpace, "preserve");
-
-    if !is_root_preserve {
-        write_newline(opt.indent, out);
-        depth.write_indent_with_step(1, out);
-    }
-
-    // Check that 'text' element contains only one text node.
-    // We use 2, since 'descendants' includes current node.
-    let is_simple_text = root.descendants().count() == 2;
-
-    let mut is_first_text = true;
-
+fn write_text_elem(iter: &mut Traverse, opt: &WriteOptions, root: &Node, out: &mut Vec<u8>) {
     for edge in iter {
         match edge {
             NodeEdge::Start(node) => {
@@ -252,18 +245,7 @@ fn write_text_elem(iter: &mut Traverse, opt: &WriteOptions, root: &Node, depth: 
                         write_element_start(&node, opt, out);
                     }
                     NodeType::Text => {
-                        if is_root_preserve {
-                            out.extend_from_slice(node.text().unwrap().as_bytes());
-                        } else if is_simple_text {
-                            out.extend_from_slice(node.text().unwrap().trim().as_bytes());
-                        } else if is_first_text {
-                            out.extend_from_slice(node.text().unwrap().trim_left().as_bytes());
-                        } else if root.last_child().unwrap() == node {
-                            out.extend_from_slice(node.text().unwrap().trim_right().as_bytes());
-                        } else {
-                            out.extend_from_slice(node.text().unwrap().as_bytes());
-                        }
-                        is_first_text = false;
+                        out.extend_from_slice(node.text().as_bytes());
                     }
                     _ => {}
                 }
@@ -271,12 +253,7 @@ fn write_text_elem(iter: &mut Traverse, opt: &WriteOptions, root: &Node, depth: 
             NodeEdge::End(node) => {
                 if let NodeType::Element = node.node_type() {
                     if node == *root {
-                        if !is_root_preserve {
-                            write_newline(opt.indent, out);
-                            depth.write_indent(out);
-                        }
                         write_element_end(&node, out);
-
                         break;
                     } else {
                         write_element_end(&node, out);

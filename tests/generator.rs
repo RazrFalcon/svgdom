@@ -17,7 +17,11 @@ macro_rules! test_resave {
         #[test]
         fn $name() {
             let doc = Document::from_str($in_text).unwrap();
-            assert_eq_text!(doc.to_string(), $out_text);
+
+            let mut opt = WriteOptions::default();
+            opt.use_single_quote = true;
+
+            assert_eq_text!(doc.to_string_with_opt(&opt), $out_text);
         }
     )
 }
@@ -179,6 +183,7 @@ fn comment_1() {
     assert_eq_text!(doc.to_string(), "<!--comment-->\n<svg/>\n");
 }
 
+// Manually created text.
 #[test]
 fn text_1() {
     let doc = Document::new();
@@ -190,12 +195,11 @@ fn text_1() {
     svg.append(&text);
 
     assert_eq_text!(doc.to_string(),
-"<svg>
-    text
-</svg>
+"<svg>text</svg>
 ");
 }
 
+// Text inside non-svg element.
 test_resave!(text_2,
 "<svg>
     <p>
@@ -204,13 +208,11 @@ test_resave!(text_2,
 </svg>
 ",
 "<svg>
-    <p>
-        text
-    </p>
+    <p>text</p>
 </svg>
 ");
 
-// 'text' element has different behavior
+// Text inside svg element.
 test_resave!(text_3,
 "<svg>
     <text>
@@ -219,117 +221,199 @@ test_resave!(text_3,
 </svg>
 ",
 "<svg>
-    <text>
-        text
-    </text>
+    <text>text</text>
 </svg>
 ");
 
+// Multiline text.
 test_resave!(text_4,
 "<svg>
-    <p>
-        text</p>
-</svg>
-",
-"<svg>
-    <p>
-        text
-    </p>
-</svg>
-");
-
-test_resave!(text_multiline_1,
-"<svg>
-    <p>
+    <text>
         Line 1
         Line 2
         Line 3
-    </p>
+    </text>
 </svg>
 ",
 "<svg>
-    <p>
+    <text>Line 1 Line 2 Line 3</text>
+</svg>
+");
+
+// Multiline text with 'preserve'.
+test_resave!(text_5,
+"<svg>
+    <text xml:space='preserve'>
         Line 1
         Line 2
         Line 3
-    </p>
-</svg>
-");
-
-// TODO: this
-// test_resave!(text_mixed_indent_1,
-// "<svg>
-// <p>
-// Line 1
-// Line 2
-// Line 3
-// </p>
-// </svg>
-// ",
-// "<svg>
-//     <p>
-//         Line 1
-//         Line 2
-//         Line 3
-//     </p>
-// </svg>
-// ");
-
-test_resave!(text_mixed_indent_2,
-"<svg>
-  <g>
-      <p>
-        text
-      </p>
-  </g>
+    </text>
 </svg>
 ",
 "<svg>
-    <g>
-        <p>
-            text
-        </p>
-    </g>
+    <text xml:space='preserve'>         Line 1         Line 2         Line 3     </text>
 </svg>
 ");
 
+// Test trimming.
+// Details: https://www.w3.org/TR/SVG11/text.html#WhiteSpace
+test_resave!(text_6,
+"<svg>
+    <text></text>
+    <text> </text>
+    <text>  </text>
+    <text> \t \n \r </text>
+    <text> \t \n \r </text>
+    <text> \t  text \t  text  t \t\n  </text>
+    <text xml:space='preserve'> \t \n text \t  text  t \t \r\n\r\n</text>
+</svg>
+",
+"<svg>
+    <text/>
+    <text></text>
+    <text></text>
+    <text></text>
+    <text></text>
+    <text>text text t</text>
+    <text xml:space='preserve'>     text    text  t     </text>
+</svg>
+");
+
+// Text with children elements.
+// Spaces will be trimmed, but not all.
 test_resave!(text_tspan_1,
 "<svg>
     <text>
-      Some  <tspan> complex </tspan>  text \t
+      Some \t <tspan>  complex  </tspan>  text \t
     </text>
 </svg>
 ",
 "<svg>
-    <text>
-        Some  <tspan> complex </tspan>  text
-    </text>
+    <text>Some <tspan>complex </tspan>text</text>
 </svg>
 ");
 
+// Text with tspan but without spaces.
+test_resave!(text_tspan_2,
+"<svg>
+    <text><tspan>Text</tspan></text>
+</svg>
+",
+"<svg>
+    <text><tspan>Text</tspan></text>
+</svg>
+");
+
+// Text with tspan with new lines.
 test_resave!(text_tspan_3,
 "<svg>
     <text>
         <tspan>Text</tspan>
+        <tspan>Text</tspan>
+        <tspan>Text</tspan>
     </text>
 </svg>
 ",
 "<svg>
-    <text>
-        <tspan>Text</tspan>
-    </text>
+    <text><tspan>Text</tspan> <tspan>Text</tspan> <tspan>Text</tspan></text>
 </svg>
 ");
 
-test_resave!(text_space_preserve,
+// Text with spaces inside a tspan.
+test_resave!(text_tspan_4,
+"<svg>
+    <text>Some<tspan> long </tspan>text</text>
+</svg>
+",
+"<svg>
+    <text>Some<tspan> long </tspan>text</text>
+</svg>
+");
+
+// Text with spaces outside a tspan.
+test_resave!(text_tspan_5,
+"<svg>
+    <text>Some <tspan>long</tspan> text</text>
+</svg>
+",
+"<svg>
+    <text>Some <tspan>long</tspan> text</text>
+</svg>
+");
+
+// Nested tspan.
+test_resave!(text_tspan_6,
+"<svg>
+    <text>  Some  <tspan>  not  <tspan>  very  </tspan>  long  </tspan>  text  </text>
+</svg>
+",
+"<svg>
+    <text>Some <tspan>not <tspan>very </tspan>long </tspan>text</text>
+</svg>
+");
+
+// Empty tspan.
+test_resave!(text_tspan_7,
+"<svg>
+    <text><tspan><tspan></tspan></tspan></text>
+    <text> <tspan> <tspan> </tspan> </tspan> </text>
+</svg>
+",
+"<svg>
+    <text><tspan><tspan/></tspan></text>
+    <text><tspan><tspan> </tspan></tspan></text>
+</svg>
+");
+
+// Test xml:space.
+test_resave!(text_space_preserve_1,
 "<svg>
     <text xml:space='preserve'> Text
     </text>
 </svg>
 ",
 "<svg>
-    <text xml:space=\"preserve\"> Text
+    <text xml:space='preserve'> Text     </text>
+</svg>
+");
+
+// Test xml:space inheritance.
+test_resave!(text_space_preserve_2,
+"<svg xml:space='preserve'>
+    <text> Text
     </text>
+</svg>
+",
+"<svg xml:space='preserve'>
+    <text> Text     </text>
+</svg>
+");
+
+// Test mixed xml:space.
+test_resave!(text_space_preserve_3,
+"<svg xml:space='preserve'>
+    <text>
+    Text
+    <tspan xml:space='default'>
+    Text
+    </tspan>
+    Text
+    </text>
+</svg>
+",
+"<svg xml:space='preserve'>
+    <text>     Text     <tspan xml:space='default'> Text </tspan>     Text     </text>
+</svg>
+");
+
+// Do not remove spaces around tspan with 'preserve'.
+test_resave!(text_space_preserve_4,
+"<svg>
+    <text> Text <tspan xml:space='preserve'> Text </tspan> Text </text>
+</svg>
+",
+"<svg>
+    <text>Text <tspan xml:space='preserve'> Text </tspan> Text</text>
 </svg>
 ");
 

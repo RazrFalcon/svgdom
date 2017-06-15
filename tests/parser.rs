@@ -77,7 +77,7 @@ fn parse_declaration_1() {
 
     let child = doc.root().first_child().unwrap();
     assert_eq!(child.node_type(), NodeType::Declaration);
-    assert_eq!(*child.text().unwrap(), "version='1.0' encoding='UTF-8' standalone='no'");
+    assert_eq!(*child.text(), "version='1.0' encoding='UTF-8' standalone='no'");
     assert_eq!(doc.root().children().count(), 2);
 }
 
@@ -87,7 +87,7 @@ fn parse_comment_1() {
 
     let child = doc.root().children().nth(1).unwrap();
     assert_eq!(child.node_type(), NodeType::Comment);
-    assert_eq!(*child.text().unwrap(), "comment");
+    assert_eq!(*child.text(), "comment");
     assert_eq!(doc.root().children().count(), 2);
 }
 
@@ -97,7 +97,7 @@ fn parse_text_1() {
 
     let child = doc.root().first_child().unwrap().first_child().unwrap();
     assert_eq!(child.node_type(), NodeType::Text);
-    assert_eq!(*child.text().unwrap(), "text");
+    assert_eq!(*child.text(), "text");
 }
 
 #[test]
@@ -115,7 +115,7 @@ fn parse_text_2() {
     assert_eq!(text_node.node_type(), NodeType::Element);
 
     let text_data_node = nodes.next().unwrap();
-    assert_eq!(*text_data_node.text().unwrap(), "Some");
+    assert_eq!(*text_data_node.text(), "Some");
     assert_eq!(text_data_node.node_type(), NodeType::Text);
 
     let tspan_node = nodes.next().unwrap();
@@ -123,11 +123,11 @@ fn parse_text_2() {
     assert_eq!(tspan_node.node_type(), NodeType::Element);
 
     let text_data_node_2 = nodes.next().unwrap();
-    assert_eq!(*text_data_node_2.text().unwrap(), "complex");
+    assert_eq!(*text_data_node_2.text(), "complex");
     assert_eq!(text_data_node_2.node_type(), NodeType::Text);
 
     let text_data_node_3 = nodes.next().unwrap();
-    assert_eq!(*text_data_node_3.text().unwrap(), "text");
+    assert_eq!(*text_data_node_3.text(), "text");
     assert_eq!(text_data_node_3.node_type(), NodeType::Text);
 }
 

@@ -38,7 +38,7 @@ impl Document {
     /// Constructs a new `Document`.
     pub fn new() -> Document {
         Document {
-            root: Document::new_node(None, NodeType::Root, None, None)
+            root: Document::new_node(None, NodeType::Root, None, String::new())
         }
     }
 
@@ -72,7 +72,7 @@ impl Document {
             }
         }
 
-        Document::new_node(Some(self.root.0.clone()), NodeType::Element, Some(tn), None)
+        Document::new_node(Some(self.root.0.clone()), NodeType::Element, Some(tn), String::new())
     }
 
     /// Constructs a new `Node` using the supplied `NodeType`.
@@ -81,8 +81,10 @@ impl Document {
     ///
     /// This method should be used for any non-element nodes.
     pub fn create_node(&self, node_type: NodeType, text: &str) -> Node {
+        // TODO: use Into<String> trait
+
         debug_assert!(node_type != NodeType::Element && node_type != NodeType::Root);
-        Document::new_node(Some(self.root.0.clone()), node_type, None, Some(text.to_owned()))
+        Document::new_node(Some(self.root.0.clone()), node_type, None, text.to_owned())
     }
 
     /// Returns the root `Node`.
@@ -170,7 +172,7 @@ impl Document {
     }
 
     fn new_node(doc: Option<Link>, node_type: NodeType, tag_name: Option<TagNameRef>,
-                text: Option<String>)
+                text: String)
                 -> Node {
         Node(Rc::new(RefCell::new(NodeData {
             doc: doc.map(|a| Rc::downgrade(&a)),

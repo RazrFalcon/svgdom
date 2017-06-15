@@ -26,12 +26,14 @@ pub struct NodeData {
     pub id: String,
     pub attributes: Attributes,
     pub linked_nodes: Vec<WeakLink>,
-    pub text: Option<String>,
+    pub text: String,
 }
 
 impl NodeData {
     /// Detach a node from its parent and siblings. Children are not affected.
     pub fn detach(&mut self) {
+        // TODO: trim names
+
         let parent_weak = self.parent.take();
         let previous_sibling_weak = self.previous_sibling.take();
         let next_sibling_strong = self.next_sibling.take();

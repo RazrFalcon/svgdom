@@ -291,7 +291,7 @@ impl Node {
                 elem
             }
             _ => {
-                self.document().create_node(self.node_type(), &*self.text().unwrap())
+                self.document().create_node(self.node_type(), &*self.text())
             }
         }
     }
@@ -472,6 +472,28 @@ impl Node {
         self.0.borrow().node_type
     }
 
+    /// Returns a text data of the node.
+    ///
+    /// Nodes with `Element` type can't contain text data.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the node is currently mutability borrowed.
+    pub fn text(&self) -> Ref<String> {
+        Ref::map(self.0.borrow(), |n| &n.text)
+    }
+
+    /// Returns a mutable text data of the node.
+    ///
+    /// Nodes with `Element` type can't contain text data.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the node is currently mutability borrowed.
+    pub fn text_mut(&self) -> RefMut<String> {
+        RefMut::map(self.0.borrow_mut(), |n| &mut n.text)
+    }
+
     /// Sets a text data to the node.
     ///
     /// # Panics
@@ -480,21 +502,7 @@ impl Node {
     pub fn set_text(&self, text: &str) {
         debug_assert_ne!(self.node_type(), NodeType::Element);
         let mut b = self.0.borrow_mut();
-        b.text = Some(text.to_owned());
-    }
-
-    /// Returns a text data of the node, if there are any.
-    ///
-    /// Nodes with `Element` type can't contain text data.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the node is currently mutability borrowed.
-    pub fn text(&self) -> Option<Ref<String>> {
-        match self.0.borrow().text {
-            Some(_) => Some(Ref::map(self.0.borrow(), |n| n.text.as_ref().unwrap())),
-            None => None,
-        }
+        b.text = text.to_owned();
     }
 
     /// Sets an ID of the element.
@@ -638,6 +646,8 @@ impl Node {
     pub fn set_attribute<'a, N, T>(&self, name: N, value: T)
         where AttributeNameRef<'a>: From<N>, N: Copy, AttributeValue: From<T>
     {
+        debug_assert!(self.node_type() == NodeType::Element);
+
         // we must remove existing attribute to prevent dangling links
         self.remove_attribute(name);
 
@@ -656,7 +666,8 @@ impl Node {
     /// - Panics if the attribute cause an ElementCrosslink error.
     pub fn set_attribute_object(&self, attr: Attribute) {
         // TODO: fix stupid name
-        // TODO: do not panic on invalid attribute type
+
+        debug_assert!(self.node_type() == NodeType::Element);
 
         // we must remove existing attribute to prevent dangling links
         self.remove_attribute(attr.name.into_ref());
@@ -732,6 +743,8 @@ impl Node {
     pub fn set_link_attribute(&self, id: AttributeId, node: Node) -> Result<(), Error> {
         // TODO: rewrite to template specialization when it will be available
         // TODO: check that node is element
+
+        debug_assert!(self.node_type() == NodeType::Element);
 
         if node.id().is_empty() {
             return Err(Error::ElementMustHaveAnId);
@@ -978,10 +991,10 @@ impl fmt::Debug for Node {
         match self.node_type() {
             NodeType::Root => write!(f, "Root node"),
             NodeType::Element => write!(f, "<{:?} id={:?}>", self.tag_name().unwrap(), self.id()),
-            NodeType::Declaration => write!(f, "<?{}?>", *self.text().unwrap()),
-            NodeType::Comment => write!(f, "<!--{}-->", *self.text().unwrap()),
-            NodeType::Cdata => write!(f, "<![CDATA[{}]]>", *self.text().unwrap()),
-            NodeType::Text => write!(f, "{}", *self.text().unwrap()),
+            NodeType::Declaration => write!(f, "<?{}?>", *self.text()),
+            NodeType::Comment => write!(f, "<!--{}-->", *self.text()),
+            NodeType::Cdata => write!(f, "<![CDATA[{}]]>", *self.text()),
+            NodeType::Text => write!(f, "{}", *self.text()),
         }
     }
 }
