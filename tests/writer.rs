@@ -5,12 +5,21 @@
 #[macro_use]
 extern crate svgdom;
 
-use svgdom::{Document, WriteOptions, WriteToString, NodeType, Indent};
-use svgdom::AttributeId as AId;
-use svgdom::ElementId as EId;
-use svgdom::types::{Transform, Length, LengthUnit, Color};
-
-// TODO: rename to writer
+use svgdom::{
+    AttributeId as AId,
+    Document,
+    ElementId as EId,
+    Indent,
+    NodeType,
+    WriteOptions,
+    WriteToString,
+};
+use svgdom::types::{
+    Color,
+    Length,
+    LengthUnit,
+    Transform,
+};
 
 macro_rules! test_resave {
     ($name:ident, $in_text:expr, $out_text:expr) => (

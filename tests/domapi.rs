@@ -5,9 +5,15 @@
 #[macro_use]
 extern crate svgdom;
 
-use svgdom::{Document, AttributeValue, Error, WriteToString, WriteOptions};
-use svgdom::AttributeId as AId;
-use svgdom::ElementId as EId;
+use svgdom::{
+    AttributeId as AId,
+    AttributeValue,
+    Document,
+    ElementId as EId,
+    Error,
+    WriteOptions,
+    WriteToString,
+};
 
 #[test]
 fn linked_attributes_1() {
