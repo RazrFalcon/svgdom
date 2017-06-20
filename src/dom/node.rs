@@ -546,20 +546,6 @@ impl Node {
         b.text = text.to_owned();
     }
 
-    /// Sets an ID of the element.
-    ///
-    /// Only element nodes can contain an ID.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the node is currently borrowed.
-    pub fn set_id<S: Into<String>>(&self, id: S) {
-        // TODO: check that it's unique.
-        debug_assert_eq!(self.node_type(), NodeType::Element);
-        let mut self_borrow = self.0.borrow_mut();
-        self_borrow.id = id.into();
-    }
-
     /// Returns an ID of the element node.
     ///
     /// # Panics
@@ -578,6 +564,20 @@ impl Node {
         !self.0.borrow().id.is_empty()
     }
 
+    /// Sets an ID of the element.
+    ///
+    /// Only element nodes can contain an ID.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the node is currently borrowed.
+    pub fn set_id<S: Into<String>>(&self, id: S) {
+        // TODO: check that it's unique.
+        debug_assert_eq!(self.node_type(), NodeType::Element);
+        let mut self_borrow = self.0.borrow_mut();
+        self_borrow.id = id.into();
+    }
+
     /// Returns `true` if node has an `Element` type and an SVG tag name.
     ///
     /// # Panics
@@ -594,34 +594,6 @@ impl Node {
             }
             None => false,
         }
-    }
-
-    /// Sets a tag name of the element node.
-    ///
-    /// Only element nodes can contain tag name.
-    ///
-    /// # Errors
-    ///
-    /// The string tag name must be non-empty.
-    ///
-    /// # Panics
-    ///
-    /// - Panics if the node is currently borrowed.
-    /// - Panics if a string tag name is empty.
-    pub fn set_tag_name<'a, T>(&self, tag_name: T)
-        where TagNameRef<'a>: From<T>
-    {
-        debug_assert_eq!(self.node_type(), NodeType::Element);
-
-        let tn = TagNameRef::from(tag_name);
-        if let NameRef::Name(name) = tn {
-            if name.is_empty() {
-                panic!("supplied tag name is empty");
-            }
-        }
-
-        let mut self_borrow = self.0.borrow_mut();
-        self_borrow.tag_name = Some(Name::from(tn));
     }
 
     /// Returns a tag name of the element node.
@@ -667,6 +639,134 @@ impl Node {
         let b = self.0.borrow();
         match b.tag_name {
             Some(ref v) => v.into_ref() == TagNameRef::from(tag_name),
+            None => false,
+        }
+    }
+
+    /// Sets a tag name of the element node.
+    ///
+    /// Only element nodes can contain tag name.
+    ///
+    /// # Errors
+    ///
+    /// The string tag name must be non-empty.
+    ///
+    /// # Panics
+    ///
+    /// - Panics if the node is currently borrowed.
+    /// - Panics if a string tag name is empty.
+    pub fn set_tag_name<'a, T>(&self, tag_name: T)
+        where TagNameRef<'a>: From<T>
+    {
+        debug_assert_eq!(self.node_type(), NodeType::Element);
+
+        let tn = TagNameRef::from(tag_name);
+        if let NameRef::Name(name) = tn {
+            if name.is_empty() {
+                panic!("supplied tag name is empty");
+            }
+        }
+
+        let mut self_borrow = self.0.borrow_mut();
+        self_borrow.tag_name = Some(Name::from(tn));
+    }
+
+    // TODO: remove
+    /// Returns a copy of the attribute by `id`.
+    ///
+    /// Use it only for attributes with simple `AttributeValue` types,
+    /// and not for `String` and `Path`, since their copying will be very expensive.
+    ///
+    /// Prefer `Node::attributes()`.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the node is currently mutability borrowed.
+    pub fn attribute(&self, id: AttributeId) -> Option<Attribute> {
+        self.attributes().get(id).cloned()
+    }
+
+    // TODO: remove
+    /// Returns a copy of the attribute value by `id`.
+    ///
+    /// Use it only for simple `AttributeValue` types, and not for `String` and `Path`,
+    /// since their copying will be very expensive.
+    ///
+    /// Prefer `Node::attributes()`.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the node is currently mutability borrowed.
+    pub fn attribute_value(&self, id: AttributeId) -> Option<AttributeValue> {
+        self.attributes().get_value(id).cloned()
+    }
+
+    /// Returns a reference to the `Attributes` of the current node.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the node is currently mutability borrowed.
+    pub fn attributes(&self) -> Ref<Attributes> {
+        Ref::map(self.0.borrow(), |n| &n.attributes)
+    }
+
+    /// Returns a mutable reference to the `Attributes` of the current node.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the node is currently borrowed.
+    pub fn attributes_mut(&self) -> RefMut<Attributes> {
+        RefMut::map(self.0.borrow_mut(), |n| &mut n.attributes)
+    }
+
+    /// Returns `true` if the node has an attribute with such `id`.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the node is currently mutability borrowed.
+    #[inline]
+    pub fn has_attribute<'a, N>(&self, name: N) -> bool
+        where AttributeNameRef<'a>: From<N>
+    {
+        self.0.borrow().attributes.contains(name)
+    }
+
+    /// Returns `true` if the node has an attribute with such `id` and this attribute is visible.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the node is currently mutability borrowed.
+    pub fn has_visible_attribute(&self, id: AttributeId) -> bool {
+        if let Some(attr) = self.attributes().get(id) { attr.visible } else { false }
+    }
+
+    /// Returns `true` if the node has any of provided attributes.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the node is currently mutability borrowed.
+    pub fn has_attributes(&self, ids: &[AttributeId]) -> bool {
+        let attrs = self.attributes();
+        for id in ids {
+            if attrs.contains(*id) {
+                return true;
+            }
+        }
+
+        false
+    }
+
+    // TODO: remove
+    /// Returns `true` if node has an attribute with such `id` and such `value`.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the node is currently mutability borrowed.
+    pub fn has_attribute_with_value<T>(&self, id: AttributeId, value: T) -> bool
+        where AttributeValue: From<T>
+    {
+        match self.attribute_value(id) {
+            Some(a) => a == AttributeValue::from(value),
             None => false,
         }
     }
@@ -830,106 +930,6 @@ impl Node {
         Ok(())
     }
 
-    // TODO: remove
-    /// Returns a copy of the attribute value by `id`.
-    ///
-    /// Use it only for simple `AttributeValue` types, and not for `String` and `Path`,
-    /// since their copying will be very expensive.
-    ///
-    /// Prefer `Node::attributes()`.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the node is currently mutability borrowed.
-    pub fn attribute_value(&self, id: AttributeId) -> Option<AttributeValue> {
-        self.attributes().get_value(id).cloned()
-    }
-
-    // TODO: remove
-    /// Returns a copy of the attribute by `id`.
-    ///
-    /// Use it only for attributes with simple `AttributeValue` types,
-    /// and not for `String` and `Path`, since their copying will be very expensive.
-    ///
-    /// Prefer `Node::attributes()`.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the node is currently mutability borrowed.
-    pub fn attribute(&self, id: AttributeId) -> Option<Attribute> {
-        self.attributes().get(id).cloned()
-    }
-
-    /// Returns a reference to the `Attributes` of the current node.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the node is currently mutability borrowed.
-    pub fn attributes(&self) -> Ref<Attributes> {
-        Ref::map(self.0.borrow(), |n| &n.attributes)
-    }
-
-    /// Returns a mutable reference to the `Attributes` of the current node.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the node is currently borrowed.
-    pub fn attributes_mut(&self) -> RefMut<Attributes> {
-        RefMut::map(self.0.borrow_mut(), |n| &mut n.attributes)
-    }
-
-    /// Returns `true` if the node has an attribute with such `id`.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the node is currently mutability borrowed.
-    #[inline]
-    pub fn has_attribute<'a, N>(&self, name: N) -> bool
-        where AttributeNameRef<'a>: From<N>
-    {
-        self.0.borrow().attributes.contains(name)
-    }
-
-    /// Returns `true` if the node has an attribute with such `id` and this attribute is visible.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the node is currently mutability borrowed.
-    pub fn has_visible_attribute(&self, id: AttributeId) -> bool {
-        if let Some(attr) = self.attributes().get(id) { attr.visible } else { false }
-    }
-
-    /// Returns `true` if the node has any of provided attributes.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the node is currently mutability borrowed.
-    pub fn has_attributes(&self, ids: &[AttributeId]) -> bool {
-        let attrs = self.attributes();
-        for id in ids {
-            if attrs.contains(*id) {
-                return true;
-            }
-        }
-
-        false
-    }
-
-    // TODO: remove
-    /// Returns `true` if node has an attribute with such `id` and such `value`.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the node is currently mutability borrowed.
-    pub fn has_attribute_with_value<T>(&self, id: AttributeId, value: T) -> bool
-        where AttributeValue: From<T>
-    {
-        match self.attribute_value(id) {
-            Some(a) => a == AttributeValue::from(value),
-            None => false,
-        }
-    }
-
     /// Removes an attribute from the node.
     ///
     /// It will also unlink it, if it was an referenced attribute.
@@ -1013,13 +1013,6 @@ impl Node {
     }
 }
 
-// TODO: move to Rc::ptr_eq (since 1.17) when we drop 1.13 version support
-fn same_rc<T>(a: &Rc<T>, b: &Rc<T>) -> bool {
-    let a: *const T = &**a;
-    let b: *const T = &**b;
-    a == b
-}
-
 /// Cloning a `Node` only increments a reference count. It does not copy the data.
 impl Clone for Node {
     fn clone(&self) -> Node {
@@ -1031,6 +1024,13 @@ impl PartialEq for Node {
     fn eq(&self, other: &Node) -> bool {
         same_rc(&self.0, &other.0)
     }
+}
+
+// TODO: move to Rc::ptr_eq (since 1.17) when we drop 1.13 version support
+fn same_rc<T>(a: &Rc<T>, b: &Rc<T>) -> bool {
+    let a: *const T = &**a;
+    let b: *const T = &**b;
+    a == b
 }
 
 impl fmt::Debug for Node {
