@@ -3,6 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 // TODO: implement xml escape
+// TODO: split to submodules
 
 use std::str;
 use std::collections::HashMap;

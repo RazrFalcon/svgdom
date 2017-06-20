@@ -123,6 +123,7 @@ pub fn resolve_stop_attributes(doc: &Document) -> Result<(), Error> {
     Ok(())
 }
 
+// TODO: explain algorithm
 fn gen_order(doc: &Document, eid: ElementId) -> Vec<Node> {
     let nodes = doc.descendants().svg().filter(|n| n.is_tag_name(eid))
                    .collect::<Vec<Node>>();

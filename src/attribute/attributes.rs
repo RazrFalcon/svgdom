@@ -13,6 +13,9 @@ use {
     AttributeValue
 };
 
+// TODO: bench with HashTable
+// TODO: iter_svg() -> iter().svg() like in dom iterators
+
 pub type SvgAttrFilter<'a> = Filter<Iter<'a, Attribute>, fn(&&Attribute) -> bool>;
 pub type SvgAttrFilterMut<'a> = Filter<IterMut<'a, Attribute>, fn(&&mut Attribute) -> bool>;
 
@@ -104,6 +107,7 @@ impl Attributes {
 
         let idx = self.0.iter().position(|x| x.name == attr.name);
         match idx {
+            // We use braces to discard return value.
             Some(i) => { mem::replace(&mut self.0[i], attr); }
             None => self.0.push(attr),
         }

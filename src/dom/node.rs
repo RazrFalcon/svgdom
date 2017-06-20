@@ -35,6 +35,8 @@ impl SvgId for ElementId {
     fn name(&self) -> &str { self.name() }
 }
 
+// TODO: fix doc bellow. Add links to structs.
+
 /// Representation of the SVG node.
 ///
 /// This is the main block of the library.
@@ -50,10 +52,6 @@ impl SvgId for ElementId {
 ///  - List of SVG attributes.
 ///  - List of unknown attributes.
 ///  - Optional text data, which is used by non-element nodes.
-///
-/// Most of the API are designed to work with SVG elements and attributes.
-/// Processing of non-SVG data is pretty hard/verbose, since it's an SVG DOM, not an XML.
-// TODO: maybe copyable
 pub struct Node(pub Rc<RefCell<NodeData>>);
 
 impl Node {
@@ -65,6 +63,7 @@ impl Node {
     /// - Panics if the node is a root node.
     pub fn document(&self) -> Document {
         // TODO: will fail on root node
+        debug_assert!(self.node_type() != NodeType::Root);
         Document { root: Node(self.0.borrow().doc.as_ref().unwrap().upgrade().unwrap()) }
     }
 
@@ -137,6 +136,8 @@ impl Node {
         self.first_child().is_some()
     }
 
+    // TODO: add has_single_child
+
     /// Returns the first child of this node, unless it has no child.
     ///
     /// # Panics
@@ -196,11 +197,34 @@ impl Node {
 
     /// Removes this node and all it children from the tree.
     ///
-    /// Same as `detach()`, but also unlinks all linked nodes and attributes.
+    /// Same as `detach()`, but also removes all linked attributes from the tree.
     ///
     /// # Panics
     ///
     /// Panics if the node or one of its adjoining nodes or any children node is currently borrowed.
+    ///
+    /// # Examples
+    /// ```
+    /// use svgdom::{Document, ElementId, AttributeId};
+    ///
+    /// let doc = Document::from_str(
+    /// "<svg>
+    ///     <rect id='rect1'/>
+    ///     <use xlink:href='#rect1'/>
+    /// </svg>").unwrap();
+    ///
+    /// let rect_elem = doc.descendants().filter(|n| *n.id() == "rect1").next().unwrap();
+    /// let use_elem = doc.descendants().filter(|n| n.is_tag_name(ElementId::Use)).next().unwrap();
+    ///
+    /// assert_eq!(use_elem.has_attribute(AttributeId::XlinkHref), true);
+    ///
+    /// // The 'remove' method will remove 'rect' element and all it's children.
+    /// // Also it will remove all links to this element and it's children,
+    /// // so 'use' element will no longer have the 'xlink:href' attribute.
+    /// rect_elem.remove();
+    ///
+    /// assert_eq!(use_elem.has_attribute(AttributeId::XlinkHref), false);
+    /// ```
     pub fn remove(&self) {
         Node::_remove(self);
         self.detach();
@@ -243,6 +267,8 @@ impl Node {
     }
 
     /// Removes only the children nodes specified by the predicate.
+    ///
+    /// Uses `remove()`, not `detach()` internally.
     ///
     /// Current node ignored.
     pub fn drain<P>(&self, f: P) -> usize
@@ -646,6 +672,8 @@ impl Node {
     pub fn set_attribute<'a, N, T>(&self, name: N, value: T)
         where AttributeNameRef<'a>: From<N>, N: Copy, AttributeValue: From<T>
     {
+        // TODO: allow Attribute
+
         debug_assert!(self.node_type() == NodeType::Element);
 
         // we must remove existing attribute to prevent dangling links
@@ -787,6 +815,7 @@ impl Node {
         Ok(())
     }
 
+    // TODO: remove
     /// Returns a copy of the attribute value by `id`.
     ///
     /// Use it only for simple `AttributeValue` types, and not for `String` and `Path`,
@@ -801,6 +830,7 @@ impl Node {
         self.attributes().get_value(id).cloned()
     }
 
+    // TODO: remove
     /// Returns a copy of the attribute by `id`.
     ///
     /// Use it only for attributes with simple `AttributeValue` types,
@@ -851,7 +881,7 @@ impl Node {
     ///
     /// Panics if the node is currently mutability borrowed.
     pub fn has_visible_attribute(&self, id: AttributeId) -> bool {
-        self.has_attribute(id) && self.attributes().get(id).unwrap().visible
+        if let Some(attr) = self.attributes().get(id) { attr.visible } else { false }
     }
 
     /// Returns `true` if the node has any of provided attributes.

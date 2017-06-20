@@ -33,6 +33,7 @@ impl NodeData {
     /// Detach a node from its parent and siblings. Children are not affected.
     pub fn detach(&mut self) {
         // TODO: trim names
+        // TODO: detach doc
 
         let parent_weak = self.parent.take();
         let previous_sibling_weak = self.previous_sibling.take();
