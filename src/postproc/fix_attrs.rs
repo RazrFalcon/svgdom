@@ -182,7 +182,8 @@ pub fn fix_stop_attributes(node: &Node) {
 
     for child in node.children() {
         // TODO: 'offset' must be resolved
-        let mut offset = *child.attribute_value(AttributeId::Offset).unwrap().as_number().unwrap();
+        let mut offset = *child.attributes().get_value(AttributeId::Offset).unwrap()
+                               .as_number().unwrap();
 
         if offset < 0.0 {
             offset = 0.0;
@@ -251,7 +252,8 @@ fn fix_len(node: &Node, id: AttributeId, new_len: Length) {
 }
 
 fn fix_negative_len(node: &Node, id: AttributeId, new_len: Length) {
-    if let Some(av) = node.attribute_value(id) {
+    let av = node.attributes().get_value(id).cloned();
+    if let Some(av) = av {
         // unwrap is safe, because coordinates must have a Length type
         let l = av.as_length().unwrap();
         if l.num.is_sign_negative() {
@@ -261,7 +263,8 @@ fn fix_negative_len(node: &Node, id: AttributeId, new_len: Length) {
 }
 
 fn rm_negative_len(node: &Node, id: AttributeId) {
-    if let Some(av) = node.attribute_value(id) {
+    let av = node.attributes().get_value(id).cloned();
+    if let Some(av) = av {
         // unwrap is safe, because coordinates must have a Length type
         let l = av.as_length().unwrap();
         if l.num.is_sign_negative() {

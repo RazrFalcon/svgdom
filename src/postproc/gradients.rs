@@ -70,8 +70,12 @@ pub fn resolve_radial_gradient_attributes(doc: &Document) {
         check_attr(&node, AttributeId::Cx, Some(AttributeValue::from((50.0, LengthUnit::Percent))));
         check_attr(&node, AttributeId::Cy, Some(AttributeValue::from((50.0, LengthUnit::Percent))));
         check_attr(&node, AttributeId::R,  Some(AttributeValue::from((50.0, LengthUnit::Percent))));
-        check_attr(&node, AttributeId::Fx, node.attribute_value(AttributeId::Cx));
-        check_attr(&node, AttributeId::Fy, node.attribute_value(AttributeId::Cy));
+
+        let cx = node.attributes().get_value(AttributeId::Cx).cloned();
+        let cy = node.attributes().get_value(AttributeId::Cy).cloned();
+        check_attr(&node, AttributeId::Fx, cx);
+        check_attr(&node, AttributeId::Fy, cy);
+
         check_attr(&node, AttributeId::GradientTransform, None);
     }
 }
@@ -91,7 +95,18 @@ pub fn resolve_radial_gradient_attributes(doc: &Document) {
 pub fn resolve_stop_attributes(doc: &Document) -> Result<(), Error> {
     for gradient in doc.descendants().filter(|n| n.is_gradient()) {
         for (idx, node) in gradient.children().enumerate() {
-            if !node.has_attribute(AttributeId::Offset) {
+            let av = node.attributes().get_value(AttributeId::Offset).cloned();
+            if let Some(av) = av {
+                if let Some(l) = av.as_length() {
+                    if l.unit == LengthUnit::Percent {
+                        // convert percent into number
+                        node.set_attribute(AttributeId::Offset, l.num / 100.0);
+                    } else {
+                        // set original value too to change attribute type from Length to Number
+                        node.set_attribute(AttributeId::Offset, l.num);
+                    }
+                }
+            } else {
                 if idx == 0 {
                     // Allow first stop to not have an offset.
                     warnln!("The 'stop' element must have an 'offset' attribute. \
@@ -100,17 +115,6 @@ pub fn resolve_stop_attributes(doc: &Document) -> Result<(), Error> {
                 } else {
                     return Err(Error::MissingAttribute("stop".to_string(),
                                                        "offset".to_string()));
-                }
-            } else {
-                let a = node.attribute_value(AttributeId::Offset).unwrap();
-                if let Some(l) = a.as_length() {
-                    if l.unit == LengthUnit::Percent {
-                        // convert percent into number
-                        node.set_attribute(AttributeId::Offset, l.num / 100.0);
-                    } else {
-                        // set original value too to change attribute type from Length to Number
-                        node.set_attribute(AttributeId::Offset, l.num);
-                    }
                 }
             }
 
@@ -170,19 +174,19 @@ fn check_attr(node: &Node, id: AttributeId, def_value: Option<AttributeValue>) {
 fn resolve_attribute(node: &Node, id: AttributeId, def_value: Option<AttributeValue>)
                      -> Option<AttributeValue> {
     if node.has_attribute(id) {
-        return node.attribute_value(id);
+        return node.attributes().get_value(id).cloned();
     }
 
-    match node.attribute_value(AttributeId::XlinkHref) {
+    match node.attributes().get_value(AttributeId::XlinkHref) {
         Some(av) => {
             match av {
-                AttributeValue::Link(ref_node) => resolve_attribute(&ref_node, id, def_value),
+                &AttributeValue::Link(ref ref_node) => resolve_attribute(ref_node, id, def_value),
                 _ => unreachable!(),
             }
         }
         None => {
-            match node.attribute_value(id) {
-                Some(v) => Some(v),
+            match node.attributes().get_value(id) {
+                Some(v) => Some(v.clone()),
                 None => def_value,
             }
         }

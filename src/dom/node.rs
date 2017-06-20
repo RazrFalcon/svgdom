@@ -671,36 +671,6 @@ impl Node {
         self_borrow.tag_name = Some(Name::from(tn));
     }
 
-    // TODO: remove
-    /// Returns a copy of the attribute by `id`.
-    ///
-    /// Use it only for attributes with simple `AttributeValue` types,
-    /// and not for `String` and `Path`, since their copying will be very expensive.
-    ///
-    /// Prefer `Node::attributes()`.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the node is currently mutability borrowed.
-    pub fn attribute(&self, id: AttributeId) -> Option<Attribute> {
-        self.attributes().get(id).cloned()
-    }
-
-    // TODO: remove
-    /// Returns a copy of the attribute value by `id`.
-    ///
-    /// Use it only for simple `AttributeValue` types, and not for `String` and `Path`,
-    /// since their copying will be very expensive.
-    ///
-    /// Prefer `Node::attributes()`.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the node is currently mutability borrowed.
-    pub fn attribute_value(&self, id: AttributeId) -> Option<AttributeValue> {
-        self.attributes().get_value(id).cloned()
-    }
-
     /// Returns a reference to the `Attributes` of the current node.
     ///
     /// # Panics
@@ -754,21 +724,6 @@ impl Node {
         }
 
         false
-    }
-
-    // TODO: remove
-    /// Returns `true` if node has an attribute with such `id` and such `value`.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the node is currently mutability borrowed.
-    pub fn has_attribute_with_value<T>(&self, id: AttributeId, value: T) -> bool
-        where AttributeValue: From<T>
-    {
-        match self.attribute_value(id) {
-            Some(a) => a == AttributeValue::from(value),
-            None => false,
-        }
     }
 
     /// Inserts a new SVG attribute into attributes list.

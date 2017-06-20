@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 - `writer` module is private now.
 
+### Removed
+- `Node::attribute`. Use `node.attributes().get()` instead.
+- `Node::attribute_value`. Use `node.attributes().get_value()` instead.
+- `Node::has_attribute_with_value`.
+
 ## [0.6.0] - 2017-06-18
 ### Added
 - `Node::text_mut`.

@@ -152,7 +152,7 @@ fn attributes_must_be_uniq() {
     n.set_attribute(AId::Fill, "red");
     n.set_attribute(AId::Fill, "green");
 
-    assert_eq!(n.attribute_value(AId::Fill).unwrap(), AttributeValue::from("green"));
+    assert_eq!(n.attributes().get_value(AId::Fill).unwrap(), &AttributeValue::from("green"));
     assert_eq!(n.attributes().len(), 1);
 }
 
@@ -163,17 +163,7 @@ fn attributes_compare_1() {
 
     n.set_attribute(AId::StrokeWidth, 1.0);
 
-    assert_eq!(n.attribute_value(AId::StrokeWidth).unwrap(), AttributeValue::from(1.0));
-}
-
-#[test]
-fn attributes_compare_2() {
-    let doc = Document::new();
-    let n = doc.create_element(EId::Svg);
-
-    n.set_attribute(AId::StrokeWidth, 1.0);
-
-    assert_eq!(n.has_attribute_with_value(AId::StrokeWidth, 1.0), true);
+    assert_eq!(n.attributes().get_value(AId::StrokeWidth).unwrap(), &AttributeValue::from(1.0));
 }
 
 #[test]

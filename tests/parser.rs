@@ -536,7 +536,7 @@ fn parse_iri_1() {
     let rect = child.children().nth(1).unwrap();
 
     assert_eq!(rg.is_used(), true);
-    assert_eq!(rect.attribute_value(AId::Fill).unwrap(), AttributeValue::FuncLink(rg));
+    assert_eq!(rect.attributes().get_value(AId::Fill).unwrap(), &AttributeValue::FuncLink(rg));
 }
 
 #[test]
@@ -554,7 +554,7 @@ fn parse_iri_2() {
     let rg = child.children().nth(1).unwrap();
 
     assert_eq!(rg.is_used(), true);
-    assert_eq!(rect.attribute_value(AId::Fill).unwrap(), AttributeValue::FuncLink(rg));
+    assert_eq!(rect.attributes().get_value(AId::Fill).unwrap(), &AttributeValue::FuncLink(rg));
 }
 
 #[test]
@@ -567,8 +567,8 @@ fn parse_iri_with_fallback_1() {
     let child = doc.first_child().unwrap();
     let rect = child.children().nth(0).unwrap();
 
-    assert_eq!(rect.attribute_value(AId::Fill).unwrap(),
-               AttributeValue::PredefValue(ValueId::None));
+    assert_eq!(rect.attributes().get_value(AId::Fill).unwrap(),
+               &AttributeValue::PredefValue(ValueId::None));
 }
 
 #[test]
@@ -581,8 +581,8 @@ fn parse_iri_with_fallback_2() {
     let child = doc.first_child().unwrap();
     let rect = child.children().nth(0).unwrap();
 
-    assert_eq!(rect.attribute_value(AId::Fill).unwrap(),
-               AttributeValue::Color(Color::new(255, 0, 0)));
+    assert_eq!(rect.attributes().get_value(AId::Fill).unwrap(),
+               &AttributeValue::Color(Color::new(255, 0, 0)));
 }
 
 #[test]

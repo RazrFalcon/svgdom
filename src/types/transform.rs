@@ -387,9 +387,13 @@ mod tests {
             fn $name() {
                 let doc = Document::from_str($text).unwrap();
                 let svg = doc.root().first_child().unwrap();
-                match svg.attribute_value(AId::Transform).unwrap() {
-                    AttributeValue::Transform(v) => assert_eq!(v.to_string(), $result),
-                    _ => unreachable!(),
+
+                let attrs = svg.attributes();
+                if let Some(av) = attrs.get_value(AId::Transform) {
+                    match *av {
+                        AttributeValue::Transform(v) => assert_eq!(v.to_string(), $result),
+                        _ => unreachable!(),
+                    }
                 }
             }
         )
