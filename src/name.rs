@@ -12,17 +12,6 @@ pub trait SvgId: Copy {
     fn name(&self) -> &str;
 }
 
-/// A reference-like container for a `Name` object.
-///
-/// We need this to prevent `String` copy.
-#[derive(Clone,Copy,PartialEq)]
-pub enum NameRef<'a, T: SvgId> {
-    /// For an SVG name.
-    Id(T),
-    /// For an unknown name.
-    Name(&'a str),
-}
-
 /// A container for an SVG item name.
 #[derive(Clone,PartialEq)]
 pub enum Name<T: SvgId> {
@@ -30,6 +19,19 @@ pub enum Name<T: SvgId> {
     Id(T),
     /// For an unknown name.
     Name(String),
+}
+
+/// A reference-like container for a [`Name`] object.
+///
+/// We need this to prevent `String` copy.
+///
+/// [`Name`]: enum.Name.html
+#[derive(Clone,Copy,PartialEq)]
+pub enum NameRef<'a, T: SvgId> {
+    /// For an SVG name.
+    Id(T),
+    /// For an unknown name.
+    Name(&'a str),
 }
 
 impl<'a, T: SvgId> From<T> for NameRef<'a, T> {

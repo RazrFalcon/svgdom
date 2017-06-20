@@ -20,15 +20,18 @@ pub enum Error {
     /// If you want to use referenced element inside link attribute,
     /// such element must have a non-empty ID.
     ElementMustHaveAnId,
-    /// A linked nodes can't reference each other.
+    /// Linked nodes can't reference each other.
     ///
-    /// Example:
-    /// ```
+    /// # Examples
+    ///
+    /// ```text
     /// <linearGradient id="lg1" xlink:href="#lg2"/>
     /// <linearGradient id="lg2" xlink:href="#lg1"/>
     /// ```
+    ///
     /// or
-    /// ```
+    ///
+    /// ```text
     /// <linearGradient id="lg1" xlink:href="#lg1"/>
     /// ```
     ElementCrosslink,
@@ -48,8 +51,9 @@ pub enum Error {
     UnsupportedEntity(ErrorPos),
     /// We don't support a \<paint\> type with a fallback value and a valid FuncIRI.
     ///
-    /// Example:
-    /// ```
+    /// # Examples
+    ///
+    /// ```text
     /// <linearGradient id="lg1"/>
     /// <rect fill="url(#lg1) red"/>
     /// ```

@@ -21,9 +21,10 @@ use {
 use types::LengthUnit;
 
 /// Representation of the [`<length>`] type.
-/// [`<length>`]: https://www.w3.org/TR/SVG/types.html#DataTypeLength
 ///
 /// We use own struct and not one from svgparser, because of traits.
+///
+/// [`<length>`]: https://www.w3.org/TR/SVG/types.html#DataTypeLength
 #[derive(Clone,Copy,PartialEq,Debug)]
 #[allow(missing_docs)]
 pub struct Length {

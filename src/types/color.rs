@@ -19,7 +19,9 @@ use {
     WriteToString,
 };
 
-/// Representation of the `<color>` type.
+/// Representation of the [`<color>`] type.
+///
+/// [`<color>`]: https://www.w3.org/TR/SVG/types.html#DataTypeColor
 #[derive(Clone,Copy,PartialEq,Debug)]
 pub struct Color {
     #[allow(missing_docs)]

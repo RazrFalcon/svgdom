@@ -2,7 +2,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-//! This module contains all struct's for manipulating SVG paths data.
+//! This module contains all struct's for manipulating SVG [path data].
+//!
+//! [path data]: https://www.w3.org/TR/SVG/paths.html#PathData
 
 // TODO: split into submodules
 

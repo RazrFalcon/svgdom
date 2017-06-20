@@ -19,7 +19,7 @@ pub struct WriteOptionsPaths {
     ///
     /// SVG allow us to remove some symbols from path notation without breaking parsing.
     ///
-    /// Example:
+    /// # Examples
     ///
     /// `M 10 -20 A 5.5 0.3 -4 1 1 0 -0.1` -> `M10-20A5.5.3-4 1 1 0-.1`
     ///
@@ -31,7 +31,7 @@ pub struct WriteOptionsPaths {
     /// Elliptical arc curve segment has flags parameters, which can have values of `0` or `1`.
     /// Since we have fixed-width values, we can skip spaces between them.
     ///
-    /// Example:
+    /// # Examples
     ///
     /// `A 5 5 30 1 1 10 10` -> `A 5 5 30 1110 10`
     ///
@@ -45,7 +45,7 @@ pub struct WriteOptionsPaths {
     ///
     /// If the segment has the same type as previous - we can skip command specifier.
     ///
-    /// Example:
+    /// # Examples
     ///
     /// `M 10 10 L 20 20 L 30 30 L 40 40` -> `M 10 10 L 20 20 30 30 40 40`
     ///
@@ -57,7 +57,7 @@ pub struct WriteOptionsPaths {
     /// 'If a MoveTo is followed by multiple pairs of coordinates,
     /// the subsequent pairs are treated as implicit LineTo commands.'
     ///
-    /// Example:
+    /// # Examples
     ///
     /// `M 10 10 L 20 20 L 30 30` -> `M 10 10 20 20 30 30`
     ///
@@ -69,7 +69,7 @@ pub struct WriteOptionsPaths {
 pub struct WriteOptions {
     /// Set XML nodes indention.
     ///
-    /// Example:
+    /// # Examples
     ///
     /// Before:
     ///
@@ -91,7 +91,7 @@ pub struct WriteOptions {
 
     /// Use single quote marks instead of double quote.
     ///
-    /// Example:
+    /// # Examples
     ///
     /// ```text
     /// <rect fill="red"/>
@@ -105,7 +105,7 @@ pub struct WriteOptions {
     ///
     /// By default all colors written using #RRGGBB notation.
     ///
-    /// Example:
+    /// # Examples
     ///
     /// `#ff0000` -> `#f00`, `#000000` -> `#000`, `#00aa00` -> `#0a0`
     ///
@@ -116,14 +116,14 @@ pub struct WriteOptions {
     ///
     /// `libsvgdom` support invisible attributes, which can be dumped to output using this option.
     ///
-    /// See `svgdom::Attribute` documentation.
+    /// See [Attribute](struct.Attribute.html) documentation.
     ///
     /// Default: disabled
     pub write_hidden_attributes: bool,
 
     /// Remove leading zero from numbers.
     ///
-    /// Example:
+    /// # Examples
     ///
     /// `0.1` -> `.1`, `-0.1` -> `-.1`
     ///
@@ -139,7 +139,7 @@ pub struct WriteOptions {
     ///
     /// If not set - all transform will be saved as 'matrix'.
     ///
-    /// Examples:
+    /// # Examples
     ///
     /// ```text
     /// matrix(1 0 0 1 10 20) -> translate(10 20)

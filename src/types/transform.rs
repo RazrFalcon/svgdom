@@ -25,7 +25,9 @@ use super::number::{
     FuzzyEq,
 };
 
-/// Representation of the`<transform>` type.
+/// Representation of the [`<transform>`] type.
+///
+/// [`<transform>`]: https://www.w3.org/TR/SVG/coords.html#TransformAttribute
 #[derive(Debug,Clone,Copy,PartialEq)]
 #[allow(missing_docs)]
 pub struct Transform {

@@ -46,23 +46,27 @@ impl SvgId for ElementId {
     fn name(&self) -> &str { self.name() }
 }
 
-// TODO: fix doc bellow. Add links to structs.
-
 /// Representation of the SVG node.
 ///
 /// This is the main block of the library.
 ///
-/// It's designed as classical DOM node. We have links to a parent node, first child, last child,
+/// It's designed as classical DOM node. It has links to a parent node, first child, last child,
 /// previous sibling and next sibling. So DOM nodes manipulations are very fast.
 ///
 /// Node consists of:
-///  - The `NodeType`, which indicates it's type. It can't be changed.
-///  - Optional `TagName`, used only by element nodes.
-///  - Unique ID of the element node. Can be set to nodes with other types,
-///    but without any affect.
-///  - List of SVG attributes.
-///  - List of unknown attributes.
-///  - Optional text data, which is used by non-element nodes.
+///
+/// - The [`NodeType`], which indicates it's type. It can't be changed.
+/// - Optional [`TagName`], used only by element nodes.
+/// - Unique ID of the `Element` node. Can be set to nodes with other types,
+///   but without any affect.
+/// - [`Attributes`] - list of [`Attribute`]s.
+/// - List of linked nodes. [Details.](#method.set_link_attribute)
+/// - Text data, which is used by non-element nodes. Empty by default.
+///
+/// [`Attribute`]: struct.Attribute.html
+/// [`Attributes`]: struct.Attributes.html
+/// [`NodeType`]: enum.NodeType.html
+/// [`TagName`]: type.TagName.html
 pub struct Node(pub Rc<RefCell<NodeData>>);
 
 impl Node {
@@ -192,7 +196,7 @@ impl Node {
 
     /// Returns an iterator over descendant nodes.
     ///
-    /// More complex alternative of the `Node::descendants()`.
+    /// More low-level alternative to [descendants()](#method.descendants).
     pub fn traverse(&self) -> Traverse {
         Traverse::new(self)
     }
@@ -279,7 +283,7 @@ impl Node {
 
     /// Removes only the children nodes specified by the predicate.
     ///
-    /// Uses `remove()`, not `detach()` internally.
+    /// Uses [remove()](#method.remove), not [detach()](#method.detach) internally.
     ///
     /// Current node ignored.
     pub fn drain<P>(&self, f: P) -> usize
@@ -311,7 +315,7 @@ impl Node {
 
     /// Returns a copy of a current node without children.
     ///
-    /// All attributes except 'id' will be copied.
+    /// All attributes except `id` will be copied, because `id` must be unique.
     ///
     /// # Panics
     ///
@@ -333,9 +337,9 @@ impl Node {
         }
     }
 
-    /// Returns a deep copy of a current node without children.
+    /// Returns a deep copy of a current node with all it's children.
     ///
-    /// All attributes except 'id' will be copied.
+    /// All attributes except `id` will be copied, because `id` must be unique.
     ///
     /// # Panics
     ///
@@ -783,7 +787,7 @@ impl Node {
         // TODO: rewrite to template specialization when it will be available
         // TODO: check that node is element
 
-        debug_assert!(self.node_type() == NodeType::Element);
+        debug_assert_eq!(self.node_type(), NodeType::Element);
 
         if node.id().is_empty() {
             return Err(Error::ElementMustHaveAnId);
@@ -975,6 +979,8 @@ impl Node {
 
     /// Returns an iterator over linked nodes.
     ///
+    /// See [Node::set_link_attribute()](#method.set_link_attribute) for details.
+    ///
     /// # Panics
     ///
     /// Panics if the node is currently mutability borrowed.
@@ -984,7 +990,7 @@ impl Node {
 
     /// Returns `true` if the current node is linked to any of the DOM nodes.
     ///
-    /// See `Node::set_link_attribute()` for details.
+    /// See [Node::set_link_attribute()](#method.set_link_attribute) for details.
     ///
     /// # Panics
     ///
@@ -996,7 +1002,7 @@ impl Node {
 
     /// Returns a number of nodes, which is linked to this node.
     ///
-    /// See `Node::set_link_attribute()` for details.
+    /// See [Node::set_link_attribute()](#method.set_link_attribute) for details.
     ///
     /// # Panics
     ///

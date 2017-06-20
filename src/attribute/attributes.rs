@@ -29,10 +29,12 @@ pub type SvgAttrFilterMut<'a> = Filter<IterMut<'a, Attribute>, fn(&&mut Attribut
 
 /// Wrapper around attributes list.
 ///
-/// More low level API than in `Node`, but it supports getting a reference to the attribute,
-/// and not only copy like `Node`'s API.
+/// More low level API than in [`Node`], but it supports getting a reference to the attribute,
+/// and not only copy like [`Node`]'s API.
 ///
-/// Use with care, since it didn't perform many checks from `Node`'s API.
+/// Use with care, since it didn't perform many checks from [`Node`]'s API.
+///
+/// [`Node`]: struct.Node.html
 pub struct Attributes(Vec<Attribute>);
 
 impl Attributes {
@@ -44,7 +46,9 @@ impl Attributes {
         Attributes(Vec::new())
     }
 
-    /// Returns an optional reference to `Attribute`.
+    /// Returns an optional reference to [`Attribute`].
+    ///
+    /// [`Attribute`]: struct.Attribute.html
     #[inline]
     pub fn get<'a, N>(&self, name: N) -> Option<&Attribute>
         where AttributeNameRef<'a>: From<N>
@@ -59,7 +63,9 @@ impl Attributes {
         None
     }
 
-    /// Returns an optional mutable reference to `Attribute`.
+    /// Returns an optional mutable reference to [`Attribute`].
+    ///
+    /// [`Attribute`]: struct.Attribute.html
     #[inline]
     pub fn get_mut<'a, N>(&mut self, name: N) -> Option<&mut Attribute>
         where AttributeNameRef<'a>: From<N>
@@ -74,7 +80,9 @@ impl Attributes {
         None
     }
 
-    /// Returns an optional reference to `AttributeValue`.
+    /// Returns an optional reference to [`AttributeValue`].
+    ///
+    /// [`AttributeValue`]: enum.AttributeValue.html
     #[inline]
     pub fn get_value<'a, N>(&self, name: N) -> Option<&AttributeValue>
         where AttributeNameRef<'a>: From<N>
@@ -89,7 +97,9 @@ impl Attributes {
         None
     }
 
-    /// Returns an optional mutable reference to `AttributeValue`.
+    /// Returns an optional mutable reference to [`AttributeValue`].
+    ///
+    /// [`AttributeValue`]: enum.AttributeValue.html
     #[inline]
     pub fn get_value_mut<'a, N>(&mut self, name: N) -> Option<&mut AttributeValue>
         where AttributeNameRef<'a>: From<N>
@@ -107,7 +117,9 @@ impl Attributes {
     /// Inserts a new attribute. Previous will be overwritten.
     ///
     /// **Warning:** this method did not perform any checks for linked attributes.
-    /// If you want to insert an linked attribute - use `Node::set_link_attribute()`.
+    /// If you want to insert an linked attribute - use [`Node::set_link_attribute()`].
+    ///
+    /// [`Node::set_link_attribute()`]: struct.Node.html#method.set_link_attribute
     pub fn insert(&mut self, attr: Attribute) {
         if self.0.capacity() == 0 {
             self.0.reserve(16);
@@ -124,7 +136,9 @@ impl Attributes {
     /// Creates a new attribute from name and value and inserts it. Previous will be overwritten.
     ///
     /// **Warning:** this method did not perform any checks for linked attributes.
-    /// If you want to insert an linked attribute - use `Node::set_link_attribute()`.
+    /// If you want to insert an linked attribute - use [`Node::set_link_attribute()`].
+    ///
+    /// [`Node::set_link_attribute()`]: struct.Node.html#method.set_link_attribute
     pub fn insert_from<'a, N, T>(&mut self, name: N, value: T)
         where AttributeNameRef<'a>: From<N>, N: Copy, AttributeValue: From<T>
     {
@@ -134,7 +148,9 @@ impl Attributes {
     /// Removes an existing attribute.
     ///
     /// **Warning:** this method did not perform any checks for linked attributes.
-    /// If you want to remove an linked attribute - use `Node::remove_attribute()`.
+    /// If you want to remove an linked attribute - use [`Node::remove_attribute()`].
+    ///
+    /// [`Node::remove_attribute()`]: struct.Node.html#method.remove_attribute
     pub fn remove<'a, N>(&mut self, name: N)
         where AttributeNameRef<'a>: From<N>
     {
@@ -215,6 +231,11 @@ impl Attributes {
     }
 
     /// Retains only elements specified by the predicate.
+    ///
+    /// **Warning:** this method did not perform any checks for linked attributes.
+    /// If you want to remove an linked attribute - use [`Node::remove_attribute()`].
+    ///
+    /// [`Node::remove_attribute()`]: struct.Node.html#method.remove_attribute
     #[inline]
     pub fn retain<F>(&mut self, f: F)
         where F: FnMut(&Attribute) -> bool
