@@ -3,20 +3,28 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 use std::mem;
-use std::iter::{Filter, Map};
-use std::slice::{Iter, IterMut};
+use std::iter::{
+    Filter,
+    Map,
+};
+use std::slice::{
+    Iter,
+    IterMut,
+};
 
 use {
     Attribute,
-    AttributeNameRef,
     AttributeId,
+    AttributeNameRef,
     AttributeValue
 };
 
 // TODO: bench with HashTable
 // TODO: iter_svg() -> iter().svg() like in dom iterators
 
+/// Filter iterator over SVG attributes.
 pub type SvgAttrFilter<'a> = Filter<Iter<'a, Attribute>, fn(&&Attribute) -> bool>;
+/// Mutable filter iterator over SVG attributes.
 pub type SvgAttrFilterMut<'a> = Filter<IterMut<'a, Attribute>, fn(&&mut Attribute) -> bool>;
 
 /// Wrapper around attributes list.

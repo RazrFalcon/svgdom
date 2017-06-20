@@ -5,9 +5,11 @@
 use std::cell::Ref;
 use std::iter::Filter;
 
-use super::node::Node;
+use {
+    Node,
+    NodeType,
+};
 use super::node_data::WeakLink;
-use super::node_type::NodeType;
 
 // TODO: maybe can be implemented as template or trait
 macro_rules! filter_svg {

@@ -7,7 +7,10 @@ use std::cmp;
 
 use float_cmp::ApproxEqUlps;
 
-use {WriteOptions, WriteBuffer};
+use {
+    WriteBuffer,
+    WriteOptions,
+};
 
 /// The trait for comparing f64 numbers.
 pub trait FuzzyEq {

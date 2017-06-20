@@ -8,7 +8,19 @@
 use std::str;
 use std::collections::HashMap;
 
-use super::{
+use svgparser::{
+    AttributeValue as ParserAttributeValue,
+    PaintFallback,
+    Stream,
+    TextFrame,
+    Tokenize,
+};
+use svgparser::svg;
+use svgparser::style;
+
+use simplecss;
+
+use {
     Attribute,
     AttributeId,
     AttributeValue,
@@ -27,21 +39,9 @@ use types::{
     Color,
     Length,
     LengthUnit,
+    path,
     Transform,
 };
-use types::path;
-
-use svgparser::{
-    AttributeValue as ParserAttributeValue,
-    PaintFallback,
-    Stream,
-    TextFrame,
-    Tokenize,
-};
-use svgparser::svg;
-use svgparser::style;
-
-use simplecss;
 
 struct NodeStreamData<'a> {
     node: Node,

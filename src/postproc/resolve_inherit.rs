@@ -2,7 +2,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use {Document, Node, AttributeId, Attribute, AttributeValue, ValueId};
+use {
+    Attribute,
+    AttributeId,
+    AttributeValue,
+    Document,
+    Node,
+    ValueId,
+};
 
 // TODO: split
 /// Resolve `inherit` and `currentColor` attributes.

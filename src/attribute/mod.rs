@@ -2,10 +2,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-pub use self::attribute::{Attribute, AttributeName, AttributeNameRef};
-pub use self::attribute_type::AttributeType;
-pub use self::attribute_value::{AttributeValue, NumberList, LengthList};
-pub use self::attributes::Attributes;
+pub use self::attribute::*;
+pub use self::attribute_type::*;
+// TODO: NumberList and LengthList should be imported from 'types'
+pub use self::attribute_value::*;
+pub use self::attributes::*;
 
 mod attribute;
 mod attribute_type;

@@ -3,10 +3,16 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 use std::cell::RefCell;
-use std::rc::{Rc, Weak};
+use std::rc::{
+    Rc,
+    Weak,
+};
 
-use {Attributes, TagName};
-use super::NodeType;
+use {
+    Attributes,
+    TagName,
+    NodeType,
+};
 
 pub type Link = Rc<RefCell<NodeData>>;
 pub type WeakLink = Weak<RefCell<NodeData>>;

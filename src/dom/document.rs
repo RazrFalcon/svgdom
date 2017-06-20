@@ -9,7 +9,10 @@ use std::rc::Rc;
 #[cfg(feature = "parsing")]
 use parser::parse_svg;
 #[cfg(feature = "parsing")]
-use {ParseOptions, Error};
+use {
+    ParseOptions,
+    Error,
+};
 
 use writer;
 use {
@@ -21,12 +24,15 @@ use {
     WriteBuffer,
     WriteOptions,
     WriteToString,
+    Children,
+    Descendants,
+    Node,
+    NodeType,
 };
-
-use super::iterators::{Children, Descendants};
-use super::node::Node;
-use super::node_data::{Link, NodeData};
-use super::node_type::NodeType;
+use super::node_data::{
+    Link,
+    NodeData,
+};
 
 /// Container of [`Node`](struct.Node.html)s.
 pub struct Document {

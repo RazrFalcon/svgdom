@@ -2,7 +2,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use { ElementId, Node };
+use {
+    ElementId,
+    Node,
+};
 
 /// This trait contains methods that check element's type according to the
 /// [SVG spec](https://www.w3.org/TR/SVG/intro.html#Definitions).

@@ -2,17 +2,28 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+use std::f64;
 use std::fmt;
 use std::ops::Mul;
-use std::f64;
-
-use {WriteOptions, WriteBuffer, WriteToString};
-use super::number::{write_num, FuzzyEq};
 
 #[cfg(feature = "parsing")]
 use FromStream;
 #[cfg(feature = "parsing")]
-use svgparser::{TextFrame, Tokenize, Error as ParseError};
+use svgparser::{
+    Error as ParseError,
+    TextFrame,
+    Tokenize,
+};
+
+use {
+    WriteBuffer,
+    WriteOptions,
+    WriteToString,
+};
+use super::number::{
+    write_num,
+    FuzzyEq,
+};
 
 /// Representation of the`<transform>` type.
 #[derive(Debug,Clone,Copy,PartialEq)]

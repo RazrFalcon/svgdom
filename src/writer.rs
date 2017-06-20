@@ -6,7 +6,7 @@
 
 use std::cell::Ref;
 
-use super::{
+use {
     Attribute,
     AttributeId,
     Document,

@@ -6,17 +6,28 @@
 
 // TODO: split into submodules
 
-use std::{fmt, str};
-
-use super::{number, FuzzyEq};
-use {WriteOptions, WriteBuffer, WriteToString};
+use std::{
+    fmt,
+    str,
+};
 
 #[cfg(feature = "parsing")]
 use FromStream;
 #[cfg(feature = "parsing")]
 use svgparser;
 #[cfg(feature = "parsing")]
-use svgparser::{TextFrame, Tokenize, Error as ParseError};
+use svgparser::{
+    Error as ParseError,
+    TextFrame,
+    Tokenize,
+};
+
+use super::{number, FuzzyEq};
+use {
+    WriteBuffer,
+    WriteOptions,
+    WriteToString,
+};
 
 /// List of all path commands.
 #[derive(Copy,Clone,Debug,PartialEq)]

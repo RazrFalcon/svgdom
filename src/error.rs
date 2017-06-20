@@ -5,8 +5,10 @@
 use std::fmt;
 use std::str;
 
-use svgparser::Error as ParseError;
-use svgparser::ErrorPos;
+use svgparser::{
+    Error as ParseError,
+    ErrorPos,
+};
 
 use simplecss::Error as CssParseError;
 

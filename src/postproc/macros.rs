@@ -3,6 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #[cfg(test)]
+// TODO: to method
 macro_rules! write_opt_for_tests {
     () => ({
         use WriteOptions;

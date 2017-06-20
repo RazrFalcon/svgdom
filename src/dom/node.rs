@@ -2,25 +2,36 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use std::cell::{RefCell, Ref, RefMut};
+use std::cell::{
+    RefCell,
+    Ref,
+    RefMut
+};
 use std::rc::Rc;
 use std::fmt;
 
-use attribute::*;
 use {
+    Attribute,
     AttributeId,
+    AttributeNameRef,
+    Attributes,
+    AttributeValue,
+    Children,
+    Descendants,
+    Document,
     ElementId,
     Error,
+    LinkedNodes,
     Name,
     NameRef,
+    NodeType,
+    Parents,
     SvgId,
     TagName,
     TagNameRef,
+    Traverse,
 };
-use super::document::Document;
-use super::iterators::*;
 use super::node_data::NodeData;
-use super::node_type::NodeType;
 
 macro_rules! try_opt {
     ($expr: expr) => {

@@ -16,9 +16,9 @@ use types::{
     Color,
     Length,
     LengthUnit,
-    Transform
+    Transform,
+    path,
 };
-use types::path;
 
 /// Representation of the `<list-of-numbers>` type.
 pub type NumberList = Vec<f64>;
