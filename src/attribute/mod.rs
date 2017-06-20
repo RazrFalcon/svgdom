@@ -4,7 +4,6 @@
 
 pub use self::attribute::*;
 pub use self::attribute_type::*;
-// TODO: NumberList and LengthList should be imported from 'types'
 pub use self::attribute_value::*;
 pub use self::attributes::*;
 

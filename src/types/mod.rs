@@ -11,8 +11,10 @@ pub use self::number::{FuzzyEq, FuzzyOrd};
 
 pub use svgparser::LengthUnit;
 
-pub use attribute::NumberList;
-pub use attribute::LengthList;
+/// Representation of the `<list-of-numbers>` type.
+pub type NumberList = Vec<f64>;
+/// Representation of the `<list-of-lengths>` type.
+pub type LengthList = Vec<Length>;
 
 pub mod path;
 mod color;

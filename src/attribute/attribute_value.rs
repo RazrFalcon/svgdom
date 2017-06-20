@@ -15,15 +15,12 @@ use {
 use types::{
     Color,
     Length,
+    LengthList,
     LengthUnit,
-    Transform,
+    NumberList,
     path,
+    Transform,
 };
-
-/// Representation of the `<list-of-numbers>` type.
-pub type NumberList = Vec<f64>;
-/// Representation of the `<list-of-lengths>` type.
-pub type LengthList = Vec<Length>;
 
 // TODO: custom debug
 
