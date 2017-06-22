@@ -914,6 +914,8 @@ impl Node {
     }
 
     fn set_simple_attribute(&self, attr: Attribute) {
+        debug_assert!(!attr.is_link() && !attr.is_func_link());
+
         // we must remove existing attribute to prevent dangling links
         self.remove_attribute(attr.name.into_ref());
 
@@ -949,7 +951,7 @@ impl Node {
             };
 
             let mut attributes = self.attributes_mut();
-            attributes.insert(a);
+            attributes.insert_impl(a);
         }
 
         {
@@ -992,7 +994,7 @@ impl Node {
             }
         }
 
-        attrs.remove(name);
+        attrs.remove_impl(name);
     }
 
     /// Removes attributes from the node.

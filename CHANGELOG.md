@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 - `writer` module is private now.
 - `Node::set_attribute` accepts only `Attribute` or tuple with attribute name and value now.
+- `Attributes` methods: `insert`, `remove` and `retain` will panic on an invalid
+  input in debug mode now.
 
 ### Removed
 - `Node::attribute`. Use `node.attributes().get()` instead.

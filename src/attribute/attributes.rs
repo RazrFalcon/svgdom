@@ -30,9 +30,7 @@ pub type SvgAttrFilterMut<'a> = Filter<IterMut<'a, Attribute>, fn(&&mut Attribut
 /// Wrapper around attributes list.
 ///
 /// More low level API than in [`Node`], but it supports getting a reference to the attribute,
-/// and not only copy like [`Node`]'s API.
-///
-/// Use with care, since it didn't perform many checks from [`Node`]'s API.
+/// and not a copy.
 ///
 /// [`Node`]: struct.Node.html
 pub struct Attributes(Vec<Attribute>);
@@ -40,7 +38,7 @@ pub struct Attributes(Vec<Attribute>);
 impl Attributes {
     /// Constructs a new attribute.
     ///
-    /// **Warning:** newer construct it manually. All nodes have `Attributes` by default.
+    /// **Warning:** this method is for private use only. Never invoke it directly.
     #[inline]
     pub fn new() -> Attributes {
         Attributes(Vec::new())
@@ -116,13 +114,40 @@ impl Attributes {
 
     /// Inserts a new attribute. Previous will be overwritten.
     ///
-    /// **Warning:** this method did not perform any checks for linked attributes.
-    /// If you want to insert an linked attribute - use [`Node::set_attribute()`].
+    /// # Panics
+    ///
+    /// During insert of a linked attribute. Use [`Node::set_attribute()`] instead.
+    ///
+    /// Will panic only in debug build.
     ///
     /// [`Node::set_attribute()`]: struct.Node.html#method.set_attribute
     pub fn insert(&mut self, attr: Attribute) {
-        // TODO: panic on a linked attr
+        if cfg!(debug_assertions) {
+            if attr.is_link() || attr.is_func_link() {
+                panic!("attribute with Link/FuncLink value must be set only via Node::set_attribute");
+            }
+        }
 
+        self.insert_impl(attr);
+    }
+
+    /// Creates a new attribute from name and value and inserts it. Previous will be overwritten.
+    ///
+    /// [`Node`] attribute value can be set only via [`Node::set_attribute()`] method.
+    ///
+    /// [`Node`]: struct.Node.html
+    /// [`Node::set_attribute()`]: struct.Node.html#method.set_attribute
+    pub fn insert_from<'a, N, T>(&mut self, name: N, value: T)
+        where AttributeNameRef<'a>: From<N>, AttributeValue: From<T>
+    {
+        self.insert(Attribute::new(name, value));
+    }
+
+    /// Inserts a new link attribute.
+    ///
+    /// **Warning:** this method is for private use only. Never invoke it directly.
+    pub fn insert_impl(&mut self, attr: Attribute) {
+        // Increase capacity on first insert.
         if self.0.capacity() == 0 {
             self.0.reserve(16);
         }
@@ -135,25 +160,39 @@ impl Attributes {
         }
     }
 
-    /// Creates a new attribute from name and value and inserts it. Previous will be overwritten.
+    /// Removes an existing attribute.
     ///
-    /// **Warning:** this method did not perform any checks for linked attributes.
-    /// If you want to insert an linked attribute - use [`Node::set_attribute()`].
+    /// # Panics
     ///
-    /// [`Node::set_attribute()`]: struct.Node.html#method.set_attribute
-    pub fn insert_from<'a, N, T>(&mut self, name: N, value: T)
-        where AttributeNameRef<'a>: From<N>, N: Copy, AttributeValue: From<T>
+    /// During remove of a linked attribute. Use [`Node::remove_attribute()`] instead.
+    ///
+    /// Will panic only in debug build.
+    ///
+    /// [`Node::remove_attribute()`]: struct.Node.html#method.remove_attribute
+    pub fn remove<'a, N>(&mut self, name: N)
+        where AttributeNameRef<'a>: From<N>, N: Copy
     {
-        self.insert(Attribute::new(name, value));
+        // Checks that removed attribute is not linked.
+        //
+        // Since this check is expensive - we do it only in debug build.
+        if cfg!(debug_assertions) {
+            let name = AttributeNameRef::from(name);
+            let attr = self.0.iter().find(|x| x.name.into_ref() == name);
+            if let Some(attr) = attr {
+                if attr.is_link() || attr.is_func_link() {
+                    panic!("attribute with Link/FuncLink value must be remove \
+                            only via Node::remove_attribute");
+                }
+            }
+        }
+
+        self.remove_impl(name);
     }
 
     /// Removes an existing attribute.
     ///
-    /// **Warning:** this method did not perform any checks for linked attributes.
-    /// If you want to remove an linked attribute - use [`Node::remove_attribute()`].
-    ///
-    /// [`Node::remove_attribute()`]: struct.Node.html#method.remove_attribute
-    pub fn remove<'a, N>(&mut self, name: N)
+    /// **Warning:** this method is for private use only. Never invoke it directly.
+    pub fn remove_impl<'a, N>(&mut self, name: N)
         where AttributeNameRef<'a>: From<N>
     {
         let name = AttributeNameRef::from(name);
@@ -234,14 +273,31 @@ impl Attributes {
 
     /// Retains only elements specified by the predicate.
     ///
-    /// **Warning:** this method did not perform any checks for linked attributes.
-    /// If you want to remove an linked attribute - use [`Node::remove_attribute()`].
+    /// # Panics
+    ///
+    /// During remove of a linked attribute. Use [`Node::remove_attribute()`] instead.
+    ///
+    /// Will panic only in debug build.
     ///
     /// [`Node::remove_attribute()`]: struct.Node.html#method.remove_attribute
     #[inline]
-    pub fn retain<F>(&mut self, f: F)
+    pub fn retain<F>(&mut self, mut f: F)
         where F: FnMut(&Attribute) -> bool
     {
+        // Checks that removed attribute is not linked.
+        //
+        // Since this check is expensive - we do it only in debug build.
+        if cfg!(debug_assertions) {
+            for attr in &self.0 {
+                if !f(attr) {
+                    if attr.is_link() || attr.is_func_link() {
+                        panic!("attribute with Link/FuncLink value must be remove \
+                                only via Node::remove_attribute");
+                    }
+                }
+            }
+        }
+
         self.0.retain(f)
     }
 }

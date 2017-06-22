@@ -435,3 +435,46 @@ fn set_attr_1() {
     rect.set_attribute((AId::XlinkHref, rect2));
     assert_eq!(rect.attributes().get(AId::XlinkHref).unwrap().to_string(), "xlink:href=\"#rect2\"");
 }
+
+#[test]
+#[should_panic]
+fn set_attr_2() {
+    let doc = Document::new();
+    let rect = doc.create_element(EId::Rect);
+    let rect2 = doc.create_element(EId::Rect);
+    rect2.set_id("rect2");
+
+    rect.set_attribute((AId::XlinkHref, rect2));
+    let attr = rect.attributes().get(AId::XlinkHref).cloned().unwrap();
+
+    // must panic
+    rect.attributes_mut().insert(attr);
+}
+
+#[test]
+#[should_panic]
+fn remove_attr_1() {
+    let doc = Document::new();
+    let rect = doc.create_element(EId::Rect);
+    let rect2 = doc.create_element(EId::Rect);
+    rect2.set_id("rect2");
+
+    rect.set_attribute((AId::XlinkHref, rect2));
+
+    // must panic
+    rect.attributes_mut().remove(AId::XlinkHref);
+}
+
+#[test]
+#[should_panic]
+fn remove_attr_2() {
+    let doc = Document::new();
+    let rect = doc.create_element(EId::Rect);
+    let rect2 = doc.create_element(EId::Rect);
+    rect2.set_id("rect2");
+
+    rect.set_attribute((AId::XlinkHref, rect2));
+
+    // must panic
+    rect.attributes_mut().retain(|a| !a.has_id(AId::XlinkHref));
+}
