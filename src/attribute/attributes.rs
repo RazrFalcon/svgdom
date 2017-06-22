@@ -117,10 +117,12 @@ impl Attributes {
     /// Inserts a new attribute. Previous will be overwritten.
     ///
     /// **Warning:** this method did not perform any checks for linked attributes.
-    /// If you want to insert an linked attribute - use [`Node::set_link_attribute()`].
+    /// If you want to insert an linked attribute - use [`Node::set_attribute()`].
     ///
-    /// [`Node::set_link_attribute()`]: struct.Node.html#method.set_link_attribute
+    /// [`Node::set_attribute()`]: struct.Node.html#method.set_attribute
     pub fn insert(&mut self, attr: Attribute) {
+        // TODO: panic on a linked attr
+
         if self.0.capacity() == 0 {
             self.0.reserve(16);
         }
@@ -136,9 +138,9 @@ impl Attributes {
     /// Creates a new attribute from name and value and inserts it. Previous will be overwritten.
     ///
     /// **Warning:** this method did not perform any checks for linked attributes.
-    /// If you want to insert an linked attribute - use [`Node::set_link_attribute()`].
+    /// If you want to insert an linked attribute - use [`Node::set_attribute()`].
     ///
-    /// [`Node::set_link_attribute()`]: struct.Node.html#method.set_link_attribute
+    /// [`Node::set_attribute()`]: struct.Node.html#method.set_attribute
     pub fn insert_from<'a, N, T>(&mut self, name: N, value: T)
         where AttributeNameRef<'a>: From<N>, N: Copy, AttributeValue: From<T>
     {

@@ -46,6 +46,26 @@ impl SvgId for ElementId {
     fn name(&self) -> &str { self.name() }
 }
 
+
+impl<'a, N, V> From<(N, V)> for Attribute
+    where AttributeNameRef<'a>: From<N>, AttributeValue: From<V>
+{
+    fn from(v: (N, V)) -> Self {
+        Attribute::new(v.0, v.1)
+    }
+}
+
+impl<'a> From<(AttributeId, Node)> for Attribute {
+    fn from(v: (AttributeId, Node)) -> Self {
+        if v.0 == AttributeId::XlinkHref {
+            Attribute::new(v.0, AttributeValue::Link(v.1))
+        } else {
+            Attribute::new(v.0, AttributeValue::FuncLink(v.1))
+        }
+    }
+}
+
+
 /// Representation of the SVG node.
 ///
 /// This is the main block of the library.
@@ -60,7 +80,7 @@ impl SvgId for ElementId {
 /// - Unique ID of the `Element` node. Can be set to nodes with other types,
 ///   but without any affect.
 /// - [`Attributes`] - list of [`Attribute`]s.
-/// - List of linked nodes. [Details.](#method.set_link_attribute)
+/// - List of linked nodes. [Details.](#method.set_attribute)
 /// - Text data, which is used by non-element nodes. Empty by default.
 ///
 /// [`Attribute`]: struct.Attribute.html
@@ -122,6 +142,7 @@ impl Node {
         }
     }
 
+    // TODO: place before has_parent
     /// Returns an iterator over node's parents.
     ///
     /// Current node is not included.
@@ -326,7 +347,7 @@ impl Node {
                 let elem = self.document().create_element(self.tag_name().unwrap().into_ref());
 
                 for attr in self.attributes().iter() {
-                    elem.set_attribute_object(attr.clone());
+                    elem.set_attribute(attr.clone());
                 }
 
                 elem
@@ -710,6 +731,7 @@ impl Node {
         if let Some(attr) = self.attributes().get(id) { attr.visible } else { false }
     }
 
+    // TODO: remove
     /// Returns `true` if the node has any of provided attributes.
     ///
     /// # Panics
@@ -726,78 +748,107 @@ impl Node {
         false
     }
 
-    /// Inserts a new SVG attribute into attributes list.
+    // /// Inserts a new attribute into attributes list.
+    // ///
+    // /// Unwrapped version of the [`set_attribute_checked`] method.
+    // ///
+    // /// # Panics
+    // ///
+    // /// Will panic on any error produced by the [`set_attribute_checked`] method.
+    // ///
+    // /// [`set_attribute_checked`]: #method.set_attribute_checked
+    // pub fn set_attribute2<'a, T>(&self, v: T)
+    //     where T: Into<Attribute>
+    // {
+    //     let attr: Attribute = v.into();
+
+    //     println!("{:?}", attr);
+
+    //     // self.set_attribute_checked(v.into()).unwrap();
+    // }
+
+    /// Inserts a new attribute into attributes list.
     ///
-    /// This method will overwrite an existing attribute with the same id.
-    ///
-    /// Use it to insert/create new attributes.
-    /// For existing attributes use `Node::set_attribute_object()`.
-    ///
-    /// You can't use this method to set referenced attributes.
-    /// Use `Node::set_link_attribute()` instead.
+    /// Unwrapped version of the [`set_attribute_checked`] method.
     ///
     /// # Panics
     ///
-    /// Panics if the node is currently borrowed.
-    pub fn set_attribute<'a, N, T>(&self, name: N, value: T)
-        where AttributeNameRef<'a>: From<N>, N: Copy, AttributeValue: From<T>
+    /// Will panic on any error produced by the [`set_attribute_checked`] method.
+    ///
+    /// [`set_attribute_checked`]: #method.set_attribute_checked
+    pub fn set_attribute<'a, T>(&self, v: T)
+        where T: Into<Attribute>
     {
-        // TODO: allow Attribute
-
-        debug_assert!(self.node_type() == NodeType::Element);
-
-        // we must remove existing attribute to prevent dangling links
-        self.remove_attribute(name);
-
-        let a = Attribute::new(name, value);
-        let mut attrs = self.attributes_mut();
-        attrs.insert(a);
+        self.set_attribute_checked(v).unwrap();
     }
 
-    /// Inserts a new SVG attribute into the attributes list.
+    /// Inserts a new attribute into attributes list.
     ///
-    /// This method will overwrite an existing attribute with the same id.
+    /// You can set attribute using one of the possible combinations:
     ///
-    /// # Panics
+    /// - ([`AttributeId`]/`&str`, [`AttributeValue`])
+    /// - ([`AttributeId`], [`Node`])
+    /// - [`Attribute`]
     ///
-    /// - Panics if the node is currently borrowed.
-    /// - Panics if the attribute cause an ElementCrosslink error.
-    pub fn set_attribute_object(&self, attr: Attribute) {
-        // TODO: fix stupid name
-
-        debug_assert!(self.node_type() == NodeType::Element);
-
-        // we must remove existing attribute to prevent dangling links
-        self.remove_attribute(attr.name.into_ref());
-
-        if attr.is_svg() {
-            match attr.value {
-                AttributeValue::Link(ref iri) | AttributeValue::FuncLink(ref iri) => {
-                    let aid = attr.id().unwrap();
-                    self.set_link_attribute(aid, iri.clone()).unwrap();
-                    return;
-                }
-                _ => {}
-            }
-        }
-
-        let mut attrs = self.attributes_mut();
-        attrs.insert(attr);
-    }
-
-    /// Inserts a new referenced SVG attribute into the attributes list.
+    /// [`AttributeId`]: enum.AttributeId.html
+    /// [`Attribute`]: struct.Attribute.html
+    /// [`Node`]: struct.Node.html
+    /// [`AttributeValue`]: enum.AttributeValue.html
     ///
-    /// This method will overwrite an existing attribute with the same id.
+    /// This method will overwrite an existing attribute with the same name.
+    ///
+    /// # Errors
+    ///
+    /// [`ElementMustHaveAnId`], [`ElementCrosslink`].
     ///
     /// # Panics
     ///
     /// Panics if the node is currently borrowed.
     ///
     /// # Examples
+    ///
+    /// Ways to specify attributes:
+    ///
     /// ```
-    /// use svgdom::{Document, ValueId};
-    /// use svgdom::AttributeId as AId;
-    /// use svgdom::ElementId as EId;
+    /// use svgdom::{
+    ///     Document,
+    ///     Attribute,
+    ///     AttributeId as AId,
+    ///     ElementId as EId,
+    /// };
+    ///
+    /// // Create a simple document.
+    /// let doc = Document::new();
+    /// let svg = doc.create_element(EId::Svg);
+    /// let rect = doc.create_element(EId::Rect);
+    ///
+    /// doc.append(&svg);
+    /// svg.append(&rect);
+    ///
+    /// // In order to set element as an attribute value, we must set id first.
+    /// rect.set_id("rect1");
+    ///
+    /// // Using predefined attribute name.
+    /// svg.set_attribute((AId::X, 1.0));
+    /// svg.set_attribute((AId::X, "random text"));
+    /// // Using custom attribute name.
+    /// svg.set_attribute(("non-svg-attr", 1.0));
+    /// // Using existing attribute object.
+    /// svg.set_attribute(Attribute::new(AId::X, 1.0));
+    /// svg.set_attribute(Attribute::new("non-svg-attr", 1.0));
+    /// // Using an existing node as an attribute value.
+    /// svg.set_attribute((AId::XlinkHref, rect));
+    /// ```
+    ///
+    /// Linked attributes:
+    ///
+    /// ```
+    /// use svgdom::{
+    ///     Document,
+    ///     AttributeId as AId,
+    ///     ElementId as EId,
+    ///     ValueId,
+    /// };
     ///
     /// // Create a simple document.
     /// let doc = Document::new();
@@ -812,14 +863,14 @@ impl Node {
     ///
     /// // Set a `fill` attribute value to the `none`.
     /// // For now everything like in any other XML DOM library.
-    /// rect.set_attribute(AId::Fill, ValueId::None);
+    /// rect.set_attribute((AId::Fill, ValueId::None));
     ///
     /// // Now we want to fill our rect with a gradient.
     /// // To do this we need to set a link attribute:
-    /// rect.set_link_attribute(AId::Fill, gradient.clone()).unwrap();
+    /// rect.set_attribute((AId::Fill, gradient.clone()));
     ///
     /// // Now our fill attribute has a link to the `gradient` node.
-    /// // Not as text, aka `url(#lg1)`, but an actual reference.
+    /// // Not as text, aka `url(#lg1)`, but as actual reference.
     ///
     /// // This adds support for fast checking that the element is used. Which is very useful.
     ///
@@ -827,22 +878,51 @@ impl Node {
     /// assert_eq!(gradient.is_used(), true);
     /// // Also, we can check how many elements are uses this `gradient`.
     /// assert_eq!(gradient.uses_count(), 1);
-    /// // And even get this elements:
+    /// // And even get this elements.
     /// assert_eq!(gradient.linked_nodes().next().unwrap(), rect);
     ///
-    /// // `rect` is unused, because no one has referenced attribute that has link to it.
-    /// assert_eq!(rect.is_used(), false);
-    ///
-    /// // Now, if we set other attribute value, `gradient` will be automatically unlinked.
-    /// rect.set_attribute(AId::Fill, ValueId::None);
-    /// // No one uses it anymore.
+    /// // And now, if we remove our `rect` - `gradient` will became unused again.
+    /// rect.remove();
     /// assert_eq!(gradient.is_used(), false);
     /// ```
-    pub fn set_link_attribute(&self, id: AttributeId, node: Node) -> Result<(), Error> {
-        // TODO: rewrite to template specialization when it will be available
-        // TODO: check that node is element
+    ///
+    /// [`ElementMustHaveAnId`]: enum.Error.html
+    /// [`ElementCrosslink`]: enum.Error.html
+    pub fn set_attribute_checked<'a, T>(&self, v: T) -> Result<(), Error>
+        where T: Into<Attribute>
+    {
+        // TODO: to error in _checked mode
+        debug_assert!(self.node_type() == NodeType::Element);
 
-        debug_assert_eq!(self.node_type(), NodeType::Element);
+        let attr: Attribute = v.into();
+
+        if attr.is_svg() {
+            match attr.value {
+                  AttributeValue::Link(ref iri)
+                | AttributeValue::FuncLink(ref iri) => {
+                    let aid = attr.id().unwrap();
+                    self.set_link_attribute(aid, iri.clone())?;
+                    return Ok(());
+                }
+                _ => {}
+            }
+        }
+
+        self.set_simple_attribute(attr);
+
+        Ok(())
+    }
+
+    fn set_simple_attribute(&self, attr: Attribute) {
+        // we must remove existing attribute to prevent dangling links
+        self.remove_attribute(attr.name.into_ref());
+
+        let mut attrs = self.attributes_mut();
+        attrs.insert(attr);
+    }
+
+    fn set_link_attribute(&self, id: AttributeId, node: Node) -> Result<(), Error> {
+        // TODO: check that node is element
 
         if node.id().is_empty() {
             return Err(Error::ElementMustHaveAnId);
@@ -854,13 +934,8 @@ impl Node {
         }
 
         // check for recursion 2
-        {
-            let self_borrow = self.0.borrow();
-            let v = &self_borrow.linked_nodes;
-
-            if v.iter().any(|n| Node(n.upgrade().unwrap()) == node) {
-                return Err(Error::ElementCrosslink);
-            }
+        if self.linked_nodes().any(|n| n == node) {
+            return Err(Error::ElementCrosslink);
         }
 
         // we must remove existing attribute to prevent dangling links
@@ -934,7 +1009,7 @@ impl Node {
 
     /// Returns an iterator over linked nodes.
     ///
-    /// See [Node::set_link_attribute()](#method.set_link_attribute) for details.
+    /// See [Node::set_attribute()](#method.set_attribute) for details.
     ///
     /// # Panics
     ///
@@ -945,7 +1020,7 @@ impl Node {
 
     /// Returns `true` if the current node is linked to any of the DOM nodes.
     ///
-    /// See [Node::set_link_attribute()](#method.set_link_attribute) for details.
+    /// See [Node::set_attribute()](#method.set_attribute) for details.
     ///
     /// # Panics
     ///
@@ -957,7 +1032,7 @@ impl Node {
 
     /// Returns a number of nodes, which is linked to this node.
     ///
-    /// See [Node::set_link_attribute()](#method.set_link_attribute) for details.
+    /// See [Node::set_attribute()](#method.set_attribute) for details.
     ///
     /// # Panics
     ///

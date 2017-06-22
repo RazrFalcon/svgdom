@@ -195,7 +195,7 @@ pub fn fix_stop_attributes(node: &Node) {
             offset = prev_offset;
         }
 
-        child.set_attribute(AttributeId::Offset, offset);
+        child.set_attribute((AttributeId::Offset, offset));
 
         prev_offset = offset;
     }
@@ -247,7 +247,7 @@ fn fix_len(node: &Node, id: AttributeId, new_len: Length) {
     if node.has_attribute(id) {
         fix_negative_len(node, id, new_len);
     } else {
-        node.set_attribute(id, new_len);
+        node.set_attribute((id, new_len));
     }
 }
 
@@ -257,7 +257,7 @@ fn fix_negative_len(node: &Node, id: AttributeId, new_len: Length) {
         // unwrap is safe, because coordinates must have a Length type
         let l = av.as_length().unwrap();
         if l.num.is_sign_negative() {
-            node.set_attribute(id, new_len);
+            node.set_attribute((id, new_len));
         }
     }
 }

@@ -100,10 +100,10 @@ pub fn resolve_stop_attributes(doc: &Document) -> Result<(), Error> {
                 if let Some(l) = av.as_length() {
                     if l.unit == LengthUnit::Percent {
                         // convert percent into number
-                        node.set_attribute(AttributeId::Offset, l.num / 100.0);
+                        node.set_attribute((AttributeId::Offset, l.num / 100.0));
                     } else {
                         // set original value too to change attribute type from Length to Number
-                        node.set_attribute(AttributeId::Offset, l.num);
+                        node.set_attribute((AttributeId::Offset, l.num));
                     }
                 }
             } else {
@@ -111,7 +111,7 @@ pub fn resolve_stop_attributes(doc: &Document) -> Result<(), Error> {
                     // Allow first stop to not have an offset.
                     warnln!("The 'stop' element must have an 'offset' attribute. \
                              Fallback to 'offset=0'.");
-                    node.set_attribute(AttributeId::Offset, 0);
+                    node.set_attribute((AttributeId::Offset, 0));
                 } else {
                     return Err(Error::MissingAttribute("stop".to_string(),
                                                        "offset".to_string()));
@@ -121,13 +121,13 @@ pub fn resolve_stop_attributes(doc: &Document) -> Result<(), Error> {
             if !node.has_attribute(AttributeId::StopColor) {
                 let mut a = Attribute::new(AttributeId::StopColor, Color::new(0, 0, 0));
                 a.visible = false;
-                node.set_attribute_object(a);
+                node.set_attribute(a);
             }
 
             if !node.has_attribute(AttributeId::StopOpacity) {
                 let mut a = Attribute::new(AttributeId::StopOpacity, 1.0);
                 a.visible = false;
-                node.set_attribute_object(a);
+                node.set_attribute(a);
             }
         }
     }
@@ -166,7 +166,7 @@ fn check_attr(node: &Node, id: AttributeId, def_value: Option<AttributeValue>) {
         if let Some(v) = resolve_attribute(node, id, def_value) {
             let mut a = Attribute::new(id, v);
             a.visible = false;
-            node.set_attribute_object(a);
+            node.set_attribute(a);
         }
     }
 }

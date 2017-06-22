@@ -246,6 +246,7 @@ impl AttributeType for Attribute {
     { list_contains(self, STROKE_ATTRIBUTES) }
 }
 
+// TODO: maybe use match
 fn list_contains(attr: &Attribute, list: &[AttributeId]) -> bool {
     match attr.name {
         Name::Id(id) => list.binary_search(&id).is_ok(),

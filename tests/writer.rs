@@ -105,7 +105,7 @@ fn links_1() {
     doc.append(&svg_n);
     svg_n.append(&use_n);
 
-    use_n.set_link_attribute(AId::XlinkHref, svg_n).unwrap();
+    use_n.set_attribute((AId::XlinkHref, svg_n));
 
     assert_eq_text!(doc.to_string(),
 "<svg id=\"svg1\">
@@ -127,7 +127,7 @@ fn links_2() {
     svg_n.append(&lg_n);
     svg_n.append(&rect_n);
 
-    rect_n.set_link_attribute(AId::Fill, lg_n).unwrap();
+    rect_n.set_attribute((AId::Fill, lg_n));
 
     assert_eq_text!(doc.to_string(),
 "<svg>
@@ -144,18 +144,18 @@ fn attributes_types_1() {
 
     doc.append(&svg);
 
-    svg.set_attribute(AId::Version, "1.0");
-    svg.set_attribute(AId::Width, 1.5);
-    svg.set_attribute(AId::Height, Length::new(1.5, LengthUnit::Percent));
-    svg.set_attribute(AId::Fill, Color::new(255, 255, 255));
-    svg.set_attribute(AId::Transform, Transform::new(2.0, 0.0, 0.0, 3.0, 20.0, 30.0));
-    svg.set_attribute(AId::StdDeviation, vec![1.5, 2.5, 3.5]);
+    svg.set_attribute((AId::Version, "1.0"));
+    svg.set_attribute((AId::Width, 1.5));
+    svg.set_attribute((AId::Height, Length::new(1.5, LengthUnit::Percent)));
+    svg.set_attribute((AId::Fill, Color::new(255, 255, 255)));
+    svg.set_attribute((AId::Transform, Transform::new(2.0, 0.0, 0.0, 3.0, 20.0, 30.0)));
+    svg.set_attribute((AId::StdDeviation, vec![1.5, 2.5, 3.5]));
 
     let mut len_list = Vec::new();
     len_list.push(Length::new(1.5, LengthUnit::Mm));
     len_list.push(Length::new(2.5, LengthUnit::Mm));
     len_list.push(Length::new(3.5, LengthUnit::Mm));
-    svg.set_attribute(AId::StrokeDasharray, len_list);
+    svg.set_attribute((AId::StrokeDasharray, len_list));
 
     // TODO: add path
 

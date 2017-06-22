@@ -12,6 +12,8 @@ pub trait SvgId: Copy {
     fn name(&self) -> &str;
 }
 
+// TODO: try Cow
+
 /// A container for an SVG item name.
 #[derive(Clone,PartialEq)]
 pub enum Name<T: SvgId> {

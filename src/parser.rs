@@ -212,7 +212,7 @@ fn process_token<'a>(doc: &Document,
                 if n.is_svg_element() {
                     parse_non_svg_attribute(n, name, value, post_data);
                 } else {
-                    n.set_attribute(name, value);
+                    n.set_attribute((name, value));
                 }
             }
         }
@@ -384,12 +384,12 @@ fn parse_svg_attribute<'a>(node: &Node,
         | AttributeId::PatternTransform => {
             let ts = Transform::from_stream(value)?;
             if !ts.is_default() {
-                node.set_attribute(id, AttributeValue::Transform(ts));
+                node.set_attribute((id, AttributeValue::Transform(ts)));
             }
         }
         AttributeId::D => {
             let p = path::Path::from_stream(value)?;
-            node.set_attribute(AttributeId::D, AttributeValue::Path(p));
+            node.set_attribute((AttributeId::D, AttributeValue::Path(p)));
         }
         AttributeId::Class => {
             // we store 'class' attributes for later use
@@ -508,7 +508,7 @@ fn parse_svg_attribute_value<'a>(node: &Node,
     };
 
     if let Some(v) = val {
-        node.set_attribute(id, v);
+        node.set_attribute((id, v));
     }
 
     Ok(())
@@ -537,7 +537,7 @@ fn parse_non_svg_attribute<'a>(node: &Node,
     }
 
     if let Some(val) = new_value {
-        node.set_attribute(name, val);
+        node.set_attribute((name, val));
     }
 }
 
@@ -562,7 +562,7 @@ fn parse_style_attribute<'a>(node: &Node,
         match s.parse_next()? {
             style::Token::XmlAttribute(name, value) => {
                 if opt.parse_unknown_attributes {
-                    node.set_attribute(name, value);
+                    node.set_attribute((name, value));
                 }
             }
             style::Token::SvgAttribute(id, value) => {
@@ -758,7 +758,7 @@ fn postprocess_class_selector<'a>(resolved_classes: &[&str],
                     text.push_str(d.text);
                 }
             } else {
-                d.node.set_attribute(AttributeId::Class, d.text);
+                d.node.set_attribute((AttributeId::Class, d.text));
             }
         }
     }
@@ -779,7 +779,7 @@ fn apply_css_attributes<'a>(values: &[(&str,&'a str)],
             }
             None => {
                 if opt.parse_unknown_attributes {
-                    node.set_attribute(aname, avalue);
+                    node.set_attribute((aname, avalue));
                 }
             }
         }
@@ -802,7 +802,7 @@ fn resolve_links(links: &Links) -> Result<(), Error> {
                         let s = d.iri.to_string();
                         return Err(Error::UnsupportedPaintFallback(s))
                     }
-                    None => d.node.set_link_attribute(d.attr_id, node.clone())?,
+                    None => d.node.set_attribute((d.attr_id, node.clone())),
                 }
             }
             None => {
@@ -811,9 +811,9 @@ fn resolve_links(links: &Links) -> Result<(), Error> {
                     Some(fallback) => {
                         match fallback {
                             PaintFallback::PredefValue(v) =>
-                                d.node.set_attribute(d.attr_id, v),
+                                d.node.set_attribute((d.attr_id, v)),
                             PaintFallback::Color(c) =>
-                                d.node.set_attribute(d.attr_id, Color::new(c.red, c.green, c.blue)),
+                                d.node.set_attribute((d.attr_id, Color::new(c.red, c.green, c.blue))),
                         }
                     }
                     None => {
@@ -853,14 +853,14 @@ fn resolve_links(links: &Links) -> Result<(), Error> {
                                     warnln!("Unresolved 'filter' IRI reference: {}. \
                                              Marking the element as invisible.",
                                              d.iri);
-                                    d.node.set_attribute(AttributeId::Visibility, ValueId::Hidden);
+                                    d.node.set_attribute((AttributeId::Visibility, ValueId::Hidden));
                                 }
                             }
                             AttributeId::Fill => {
                                 warnln!("Could not resolve the 'fill' IRI reference: {}. \
                                          Fallback to 'none'.",
                                          d.iri);
-                                d.node.set_attribute(AttributeId::Fill, ValueId::None);
+                                d.node.set_attribute((AttributeId::Fill, ValueId::None));
                             }
                             _ => {
                                 warnln!("Could not resolve IRI reference: {}.", d.iri);
@@ -970,7 +970,7 @@ fn set_xmlspace(node: &Node, xmlspace: XmlSpace) {
         visible: false,
     };
 
-    node.set_attribute_object(attr);
+    node.set_attribute(attr);
 }
 
 trait StrTrim {
