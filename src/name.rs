@@ -12,8 +12,6 @@ pub trait SvgId: Copy {
     fn name(&self) -> &str;
 }
 
-// TODO: try Cow
-
 /// A container for an SVG item name.
 #[derive(Clone,PartialEq)]
 pub enum Name<T: SvgId> {
@@ -76,7 +74,6 @@ impl<T: SvgId> Name<T> {
     }
 }
 
-// TODO: add Display
 impl<T: SvgId> fmt::Debug for Name<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{:?}", self.into_ref())

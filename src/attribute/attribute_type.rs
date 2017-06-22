@@ -60,163 +60,89 @@ pub trait AttributeType {
     fn is_stroke(&self) -> bool;
 }
 
-static PRESENTATION_ATTRIBUTES: &'static [AttributeId] = &[
-    AttributeId::AlignmentBaseline,
-    AttributeId::BaselineShift,
-    AttributeId::Clip,
-    AttributeId::ClipPath,
-    AttributeId::ClipRule,
-    AttributeId::Color,
-    AttributeId::ColorInterpolation,
-    AttributeId::ColorInterpolationFilters,
-    AttributeId::ColorProfile,
-    AttributeId::ColorRendering,
-    AttributeId::Cursor,
-    AttributeId::Direction,
-    AttributeId::Display,
-    AttributeId::DominantBaseline,
-    AttributeId::EnableBackground,
-    AttributeId::Fill,
-    AttributeId::FillOpacity,
-    AttributeId::FillRule,
-    AttributeId::Filter,
-    AttributeId::FloodColor,
-    AttributeId::FloodOpacity,
-    AttributeId::Font,
-    AttributeId::FontFamily,
-    AttributeId::FontSize,
-    AttributeId::FontSizeAdjust,
-    AttributeId::FontStretch,
-    AttributeId::FontStyle,
-    AttributeId::FontVariant,
-    AttributeId::FontWeight,
-    AttributeId::GlyphOrientationHorizontal,
-    AttributeId::GlyphOrientationVertical,
-    AttributeId::ImageRendering,
-    AttributeId::Kerning,
-    AttributeId::LetterSpacing,
-    AttributeId::LightingColor,
-    AttributeId::Marker,
-    AttributeId::MarkerEnd,
-    AttributeId::MarkerMid,
-    AttributeId::MarkerStart,
-    AttributeId::Mask,
-    AttributeId::Opacity,
-    AttributeId::Overflow,
-    AttributeId::PointerEvents,
-    AttributeId::ShapeRendering,
-    AttributeId::StopColor,
-    AttributeId::StopOpacity,
-    AttributeId::Stroke,
-    AttributeId::StrokeDasharray,
-    AttributeId::StrokeDashoffset,
-    AttributeId::StrokeLinecap,
-    AttributeId::StrokeLinejoin,
-    AttributeId::StrokeMiterlimit,
-    AttributeId::StrokeOpacity,
-    AttributeId::StrokeWidth,
-    AttributeId::TextAnchor,
-    AttributeId::TextDecoration,
-    AttributeId::TextRendering,
-    AttributeId::UnicodeBidi,
-    AttributeId::Visibility,
-    AttributeId::WordSpacing,
-    AttributeId::WritingMode,
-];
-
-// NOTE: `visibility` is marked as inheritable here: https://www.w3.org/TR/SVG/propidx.html,
-// but here https://www.w3.org/TR/SVG/painting.html#VisibilityControl
-// we have "Note that `visibility` is not an inheritable property."
-// And according to webkit, it's really non-inheritable.
-static NON_INHERITABLE_ATTRIBUTES: &'static [AttributeId] = &[
-    AttributeId::AlignmentBaseline,
-    AttributeId::BaselineShift,
-    AttributeId::Clip,
-    AttributeId::ClipPath,
-    AttributeId::Display,
-    AttributeId::DominantBaseline,
-    AttributeId::EnableBackground,
-    AttributeId::Filter,
-    AttributeId::FloodColor,
-    AttributeId::FloodOpacity,
-    AttributeId::LightingColor,
-    AttributeId::Mask,
-    AttributeId::Opacity,
-    AttributeId::Overflow,
-    AttributeId::StopColor,
-    AttributeId::StopOpacity,
-    AttributeId::DominantBaseline,
-    AttributeId::TextDecoration,
-    AttributeId::UnicodeBidi,
-    AttributeId::Visibility,
-];
-
-static ANIMATION_EVENT_ATTRIBUTES: &'static [AttributeId] = &[
-    AttributeId::Onbegin,
-    AttributeId::Onend,
-    AttributeId::Onload,
-    AttributeId::Onrepeat,
-];
-
-static GRAPHICAL_EVENT_ATTRIBUTES: &'static [AttributeId] = &[
-    AttributeId::Onactivate,
-    AttributeId::Onclick,
-    AttributeId::Onfocusin,
-    AttributeId::Onfocusout,
-    AttributeId::Onload,
-    AttributeId::Onmousedown,
-    AttributeId::Onmousemove,
-    AttributeId::Onmouseout,
-    AttributeId::Onmouseover,
-    AttributeId::Onmouseup,
-];
-
-static DOCUMENT_EVENT_ATTRIBUTES: &'static [AttributeId] = &[
-    AttributeId::Onabort,
-    AttributeId::Onerror,
-    AttributeId::Onresize,
-    AttributeId::Onscroll,
-    AttributeId::Onunload,
-    AttributeId::Onzoom,
-];
-
-static CONDITIONAL_PROCESSING_ATTRIBUTES: &'static [AttributeId] = &[
-    AttributeId::RequiredExtensions,
-    AttributeId::RequiredFeatures,
-    AttributeId::SystemLanguage,
-];
-
-static CORE_ATTRIBUTES: &'static [AttributeId] = &[
-    AttributeId::XmlBase,
-    AttributeId::XmlLang,
-    AttributeId::XmlSpace,
-];
-
-static FILL_ATTRIBUTES: &'static [AttributeId] = &[
-    AttributeId::Fill,
-    AttributeId::FillOpacity,
-    AttributeId::FillRule,
-];
-
-static STROKE_ATTRIBUTES: &'static [AttributeId] = &[
-    AttributeId::Stroke,
-    AttributeId::StrokeDasharray,
-    AttributeId::StrokeDashoffset,
-    AttributeId::StrokeLinecap,
-    AttributeId::StrokeLinejoin,
-    AttributeId::StrokeMiterlimit,
-    AttributeId::StrokeOpacity,
-    AttributeId::StrokeWidth,
-];
+macro_rules! is_func {
+    ($name:ident, $($pattern:tt)+) => (
+        fn $name(&self) -> bool {
+            if let Some(id) = self.id() {
+                match id {
+                    $($pattern)+ => true,
+                    _ => false
+                }
+            } else {
+                false
+            }
+        }
+    )
+}
 
 impl AttributeType for Attribute {
-    fn is_presentation(&self) -> bool
-    { list_contains(self, PRESENTATION_ATTRIBUTES) }
+    is_func!(is_presentation,
+          AttributeId::AlignmentBaseline
+        | AttributeId::BaselineShift
+        | AttributeId::Clip
+        | AttributeId::ClipPath
+        | AttributeId::ClipRule
+        | AttributeId::Color
+        | AttributeId::ColorInterpolation
+        | AttributeId::ColorInterpolationFilters
+        | AttributeId::ColorProfile
+        | AttributeId::ColorRendering
+        | AttributeId::Cursor
+        | AttributeId::Direction
+        | AttributeId::Display
+        | AttributeId::DominantBaseline
+        | AttributeId::EnableBackground
+        | AttributeId::Fill
+        | AttributeId::FillOpacity
+        | AttributeId::FillRule
+        | AttributeId::Filter
+        | AttributeId::FloodColor
+        | AttributeId::FloodOpacity
+        | AttributeId::Font
+        | AttributeId::FontFamily
+        | AttributeId::FontSize
+        | AttributeId::FontSizeAdjust
+        | AttributeId::FontStretch
+        | AttributeId::FontStyle
+        | AttributeId::FontVariant
+        | AttributeId::FontWeight
+        | AttributeId::GlyphOrientationHorizontal
+        | AttributeId::GlyphOrientationVertical
+        | AttributeId::ImageRendering
+        | AttributeId::Kerning
+        | AttributeId::LetterSpacing
+        | AttributeId::LightingColor
+        | AttributeId::Marker
+        | AttributeId::MarkerEnd
+        | AttributeId::MarkerMid
+        | AttributeId::MarkerStart
+        | AttributeId::Mask
+        | AttributeId::Opacity
+        | AttributeId::Overflow
+        | AttributeId::PointerEvents
+        | AttributeId::ShapeRendering
+        | AttributeId::StopColor
+        | AttributeId::StopOpacity
+        | AttributeId::Stroke
+        | AttributeId::StrokeDasharray
+        | AttributeId::StrokeDashoffset
+        | AttributeId::StrokeLinecap
+        | AttributeId::StrokeLinejoin
+        | AttributeId::StrokeMiterlimit
+        | AttributeId::StrokeOpacity
+        | AttributeId::StrokeWidth
+        | AttributeId::TextAnchor
+        | AttributeId::TextDecoration
+        | AttributeId::TextRendering
+        | AttributeId::UnicodeBidi
+        | AttributeId::Visibility
+        | AttributeId::WordSpacing
+        | AttributeId::WritingMode);
 
     fn is_inheritable(&self) -> bool {
         if self.is_presentation() {
             match self.name {
-                Name::Id(id) => NON_INHERITABLE_ATTRIBUTES.binary_search(&id).is_err(),
+                Name::Id(id) => !is_non_inheritable(id),
                 Name::Name(_) => false,
             }
         } else {
@@ -224,32 +150,83 @@ impl AttributeType for Attribute {
         }
     }
 
-    fn is_animation_event(&self) -> bool
-    { list_contains(self, ANIMATION_EVENT_ATTRIBUTES) }
+    is_func!(is_animation_event,
+          AttributeId::Onbegin
+        | AttributeId::Onend
+        | AttributeId::Onload
+        | AttributeId::Onrepeat);
 
-    fn is_graphical_event(&self) -> bool
-    { list_contains(self, GRAPHICAL_EVENT_ATTRIBUTES) }
+    is_func!(is_graphical_event,
+          AttributeId::Onactivate
+        | AttributeId::Onclick
+        | AttributeId::Onfocusin
+        | AttributeId::Onfocusout
+        | AttributeId::Onload
+        | AttributeId::Onmousedown
+        | AttributeId::Onmousemove
+        | AttributeId::Onmouseout
+        | AttributeId::Onmouseover
+        | AttributeId::Onmouseup);
 
-    fn is_document_event(&self) -> bool
-    { list_contains(self, DOCUMENT_EVENT_ATTRIBUTES) }
+    is_func!(is_document_event,
+          AttributeId::Onabort
+        | AttributeId::Onerror
+        | AttributeId::Onresize
+        | AttributeId::Onscroll
+        | AttributeId::Onunload
+        | AttributeId::Onzoom);
 
-    fn is_conditional_processing(&self) -> bool
-    { list_contains(self, CONDITIONAL_PROCESSING_ATTRIBUTES) }
+    is_func!(is_conditional_processing,
+          AttributeId::RequiredExtensions
+        | AttributeId::RequiredFeatures
+        | AttributeId::SystemLanguage);
 
-    fn is_core(&self) -> bool
-    { list_contains(self, CORE_ATTRIBUTES) }
+    is_func!(is_core,
+          AttributeId::XmlBase
+        | AttributeId::XmlLang
+        | AttributeId::XmlSpace);
 
-    fn is_fill(&self) -> bool
-    { list_contains(self, FILL_ATTRIBUTES) }
+    is_func!(is_fill,
+          AttributeId::Fill
+        | AttributeId::FillOpacity
+        | AttributeId::FillRule);
 
-    fn is_stroke(&self) -> bool
-    { list_contains(self, STROKE_ATTRIBUTES) }
+    is_func!(is_stroke,
+          AttributeId::Stroke
+        | AttributeId::StrokeDasharray
+        | AttributeId::StrokeDashoffset
+        | AttributeId::StrokeLinecap
+        | AttributeId::StrokeLinejoin
+        | AttributeId::StrokeMiterlimit
+        | AttributeId::StrokeOpacity
+        | AttributeId::StrokeWidth);
 }
 
-// TODO: maybe use match
-fn list_contains(attr: &Attribute, list: &[AttributeId]) -> bool {
-    match attr.name {
-        Name::Id(id) => list.binary_search(&id).is_ok(),
-        Name::Name(_) => false,
+// NOTE: `visibility` is marked as inheritable here: https://www.w3.org/TR/SVG/propidx.html,
+// but here https://www.w3.org/TR/SVG/painting.html#VisibilityControl
+// we have "Note that `visibility` is not an inheritable property."
+// And according to webkit, it's really non-inheritable.
+fn is_non_inheritable(id: AttributeId) -> bool {
+    match id {
+          AttributeId::AlignmentBaseline
+        | AttributeId::BaselineShift
+        | AttributeId::Clip
+        | AttributeId::ClipPath
+        | AttributeId::Display
+        | AttributeId::DominantBaseline
+        | AttributeId::EnableBackground
+        | AttributeId::Filter
+        | AttributeId::FloodColor
+        | AttributeId::FloodOpacity
+        | AttributeId::LightingColor
+        | AttributeId::Mask
+        | AttributeId::Opacity
+        | AttributeId::Overflow
+        | AttributeId::StopColor
+        | AttributeId::StopOpacity
+        | AttributeId::TextDecoration
+        | AttributeId::UnicodeBidi
+        | AttributeId::Visibility => true,
+        _ => false
     }
 }
