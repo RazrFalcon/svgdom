@@ -203,7 +203,7 @@ impl Document {
             parent: None,
             first_child: None,
             last_child: None,
-            previous_sibling: None,
+            prev_sibling: None,
             next_sibling: None,
             node_type: node_type,
             tag_name: tag_name.map(TagName::from),

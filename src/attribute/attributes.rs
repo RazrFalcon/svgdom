@@ -301,5 +301,3 @@ impl Attributes {
         self.0.retain(f)
     }
 }
-
-// TODO: IntoIterator

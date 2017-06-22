@@ -802,7 +802,7 @@ fn resolve_links(links: &Links) -> Result<(), Error> {
                         let s = d.iri.to_string();
                         return Err(Error::UnsupportedPaintFallback(s))
                     }
-                    None => d.node.set_attribute((d.attr_id, node.clone())),
+                    None => d.node.set_attribute_checked((d.attr_id, node.clone()))?,
                 }
             }
             None => {

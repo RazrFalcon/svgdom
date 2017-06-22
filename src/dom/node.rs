@@ -198,7 +198,7 @@ impl Node {
     ///
     /// Panics if the node is currently mutability borrowed.
     pub fn previous_sibling(&self) -> Option<Node> {
-        Some(Node(try_opt!(try_opt!(self.0.borrow().previous_sibling.as_ref()).upgrade())))
+        Some(Node(try_opt!(try_opt!(self.0.borrow().prev_sibling.as_ref()).upgrade())))
     }
 
     /// Returns the previous sibling of this node, unless it is a first child.
@@ -268,10 +268,12 @@ impl Node {
 
     fn _remove(node: &Node) {
         // remove link attributes, which will trigger nodes unlink
-        let mut ids: Vec<AttributeId> = node.attributes().iter_svg()
-                                        .filter(|&(_, a)| a.is_link() || a.is_func_link())
-                                        .map(|(id, _)| id)
-                                        .collect();
+        let mut ids: Vec<AttributeId>
+            = node.attributes().iter_svg()
+                  .filter(|&(_, a)| a.is_link() || a.is_func_link())
+                  .map(|(id, _)| id)
+                  .collect();
+
         for id in &ids {
             node.remove_attribute(*id);
         }
@@ -282,7 +284,8 @@ impl Node {
 
             for (aid, attr) in linked.attributes().iter_svg() {
                 match attr.value {
-                    AttributeValue::Link(ref link) | AttributeValue::FuncLink(ref link) => {
+                      AttributeValue::Link(ref link)
+                    | AttributeValue::FuncLink(ref link) => {
                         if link == node {
                             ids.push(aid);
                         }
@@ -388,30 +391,30 @@ impl Node {
     ///
     /// Panics if the node, the new child, or one of their adjoining nodes is currently borrowed.
     pub fn append(&self, new_child: &Node) {
-        let mut self_borrow = self.0.borrow_mut();
-        let mut last_child_opt = None;
+        let mut this = self.0.borrow_mut();
+        let mut last = None;
         let nc = new_child.clone();
         {
-            let mut new_child_borrow = nc.0.borrow_mut();
-            new_child_borrow.detach();
-            new_child_borrow.parent = Some(Rc::downgrade(&self.0));
-            if let Some(last_child_weak) = self_borrow.last_child.take() {
-                if let Some(last_child_strong) = last_child_weak.upgrade() {
-                    new_child_borrow.previous_sibling = Some(last_child_weak);
-                    last_child_opt = Some(last_child_strong);
+            let mut child = nc.0.borrow_mut();
+            child.detach();
+            child.parent = Some(Rc::downgrade(&self.0));
+            if let Some(last_weak) = this.last_child.take() {
+                if let Some(last_strong) = last_weak.upgrade() {
+                    child.prev_sibling = Some(last_weak);
+                    last = Some(last_strong);
                 }
             }
-            self_borrow.last_child = Some(Rc::downgrade(&nc.0));
+            this.last_child = Some(Rc::downgrade(&nc.0));
         }
 
-        if let Some(last_child_strong) = last_child_opt {
-            let mut last_child_borrow = last_child_strong.borrow_mut();
-            debug_assert!(last_child_borrow.next_sibling.is_none());
-            last_child_borrow.next_sibling = Some(nc.0);
+        if let Some(last) = last {
+            let mut last = last.borrow_mut();
+            debug_assert!(last.next_sibling.is_none());
+            last.next_sibling = Some(nc.0);
         } else {
             // No last child
-            debug_assert!(self_borrow.first_child.is_none());
-            self_borrow.first_child = Some(nc.0);
+            debug_assert!(this.first_child.is_none());
+            this.first_child = Some(nc.0);
         }
     }
 
@@ -421,27 +424,27 @@ impl Node {
     ///
     /// Panics if the node, the new child, or one of their adjoining nodes is currently borrowed.
     pub fn prepend(&self, new_child: &Node) {
-        let mut self_borrow = self.0.borrow_mut();
+        let mut this = self.0.borrow_mut();
         {
-            let mut new_child_borrow = new_child.0.borrow_mut();
-            new_child_borrow.detach();
-            new_child_borrow.parent = Some(Rc::downgrade(&self.0));
-            match self_borrow.first_child.take() {
-                Some(first_child_strong) => {
+            let mut child = new_child.0.borrow_mut();
+            child.detach();
+            child.parent = Some(Rc::downgrade(&self.0));
+            match this.first_child.take() {
+                Some(first) => {
                     {
-                        let mut first_child_borrow = first_child_strong.borrow_mut();
-                        debug_assert!(first_child_borrow.previous_sibling.is_none());
-                        first_child_borrow.previous_sibling = Some(Rc::downgrade(&new_child.0));
+                        let mut first = first.borrow_mut();
+                        debug_assert!(first.prev_sibling.is_none());
+                        first.prev_sibling = Some(Rc::downgrade(&new_child.0));
                     }
-                    new_child_borrow.next_sibling = Some(first_child_strong);
+                    child.next_sibling = Some(first);
                 }
                 None => {
-                    debug_assert!(self_borrow.first_child.is_none());
-                    self_borrow.last_child = Some(Rc::downgrade(&new_child.0));
+                    debug_assert!(this.first_child.is_none());
+                    this.last_child = Some(Rc::downgrade(&new_child.0));
                 }
             }
         }
-        self_borrow.first_child = Some(new_child.clone().0);
+        this.first_child = Some(new_child.clone().0);
     }
 
     /// Insert a new sibling after this node.
@@ -452,35 +455,32 @@ impl Node {
     pub fn insert_after(&self, new_sibling: &Node) {
         // TODO: add an example, since we need to detach 'new_sibling'
         //       before passing it to this method
-        let mut self_borrow = self.0.borrow_mut();
+        let mut this = self.0.borrow_mut();
         {
-            let mut new_sibling_borrow = new_sibling.0.borrow_mut();
-            new_sibling_borrow.detach();
-            new_sibling_borrow.parent = self_borrow.parent.clone();
-            new_sibling_borrow.previous_sibling = Some(Rc::downgrade(&self.0));
-            match self_borrow.next_sibling.take() {
-                Some(next_sibling_strong) => {
+            let mut child = new_sibling.0.borrow_mut();
+            child.detach();
+            child.parent = this.parent.clone();
+            child.prev_sibling = Some(Rc::downgrade(&self.0));
+            match this.next_sibling.take() {
+                Some(next) => {
                     {
-                        let mut next_sibling_borrow = next_sibling_strong.borrow_mut();
+                        let mut next = next.borrow_mut();
                         debug_assert!({
-                            let weak = next_sibling_borrow.previous_sibling.as_ref().unwrap();
+                            let weak = next.prev_sibling.as_ref().unwrap();
                             same_rc(&weak.upgrade().unwrap(), &self.0)
                         });
-                        next_sibling_borrow.previous_sibling = Some(Rc::downgrade(&new_sibling.0));
+                        next.prev_sibling = Some(Rc::downgrade(&new_sibling.0));
                     }
-                    new_sibling_borrow.next_sibling = Some(next_sibling_strong);
+                    child.next_sibling = Some(next);
                 }
                 None => {
-                    if let Some(parent_ref) = self_borrow.parent.as_ref() {
-                        if let Some(parent_strong) = parent_ref.upgrade() {
-                            let mut parent_borrow = parent_strong.borrow_mut();
-                            parent_borrow.last_child = Some(Rc::downgrade(&new_sibling.0));
-                        }
-                    }
+                    Node::update_parent(&this, |mut p| {
+                        p.last_child = Some(Rc::downgrade(&new_sibling.0))
+                    });
                 }
             }
         }
-        self_borrow.next_sibling = Some(new_sibling.clone().0);
+        this.next_sibling = Some(new_sibling.clone().0);
     }
 
     /// Insert a new sibling before this node.
@@ -489,36 +489,43 @@ impl Node {
     ///
     /// Panics if the node, the new sibling, or one of their adjoining nodes is currently borrowed.
     pub fn insert_before(&self, new_sibling: &Node) {
-        let mut self_borrow = self.0.borrow_mut();
-        let mut previous_sibling_opt = None;
+        let mut this = self.0.borrow_mut();
+        let mut prev_opt = None;
         {
-            let mut new_sibling_borrow = new_sibling.0.borrow_mut();
-            new_sibling_borrow.detach();
-            new_sibling_borrow.parent = self_borrow.parent.clone();
-            new_sibling_borrow.next_sibling = Some(self.0.clone());
-            if let Some(previous_sibling_weak) = self_borrow.previous_sibling.take() {
-                if let Some(previous_sibling_strong) = previous_sibling_weak.upgrade() {
-                    new_sibling_borrow.previous_sibling = Some(previous_sibling_weak);
-                    previous_sibling_opt = Some(previous_sibling_strong);
+            let mut child = new_sibling.0.borrow_mut();
+            child.detach();
+            child.parent = this.parent.clone();
+            child.next_sibling = Some(self.0.clone());
+            if let Some(prev_weak) = this.prev_sibling.take() {
+                if let Some(prev_strong) = prev_weak.upgrade() {
+                    child.prev_sibling = Some(prev_weak);
+                    prev_opt = Some(prev_strong);
                 }
             }
-            self_borrow.previous_sibling = Some(Rc::downgrade(&new_sibling.0));
+            this.prev_sibling = Some(Rc::downgrade(&new_sibling.0));
         }
 
-        if let Some(previous_sibling_strong) = previous_sibling_opt {
-            let mut previous_sibling_borrow = previous_sibling_strong.borrow_mut();
+        if let Some(prev) = prev_opt {
+            let mut prev = prev.borrow_mut();
             debug_assert!({
-                let rc = previous_sibling_borrow.next_sibling.as_ref().unwrap();
+                let rc = prev.next_sibling.as_ref().unwrap();
                 same_rc(rc, &self.0)
             });
-            previous_sibling_borrow.next_sibling = Some(new_sibling.clone().0);
+            prev.next_sibling = Some(new_sibling.clone().0);
         } else {
-            // No previous sibling.
-            if let Some(parent_ref) = self_borrow.parent.as_ref() {
-                if let Some(parent_strong) = parent_ref.upgrade() {
-                    let mut parent_borrow = parent_strong.borrow_mut();
-                    parent_borrow.first_child = Some(new_sibling.clone().0);
-                }
+            // No prev sibling.
+            Node::update_parent(&this, |mut p| {
+                p.first_child = Some(new_sibling.clone().0)
+            });
+        }
+    }
+
+    fn update_parent<F>(this: &RefMut<NodeData>, mut f: F)
+        where F: FnMut(RefMut<NodeData>)
+    {
+        if let Some(parent) = this.parent.as_ref() {
+            if let Some(parent) = parent.upgrade() {
+                f(parent.borrow_mut());
             }
         }
     }
@@ -748,25 +755,6 @@ impl Node {
         false
     }
 
-    // /// Inserts a new attribute into attributes list.
-    // ///
-    // /// Unwrapped version of the [`set_attribute_checked`] method.
-    // ///
-    // /// # Panics
-    // ///
-    // /// Will panic on any error produced by the [`set_attribute_checked`] method.
-    // ///
-    // /// [`set_attribute_checked`]: #method.set_attribute_checked
-    // pub fn set_attribute2<'a, T>(&self, v: T)
-    //     where T: Into<Attribute>
-    // {
-    //     let attr: Attribute = v.into();
-
-    //     println!("{:?}", attr);
-
-    //     // self.set_attribute_checked(v.into()).unwrap();
-    // }
-
     /// Inserts a new attribute into attributes list.
     ///
     /// Unwrapped version of the [`set_attribute_checked`] method.
@@ -924,8 +912,6 @@ impl Node {
     }
 
     fn set_link_attribute(&self, id: AttributeId, node: Node) -> Result<(), Error> {
-        // TODO: check that node is element
-
         if node.id().is_empty() {
             return Err(Error::ElementMustHaveAnId);
         }
@@ -997,6 +983,7 @@ impl Node {
         attrs.remove_impl(name);
     }
 
+    // TODO: remove
     /// Removes attributes from the node.
     ///
     /// # Panics

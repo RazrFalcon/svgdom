@@ -24,7 +24,7 @@ pub struct NodeData {
     pub parent: Option<WeakLink>,
     pub first_child: Option<Link>,
     pub last_child: Option<WeakLink>,
-    pub previous_sibling: Option<WeakLink>,
+    pub prev_sibling: Option<WeakLink>,
     pub next_sibling: Option<Link>,
 
     pub node_type: NodeType, // TODO: should be immutable/const somehow
@@ -38,32 +38,27 @@ pub struct NodeData {
 impl NodeData {
     /// Detach a node from its parent and siblings. Children are not affected.
     pub fn detach(&mut self) {
-        // TODO: trim names
         // TODO: detach doc
 
         let parent_weak = self.parent.take();
-        let previous_sibling_weak = self.previous_sibling.take();
-        let next_sibling_strong = self.next_sibling.take();
+        let prev_weak = self.prev_sibling.take();
+        let next_strong = self.next_sibling.take();
 
-        let previous_sibling_opt = previous_sibling_weak.as_ref().and_then(|weak| weak.upgrade());
+        let prev_opt = prev_weak.as_ref().and_then(|weak| weak.upgrade());
 
-        if let Some(next_sibling_ref) = next_sibling_strong.as_ref() {
-            let mut next_sibling_borrow = next_sibling_ref.borrow_mut();
-            next_sibling_borrow.previous_sibling = previous_sibling_weak;
-        } else if let Some(parent_ref) = parent_weak.as_ref() {
-            if let Some(parent_strong) = parent_ref.upgrade() {
-                let mut parent_borrow = parent_strong.borrow_mut();
-                parent_borrow.last_child = previous_sibling_weak;
+        if let Some(next) = next_strong.as_ref() {
+            next.borrow_mut().prev_sibling = prev_weak;
+        } else if let Some(parent) = parent_weak.as_ref() {
+            if let Some(parent) = parent.upgrade() {
+                parent.borrow_mut().last_child = prev_weak;
             }
         }
 
-        if let Some(previous_sibling_strong) = previous_sibling_opt {
-            let mut previous_sibling_borrow = previous_sibling_strong.borrow_mut();
-            previous_sibling_borrow.next_sibling = next_sibling_strong;
-        } else if let Some(parent_ref) = parent_weak.as_ref() {
-            if let Some(parent_strong) = parent_ref.upgrade() {
-                let mut parent_borrow = parent_strong.borrow_mut();
-                parent_borrow.first_child = next_sibling_strong;
+        if let Some(prev) = prev_opt {
+            prev.borrow_mut().next_sibling = next_strong;
+        } else if let Some(parent) = parent_weak.as_ref() {
+            if let Some(parent) = parent.upgrade() {
+                parent.borrow_mut().first_child = next_strong;
             }
         }
     }

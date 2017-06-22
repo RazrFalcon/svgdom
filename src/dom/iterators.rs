@@ -11,7 +11,7 @@ use {
 };
 use super::node_data::WeakLink;
 
-// TODO: maybe can be implemented as template or trait
+// TODO: maybe can be implemented as a trait
 macro_rules! filter_svg {
     ($name:ty) => (
         impl $name {

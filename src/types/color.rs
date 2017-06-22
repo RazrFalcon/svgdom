@@ -59,8 +59,8 @@ fn int2hex(n: u8) -> (u8, u8) {
 
 impl WriteBuffer for Color {
     fn write_buf_opt(&self, opt: &WriteOptions, buf: &mut Vec<u8>) {
-        // TODO: next release: rgb() support
-        // TODO: next release: color name support
+        // TODO: rgb() support
+        // TODO: color name support
 
         buf.push(b'#');
         let (r1, r2) = int2hex(self.red);
