@@ -9,6 +9,9 @@ repository = "https://github.com/RazrFalcon/libsvgdom"
 documentation = "https://docs.rs/svgdom/"
 readme = "README.md"
 
+[badges]
+travis-ci = { repository = "RazrFalcon/svgdom" }
+
 [dependencies]
 float-cmp = "0.2.3"
 # simplecss = { git = "https://github.com/RazrFalcon/simplecss.git" }
