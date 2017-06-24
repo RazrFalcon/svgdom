@@ -2,8 +2,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-pub use self::parser::*;
+pub use self::parser::parse_svg;
 pub use self::options::*;
 
 mod parser;
 mod options;
+mod text;
