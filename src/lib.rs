@@ -52,7 +52,8 @@ DOM structure itself based on: https://github.com/SimonSapin/rust-forest/tree/ma
 #![warn(missing_docs)]
 #![deny(unused_import_braces)]
 
-#[macro_use] extern crate svgparser;
+#[macro_use]
+extern crate svgparser;
 extern crate simplecss;
 extern crate float_cmp;
 
@@ -61,9 +62,14 @@ pub use dom::*;
 pub use error::Error;
 pub use name::*;
 pub use traits::*;
-pub use write_options::*;
+pub use writer::{
+    WriteOptions,
+    WriteOptionsPaths,
+    Indent
+};
+
 #[cfg(feature = "parsing")]
-pub use parse_options::*;
+pub use parser::ParseOptions;
 
 pub use svgparser::AttributeId;
 pub use svgparser::ElementId;
@@ -93,12 +99,10 @@ mod attribute;
 mod dom;
 mod error;
 mod name;
-#[cfg(feature = "parsing")]
-mod parse_options;
+mod writer;
+
 #[cfg(feature = "parsing")]
 mod parser;
-mod write_options;
-mod writer;
 
 pub mod types;
 pub mod postproc;

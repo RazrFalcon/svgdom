@@ -2,8 +2,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-// TODO: option to disable path parsing
-
 /// Options that defines SVG parsing.
 pub struct ParseOptions {
     /// Add comment nodes to the DOM during parsing.
