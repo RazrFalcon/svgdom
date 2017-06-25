@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Added
+- `FuzzyEq::is_fuzzy_zero`.
+
 ### Changed
 - `writer` module is private now.
 - `Node::set_attribute` accepts only `Attribute` or tuple with attribute name and value now.
@@ -17,6 +20,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - `Node::has_attribute_with_value`.
 - `Node::set_link_attribute`. Use `Node::set_attribute` instead.
 - `Node::set_attribute_object`. Use `Node::set_attribute` instead.
+- All `AttributeValue::as_*` methods.
 
 ## [0.6.0] - 2017-06-18
 ### Added

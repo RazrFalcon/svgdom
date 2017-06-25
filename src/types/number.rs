@@ -22,6 +22,12 @@ pub trait FuzzyEq {
     fn fuzzy_ne(&self, other: &f64) -> bool {
         !self.fuzzy_eq(other)
     }
+
+    /// Returns `true` if number is zero.
+    #[inline]
+    fn is_fuzzy_zero(&self) -> bool {
+        self.fuzzy_eq(&0.0)
+    }
 }
 
 impl FuzzyEq for f64 {

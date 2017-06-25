@@ -12,6 +12,7 @@ use {
 use super::node_data::WeakLink;
 
 // TODO: maybe can be implemented as a trait
+// TODO: return ElementId with Node
 macro_rules! filter_svg {
     ($name:ty) => (
         impl $name {

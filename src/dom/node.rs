@@ -764,7 +764,7 @@ impl Node {
     /// Will panic on any error produced by the [`set_attribute_checked`] method.
     ///
     /// [`set_attribute_checked`]: #method.set_attribute_checked
-    pub fn set_attribute<'a, T>(&self, v: T)
+    pub fn set_attribute<T>(&self, v: T)
         where T: Into<Attribute>
     {
         self.set_attribute_checked(v).unwrap();
@@ -876,7 +876,7 @@ impl Node {
     ///
     /// [`ElementMustHaveAnId`]: enum.Error.html
     /// [`ElementCrosslink`]: enum.Error.html
-    pub fn set_attribute_checked<'a, T>(&self, v: T) -> Result<(), Error>
+    pub fn set_attribute_checked<T>(&self, v: T) -> Result<(), Error>
         where T: Into<Attribute>
     {
         // TODO: to error in _checked mode

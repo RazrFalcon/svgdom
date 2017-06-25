@@ -181,9 +181,12 @@ pub fn fix_stop_attributes(node: &Node) {
     let mut prev_offset = 0.0;
 
     for child in node.children() {
-        // TODO: 'offset' must be resolved
-        let mut offset = *child.attributes().get_value(AttributeId::Offset).unwrap()
-                               .as_number().unwrap();
+        let av = child.attributes().get_value(AttributeId::Offset).cloned();
+
+        let mut offset = match av {
+            Some(AttributeValue::Number(n)) => n,
+            _ => unreachable!("'offset' must be resolved"),
+        };
 
         if offset < 0.0 {
             offset = 0.0;
@@ -253,9 +256,7 @@ fn fix_len(node: &Node, id: AttributeId, new_len: Length) {
 
 fn fix_negative_len(node: &Node, id: AttributeId, new_len: Length) {
     let av = node.attributes().get_value(id).cloned();
-    if let Some(av) = av {
-        // unwrap is safe, because coordinates must have a Length type
-        let l = av.as_length().unwrap();
+    if let Some(AttributeValue::Length(l)) = av {
         if l.num.is_sign_negative() {
             node.set_attribute((id, new_len));
         }
@@ -264,9 +265,7 @@ fn fix_negative_len(node: &Node, id: AttributeId, new_len: Length) {
 
 fn rm_negative_len(node: &Node, id: AttributeId) {
     let av = node.attributes().get_value(id).cloned();
-    if let Some(av) = av {
-        // unwrap is safe, because coordinates must have a Length type
-        let l = av.as_length().unwrap();
+    if let Some(AttributeValue::Length(l)) = av {
         if l.num.is_sign_negative() {
             node.remove_attribute(id);
         }

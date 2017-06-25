@@ -96,15 +96,13 @@ pub fn resolve_stop_attributes(doc: &Document) -> Result<(), Error> {
     for gradient in doc.descendants().filter(|n| n.is_gradient()) {
         for (idx, node) in gradient.children().enumerate() {
             let av = node.attributes().get_value(AttributeId::Offset).cloned();
-            if let Some(av) = av {
-                if let Some(l) = av.as_length() {
-                    if l.unit == LengthUnit::Percent {
-                        // convert percent into number
-                        node.set_attribute((AttributeId::Offset, l.num / 100.0));
-                    } else {
-                        // set original value too to change attribute type from Length to Number
-                        node.set_attribute((AttributeId::Offset, l.num));
-                    }
+            if let Some(AttributeValue::Length(l)) = av {
+                if l.unit == LengthUnit::Percent {
+                    // convert percent into number
+                    node.set_attribute((AttributeId::Offset, l.num / 100.0));
+                } else {
+                    // set original value too to change attribute type from Length to Number
+                    node.set_attribute((AttributeId::Offset, l.num));
                 }
             } else {
                 if idx == 0 {

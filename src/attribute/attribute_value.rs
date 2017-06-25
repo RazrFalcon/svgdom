@@ -88,32 +88,7 @@ impl From<(f64, LengthUnit)> for AttributeValue {
     }
 }
 
-// TODO: maybe remove?
-macro_rules! impl_as_type {
-    ($name:ident, $t:ident, $out:ty) => (
-        #[allow(missing_docs)]
-        pub fn $name(&self) -> Option<&$out> {
-            match *self {
-                AttributeValue::$t(ref v) => Some(v),
-                _ => None,
-            }
-        }
-    )
-}
-
 impl AttributeValue {
-    impl_as_type!(as_color, Color, Color);
-    impl_as_type!(as_length, Length, Length);
-    impl_as_type!(as_length_list, LengthList, LengthList);
-    impl_as_type!(as_link, Link, Node);
-    impl_as_type!(as_func_link, FuncLink, Node);
-    impl_as_type!(as_number, Number, f64);
-    impl_as_type!(as_number_list, NumberList, NumberList);
-    impl_as_type!(as_path, Path, path::Path);
-    impl_as_type!(as_predef_value, PredefValue, ValueId);
-    impl_as_type!(as_string, String, String);
-    impl_as_type!(as_transform, Transform, Transform);
-
     /// Constructs a new attribute value with a default value, if it's known.
     pub fn default_value(id: AttributeId) -> Option<AttributeValue> {
         macro_rules! some {

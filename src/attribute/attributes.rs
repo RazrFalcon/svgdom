@@ -16,7 +16,7 @@ use {
     Attribute,
     AttributeId,
     AttributeNameRef,
-    AttributeValue
+    AttributeValue,
 };
 
 // TODO: bench with HashTable
