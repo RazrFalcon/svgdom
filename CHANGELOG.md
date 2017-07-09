@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 ### Added
 - `FuzzyEq::is_fuzzy_zero`.
+- `Node::parents_with_self`.
 
 ### Changed
 - `writer` module is private now.

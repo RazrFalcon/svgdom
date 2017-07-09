@@ -154,6 +154,17 @@ impl Node {
         Parents::new(self.parent())
     }
 
+    /// Returns an iterator over parent nodes.
+    ///
+    /// Current node is included.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the node is currently mutability borrowed.
+    pub fn parents_with_self(&self) -> Parents {
+        Parents::new(Some(self.clone()))
+    }
+
     /// Returns an iterator to this node's children nodes.
     ///
     /// # Panics
