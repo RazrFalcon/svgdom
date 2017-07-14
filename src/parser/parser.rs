@@ -3,7 +3,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 // TODO: implement xml escape
-// TODO: split to submodules
 
 use std::str;
 use std::collections::HashMap;
@@ -34,10 +33,10 @@ use {
     ValueId,
 };
 use types::{
+    path,
     Color,
     Length,
     LengthUnit,
-    path,
     Transform,
 };
 
@@ -70,8 +69,13 @@ struct Links<'a> {
 }
 
 impl<'a> Links<'a> {
-    fn append(&mut self, id: AttributeId, iri: &'a str, fallback: Option<PaintFallback>,
-              node: &Node) {
+    fn append(
+        &mut self,
+        id: AttributeId,
+        iri: &'a str,
+        fallback: Option<PaintFallback>,
+        node: &Node,
+    ) {
         self.list.push(LinkData {
             attr_id: id,
             iri: iri,
@@ -164,15 +168,15 @@ pub fn parse_svg(text: &str, opt: &ParseOptions) -> Result<Document, Error> {
     Ok(doc)
 }
 
-fn process_token<'a>(doc: &Document,
-                     token: svg::Token<'a>,
-                     tokenizer: &mut svg::Tokenizer<'a>,
-                     node: &mut Option<Node>,
-                     parent: &mut Node,
-                     post_data: &mut PostData<'a>,
-                     opt: &ParseOptions)
-                     -> Result<(), Error> {
-
+fn process_token<'a>(
+    doc: &Document,
+    token: svg::Token<'a>,
+    tokenizer: &mut svg::Tokenizer<'a>,
+    node: &mut Option<Node>,
+    parent: &mut Node,
+    post_data: &mut PostData<'a>,
+    opt: &ParseOptions,
+) -> Result<(), Error> {
     macro_rules! create_node {
         ($nodetype:expr, $buf:expr) => ({
             let e = doc.create_node($nodetype, $buf);
@@ -293,11 +297,12 @@ fn process_token<'a>(doc: &Document,
     Ok(())
 }
 
-fn parse_svg_element<'a>(doc: &Document,
-                         tokenizer: &mut svg::Tokenizer<'a>,
-                         id: ElementId,
-                         styles: &mut Vec<TextFrame<'a>>)
-                         -> Result<Option<Node>, Error> {
+fn parse_svg_element<'a>(
+    doc: &Document,
+    tokenizer: &mut svg::Tokenizer<'a>,
+    id: ElementId,
+    styles: &mut Vec<TextFrame<'a>>,
+) -> Result<Option<Node>, Error> {
     // We never create 'style' element.
     // If 'style' element is empty - we skip it.
     // If it contains CDATA/CSS - we parse it and store it for future use,
@@ -355,12 +360,13 @@ fn parse_svg_element<'a>(doc: &Document,
     }
 }
 
-fn parse_svg_attribute<'a>(node: &Node,
-                           id: AttributeId,
-                           value: TextFrame<'a>,
-                           post_data: &mut PostData<'a>,
-                           opt: &ParseOptions)
-                           -> Result<(), Error> {
+fn parse_svg_attribute<'a>(
+    node: &Node,
+    id: AttributeId,
+    value: TextFrame<'a>,
+    post_data: &mut PostData<'a>,
+    opt: &ParseOptions,
+) -> Result<(), Error> {
     match id {
         AttributeId::Id => {
             node.set_id(value.slice());
@@ -413,13 +419,14 @@ fn parse_svg_attribute<'a>(node: &Node,
     Ok(())
 }
 
-fn parse_svg_attribute_value<'a>(node: &Node,
-                                 id: AttributeId,
-                                 frame: TextFrame<'a>,
-                                 links: &mut Links<'a>,
-                                 entitis: &Entities<'a>,
-                                 opt: &ParseOptions)
-                                 -> Result<(), Error> {
+fn parse_svg_attribute_value<'a>(
+    node: &Node,
+    id: AttributeId,
+    frame: TextFrame<'a>,
+    links: &mut Links<'a>,
+    entitis: &Entities<'a>,
+    opt: &ParseOptions,
+) -> Result<(), Error> {
     let tag_id = node.tag_id().unwrap();
 
     let val = match ParserAttributeValue::from_frame(tag_id, id, frame)? {
@@ -508,10 +515,12 @@ fn parse_svg_attribute_value<'a>(node: &Node,
     Ok(())
 }
 
-fn parse_non_svg_attribute<'a>(node: &Node,
-                               name: &str,
-                               value: &str,
-                               post_data: &PostData<'a>) {
+fn parse_non_svg_attribute<'a>(
+    node: &Node,
+    name: &str,
+    value: &str,
+    post_data: &PostData<'a>,
+) {
     let new_value;
 
     let mut stream = Stream::from_str(value);
@@ -544,12 +553,13 @@ fn prepare_length_unit(unit: LengthUnit, opt: &ParseOptions) -> LengthUnit {
     unit
 }
 
-fn parse_style_attribute<'a>(node: &Node,
-                             frame: TextFrame<'a>,
-                             links: &mut Links<'a>,
-                             entitis: &Entities<'a>,
-                             opt: &ParseOptions)
-                             -> Result<(), Error> {
+fn parse_style_attribute<'a>(
+    node: &Node,
+    frame: TextFrame<'a>,
+    links: &mut Links<'a>,
+    entitis: &Entities<'a>,
+    opt: &ParseOptions,
+) -> Result<(), Error> {
     let mut s = style::Tokenizer::from_frame(frame);
 
     loop {
@@ -576,10 +586,11 @@ fn parse_style_attribute<'a>(node: &Node,
     Ok(())
 }
 
-fn resolve_css<'a>(doc: &Document,
-                   post_data: &mut PostData<'a>,
-                   opt: &ParseOptions)
-                   -> Result<(), Error> {
+fn resolve_css<'a>(
+    doc: &Document,
+    post_data: &mut PostData<'a>,
+    opt: &ParseOptions,
+) -> Result<(), Error> {
     use simplecss::Token as CssToken;
 
     #[derive(Clone,Copy,Debug)]
@@ -731,9 +742,11 @@ fn resolve_css<'a>(doc: &Document,
     Ok(())
 }
 
-fn postprocess_class_selector<'a>(resolved_classes: &[&str],
-                                  class_attrs: &mut Vec<NodeTextData<'a>>,
-                                  opt: &ParseOptions) {
+fn postprocess_class_selector<'a>(
+    resolved_classes: &[&str],
+    class_attrs: &mut Vec<NodeTextData<'a>>,
+    opt: &ParseOptions,
+) {
     // remove resolved classes
     class_attrs.retain(|n| !resolved_classes.contains(&n.text));
 
@@ -758,12 +771,13 @@ fn postprocess_class_selector<'a>(resolved_classes: &[&str],
     }
 }
 
-fn apply_css_attributes<'a>(values: &[(&str,&'a str)],
-                            node: &Node,
-                            links: &mut Links<'a>,
-                            entitis: &Entities<'a>,
-                            opt: &ParseOptions)
-                            -> Result<(), Error> {
+fn apply_css_attributes<'a>(
+    values: &[(&str,&'a str)],
+    node: &Node,
+    links: &mut Links<'a>,
+    entitis: &Entities<'a>,
+    opt: &ParseOptions,
+) -> Result<(), Error> {
     for &(aname, avalue) in values {
         match AttributeId::from_name(aname) {
             Some(aid) => {
@@ -800,67 +814,75 @@ fn resolve_links(links: &Links) -> Result<(), Error> {
                 }
             }
             None => {
-                // check that <paint> contains a fallback value before showing a warning
-                match d.fallback {
-                    Some(fallback) => {
-                        match fallback {
-                            PaintFallback::PredefValue(v) =>
-                                d.node.set_attribute((d.attr_id, v)),
-                            PaintFallback::Color(c) =>
-                                d.node.set_attribute((d.attr_id, Color::new(c.red, c.green, c.blue))),
-                        }
+                resolve_fallback(&d)?;
+            }
+        }
+    }
+
+    Ok(())
+}
+
+fn resolve_fallback(d: &LinkData) -> Result<(), Error> {
+    // check that <paint> contains a fallback value before showing a warning
+    match d.fallback {
+        Some(fallback) => {
+            match fallback {
+                PaintFallback::PredefValue(v) => {
+                    d.node.set_attribute((d.attr_id, v));
+                }
+                PaintFallback::Color(c) => {
+                    d.node.set_attribute((d.attr_id, Color::new(c.red, c.green, c.blue)));
+                }
+            }
+        }
+        None => {
+            match d.attr_id {
+                AttributeId::Filter => {
+                    // If an element has a 'filter' attribute with a broken FuncIRI,
+                    // then it shouldn't be rendered. But we can't express such behavior
+                    // in the svgdom now.
+                    // It's not the best solution, but it works.
+
+                    if d.node.is_tag_name(ElementId::Use) {
+                        // TODO: find a solution
+                        // For some reasons if we remove attribute with a broken filter
+                        // from 'use' elements - image will become broken.
+                        // Have no idea why this is happening.
+                        //
+                        // You can test this issue on:
+                        // breeze-icons/icons/actions/22/color-management.svg
+                        let s = d.iri.to_string();
+                        return Err(Error::BrokenFuncIri(s));
                     }
-                    None => {
-                        match d.attr_id {
-                            AttributeId::Filter => {
-                                // If an element has a 'filter' attribute with a broken FuncIRI,
-                                // then it shouldn't be rendered. But we can't express such behavior
-                                // in the svgdom now.
-                                // It's not the best solution, but it works.
 
-                                if d.node.is_tag_name(ElementId::Use) {
-                                    // TODO: find a solution
-                                    // For some reasons if we remove attribute with a broken filter
-                                    // from 'use' elements - image will become broken.
-                                    // Have no idea why this is happening.
-                                    //
-                                    // You can test this issue on:
-                                    // breeze-icons/icons/actions/22/color-management.svg
-                                    let s = d.iri.to_string();
-                                    return Err(Error::BrokenFuncIri(s));
-                                }
+                    let flag = d.node.parents().any(|n| {
+                           n.is_tag_name(ElementId::Mask)
+                        || n.is_tag_name(ElementId::ClipPath)
+                        || n.is_tag_name(ElementId::Marker)
+                    });
 
-                                let flag = d.node.parents().any(|n| {
-                                       n.is_tag_name(ElementId::Mask)
-                                    || n.is_tag_name(ElementId::ClipPath)
-                                    || n.is_tag_name(ElementId::Marker)
-                                });
-
-                                if flag {
-                                    // If our element is inside one of this elements - then do nothing.
-                                    // I can't find explanation of this in the SVG spec, but it works.
-                                    // Probably because this elements only care about a shape,
-                                    // not a style.
-                                    warnln!("Could not resolve IRI reference: {}.", d.iri);
-                                } else {
-                                    // Imitate invisible element.
-                                    warnln!("Unresolved 'filter' IRI reference: {}. \
-                                             Marking the element as invisible.",
-                                             d.iri);
-                                    d.node.set_attribute((AttributeId::Visibility, ValueId::Hidden));
-                                }
-                            }
-                            AttributeId::Fill => {
-                                warnln!("Could not resolve the 'fill' IRI reference: {}. \
-                                         Fallback to 'none'.",
-                                         d.iri);
-                                d.node.set_attribute((AttributeId::Fill, ValueId::None));
-                            }
-                            _ => {
-                                warnln!("Could not resolve IRI reference: {}.", d.iri);
-                            }
-                        }
+                    if flag {
+                        // If our element is inside one of this elements - then do nothing.
+                        // I can't find explanation of this in the SVG spec, but it works.
+                        // Probably because this elements only care about a shape,
+                        // not a style.
+                        warnln!("Could not resolve IRI reference: {}.", d.iri);
+                    } else {
+                        // Imitate invisible element.
+                        warnln!("Unresolved 'filter' IRI reference: {}. \
+                                 Marking the element as invisible.",
+                                 d.iri);
+                        d.node.set_attribute((AttributeId::Visibility, ValueId::Hidden));
                     }
+                }
+                AttributeId::Fill => {
+                    warnln!("Could not resolve the 'fill' IRI reference: {}. \
+                             Fallback to 'none'.",
+                             d.iri);
+                    d.node.set_attribute((AttributeId::Fill, ValueId::None));
+                }
+                _ => {
+                    warnln!("Could not resolve IRI reference: {}.", d.iri);
                 }
             }
         }
