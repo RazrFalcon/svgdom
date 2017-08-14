@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - `FuzzyEq::is_fuzzy_zero`.
 - `Node::parents_with_self`.
+- `WriteOptions::attributes_indent`.
 
 ### Changed
 - `writer` module is private now.

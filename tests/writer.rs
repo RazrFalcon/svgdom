@@ -581,6 +581,37 @@ fn indent_5() {
 }
 
 #[test]
+fn attrs_indent_1() {
+    let doc = Document::from_str(
+"<svg id='svg1' width='100' height='100'>
+    <g fill='red' stroke='blue' custom='qwe'>
+        <rect id='rect1' stroke-width='2'/>
+    </g>
+</svg>
+").unwrap();
+
+    let mut opt = WriteOptions::default();
+    opt.attributes_indent = Indent::Spaces(3);
+    opt.use_single_quote = true;
+    assert_eq_text!(doc.to_string_with_opt(&opt),
+"<svg
+   id='svg1'
+   height='100'
+   width='100'>
+    <g
+       fill='#ff0000'
+       stroke='#0000ff'
+       custom='qwe'>
+        <rect
+           id='rect1'
+           stroke-width='2'/>
+    </g>
+</svg>
+");
+}
+
+
+#[test]
 fn single_quote_1() {
     let doc = Document::from_str(
 "<svg id=\"svg1\"/>").unwrap();

@@ -71,23 +71,53 @@ pub struct WriteOptions {
     ///
     /// # Examples
     ///
+    /// `Indent::None`
+    ///
     /// Before:
     ///
     /// ```text
-    ///     <svg>
-    ///         <rect fill="red"/>
-    ///     </svg>
+    /// <svg>
+    ///     <rect fill="red"/>
+    /// </svg>
     ///
     /// ```
     ///
     /// After:
     ///
     /// ```text
-    ///     <svg><rect fill="red"/></svg>
+    /// <svg><rect fill="red"/></svg>
     /// ```
     ///
     /// Default: 4 spaces
     pub indent: Indent,
+
+    /// Set XML attributes indention.
+    ///
+    /// # Examples
+    ///
+    /// `Indent::Spaces(2)`
+    ///
+    /// Before:
+    ///
+    /// ```text
+    /// <svg>
+    ///     <rect fill="red" stroke="black"/>
+    /// </svg>
+    ///
+    /// ```
+    ///
+    /// After:
+    ///
+    /// ```text
+    /// <svg>
+    ///     <rect
+    ///       fill="red"
+    ///       stroke="black"/>
+    /// </svg>
+    /// ```
+    ///
+    /// Default: `None`
+    pub attributes_indent: Indent,
 
     /// Use single quote marks instead of double quote.
     ///
@@ -157,6 +187,7 @@ impl Default for WriteOptions {
     fn default() -> WriteOptions {
         WriteOptions {
             indent: Indent::Spaces(4),
+            attributes_indent: Indent::None,
             use_single_quote: false,
             trim_hex_colors: false,
             write_hidden_attributes: false,

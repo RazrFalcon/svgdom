@@ -71,12 +71,15 @@ impl Depth {
 /// Writes a document into the buffer.
 pub fn write_dom(doc: &Document, opt: &WriteOptions, out: &mut Vec<u8>) {
     let mut depth = Depth::new(opt.indent);
+    let mut attrs_depth = Depth::new(opt.attributes_indent);
     let mut iter = doc.root().traverse();
+
+    attrs_depth.value += 1;
 
     while let Some(edge) = iter.next() {
         match edge {
             NodeEdge::Start(node) => {
-                write_start_edge(&node, &mut iter, &mut depth, opt, out)
+                write_start_edge(&node, &mut iter, &mut depth, &attrs_depth, opt, out)
             }
             NodeEdge::End(node) => {
                 write_end_edge(&node, &mut depth, opt.indent, out)
@@ -86,16 +89,22 @@ pub fn write_dom(doc: &Document, opt: &WriteOptions, out: &mut Vec<u8>) {
 }
 
 /// Writes node's start edge.
-fn write_start_edge(node: &Node, iter: &mut Traverse, depth: &mut Depth, opt: &WriteOptions,
-                    out: &mut Vec<u8>) {
+fn write_start_edge(
+    node: &Node,
+    iter: &mut Traverse,
+    depth: &mut Depth,
+    attrs_depth: &Depth,
+    opt: &WriteOptions,
+    out: &mut Vec<u8>
+) {
     match node.node_type() {
         NodeType::Root => {}
         NodeType::Element => {
             depth.write_indent(out);
-            write_element_start(node, opt, out);
+            write_element_start(node, depth, attrs_depth, opt, out);
 
             if node.is_tag_name(ElementId::Text) && node.has_children() {
-                write_text_elem(iter, opt, node, out);
+                write_text_elem(iter, depth, attrs_depth, opt, node, out);
                 write_newline(opt.indent, out);
                 return;
             }
@@ -166,11 +175,17 @@ fn write_node(prefix: &[u8], data: Ref<String>, suffix: &[u8], out: &mut Vec<u8>
 /// - tag name
 /// - attributes
 /// - closing tag, if a node has children
-fn write_element_start(node: &Node, opt: &WriteOptions, out: &mut Vec<u8>) {
+fn write_element_start(
+    node: &Node,
+    depth: &Depth,
+    attrs_depth: &Depth,
+    opt: &WriteOptions,
+    out: &mut Vec<u8>
+) {
     out.push(b'<');
 
     write_tag_name(&node.tag_name().unwrap(), out);
-    write_attributes(node, opt, out);
+    write_attributes(node, depth, attrs_depth, opt, out);
 
     if node.has_children() {
         out.push(b'>');
@@ -196,12 +211,17 @@ fn write_tag_name(tag_name: &Name<ElementId>, out: &mut Vec<u8>) {
 /// - 'id'
 /// - sorted SVG attributes
 /// - unsorted non-SVG attributes
-fn write_attributes(node: &Node, opt: &WriteOptions, out: &mut Vec<u8>) {
+fn write_attributes(
+    node: &Node,
+    depth: &Depth,
+    attrs_depth: &Depth,
+    opt: &WriteOptions,
+    out: &mut Vec<u8>
+) {
     // write 'id'
     if node.has_id() {
-        out.push(b' ');
         let attr = Attribute::new(AttributeId::Id, node.id().clone());
-        attr.write_buf_opt(opt, out);
+        write_attribute(&attr, depth, attrs_depth, opt, out);
     }
 
     let attrs = node.attributes();
@@ -220,27 +240,50 @@ fn write_attributes(node: &Node, opt: &WriteOptions, out: &mut Vec<u8>) {
             continue;
         }
 
-        out.push(b' ');
-        attr.write_buf_opt(opt, out);
+        write_attribute(attr, depth, attrs_depth, opt, out);
     }
 
     // write non-SVG attributes
     for attr in attrs.iter() {
         if let Name::Name(_) = attr.name {
-            out.push(b' ');
-            attr.write_buf_opt(opt, out);
+            write_attribute(attr, depth, attrs_depth, opt, out);
         }
     }
 }
 
+fn write_attribute(
+    attr: &Attribute,
+    depth: &Depth,
+    attrs_depth: &Depth,
+    opt: &WriteOptions,
+    out: &mut Vec<u8>
+) {
+    if opt.attributes_indent == Indent::None {
+        out.push(b' ');
+    } else {
+        out.push(b'\n');
+        depth.write_indent(out);
+        attrs_depth.write_indent(out);
+    }
+
+    attr.write_buf_opt(opt, out);
+}
+
 /// Writes a `text` element node and it's children.
-fn write_text_elem(iter: &mut Traverse, opt: &WriteOptions, root: &Node, out: &mut Vec<u8>) {
+fn write_text_elem(
+    iter: &mut Traverse,
+    depth: &Depth,
+    attrs_depth: &Depth,
+    opt: &WriteOptions,
+    root: &Node,
+    out: &mut Vec<u8>
+) {
     for edge in iter {
         match edge {
             NodeEdge::Start(node) => {
                 match node.node_type() {
                     NodeType::Element => {
-                        write_element_start(&node, opt, out);
+                        write_element_start(&node, depth, attrs_depth, opt, out);
                     }
                     NodeType::Text => {
                         out.extend_from_slice(node.text().as_bytes());

@@ -13,12 +13,12 @@ use {
     WriteToString,
 };
 use types::{
+    path,
     Color,
     Length,
     LengthList,
     LengthUnit,
     NumberList,
-    path,
     Transform,
 };
 

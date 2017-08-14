@@ -46,9 +46,12 @@ impl WriteBuffer for Path {
     }
 }
 
-fn write_cmd(seg: &Segment, prev_cmd: &mut Option<PrevCmd>,
-             opt: &WriteOptions, buf: &mut Vec<u8>) -> bool {
-
+fn write_cmd(
+    seg: &Segment,
+    prev_cmd: &mut Option<PrevCmd>,
+    opt: &WriteOptions,
+    buf: &mut Vec<u8>
+) -> bool {
     let mut print_cmd = true;
     if opt.paths.remove_duplicated_commands {
         // check that previous command is the same as current
@@ -139,9 +142,13 @@ pub fn write_cmd_char(seg: &Segment, buf: &mut Vec<u8>) {
     buf.push(cmd);
 }
 
-pub fn write_segment(data: &SegmentData, is_written: bool, prev_coord_has_dot: &mut bool,
-                     opt: &WriteOptions, buf: &mut Vec<u8>)
-{
+pub fn write_segment(
+    data: &SegmentData,
+    is_written: bool,
+    prev_coord_has_dot: &mut bool,
+    opt: &WriteOptions,
+    buf: &mut Vec<u8>
+) {
     match *data {
           SegmentData::MoveTo { x, y }
         | SegmentData::LineTo { x, y }
@@ -203,9 +210,13 @@ pub fn write_segment(data: &SegmentData, is_written: bool, prev_coord_has_dot: &
     }
 }
 
-fn write_coords(coords: &[f64], is_explicit_cmd: bool, prev_coord_has_dot: &mut bool,
-                    opt: &WriteOptions, buf: &mut Vec<u8>)
-{
+fn write_coords(
+    coords: &[f64],
+    is_explicit_cmd: bool,
+    prev_coord_has_dot: &mut bool,
+    opt: &WriteOptions,
+    buf: &mut Vec<u8>
+) {
     if opt.paths.use_compact_notation {
         for (i, num) in coords.iter().enumerate() {
             let start_pos = buf.len() - 1;
