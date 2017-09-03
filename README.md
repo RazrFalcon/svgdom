@@ -177,22 +177,18 @@ All features are enabled by default.
 There will be no comparisons with other XML parsers since they do not parse SVG data.
 And no comparisons with other SVG parsers, since there are no such\*.
 
-Note that most of the time is spend in a string to number and a number to string conversions.
+Note that most of the time is spent during string to number and number to string conversion.
 
-It's still not as fast as I want, but here are some stats using *resave* example:
+```
+test parse_large  ... bench:  11,113,036 ns/iter (+/- 205,112)
+test parse_medium ... bench:   2,167,673 ns/iter (+/- 12,992)
+test parse_small  ... bench:      43,717 ns/iter (+/- 176)
+test write_large  ... bench:  15,962,604 ns/iter (+/- 140,022)
+test write_medium ... bench:   1,459,936 ns/iter (+/- 2,509)
+test write_small  ... bench:      29,679 ns/iter (+/- 71)
+```
 
-| Image | Result |
-| ------------- | ------------- |
-| [Some huge image](https://openclipart.org/detail/259586/cyberscooty-floral-border-extended-22)\*\* (17.3MiB) | ~850ms/~5500M instructions. |
-| [Big image](https://en.wikipedia.org/wiki/File:Jupiter_diagram.svg) (1.7MiB) | ~80ms/~500M instructions. |
-| [Average image](https://commons.wikimedia.org/wiki/File:Electromagnetic_Radiation_Spectrum_Infographic.svg) (324.4KiB) | ~20ms/~89M instructions. |
-| Small image, like [SVG Logo](https://commons.wikimedia.org/wiki/File:SVG_logo.svg) (8.8KiB) | ~0.45ms/~2M instructions. |
-
-\* At least I don't know about them.
-
-\*\* It's not direct download links.
-
-Tested on i5-3570k 3.8GHz.
+Tested on i5-3570k 3.4GHz.
 
 ### License
 

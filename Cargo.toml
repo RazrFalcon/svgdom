@@ -27,7 +27,12 @@ version = "0.4"
 
 [dev-dependencies]
 time = "0.1"
+bencher = "0.1"
 
 [features]
 default = ["parsing"]
 parsing = []
+
+[[bench]]
+name = "parser"
+harness = false
