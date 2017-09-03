@@ -13,7 +13,11 @@ use {
     Node,
     ValueId,
 };
-use types::{Color, LengthUnit};
+use types::{
+    Color,
+    Length,
+    LengthUnit,
+};
 
 /// Resolve attributes of `linearGradient` elements.
 ///
@@ -98,18 +102,16 @@ pub fn resolve_stop_attributes(doc: &Document) -> Result<(), Error> {
             let av = node.attributes().get_value(AttributeId::Offset).cloned();
             if let Some(AttributeValue::Length(l)) = av {
                 if l.unit == LengthUnit::Percent {
-                    // convert percent into number
-                    node.set_attribute((AttributeId::Offset, l.num / 100.0));
-                } else {
-                    // set original value too to change attribute type from Length to Number
-                    node.set_attribute((AttributeId::Offset, l.num));
+                    // convert percent into a number
+                    let new_l = Length::new_number(l.num / 100.0);
+                    node.set_attribute((AttributeId::Offset, new_l));
                 }
             } else {
                 if idx == 0 {
                     // Allow first stop to not have an offset.
                     warnln!("The 'stop' element must have an 'offset' attribute. \
                              Fallback to 'offset=0'.");
-                    node.set_attribute((AttributeId::Offset, 0));
+                    node.set_attribute((AttributeId::Offset, Length::zero()));
                 } else {
                     return Err(Error::MissingAttribute("stop".to_string(),
                                                        "offset".to_string()));

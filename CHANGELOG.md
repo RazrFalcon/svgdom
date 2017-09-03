@@ -9,12 +9,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - `FuzzyEq::is_fuzzy_zero`.
 - `Node::parents_with_self`.
 - `WriteOptions::attributes_indent`.
+- `Length::new_number`.
 
 ### Changed
 - `writer` module is private now.
 - `Node::set_attribute` accepts only `Attribute` or tuple with attribute name and value now.
 - `Attributes` methods: `insert`, `remove` and `retain` will panic on an invalid
   input in debug mode now.
+- `postproc::resolve_stop_attributes` no longer converts `offset` attribute
+  into a `Number` type, leaving it in a `Length` type.
 
 ### Removed
 - `Node::attribute`. Use `node.attributes().get()` instead.
@@ -23,6 +26,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - `Node::set_link_attribute`. Use `Node::set_attribute` instead.
 - `Node::set_attribute_object`. Use `Node::set_attribute` instead.
 - All `AttributeValue::as_*` methods.
+
+### Fixed
+- `postproc::resolve_stop_attributes` can be executed multiple times without errors now.
 
 ## [0.6.0] - 2017-06-18
 ### Added

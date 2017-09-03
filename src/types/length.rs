@@ -42,6 +42,15 @@ impl Length {
         }
     }
 
+    /// Constructs a new length with `LengthUnit::None`.
+    #[inline]
+    pub fn new_number(num: f64) -> Length {
+        Length {
+            num: num,
+            unit: LengthUnit::None,
+        }
+    }
+
     /// Constructs a new length with a zero value.
     ///
     /// Shorthand for: `Length::new(0.0, Unit::None)`.

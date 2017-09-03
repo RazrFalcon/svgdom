@@ -9,7 +9,10 @@ use {
     ElementType,
     Node,
 };
-use types::Length;
+use types::{
+    Length,
+    LengthUnit,
+};
 
 /// Fix `rect` element attributes.
 ///
@@ -184,7 +187,13 @@ pub fn fix_stop_attributes(node: &Node) {
         let av = child.attributes().get_value(AttributeId::Offset).cloned();
 
         let mut offset = match av {
-            Some(AttributeValue::Number(n)) => n,
+            Some(AttributeValue::Length(n)) => {
+                if n.unit == LengthUnit::None {
+                    n.num
+                } else {
+                    unreachable!("'offset' must be resolved")
+                }
+            }
             _ => unreachable!("'offset' must be resolved"),
         };
 
@@ -198,7 +207,7 @@ pub fn fix_stop_attributes(node: &Node) {
             offset = prev_offset;
         }
 
-        child.set_attribute((AttributeId::Offset, offset));
+        child.set_attribute((AttributeId::Offset, Length::new_number(offset)));
 
         prev_offset = offset;
     }
