@@ -25,23 +25,11 @@ trait StrTrim {
 
 impl StrTrim for String {
     fn remove_first(&mut self) {
-        debug_assert!(self.is_char_boundary(0));
-
-        // There is no other way to modify a String in place...
-        let mut bytes = unsafe { self.as_mut_vec() };
-        bytes.remove(0);
+        self.drain(0..1);
     }
 
     fn remove_last(&mut self) {
-        debug_assert!(self.len() > 0);
-
-        let pos = self.len() - 1;
-
-        debug_assert!(self.is_char_boundary(pos));
-
-        // There is no other way to modify a String in place...
-        let mut bytes = unsafe { self.as_mut_vec() };
-        bytes.remove(pos);
+        self.pop();
     }
 }
 
@@ -116,8 +104,11 @@ fn prepare_text_children(parent: &Node, xmlspace: XmlSpace) {
     for child in parent.descendants() {
         if child.node_type() == NodeType::Text {
             let child_xmlspace = get_xmlspace(&child.parent().unwrap(), xmlspace);
-            let mut text = child.text_mut();
-            trim_text(&mut text, child_xmlspace);
+            let new_text = {
+                let text = child.text();
+                trim_text(text.as_ref(), child_xmlspace)
+            };
+            child.set_text(&new_text);
         }
     }
 
@@ -162,7 +153,7 @@ fn prepare_text_children(parent: &Node, xmlspace: XmlSpace) {
             }
         }
     } else {
-        // Process element with a lot text node children.
+        // Process element with many text node children.
 
         // We manage all text nodes as a single text node
         // and trying to remove duplicated spaces across nodes.
@@ -185,8 +176,8 @@ fn prepare_text_children(parent: &Node, xmlspace: XmlSpace) {
             let mut text1 = node1.text_mut();
             let mut text2 = node2.text_mut();
 
-            // 'text' + 'text'
-            //  1  2     3  4
+            // >text<..>text<
+            //  1  2    3  4
             let c1 = text1.as_bytes().first().cloned();
             let c2 = text1.as_bytes().last().cloned();
             let c3 = text2.as_bytes().first().cloned();
@@ -219,63 +210,65 @@ fn prepare_text_children(parent: &Node, xmlspace: XmlSpace) {
     }
 }
 
-fn trim_text(text: &mut String, xmlspace: XmlSpace) {
-    // In place map() alternative.
-    fn replace_if<P>(data: &mut Vec<u8>, p: P, new: u8)
-        where P: Fn(u8) -> bool
-    {
-        for c in data.iter_mut() {
-            if p(*c) {
-                *c = new;
-            }
-        }
-    }
-
-    // There is no other way to modify a String in place...
-    let mut bytes = unsafe { text.as_mut_vec() };
+fn trim_text(text: &str, xmlspace: XmlSpace) -> String {
+    let mut new_text = String::with_capacity(text.len());
 
     // Process whitespaces as described in: https://www.w3.org/TR/SVG11/text.html#WhiteSpace
     match xmlspace {
         XmlSpace::Default => {
-            // 'First, it will remove all newline characters.'
-            bytes.retain(|c| *c != b'\n' && *c != b'\r');
-
-            // 'Then it will convert all tab characters into space characters.'
-            replace_if(&mut bytes, |c| c == b'\t', b' ');
-
-            // 'Then, it will strip off all leading and trailing space characters.'
-            //
-            // But we do not trim spaces here, because it depend on sibling nodes.
-
-            // 'Then, all contiguous space characters will be consolidated.'
-            if bytes.len() > 1 {
-                let mut pos = 0;
-                while pos < bytes.len() - 1 {
-                    if bytes[pos] == b' ' && bytes[pos + 1] == b' ' {
-                        bytes.remove(pos);
-                    } else {
-                        pos += 1;
+            let mut prev_char = '.';
+            for c in text.chars() {
+                match c {
+                    '\n' | '\r' => {
+                        // Remove newline characters.
+                    }
+                    '\t' | ' ' => {
+                        // Convert tab character into a space character,
+                        // but only when previous character is not a space.
+                        //
+                        // Remove contiguous space character.
+                        if prev_char != ' ' {
+                            new_text.push(' ');
+                            prev_char = ' ';
+                        }
+                    }
+                    _ => {
+                        // Keep original character.
+                        new_text.push(c);
+                        prev_char = c;
                     }
                 }
             }
         }
         XmlSpace::Preserve => {
-            // 'It will convert all newline and tab characters into space characters.'
+            // Convert all newline and tab characters into space characters.
 
-            // '\r\n' should be converted into a single space.
-            if bytes.len() > 1 {
-                let mut pos = 0;
-                while pos < bytes.len() - 1 {
-                    if bytes[pos] == b'\r' && bytes[pos + 1] == b'\n' {
-                        bytes.remove(pos);
-                        bytes[pos] = b' ';
+            let mut chars = text.chars();
+            while let Some(c) = chars.next() {
+                match c {
+                    '\r' => {
+                        // '\r\n' should be converted into a single space.
+
+                        if let Some(c2) = chars.next() {
+                            if c2 == '\n' {
+                                new_text.push(' ');
+                            } else {
+                                new_text.push(c2);
+                            }
+                        } else {
+                            new_text.push(' ');
+                        }
                     }
-
-                    pos += 1;
+                    '\t' | '\n' => {
+                        new_text.push(' ');
+                    }
+                    _ => {
+                        new_text.push(c);
+                    }
                 }
             }
-
-            replace_if(&mut bytes, |c| c == b'\t' || c == b'\n' || c == b'\r', b' ');
         }
     }
+
+    new_text
 }

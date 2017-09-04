@@ -49,6 +49,7 @@ DOM structure itself based on: https://github.com/SimonSapin/rust-forest/tree/ma
 
 */
 
+#![forbid(unsafe_code)]
 #![warn(missing_docs)]
 
 #[macro_use]

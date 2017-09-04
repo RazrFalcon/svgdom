@@ -288,6 +288,21 @@ test_resave!(text_6,
 </svg>
 ");
 
+// Non-latin text.
+test_resave!(text_7,
+"<svg>
+    <text>Текст</text>
+    <text>  Текст  </text>
+    <text xml:space='preserve'>     текс    текс  т     </text>
+</svg>
+",
+"<svg>
+    <text>Текст</text>
+    <text>Текст</text>
+    <text xml:space='preserve'>     текс    текс  т     </text>
+</svg>
+");
+
 // Text with children elements.
 // Spaces will be trimmed, but not all.
 test_resave!(text_tspan_1,
