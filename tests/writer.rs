@@ -272,7 +272,6 @@ test_resave!(text_6,
     <text> </text>
     <text>  </text>
     <text> \t \n \r </text>
-    <text> \t \n \r </text>
     <text> \t  text \t  text  t \t\n  </text>
     <text xml:space='preserve'> \t \n text \t  text  t \t \r\n\r\n</text>
 </svg>
@@ -282,24 +281,21 @@ test_resave!(text_6,
     <text></text>
     <text></text>
     <text></text>
-    <text></text>
     <text>text text t</text>
     <text xml:space='preserve'>     text    text  t     </text>
 </svg>
 ");
 
-// Non-latin text.
+// Escape.
 test_resave!(text_7,
 "<svg>
-    <text>Текст</text>
-    <text>  Текст  </text>
-    <text xml:space='preserve'>     текс    текс  т     </text>
+    <text>&quot;&amp;&apos;&lt;&gt;</text>
+    <nontext>&quot;&amp;&apos;&lt;&gt;</nontext>
 </svg>
 ",
 "<svg>
-    <text>Текст</text>
-    <text>Текст</text>
-    <text xml:space='preserve'>     текс    текс  т     </text>
+    <text>&quot;&amp;&apos;&lt;&gt;</text>
+    <nontext>&quot;&amp;&apos;&lt;&gt;</nontext>
 </svg>
 ");
 

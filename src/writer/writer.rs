@@ -155,7 +155,7 @@ fn write_non_element_node(node: &Node, out: &mut Vec<u8>) {
             write_node(b"<![CDATA[", node.text(), b"]]>", out);
         }
         NodeType::Text => {
-            out.extend_from_slice(node.text().as_bytes());
+            write_escaped_text(node.text().as_ref(), out);
         }
         _ => unreachable!(),
     }
@@ -286,7 +286,7 @@ fn write_text_elem(
                         write_element_start(&node, depth, attrs_depth, opt, out);
                     }
                     NodeType::Text => {
-                        out.extend_from_slice(node.text().as_bytes());
+                        write_escaped_text(node.text().as_ref(), out);
                     }
                     _ => {}
                 }
@@ -301,6 +301,19 @@ fn write_text_elem(
                     }
                 }
             }
+        }
+    }
+}
+
+fn write_escaped_text(text: &str, out: &mut Vec<u8>) {
+    for c in text.as_bytes() {
+        match *c {
+            b'"'  => out.extend_from_slice(b"&quot;"),
+            b'&'  => out.extend_from_slice(b"&amp;"),
+            b'\'' => out.extend_from_slice(b"&apos;"),
+            b'<'  => out.extend_from_slice(b"&lt;"),
+            b'>'  => out.extend_from_slice(b"&gt;"),
+            _     => out.push(*c),
         }
     }
 }

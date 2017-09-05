@@ -2,6 +2,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+use svgparser::TextUnescape;
+
 use {
     Attribute,
     AttributeId,
@@ -106,7 +108,8 @@ fn prepare_text_children(parent: &Node, xmlspace: XmlSpace) {
             let child_xmlspace = get_xmlspace(&child.parent().unwrap(), xmlspace);
             let new_text = {
                 let text = child.text();
-                trim_text(text.as_ref(), child_xmlspace)
+                let preserve = child_xmlspace == XmlSpace::Preserve;
+                TextUnescape::unescape(text.as_ref(), preserve).unwrap()
             };
             child.set_text(&new_text);
         }
@@ -125,7 +128,6 @@ fn prepare_text_children(parent: &Node, xmlspace: XmlSpace) {
 
         let node = &nodes[0];
 
-        // Do nothing when xml:space=preserve.
         if xmlspace == XmlSpace::Default {
             let mut text = node.text_mut();
 
@@ -134,6 +136,7 @@ fn prepare_text_children(parent: &Node, xmlspace: XmlSpace) {
                 1 => {
                     // If string has only one character and it's a space - clear this string.
                     if text.as_bytes()[0] == b' ' {
+                        // TODO: remove node
                         text.clear();
                     }
                 }
@@ -151,6 +154,8 @@ fn prepare_text_children(parent: &Node, xmlspace: XmlSpace) {
                     }
                 }
             }
+        } else {
+            // Do nothing when xml:space=preserve.
         }
     } else {
         // Process element with many text node children.
@@ -208,67 +213,4 @@ fn prepare_text_children(parent: &Node, xmlspace: XmlSpace) {
             i += 1;
         }
     }
-}
-
-fn trim_text(text: &str, xmlspace: XmlSpace) -> String {
-    let mut new_text = String::with_capacity(text.len());
-
-    // Process whitespaces as described in: https://www.w3.org/TR/SVG11/text.html#WhiteSpace
-    match xmlspace {
-        XmlSpace::Default => {
-            let mut prev_char = '.';
-            for c in text.chars() {
-                match c {
-                    '\n' | '\r' => {
-                        // Remove newline characters.
-                    }
-                    '\t' | ' ' => {
-                        // Convert tab character into a space character,
-                        // but only when previous character is not a space.
-                        //
-                        // Remove contiguous space character.
-                        if prev_char != ' ' {
-                            new_text.push(' ');
-                            prev_char = ' ';
-                        }
-                    }
-                    _ => {
-                        // Keep original character.
-                        new_text.push(c);
-                        prev_char = c;
-                    }
-                }
-            }
-        }
-        XmlSpace::Preserve => {
-            // Convert all newline and tab characters into space characters.
-
-            let mut chars = text.chars();
-            while let Some(c) = chars.next() {
-                match c {
-                    '\r' => {
-                        // '\r\n' should be converted into a single space.
-
-                        if let Some(c2) = chars.next() {
-                            if c2 == '\n' {
-                                new_text.push(' ');
-                            } else {
-                                new_text.push(c2);
-                            }
-                        } else {
-                            new_text.push(' ');
-                        }
-                    }
-                    '\t' | '\n' => {
-                        new_text.push(' ');
-                    }
-                    _ => {
-                        new_text.push(c);
-                    }
-                }
-            }
-        }
-    }
-
-    new_text
 }

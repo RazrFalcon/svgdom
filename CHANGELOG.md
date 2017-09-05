@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - `Node::parents_with_self`.
 - `WriteOptions::attributes_indent`.
 - `Length::new_number`.
+- Text escaping before saving to file.
 
 ### Changed
 - `writer` module is private now.
