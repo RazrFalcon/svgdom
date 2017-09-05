@@ -225,16 +225,15 @@ fn write_coords(
 
             let c = buf[start_pos + 1];
 
-            let write_space;
-            if !*prev_coord_has_dot && c == b'.' {
-                write_space = true;
+            let write_space = if !*prev_coord_has_dot && c == b'.' {
+                !(i == 0 && is_explicit_cmd)
             } else if i == 0 && is_explicit_cmd {
-                write_space = false;
+                false
             } else if (c as char).is_digit(10) {
-                write_space = true;
+                true
             } else {
-                write_space = false;
-            }
+                false
+            };
 
             if write_space {
                 buf.insert(start_pos + 1, b' ');
@@ -416,5 +415,17 @@ mod tests {
         // may generate as 'm10 20A10 10 0 1 0 0 0 2 2 0 1 0  2 0' <- two spaces
 
         assert_eq_text!(path.to_string_with_opt(&opt), "m10 20A10 10 0 1 0 0 0 2 2 0 1 0 2 0");
+    }
+
+    #[test]
+    fn gen_path_20() {
+        let path = Path::from_str("M 0.1 0.1 L 1 0.1 2 -0.1").unwrap();
+
+        let mut opt = WriteOptions::default();
+        opt.paths.use_compact_notation = true;
+        opt.paths.remove_duplicated_commands = true;
+        opt.remove_leading_zero = true;
+
+        assert_eq_text!(path.to_string_with_opt(&opt), "M.1.1L1 .1 2-.1");
     }
 }

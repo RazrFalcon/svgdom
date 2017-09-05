@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
 - `postproc::resolve_stop_attributes` can be executed multiple times without errors now.
+- Additional whitespace after command in paths.
 
 ## [0.6.0] - 2017-06-18
 ### Added
