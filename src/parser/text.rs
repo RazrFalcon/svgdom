@@ -45,7 +45,7 @@ pub fn prepare_text(dom: &Document) {
     _prepare_text(&dom.root(), XmlSpace::Default);
 
     // Remove invisible 'xml:space' attributes created during text processing.
-    for node in dom.descendants().filter(|n| n.node_type() == NodeType::Element) {
+    for mut node in dom.descendants().filter(|n| n.node_type() == NodeType::Element) {
         node.attributes_mut().retain(|attr| attr.visible == true);
     }
 }
@@ -53,8 +53,8 @@ pub fn prepare_text(dom: &Document) {
 fn _prepare_text(parent: &Node, parent_xmlspace: XmlSpace) {
     let mut xmlspace = parent_xmlspace;
 
-    for node in parent.children().filter(|n| n.node_type() == NodeType::Element) {
-        xmlspace = get_xmlspace(&node, xmlspace);
+    for mut node in parent.children().filter(|n| n.node_type() == NodeType::Element) {
+        xmlspace = get_xmlspace(&mut node, xmlspace);
 
         if let Some(child) = node.first_child() {
             if child.node_type() == NodeType::Text {
@@ -67,7 +67,7 @@ fn _prepare_text(parent: &Node, parent_xmlspace: XmlSpace) {
     }
 }
 
-fn get_xmlspace(node: &Node, default: XmlSpace) -> XmlSpace {
+fn get_xmlspace(node: &mut Node, default: XmlSpace) -> XmlSpace {
     {
         let attrs = node.attributes();
         let v = attrs.get_value(AttributeId::XmlSpace);
@@ -86,7 +86,7 @@ fn get_xmlspace(node: &Node, default: XmlSpace) -> XmlSpace {
     default
 }
 
-fn set_xmlspace(node: &Node, xmlspace: XmlSpace) {
+fn set_xmlspace(node: &mut Node, xmlspace: XmlSpace) {
     let xmlspace_str = match xmlspace {
         XmlSpace::Default => "default",
         XmlSpace::Preserve => "preserve",
@@ -103,9 +103,9 @@ fn set_xmlspace(node: &Node, xmlspace: XmlSpace) {
 
 fn prepare_text_children(parent: &Node, xmlspace: XmlSpace) {
     // Trim all descendant text nodes.
-    for child in parent.descendants() {
+    for mut child in parent.descendants() {
         if child.node_type() == NodeType::Text {
-            let child_xmlspace = get_xmlspace(&child.parent().unwrap(), xmlspace);
+            let child_xmlspace = get_xmlspace(&mut child.parent().unwrap(), xmlspace);
             let new_text = {
                 let text = child.text();
                 let preserve = child_xmlspace == XmlSpace::Preserve;
@@ -116,9 +116,9 @@ fn prepare_text_children(parent: &Node, xmlspace: XmlSpace) {
     }
 
     // Collect all descendant text nodes.
-    let nodes: Vec<Node> = parent.descendants()
-                                 .filter(|n| n.node_type() == NodeType::Text)
-                                 .collect();
+    let mut nodes: Vec<Node> = parent.descendants()
+                                     .filter(|n| n.node_type() == NodeType::Text)
+                                     .collect();
 
     // 'trim_text' already collapsed all spaces into a single one,
     // so we have to check only for one leading or trailing space.
@@ -126,7 +126,7 @@ fn prepare_text_children(parent: &Node, xmlspace: XmlSpace) {
     if nodes.len() == 1 {
         // Process element with a single text node child.
 
-        let node = &nodes[0];
+        let node = &mut nodes[0];
 
         if xmlspace == XmlSpace::Default {
             let mut text = node.text_mut();
@@ -170,30 +170,39 @@ fn prepare_text_children(parent: &Node, xmlspace: XmlSpace) {
         let len = nodes.len() - 1;
         while i < len {
             // Process pairs.
-            let node1 = &nodes[i];
-            let node2 = &nodes[i + 1];
+            let mut node1 = nodes[i].clone();
+            let mut node2 = nodes[i + 1].clone();
 
             // Parent of the text node is always an element node and always exist,
             // so unwrap is safe.
-            let xmlspace1 = get_xmlspace(&node1.parent().unwrap(), xmlspace);
-            let xmlspace2 = get_xmlspace(&node2.parent().unwrap(), xmlspace);
-
-            let mut text1 = node1.text_mut();
-            let mut text2 = node2.text_mut();
+            let xmlspace1 = get_xmlspace(&mut node1.parent().unwrap(), xmlspace);
+            let xmlspace2 = get_xmlspace(&mut node2.parent().unwrap(), xmlspace);
 
             // >text<..>text<
             //  1  2    3  4
-            let c1 = text1.as_bytes().first().cloned();
-            let c2 = text1.as_bytes().last().cloned();
-            let c3 = text2.as_bytes().first().cloned();
-            let c4 = text2.as_bytes().last().cloned();
+            let (c1, c2, c3, c4) = {
+                let text1 = node1.text();
+                let text2 = node2.text();
+
+                let bytes1 = text1.as_bytes();
+                let bytes2 = text2.as_bytes();
+
+                let c1 = bytes1.first().cloned();
+                let c2 = bytes1.last().cloned();
+                let c3 = bytes2.first().cloned();
+                let c4 = bytes2.last().cloned();
+
+                (c1, c2, c3, c4)
+            };
+
+            let is_text2_empty = node2.text().is_empty();
 
             // Remove space from the second text node if both nodes has bound spaces.
             // From: '<text>Text <tspan> text</tspan></text>'
             // To:   '<text>Text <tspan>text</tspan></text>'
             if xmlspace1 == XmlSpace::Default && xmlspace2 == XmlSpace::Default {
                 if c2 == Some(b' ') && c2 == c3 {
-                    text2.remove_first();
+                    node2.text_mut().remove_first();
                 }
             }
 
@@ -202,12 +211,12 @@ fn prepare_text_children(parent: &Node, xmlspace: XmlSpace) {
 
             if is_first && c1 == Some(b' ') && xmlspace1 == XmlSpace::Default {
                 // Remove leading space of the first text node.
-                text1.remove_first();
-            } else if    is_last && c4 == Some(b' ') && !text2.is_empty()
+                node1.text_mut().remove_first();
+            } else if    is_last && c4 == Some(b' ') && !is_text2_empty
                       && xmlspace2 == XmlSpace::Default {
                 // Remove trailing space of the last text node.
                 // Also check that 'text2' is not empty already.
-                text2.remove_last();
+                node2.text_mut().remove_last();
             }
 
             i += 1;

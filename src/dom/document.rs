@@ -77,7 +77,7 @@ impl Document {
     ///
     /// [`Node`]: struct.Node.html
     /// [`NodeType`]: enum.NodeType.html
-    pub fn create_element<'a, T>(&self, tag_name: T) -> Node
+    pub fn create_element<'a, T>(&mut self, tag_name: T) -> Node
         where TagNameRef<'a>: From<T>
     {
         let tn = TagNameRef::from(tag_name);
@@ -98,7 +98,7 @@ impl Document {
     ///
     /// [`Node`]: struct.Node.html
     /// [`NodeType`]: enum.NodeType.html
-    pub fn create_node(&self, node_type: NodeType, text: &str) -> Node {
+    pub fn create_node(&mut self, node_type: NodeType, text: &str) -> Node {
         // TODO: use Into<String> trait
 
         debug_assert!(node_type != NodeType::Element && node_type != NodeType::Root);
@@ -162,12 +162,13 @@ impl Document {
     /// ```
     /// use svgdom::{Document, ElementId};
     ///
-    /// let doc = Document::new();
-    /// doc.append(&doc.create_element(ElementId::Svg));
+    /// let mut doc = Document::new();
+    /// let svg = doc.create_element(ElementId::Svg);
+    /// doc.append(&svg);
     ///
     /// assert_eq!(doc.to_string(), "<svg/>\n");
     /// ```
-    pub fn append(&self, new_child: &Node) -> Node {
+    pub fn append(&mut self, new_child: &Node) -> Node {
         self.root.append(new_child);
         new_child.clone()
     }
@@ -189,7 +190,7 @@ impl Document {
     /// Removes only the children nodes specified by the predicate.
     ///
     /// The root node ignored.
-    pub fn drain<P>(&self, f: P) -> usize
+    pub fn drain<P>(&mut self, f: P) -> usize
         where P: Fn(&Node) -> bool
     {
         self.root().drain(f)
@@ -212,12 +213,6 @@ impl Document {
             linked_nodes: Vec::new(),
             text: text,
         })))
-    }
-}
-
-impl Default for Document {
-    fn default() -> Self {
-        Self::new()
     }
 }
 

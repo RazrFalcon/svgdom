@@ -24,7 +24,7 @@ pub fn resolve_inherit(doc: &Document) {
     let mut vec_inherit = Vec::new();
     let mut vec_curr_color = Vec::new();
 
-    for node in doc.descendants().svg() {
+    for mut node in doc.descendants().svg() {
         vec_inherit.clear();
         vec_curr_color.clear();
 
@@ -46,7 +46,7 @@ pub fn resolve_inherit(doc: &Document) {
         }
 
         for id in &vec_inherit {
-            resolve_impl(&node, *id, *id);
+            resolve_impl(&mut node, *id, *id);
         }
 
         for id in &vec_curr_color {
@@ -54,13 +54,13 @@ pub fn resolve_inherit(doc: &Document) {
             if let Some(av) = av {
                 node.set_attribute((*id, av.clone()));
             } else {
-                resolve_impl(&node, *id, AttributeId::Color);
+                resolve_impl(&mut node, *id, AttributeId::Color);
             }
         }
     }
 }
 
-fn resolve_impl(node: &Node, curr_attr: AttributeId, parent_attr: AttributeId) {
+fn resolve_impl(node: &mut Node, curr_attr: AttributeId, parent_attr: AttributeId) {
     if let Some(n) = node.parents().find(|n| n.has_attribute(parent_attr)) {
         let av = n.attributes().get_value(parent_attr).cloned();
         if let Some(av) = av {

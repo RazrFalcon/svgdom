@@ -22,7 +22,7 @@ use types::{
 /// - A negative `ry` will be removed
 ///
 /// Details: https://www.w3.org/TR/SVG/shapes.html#RectElement
-pub fn fix_rect_attributes(node: &Node) {
+pub fn fix_rect_attributes(node: &mut Node) {
     debug_assert!(node.is_tag_name(ElementId::Rect));
 
     fix_len(node, AttributeId::Width,  Length::zero());
@@ -47,8 +47,8 @@ mod test_rect {
             #[test]
             fn $name() {
                 let doc = Document::from_str($in_text).unwrap();
-                for node in doc.descendants().svg().filter(|n| n.is_tag_name(ElementId::Rect)) {
-                    fix_rect_attributes(&node);
+                for mut node in doc.descendants().svg().filter(|n| n.is_tag_name(ElementId::Rect)) {
+                    fix_rect_attributes(&mut node);
                 }
                 assert_eq_text!(doc.to_string_with_opt(&write_opt_for_tests!()), $out_text);
             }
@@ -102,7 +102,7 @@ mod test_rect {
 ///
 /// Details: https://www.w3.org/TR/SVG/shapes.html#PolylineElement
 /// https://www.w3.org/TR/SVG/shapes.html#PolygonElement
-pub fn fix_poly_attributes(node: &Node) {
+pub fn fix_poly_attributes(node: &mut Node) {
     debug_assert!(node.is_tag_name(ElementId::Polyline) || node.is_tag_name(ElementId::Polygon));
 
     let mut attrs_data = node.attributes_mut();
@@ -140,9 +140,9 @@ mod test_poly {
             #[test]
             fn $name() {
                 let doc = Document::from_str($in_text).unwrap();
-                for node in doc.descendants().svg()
+                for mut node in doc.descendants().svg()
                     .filter(|n| n.is_tag_name(ElementId::Polygon) || n.is_tag_name(ElementId::Polyline)) {
-                    fix_poly_attributes(&node);
+                    fix_poly_attributes(&mut node);
                 }
                 assert_eq_text!(doc.to_string_with_opt(&write_opt_for_tests!()), $out_text);
             }
@@ -183,7 +183,7 @@ pub fn fix_stop_attributes(node: &Node) {
 
     let mut prev_offset = 0.0;
 
-    for child in node.children() {
+    for mut child in node.children() {
         let av = child.attributes().get_value(AttributeId::Offset).cloned();
 
         let mut offset = match av {
@@ -255,7 +255,7 @@ mod test_stop {
 ");
 }
 
-fn fix_len(node: &Node, id: AttributeId, new_len: Length) {
+fn fix_len(node: &mut Node, id: AttributeId, new_len: Length) {
     if node.has_attribute(id) {
         fix_negative_len(node, id, new_len);
     } else {
@@ -263,7 +263,7 @@ fn fix_len(node: &Node, id: AttributeId, new_len: Length) {
     }
 }
 
-fn fix_negative_len(node: &Node, id: AttributeId, new_len: Length) {
+fn fix_negative_len(node: &mut Node, id: AttributeId, new_len: Length) {
     let av = node.attributes().get_value(id).cloned();
     if let Some(AttributeValue::Length(l)) = av {
         if l.num.is_sign_negative() {
@@ -272,7 +272,7 @@ fn fix_negative_len(node: &Node, id: AttributeId, new_len: Length) {
     }
 }
 
-fn rm_negative_len(node: &Node, id: AttributeId) {
+fn rm_negative_len(node: &mut Node, id: AttributeId) {
     let av = node.attributes().get_value(id).cloned();
     if let Some(AttributeValue::Length(l)) = av {
         if l.num.is_sign_negative() {

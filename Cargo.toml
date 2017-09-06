@@ -36,3 +36,6 @@ parsing = []
 [[bench]]
 name = "parser"
 harness = false
+
+# [lib]
+# doctest = false

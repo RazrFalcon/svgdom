@@ -238,7 +238,7 @@ impl Node {
     /// # Panics
     ///
     /// Panics if the node or one of its adjoining nodes is currently borrowed.
-    pub fn detach(&self) {
+    pub fn detach(&mut self) {
         self.0.borrow_mut().detach();
     }
 
@@ -260,7 +260,7 @@ impl Node {
     ///     <use xlink:href='#rect1'/>
     /// </svg>").unwrap();
     ///
-    /// let rect_elem = doc.descendants().filter(|n| *n.id() == "rect1").next().unwrap();
+    /// let mut rect_elem = doc.descendants().filter(|n| *n.id() == "rect1").next().unwrap();
     /// let use_elem = doc.descendants().filter(|n| n.is_tag_name(ElementId::Use)).next().unwrap();
     ///
     /// assert_eq!(use_elem.has_attribute(AttributeId::XlinkHref), true);
@@ -272,12 +272,12 @@ impl Node {
     ///
     /// assert_eq!(use_elem.has_attribute(AttributeId::XlinkHref), false);
     /// ```
-    pub fn remove(&self) {
+    pub fn remove(&mut self) {
         Node::_remove(self);
         self.detach();
     }
 
-    fn _remove(node: &Node) {
+    fn _remove(node: &mut Node) {
         // remove link attributes, which will trigger nodes unlink
         let mut ids: Vec<AttributeId>
             = node.attributes().iter_svg()
@@ -290,7 +290,7 @@ impl Node {
         }
 
         // remove all attributes that linked to this node
-        for linked in node.linked_nodes().collect::<Vec<Node>>() {
+        for mut linked in node.linked_nodes().collect::<Vec<Node>>() {
             ids.clear();
 
             for (aid, attr) in linked.attributes().iter_svg() {
@@ -311,8 +311,8 @@ impl Node {
         }
 
         // repeat for children
-        for child in node.children().svg() {
-            Node::_remove(&child);
+        for mut child in node.children().svg() {
+            Node::_remove(&mut child);
         }
     }
 
@@ -321,7 +321,7 @@ impl Node {
     /// Uses [remove()](#method.remove), not [detach()](#method.detach) internally.
     ///
     /// Current node ignored.
-    pub fn drain<P>(&self, f: P) -> usize
+    pub fn drain<P>(&mut self, f: P) -> usize
         where P: Fn(&Node) -> bool
     {
         let mut count = 0;
@@ -329,18 +329,18 @@ impl Node {
         count
     }
 
-    fn _drain<P>(parent: &Node, f: &P, count: &mut usize)
+    fn _drain<P>(parent: &mut Node, f: &P, count: &mut usize)
         where P: Fn(&Node) -> bool
     {
         let mut node = parent.first_child();
-        while let Some(n) = node {
+        while let Some(mut n) = node {
             if f(&n) {
                 node = n.next_sibling();
                 n.remove();
                 *count += 1;
             } else {
                 if n.has_children() {
-                    Node::_drain(&n, f, count);
+                    Node::_drain(&mut n, f, count);
                 }
 
                 node = n.next_sibling();
@@ -358,7 +358,7 @@ impl Node {
     pub fn make_copy(&self) -> Node {
         match self.node_type() {
             NodeType::Element => {
-                let elem = self.document().create_element(self.tag_name().unwrap().into_ref());
+                let mut elem = self.document().create_element(self.tag_name().unwrap().into_ref());
 
                 for attr in self.attributes().iter() {
                     elem.set_attribute(attr.clone());
@@ -380,18 +380,18 @@ impl Node {
     ///
     /// Panics if the node or any children node are currently mutability borrowed.
     pub fn make_deep_copy(&self) -> Node {
-        let root = self.make_copy();
-        Node::_make_deep_copy(&root, self);
+        let mut root = self.make_copy();
+        Node::_make_deep_copy(&mut root, self);
         root
     }
 
-    fn _make_deep_copy(parent: &Node, node: &Node) {
+    fn _make_deep_copy(parent: &mut Node, node: &Node) {
         for child in node.children() {
-            let new_node = child.make_copy();
+            let mut new_node = child.make_copy();
             parent.append(&new_node);
 
             if child.has_children() {
-                Node::_make_deep_copy(&new_node, &child);
+                Node::_make_deep_copy(&mut new_node, &child);
             }
         }
     }
@@ -401,7 +401,7 @@ impl Node {
     /// # Panics
     ///
     /// Panics if the node, the new child, or one of their adjoining nodes is currently borrowed.
-    pub fn append(&self, new_child: &Node) {
+    pub fn append(&mut self, new_child: &Node) {
         let mut this = self.0.borrow_mut();
         let mut last = None;
         let nc = new_child.clone();
@@ -434,7 +434,7 @@ impl Node {
     /// # Panics
     ///
     /// Panics if the node, the new child, or one of their adjoining nodes is currently borrowed.
-    pub fn prepend(&self, new_child: &Node) {
+    pub fn prepend(&mut self, new_child: &Node) {
         let mut this = self.0.borrow_mut();
         {
             let mut child = new_child.0.borrow_mut();
@@ -463,7 +463,7 @@ impl Node {
     /// # Panics
     ///
     /// Panics if the node, the new sibling, or one of their adjoining nodes is currently borrowed.
-    pub fn insert_after(&self, new_sibling: &Node) {
+    pub fn insert_after(&mut self, new_sibling: &Node) {
         // TODO: add an example, since we need to detach 'new_sibling'
         //       before passing it to this method
         let mut this = self.0.borrow_mut();
@@ -499,7 +499,7 @@ impl Node {
     /// # Panics
     ///
     /// Panics if the node, the new sibling, or one of their adjoining nodes is currently borrowed.
-    pub fn insert_before(&self, new_sibling: &Node) {
+    pub fn insert_before(&mut self, new_sibling: &Node) {
         let mut this = self.0.borrow_mut();
         let mut prev_opt = None;
         {
@@ -570,7 +570,7 @@ impl Node {
     /// # Panics
     ///
     /// Panics if the node is currently mutability borrowed.
-    pub fn text_mut(&self) -> RefMut<String> {
+    pub fn text_mut(&mut self) -> RefMut<String> {
         RefMut::map(self.0.borrow_mut(), |n| &mut n.text)
     }
 
@@ -579,7 +579,7 @@ impl Node {
     /// # Panics
     ///
     /// Panics if the node is currently mutability borrowed.
-    pub fn set_text(&self, text: &str) {
+    pub fn set_text(&mut self, text: &str) {
         debug_assert_ne!(self.node_type(), NodeType::Element);
         let mut b = self.0.borrow_mut();
         b.text = text.to_owned();
@@ -610,7 +610,7 @@ impl Node {
     /// # Panics
     ///
     /// Panics if the node is currently borrowed.
-    pub fn set_id<S: Into<String>>(&self, id: S) {
+    pub fn set_id<S: Into<String>>(&mut self, id: S) {
         // TODO: check that it's unique.
         debug_assert_eq!(self.node_type(), NodeType::Element);
         let mut self_borrow = self.0.borrow_mut();
@@ -694,7 +694,7 @@ impl Node {
     ///
     /// - Panics if the node is currently borrowed.
     /// - Panics if a string tag name is empty.
-    pub fn set_tag_name<'a, T>(&self, tag_name: T)
+    pub fn set_tag_name<'a, T>(&mut self, tag_name: T)
         where TagNameRef<'a>: From<T>
     {
         debug_assert_eq!(self.node_type(), NodeType::Element);
@@ -724,7 +724,7 @@ impl Node {
     /// # Panics
     ///
     /// Panics if the node is currently borrowed.
-    pub fn attributes_mut(&self) -> RefMut<Attributes> {
+    pub fn attributes_mut(&mut self) -> RefMut<Attributes> {
         RefMut::map(self.0.borrow_mut(), |n| &mut n.attributes)
     }
 
@@ -775,7 +775,7 @@ impl Node {
     /// Will panic on any error produced by the [`set_attribute_checked`] method.
     ///
     /// [`set_attribute_checked`]: #method.set_attribute_checked
-    pub fn set_attribute<T>(&self, v: T)
+    pub fn set_attribute<T>(&mut self, v: T)
         where T: Into<Attribute>
     {
         self.set_attribute_checked(v).unwrap();
@@ -817,9 +817,9 @@ impl Node {
     /// };
     ///
     /// // Create a simple document.
-    /// let doc = Document::new();
-    /// let svg = doc.create_element(EId::Svg);
-    /// let rect = doc.create_element(EId::Rect);
+    /// let mut doc = Document::new();
+    /// let mut svg = doc.create_element(EId::Svg);
+    /// let mut rect = doc.create_element(EId::Rect);
     ///
     /// doc.append(&svg);
     /// svg.append(&rect);
@@ -850,9 +850,9 @@ impl Node {
     /// };
     ///
     /// // Create a simple document.
-    /// let doc = Document::new();
-    /// let gradient = doc.create_element(EId::LinearGradient);
-    /// let rect = doc.create_element(EId::Rect);
+    /// let mut doc = Document::new();
+    /// let mut gradient = doc.create_element(EId::LinearGradient);
+    /// let mut rect = doc.create_element(EId::Rect);
     ///
     /// doc.append(&gradient);
     /// doc.append(&rect);
@@ -887,7 +887,7 @@ impl Node {
     ///
     /// [`ElementMustHaveAnId`]: enum.Error.html
     /// [`ElementCrosslink`]: enum.Error.html
-    pub fn set_attribute_checked<T>(&self, v: T) -> Result<(), Error>
+    pub fn set_attribute_checked<T>(&mut self, v: T) -> Result<(), Error>
         where T: Into<Attribute>
     {
         // TODO: to error in _checked mode
@@ -912,7 +912,7 @@ impl Node {
         Ok(())
     }
 
-    fn set_simple_attribute(&self, attr: Attribute) {
+    fn set_simple_attribute(&mut self, attr: Attribute) {
         debug_assert!(!attr.is_link() && !attr.is_func_link());
 
         // we must remove existing attribute to prevent dangling links
@@ -922,7 +922,7 @@ impl Node {
         attrs.insert(attr);
     }
 
-    fn set_link_attribute(&self, id: AttributeId, node: Node) -> Result<(), Error> {
+    fn set_link_attribute(&mut self, id: AttributeId, node: Node) -> Result<(), Error> {
         if node.id().is_empty() {
             return Err(Error::ElementMustHaveAnId);
         }
@@ -966,24 +966,23 @@ impl Node {
     /// # Panics
     ///
     /// Panics if the node is currently borrowed.
-    pub fn remove_attribute<'a, N>(&self, name: N)
+    pub fn remove_attribute<'a, N>(&mut self, name: N)
         where AttributeNameRef<'a>: From<N>, N: Copy
     {
         if !self.has_attribute(name) {
             return;
         }
 
-        let mut attrs = self.attributes_mut();
-
         // we must unlink referenced attributes
-        if let Some(value) = attrs.get_value(name) {
+        if let Some(value) = self.attributes().get_value(name) {
             match *value {
                 AttributeValue::Link(ref node) | AttributeValue::FuncLink(ref node) => {
-                    let mut self_borrow = node.0.borrow_mut();
-                    let ln = &mut self_borrow.linked_nodes;
+                    let self_borrow = &self.0;
+                    let mut node_borrow = node.0.borrow_mut();
+                    let ln = &mut node_borrow.linked_nodes;
                     // this code can't panic, because we know that such node exist
                     let index = ln.iter().position(|x| {
-                        same_rc(&x.upgrade().unwrap(), &self.0)
+                        same_rc(&x.upgrade().unwrap(), self_borrow)
                     }).unwrap();
                     ln.remove(index);
                 }
@@ -991,7 +990,7 @@ impl Node {
             }
         }
 
-        attrs.remove_impl(name);
+        self.attributes_mut().remove_impl(name);
     }
 
     // TODO: remove
@@ -1000,7 +999,7 @@ impl Node {
     /// # Panics
     ///
     /// Panics if the node is currently borrowed.
-    pub fn remove_attributes(&self, ids: &[AttributeId]) {
+    pub fn remove_attributes(&mut self, ids: &[AttributeId]) {
         // TODO: to AttributeNameRef
         for id in ids {
             self.remove_attribute(*id);

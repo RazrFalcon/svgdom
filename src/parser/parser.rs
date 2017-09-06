@@ -100,7 +100,7 @@ struct PostData<'a> {
 }
 
 pub fn parse_svg(text: &str, opt: &ParseOptions) -> Result<Document, Error> {
-    let doc = Document::new();
+    let mut doc = Document::new();
     let mut parent = doc.root();
 
     let mut tokenizer = svg::Tokenizer::from_str(text);
@@ -129,7 +129,7 @@ pub fn parse_svg(text: &str, opt: &ParseOptions) -> Result<Document, Error> {
         match t {
             svg::Token::EndOfStream => break,
             _ => {
-                process_token(&doc, t, &mut tokenizer,
+                process_token(&mut doc, t, &mut tokenizer,
                               &mut node, &mut parent,
                               &mut post_data, opt)?
             }
@@ -156,12 +156,12 @@ pub fn parse_svg(text: &str, opt: &ParseOptions) -> Result<Document, Error> {
     resolve_css(&doc, &mut post_data, opt)?;
 
     // resolve styles
-    for d in &post_data.style_attrs {
-        parse_style_attribute(&d.node, d.stream, &mut post_data.links,
+    for d in &mut post_data.style_attrs {
+        parse_style_attribute(&mut d.node, d.stream, &mut post_data.links,
                               &post_data.entitis, opt)?;
     }
 
-    resolve_links(&post_data.links)?;
+    resolve_links(&mut post_data.links)?;
 
     text::prepare_text(&doc);
 
@@ -169,7 +169,7 @@ pub fn parse_svg(text: &str, opt: &ParseOptions) -> Result<Document, Error> {
 }
 
 fn process_token<'a>(
-    doc: &Document,
+    doc: &mut Document,
     token: svg::Token<'a>,
     tokenizer: &mut svg::Tokenizer<'a>,
     node: &mut Option<Node>,
@@ -206,7 +206,7 @@ fn process_token<'a>(
         }
         svg::Token::XmlAttribute(name, value) => {
             if opt.parse_unknown_attributes {
-                let n = node.as_ref().unwrap();
+                let n = node.as_mut().unwrap();
                 if n.is_svg_element() {
                     parse_non_svg_attribute(n, name, value, post_data);
                 } else {
@@ -215,7 +215,7 @@ fn process_token<'a>(
             }
         }
         svg::Token::SvgAttribute(aid, value) => {
-            let n = node.as_ref().unwrap();
+            let n = node.as_mut().unwrap();
             parse_svg_attribute(n, aid, value, post_data, opt)?;
         }
         svg::Token::ElementEnd(end) => {
@@ -298,7 +298,7 @@ fn process_token<'a>(
 }
 
 fn parse_svg_element<'a>(
-    doc: &Document,
+    doc: &mut Document,
     tokenizer: &mut svg::Tokenizer<'a>,
     id: ElementId,
     styles: &mut Vec<TextFrame<'a>>,
@@ -361,7 +361,7 @@ fn parse_svg_element<'a>(
 }
 
 fn parse_svg_attribute<'a>(
-    node: &Node,
+    node: &mut Node,
     id: AttributeId,
     value: TextFrame<'a>,
     post_data: &mut PostData<'a>,
@@ -420,7 +420,7 @@ fn parse_svg_attribute<'a>(
 }
 
 fn parse_svg_attribute_value<'a>(
-    node: &Node,
+    node: &mut Node,
     id: AttributeId,
     frame: TextFrame<'a>,
     links: &mut Links<'a>,
@@ -516,7 +516,7 @@ fn parse_svg_attribute_value<'a>(
 }
 
 fn parse_non_svg_attribute<'a>(
-    node: &Node,
+    node: &mut Node,
     name: &str,
     value: &str,
     post_data: &PostData<'a>,
@@ -554,7 +554,7 @@ fn prepare_length_unit(unit: LengthUnit, opt: &ParseOptions) -> LengthUnit {
 }
 
 fn parse_style_attribute<'a>(
-    node: &Node,
+    node: &mut Node,
     frame: TextFrame<'a>,
     links: &mut Links<'a>,
     entitis: &Entities<'a>,
@@ -701,15 +701,15 @@ fn resolve_css<'a>(
             for selector in &selectors {
                 match *selector {
                     CssSelector::Universal => {
-                        for node in doc.descendants().svg() {
-                            apply_css_attributes(&values, &node, &mut post_data.links,
+                        for mut node in doc.descendants().svg() {
+                            apply_css_attributes(&values, &mut node, &mut post_data.links,
                                                  &post_data.entitis, opt)?;
                         }
                     }
                     CssSelector::Type(name) => {
                         if let Some(eid) = ElementId::from_name(name) {
-                            for node in doc.descendants().svg().filter(|n| n.is_tag_name(eid)) {
-                                apply_css_attributes(&values, &node, &mut post_data.links,
+                            for mut node in doc.descendants().svg().filter(|n| n.is_tag_name(eid)) {
+                                apply_css_attributes(&values, &mut node, &mut post_data.links,
                                                      &post_data.entitis, opt)?;
                             }
                         } else {
@@ -718,15 +718,15 @@ fn resolve_css<'a>(
                         }
                     }
                     CssSelector::Id(name) => {
-                        if let Some(node) = doc.descendants().svg().find(|n| *n.id() == name) {
-                            apply_css_attributes(&values, &node, &mut post_data.links,
+                        if let Some(mut node) = doc.descendants().svg().find(|n| *n.id() == name) {
+                            apply_css_attributes(&values, &mut node, &mut post_data.links,
                                                  &post_data.entitis, opt)?;
                         }
                     }
                     CssSelector::Class(name) => {
                         // we use already collected list of 'class' attributes
-                        for d in post_data.class_attrs.iter().filter(|n| n.text == name) {
-                            apply_css_attributes(&values, &d.node, &mut post_data.links,
+                        for d in post_data.class_attrs.iter_mut().filter(|n| n.text == name) {
+                            apply_css_attributes(&values, &mut d.node, &mut post_data.links,
                                                  &post_data.entitis, opt)?;
 
                             resolved_classes.push(name);
@@ -773,7 +773,7 @@ fn postprocess_class_selector<'a>(
 
 fn apply_css_attributes<'a>(
     values: &[(&str,&'a str)],
-    node: &Node,
+    node: &mut Node,
     links: &mut Links<'a>,
     entitis: &Entities<'a>,
     opt: &ParseOptions,
@@ -796,8 +796,8 @@ fn apply_css_attributes<'a>(
     Ok(())
 }
 
-fn resolve_links(links: &Links) -> Result<(), Error> {
-    for d in &links.list {
+fn resolve_links(links: &mut Links) -> Result<(), Error> {
+    for mut d in &mut links.list {
         match links.elems_with_id.get(d.iri) {
             Some(node) => {
                 // The SVG uses a fallback paint value not only when the FuncIRI is invalid,
@@ -814,7 +814,7 @@ fn resolve_links(links: &Links) -> Result<(), Error> {
                 }
             }
             None => {
-                resolve_fallback(&d)?;
+                resolve_fallback(&mut d)?;
             }
         }
     }
@@ -822,7 +822,7 @@ fn resolve_links(links: &Links) -> Result<(), Error> {
     Ok(())
 }
 
-fn resolve_fallback(d: &LinkData) -> Result<(), Error> {
+fn resolve_fallback(d: &mut LinkData) -> Result<(), Error> {
     // check that <paint> contains a fallback value before showing a warning
     match d.fallback {
         Some(fallback) => {

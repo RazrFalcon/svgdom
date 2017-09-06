@@ -42,7 +42,7 @@ fn empty_doc_1() {
 
 #[test]
 fn single_node_1() {
-    let doc = Document::new();
+    let mut doc = Document::new();
     let n = doc.create_element(EId::Svg);
 
     doc.append(&n);
@@ -52,8 +52,8 @@ fn single_node_1() {
 
 #[test]
 fn child_node_1() {
-    let doc = Document::new();
-    let svg = doc.create_element(EId::Svg);
+    let mut doc = Document::new();
+    let mut svg = doc.create_element(EId::Svg);
     let defs = doc.create_element(EId::Defs);
 
     doc.append(&svg);
@@ -68,13 +68,13 @@ fn child_node_1() {
 
 #[test]
 fn child_nodes_1() {
-    let doc = Document::new();
+    let mut doc = Document::new();
     let svg = doc.create_element(EId::Svg);
     doc.append(&svg);
 
     let mut parent = svg;
     for n in 1..5 {
-        let r = doc.create_element(EId::Rect);
+        let mut r = doc.create_element(EId::Rect);
         r.set_id(n.to_string());
         parent.append(&r);
 
@@ -96,9 +96,9 @@ fn child_nodes_1() {
 
 #[test]
 fn links_1() {
-    let doc = Document::new();
-    let svg_n = doc.create_element(EId::Svg);
-    let use_n = doc.create_element(EId::Use);
+    let mut doc = Document::new();
+    let mut svg_n = doc.create_element(EId::Svg);
+    let mut use_n = doc.create_element(EId::Use);
 
     svg_n.set_id("svg1");
 
@@ -116,10 +116,10 @@ fn links_1() {
 
 #[test]
 fn links_2() {
-    let doc = Document::new();
-    let svg_n = doc.create_element(EId::Svg);
-    let lg_n = doc.create_element(EId::LinearGradient);
-    let rect_n = doc.create_element(EId::Rect);
+    let mut doc = Document::new();
+    let mut svg_n = doc.create_element(EId::Svg);
+    let mut lg_n = doc.create_element(EId::LinearGradient);
+    let mut rect_n = doc.create_element(EId::Rect);
 
     lg_n.set_id("lg1");
 
@@ -139,8 +139,8 @@ fn links_2() {
 
 #[test]
 fn attributes_types_1() {
-    let doc = Document::new();
-    let svg = doc.create_element(EId::Svg);
+    let mut doc = Document::new();
+    let mut svg = doc.create_element(EId::Svg);
 
     doc.append(&svg);
 
@@ -167,7 +167,7 @@ fn attributes_types_1() {
 
 #[test]
 fn declaration_1() {
-    let doc = Document::new();
+    let mut doc = Document::new();
 
     let dec = doc.create_node(NodeType::Declaration,
         "version=\"1.0\" encoding=\"UTF-8\"");
@@ -181,7 +181,7 @@ fn declaration_1() {
 
 #[test]
 fn comment_1() {
-    let doc = Document::new();
+    let mut doc = Document::new();
 
     let comm = doc.create_node(NodeType::Comment, "comment");
     let svg = doc.create_element(EId::Svg);
@@ -195,9 +195,9 @@ fn comment_1() {
 // Manually created text.
 #[test]
 fn text_1() {
-    let doc = Document::new();
+    let mut doc = Document::new();
 
-    let svg = doc.create_element(EId::Svg);
+    let mut svg = doc.create_element(EId::Svg);
     let text = doc.create_node(NodeType::Text, "text");
 
     doc.append(&svg);

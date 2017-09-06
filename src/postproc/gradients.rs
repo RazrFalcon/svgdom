@@ -33,15 +33,15 @@ use types::{
 ///
 /// Details: https://www.w3.org/TR/SVG/pservers.html#LinearGradients
 pub fn resolve_linear_gradient_attributes(doc: &Document) {
-    for node in gen_order(doc, ElementId::LinearGradient) {
-        check_attr(&node, AttributeId::GradientUnits,
+    for node in &mut gen_order(doc, ElementId::LinearGradient) {
+        check_attr(node, AttributeId::GradientUnits,
             Some(AttributeValue::from(ValueId::ObjectBoundingBox)));
-        check_attr(&node, AttributeId::SpreadMethod, Some(AttributeValue::from(ValueId::Pad)));
-        check_attr(&node, AttributeId::X1, Some(AttributeValue::from((0.0, LengthUnit::Percent))));
-        check_attr(&node, AttributeId::Y1, Some(AttributeValue::from((0.0, LengthUnit::Percent))));
-        check_attr(&node, AttributeId::X2, Some(AttributeValue::from((100.0, LengthUnit::Percent))));
-        check_attr(&node, AttributeId::Y2, Some(AttributeValue::from((0.0, LengthUnit::Percent))));
-        check_attr(&node, AttributeId::GradientTransform, None);
+        check_attr(node, AttributeId::SpreadMethod, Some(AttributeValue::from(ValueId::Pad)));
+        check_attr(node, AttributeId::X1, Some(AttributeValue::from((0.0, LengthUnit::Percent))));
+        check_attr(node, AttributeId::Y1, Some(AttributeValue::from((0.0, LengthUnit::Percent))));
+        check_attr(node, AttributeId::X2, Some(AttributeValue::from((100.0, LengthUnit::Percent))));
+        check_attr(node, AttributeId::Y2, Some(AttributeValue::from((0.0, LengthUnit::Percent))));
+        check_attr(node, AttributeId::GradientTransform, None);
     }
 }
 
@@ -67,20 +67,20 @@ pub fn resolve_radial_gradient_attributes(doc: &Document) {
     // So we need to resolve nodes in referencing order.
     // From not referenced to referenced.
 
-    for node in gen_order(doc, ElementId::RadialGradient) {
-        check_attr(&node, AttributeId::GradientUnits,
+    for node in &mut gen_order(doc, ElementId::RadialGradient) {
+        check_attr(node, AttributeId::GradientUnits,
             Some(AttributeValue::from(ValueId::ObjectBoundingBox)));
-        check_attr(&node, AttributeId::SpreadMethod, Some(AttributeValue::from(ValueId::Pad)));
-        check_attr(&node, AttributeId::Cx, Some(AttributeValue::from((50.0, LengthUnit::Percent))));
-        check_attr(&node, AttributeId::Cy, Some(AttributeValue::from((50.0, LengthUnit::Percent))));
-        check_attr(&node, AttributeId::R,  Some(AttributeValue::from((50.0, LengthUnit::Percent))));
+        check_attr(node, AttributeId::SpreadMethod, Some(AttributeValue::from(ValueId::Pad)));
+        check_attr(node, AttributeId::Cx, Some(AttributeValue::from((50.0, LengthUnit::Percent))));
+        check_attr(node, AttributeId::Cy, Some(AttributeValue::from((50.0, LengthUnit::Percent))));
+        check_attr(node, AttributeId::R,  Some(AttributeValue::from((50.0, LengthUnit::Percent))));
 
         let cx = node.attributes().get_value(AttributeId::Cx).cloned();
         let cy = node.attributes().get_value(AttributeId::Cy).cloned();
-        check_attr(&node, AttributeId::Fx, cx);
-        check_attr(&node, AttributeId::Fy, cy);
+        check_attr(node, AttributeId::Fx, cx);
+        check_attr(node, AttributeId::Fy, cy);
 
-        check_attr(&node, AttributeId::GradientTransform, None);
+        check_attr(node, AttributeId::GradientTransform, None);
     }
 }
 
@@ -98,7 +98,7 @@ pub fn resolve_radial_gradient_attributes(doc: &Document) {
 /// which is not a first child of a gradient, didn't have an `offset` attribute.
 pub fn resolve_stop_attributes(doc: &Document) -> Result<(), Error> {
     for gradient in doc.descendants().filter(|n| n.is_gradient()) {
-        for (idx, node) in gradient.children().enumerate() {
+        for (idx, mut node) in gradient.children().enumerate() {
             let av = node.attributes().get_value(AttributeId::Offset).cloned();
             if let Some(AttributeValue::Length(l)) = av {
                 if l.unit == LengthUnit::Percent {
@@ -161,7 +161,7 @@ fn gen_order(doc: &Document, eid: ElementId) -> Vec<Node> {
     order
 }
 
-fn check_attr(node: &Node, id: AttributeId, def_value: Option<AttributeValue>) {
+fn check_attr(node: &mut Node, id: AttributeId, def_value: Option<AttributeValue>) {
     if !node.has_attribute(id) {
         if let Some(v) = resolve_attribute(node, id, def_value) {
             let mut a = Attribute::new(id, v);
