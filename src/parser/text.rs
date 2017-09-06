@@ -46,7 +46,7 @@ pub fn prepare_text(dom: &Document) {
 
     // Remove invisible 'xml:space' attributes created during text processing.
     for mut node in dom.descendants().filter(|n| n.node_type() == NodeType::Element) {
-        node.attributes_mut().retain(|attr| attr.visible == true);
+        node.attributes_mut().retain(|attr| attr.visible);
     }
 }
 

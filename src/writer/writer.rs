@@ -61,7 +61,7 @@ impl Depth {
     /// Writes a relative indent to the buffer.
     #[inline]
     fn write_indent_with_step(&self, step: i8, buf: &mut Vec<u8>) {
-        let v = (self.value as i32 + step as i32) as u32;
+        let v = (self.value as i32 + i32::from(step)) as u32;
         for _ in 0..v {
             buf.extend_from_slice(&self.block);
         }

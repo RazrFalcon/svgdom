@@ -72,13 +72,13 @@ impl<'a> From<&'a str> for AttributeValue {
 
 impl From<i32> for AttributeValue {
     fn from(value: i32) -> AttributeValue {
-        AttributeValue::Number(value as f64)
+        AttributeValue::Number(f64::from(value))
     }
 }
 
 impl From<(i32, LengthUnit)> for AttributeValue {
     fn from(value: (i32, LengthUnit)) -> AttributeValue {
-        AttributeValue::Length(Length::new(value.0 as f64, value.1))
+        AttributeValue::Length(Length::new(f64::from(value.0), value.1))
     }
 }
 

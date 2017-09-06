@@ -16,6 +16,7 @@ travis-ci = { repository = "RazrFalcon/svgdom" }
 float-cmp = "0.2.3"
 # simplecss = { git = "https://github.com/RazrFalcon/simplecss.git" }
 simplecss = "0.1.0"
+clippy = {version = "*", optional = true}
 
 [dependencies.svgparser]
 # latest public

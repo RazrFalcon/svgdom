@@ -759,7 +759,7 @@ fn postprocess_class_selector<'a>(
         for d in class_attrs {
             if d.node.has_attribute(AttributeId::Class) {
                 let mut attrs = d.node.attributes_mut();
-                let mut class_val = attrs.get_value_mut(AttributeId::Class);
+                let class_val = attrs.get_value_mut(AttributeId::Class);
                 if let Some(&mut AttributeValue::String(ref mut text)) = class_val {
                     text.push(' ');
                     text.push_str(d.text);

@@ -52,6 +52,13 @@ DOM structure itself based on: https://github.com/SimonSapin/rust-forest/tree/ma
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
 
+#![cfg_attr(feature="clippy", feature(plugin))]
+#![cfg_attr(feature="clippy", plugin(clippy))]
+#![cfg_attr(feature="clippy", allow(collapsible_if))]
+#![cfg_attr(feature="clippy", allow(module_inception))]
+#![cfg_attr(feature="clippy", allow(new_without_default))]
+#![cfg_attr(feature="clippy", allow(new_without_default_derive))]
+
 #[macro_use]
 extern crate svgparser;
 extern crate simplecss;

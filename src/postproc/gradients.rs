@@ -179,8 +179,8 @@ fn resolve_attribute(node: &Node, id: AttributeId, def_value: Option<AttributeVa
 
     match node.attributes().get_value(AttributeId::XlinkHref) {
         Some(av) => {
-            match av {
-                &AttributeValue::Link(ref ref_node) => resolve_attribute(ref_node, id, def_value),
+            match *av {
+                AttributeValue::Link(ref ref_node) => resolve_attribute(ref_node, id, def_value),
                 _ => unreachable!(),
             }
         }

@@ -98,7 +98,7 @@ impl Node {
     /// - Panics if the node is a root node.
     pub fn document(&self) -> Document {
         // TODO: will fail on root node
-        debug_assert!(self.node_type() != NodeType::Root);
+        debug_assert_ne!(self.node_type(), NodeType::Root);
         Document { root: Node(self.0.borrow().doc.as_ref().unwrap().upgrade().unwrap()) }
     }
 
@@ -891,7 +891,7 @@ impl Node {
         where T: Into<Attribute>
     {
         // TODO: to error in _checked mode
-        debug_assert!(self.node_type() == NodeType::Element);
+        debug_assert_eq!(self.node_type(), NodeType::Element);
 
         let attr: Attribute = v.into();
 
