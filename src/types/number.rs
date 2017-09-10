@@ -57,11 +57,11 @@ impl FuzzyOrd for f64 {
 }
 
 pub fn write_num(num: &f64, rm_leading_zero: bool, buf: &mut Vec<u8>) {
-    // By default it will round numbers up to 12 digits
+    // By default it will round numbers up to 11 digits
     // to prevent writing ugly numbers like 29.999999999999996.
     // It's not 100% correct, but differences are insignificant.
 
-    let v = (num * 1_000_000_000_000.0).round() / 1_000_000_000_000.0;
+    let v = (num * 100_000_000_000.0).round() / 100_000_000_000.0;
 
     let start_pos = buf.len();
 
@@ -115,7 +115,7 @@ mod tests {
     test_number!(gen_number_2,  0.0,                 false, "0");
     test_number!(gen_number_3,  -0.0,                false, "0");
     test_number!(gen_number_4,  -1.0,                false, "-1");
-    test_number!(gen_number_5,  12345678.12345678,   false, "12345678.12345678");
+    test_number!(gen_number_5,  12345678.12345678,   false, "12345678.123456782");
     test_number!(gen_number_6,  -0.1,                true,  "-.1");
     test_number!(gen_number_7,  0.1,                 true,  ".1");
     test_number!(gen_number_8,  1.0,                 true,  "1");
@@ -124,4 +124,6 @@ mod tests {
     test_number!(gen_number_11, 0.14186,             false, "0.14186");
     test_number!(gen_number_12, 29.999999999999996,  false, "30");
     test_number!(gen_number_13, 0.49999999999999994, false, "0.5");
+    // With some algorithms may produce 4273.680000000001.
+    test_number!(gen_number_14, 4273.68,             false, "4273.68");
 }

@@ -2,6 +2,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+use std::fmt;
+use std::str;
 use std::mem;
 use std::iter::{
     Filter,
@@ -17,6 +19,7 @@ use {
     AttributeId,
     AttributeNameRef,
     AttributeValue,
+    WriteBuffer,
 };
 
 // TODO: bench with HashTable
@@ -299,5 +302,25 @@ impl Attributes {
         }
 
         self.0.retain(f)
+    }
+}
+
+impl fmt::Debug for Attributes {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let mut out = Vec::with_capacity(256);
+
+        out.extend_from_slice(b"Attributes(");
+
+        for attr in self.iter() {
+            attr.write_buf(&mut out);
+            out.push(b',');
+            out.push(b' ');
+        }
+
+        out.pop();
+        out.pop();
+        out.push(b')');
+
+        write!(f, "{}", str::from_utf8(&out).unwrap())
     }
 }

@@ -47,9 +47,11 @@ macro_rules! impl_display {
     ($t:ty) => (
         impl fmt::Display for $t {
             fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                use std::str;
+
                 let mut out = Vec::with_capacity(32);
                 self.write_buf(&mut out);
-                write!(f, "{}", String::from_utf8(out).unwrap())
+                write!(f, "{}", str::from_utf8(&out).unwrap())
             }
         }
 

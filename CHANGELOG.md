@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Text escaping before saving to file.
 - Enforced mutability. Many `Document`'s and `Node`'s methods require `&mut self` now.
   This will prevent many runtime errors caused by borrowing `Rc` as mutable more than once.
+- `Debug` for `Attributes`.
 
 ### Changed
 - `writer` module is private now.
@@ -28,6 +29,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
     attributes_mut, set_attribute, set_attribute_checked, remove_attribute,
     remove_attributes
   - `postproc`: fix_rect_attributes, fix_poly_attributes
+- Default numeric precision is 11 instead of 12 now.
 
 ### Removed
 - `Node::attribute`. Use `node.attributes().get()` instead.

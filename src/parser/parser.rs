@@ -268,7 +268,7 @@ fn process_token<'a>(
             let mut s = Stream::from_frame(value);
             s.skip_spaces();
             if !s.at_end() {
-                if s.curr_char_raw() == b'<' {
+                if s.curr_char_unchecked() == b'<' {
                     return Err(Error::UnsupportedEntity(s.gen_error_pos()));
                 }
             }
@@ -399,7 +399,7 @@ fn parse_svg_attribute<'a>(
                 s.skip_spaces();
 
                 let len = s.len_to_space_or_end();
-                let class_raw = s.read_raw(len);
+                let class_raw = s.read_unchecked(len);
                 let class = class_raw;
 
                 post_data.class_attrs.push(NodeTextData {
@@ -524,9 +524,9 @@ fn parse_non_svg_attribute<'a>(
     let new_value;
 
     let mut stream = Stream::from_str(value);
-    if !stream.at_end() && stream.is_char_eq_raw(b'&') {
-        stream.advance_raw(1);
-        let link = stream.slice_next_raw(stream.len_to_or_end(b';'));
+    if !stream.at_end() && stream.is_char_eq_unchecked(b'&') {
+        stream.advance_unchecked(1);
+        let link = stream.slice_next_unchecked(stream.len_to_or_end(b';'));
 
         match post_data.entitis.get(link) {
             Some(link_value) => new_value = Some(*link_value),
@@ -603,7 +603,7 @@ fn resolve_css<'a>(
 
     fn gen_err_pos(frame: TextFrame, pos: usize) -> ErrorPos {
         let mut s = Stream::from_str(frame.full_slice());
-        s.set_pos_raw(pos);
+        s.set_pos_unchecked(pos);
         s.gen_error_pos()
     }
 

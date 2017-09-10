@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use svgparser::TextUnescape;
+use svgparser::{TextUnescape, XmlSpace};
 
 use {
     Attribute,
@@ -13,12 +13,6 @@ use {
     Node,
     NodeType,
 };
-
-#[derive(Clone,Copy,PartialEq)]
-enum XmlSpace {
-    Default,
-    Preserve,
-}
 
 trait StrTrim {
     fn remove_first(&mut self);
@@ -108,8 +102,7 @@ fn prepare_text_children(parent: &Node, xmlspace: XmlSpace) {
             let child_xmlspace = get_xmlspace(&mut child.parent().unwrap(), xmlspace);
             let new_text = {
                 let text = child.text();
-                let preserve = child_xmlspace == XmlSpace::Preserve;
-                TextUnescape::unescape(text.as_ref(), preserve).unwrap()
+                TextUnescape::unescape(text.as_ref(), child_xmlspace).unwrap()
             };
             child.set_text(&new_text);
         }

@@ -416,12 +416,12 @@ mod tests {
 
     test_transform!(parse_transform_4,
         "<svg transform='rotate(30)'/>",
-        "matrix(0.866025403784 0.5 -0.5 0.866025403784 0 0)"
+        "matrix(0.86602540378 0.5 -0.5 0.86602540378 0 0)"
     );
 
     test_transform!(parse_transform_5,
         "<svg transform='rotate(30 10 20)'/>",
-        "matrix(0.866025403784 0.5 -0.5 0.866025403784 11.339745962156 -2.320508075689)"
+        "matrix(0.86602540378 0.5 -0.5 0.86602540378 11.33974596216 -2.32050807569)"
     );
 
     test_transform!(parse_transform_6,
