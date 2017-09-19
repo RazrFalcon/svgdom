@@ -87,7 +87,7 @@ impl Document {
             }
         }
 
-        Document::new_node(Some(self.root.0.clone()), NodeType::Element, Some(tn), String::new())
+        Document::new_node(Some(Rc::clone(&self.root.0)), NodeType::Element, Some(tn), String::new())
     }
 
     /// Constructs a new [`Node`] using the supplied [`NodeType`].
@@ -102,7 +102,7 @@ impl Document {
         // TODO: use Into<String> trait
 
         debug_assert!(node_type != NodeType::Element && node_type != NodeType::Root);
-        Document::new_node(Some(self.root.0.clone()), node_type, None, text.to_owned())
+        Document::new_node(Some(Rc::clone(&self.root.0)), node_type, None, text.to_owned())
     }
 
     /// Returns the root [`Node`].

@@ -10,7 +10,7 @@ documentation = "https://docs.rs/svgdom/"
 readme = "README.md"
 
 [badges]
-travis-ci = { repository = "RazrFalcon/svgdom" }
+travis-ci = { repository = "RazrFalcon/libsvgdom" }
 
 [dependencies]
 float-cmp = "0.2.3"
@@ -21,10 +21,11 @@ clippy = {version = "*", optional = true}
 [dependencies.svgparser]
 # latest public
 # git = "https://github.com/RazrFalcon/libsvgparser.git"
+# branch = "master"
 # local copy
 # path = "../svgparser"
 # from crates
-version = "0.4"
+version = "0.5"
 
 [dev-dependencies]
 time = "0.1"

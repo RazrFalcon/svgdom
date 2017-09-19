@@ -191,7 +191,7 @@ impl Node {
     ///
     /// Panics if the node is currently mutability borrowed.
     pub fn first_child(&self) -> Option<Node> {
-        Some(Node(try_opt!(self.0.borrow().first_child.as_ref()).clone()))
+        Some(Node(Rc::clone(try_opt!(self.0.borrow().first_child.as_ref()))))
     }
 
     /// Returns the last child of this node, unless it has no child.
@@ -218,7 +218,7 @@ impl Node {
     ///
     /// Panics if the node is currently mutability borrowed.
     pub fn next_sibling(&self) -> Option<Node> {
-        Some(Node(try_opt!(self.0.borrow().next_sibling.as_ref()).clone()))
+        Some(Node(Rc::clone(try_opt!(self.0.borrow().next_sibling.as_ref()))))
     }
 
     /// Returns an iterator over descendant nodes.
@@ -506,7 +506,7 @@ impl Node {
             let mut child = new_sibling.0.borrow_mut();
             child.detach();
             child.parent = this.parent.clone();
-            child.next_sibling = Some(self.0.clone());
+            child.next_sibling = Some(Rc::clone(&self.0));
             if let Some(prev_weak) = this.prev_sibling.take() {
                 if let Some(prev_strong) = prev_weak.upgrade() {
                     child.prev_sibling = Some(prev_weak);
@@ -1045,7 +1045,7 @@ impl Node {
 /// Cloning a `Node` only increments a reference count. It does not copy the data.
 impl Clone for Node {
     fn clone(&self) -> Node {
-        Node(self.0.clone())
+        Node(Rc::clone(&self.0))
     }
 }
 

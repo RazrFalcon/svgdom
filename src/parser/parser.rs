@@ -2,8 +2,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-// TODO: implement xml escape
-
 use std::str;
 use std::collections::HashMap;
 
@@ -13,6 +11,7 @@ use svgparser::{
     Stream,
     TextFrame,
     Tokenize,
+    Tokens,
 };
 use svgparser::svg;
 use svgparser::style;
@@ -41,6 +40,8 @@ use types::{
 };
 
 use super::text;
+
+type SvgTokens<'a> = Tokens<'a, svg::Tokenizer<'a>>;
 
 struct NodeStreamData<'a> {
     node: Node,
@@ -103,7 +104,8 @@ pub fn parse_svg(text: &str, opt: &ParseOptions) -> Result<Document, Error> {
     let mut doc = Document::new();
     let mut parent = doc.root();
 
-    let mut tokenizer = svg::Tokenizer::from_str(text);
+    let tokens = svg::Tokenizer::from_str(text).tokens();
+    let tokens = &mut tokens.into_iter();
 
     // Since we not only parsing, but also converting an SVG structure,
     // we can't do everything in one take.
@@ -124,17 +126,13 @@ pub fn parse_svg(text: &str, opt: &ParseOptions) -> Result<Document, Error> {
     // process SVG tokens
     let mut node: Option<Node> = None;
 
-    loop {
-        let t = tokenizer.parse_next()?;
-        match t {
-            svg::Token::EndOfStream => break,
-            _ => {
-                process_token(&mut doc, t, &mut tokenizer,
-                              &mut node, &mut parent,
-                              &mut post_data, opt)?
-            }
-        }
+    while let Some(token) = tokens.next() {
+        process_token(&mut doc, token, tokens,
+                      &mut node, &mut parent,
+                      &mut post_data, opt)?
     }
+
+    tokens.error()?;
 
     // document must contain any children
     if !doc.root().has_children() {
@@ -171,7 +169,7 @@ pub fn parse_svg(text: &str, opt: &ParseOptions) -> Result<Document, Error> {
 fn process_token<'a>(
     doc: &mut Document,
     token: svg::Token<'a>,
-    tokenizer: &mut svg::Tokenizer<'a>,
+    tokens: &mut SvgTokens<'a>,
     node: &mut Option<Node>,
     parent: &mut Node,
     post_data: &mut PostData<'a>,
@@ -188,7 +186,7 @@ fn process_token<'a>(
     match token {
         svg::Token::XmlElementStart(name) => {
             if !opt.parse_unknown_elements {
-                skip_current_element(tokenizer)?;
+                skip_current_element(tokens)?;
             } else {
                 // create new node
                 let e = doc.create_element(name);
@@ -197,7 +195,7 @@ fn process_token<'a>(
             }
         }
         svg::Token::SvgElementStart(eid) => {
-            let res = parse_svg_element(doc, tokenizer, eid, &mut post_data.css_list)?;
+            let res = parse_svg_element(doc, tokens, eid, &mut post_data.css_list)?;
 
             if let Some(n) = res {
                 *node = Some(n.clone());
@@ -277,8 +275,7 @@ fn process_token<'a>(
         }
           svg::Token::DtdStart(_)
         | svg::Token::DtdEmpty(_)
-        | svg::Token::DtdEnd
-        | svg::Token::EndOfStream => {
+        | svg::Token::DtdEnd => {
             // do nothing
         }
     }
@@ -299,7 +296,7 @@ fn process_token<'a>(
 
 fn parse_svg_element<'a>(
     doc: &mut Document,
-    tokenizer: &mut svg::Tokenizer<'a>,
+    mut tokens: &mut SvgTokens<'a>,
     id: ElementId,
     styles: &mut Vec<TextFrame<'a>>,
 ) -> Result<Option<Node>, Error> {
@@ -313,8 +310,8 @@ fn parse_svg_element<'a>(
         // skip attributes, since we only interested in CDATA.
         let mut is_valid_type = true;
 
-        loop {
-            match tokenizer.parse_next()? {
+        while let Some(token) = tokens.next() {
+            match token {
                 svg::Token::SvgAttribute(aid, value) => {
                     if aid == AttributeId::Type {
                         if value.slice() != "text/css" {
@@ -332,7 +329,7 @@ fn parse_svg_element<'a>(
         }
 
         if !is_valid_type {
-            skip_current_element(tokenizer)?;
+            skip_current_element(tokens)?;
             return Ok(None);
         }
 
@@ -343,8 +340,8 @@ fn parse_svg_element<'a>(
         // so we process all of them.
         // Also style node can contain only text.
 
-        loop {
-            match tokenizer.parse_next()? {
+        for token in tokens {
+            match token {
                   svg::Token::Cdata(s)
                 | svg::Token::Text(s) => styles.push(s),
                 svg::Token::Whitespace(_) => {}
@@ -560,10 +557,10 @@ fn parse_style_attribute<'a>(
     entitis: &Entities<'a>,
     opt: &ParseOptions,
 ) -> Result<(), Error> {
-    let mut s = style::Tokenizer::from_frame(frame);
+    let mut tokens = style::Tokenizer::from_frame(frame).tokens();
 
-    loop {
-        match s.parse_next()? {
+    for token in &mut tokens {
+        match token {
             style::Token::XmlAttribute(name, value) => {
                 if opt.parse_unknown_attributes {
                     node.set_attribute((name, value));
@@ -579,9 +576,10 @@ fn parse_style_attribute<'a>(
                     parse_style_attribute(node, ss, links, entitis, opt)?;
                 }
             }
-            style::Token::EndOfStream => break,
         }
     }
+
+    tokens.error()?;
 
     Ok(())
 }
@@ -891,34 +889,32 @@ fn resolve_fallback(d: &mut LinkData) -> Result<(), Error> {
     Ok(())
 }
 
-fn skip_current_element(p: &mut svg::Tokenizer) -> Result<(), Error> {
+fn skip_current_element(mut tokens: &mut SvgTokens) -> Result<(), Error> {
     let mut local_depth = 0;
 
-    loop {
-        match p.parse_next()? {
-            svg::Token::ElementEnd(end) => {
-                match end {
-                    svg::ElementEnd::Empty => {
-                        if local_depth == 0 {
-                            break;
-                        }
-                    }
-                    svg::ElementEnd::CloseXml(_) |
-                    svg::ElementEnd::CloseSvg(_) => {
-                        local_depth -= 1;
-                        if local_depth == 0 {
-                            break;
-                        }
-                    }
-                    svg::ElementEnd::Open => {
-                        local_depth += 1;
+    while let Some(token) = tokens.next() {
+        if let svg::Token::ElementEnd(end) = token {
+            match end {
+                svg::ElementEnd::Empty => {
+                    if local_depth == 0 {
+                        break;
                     }
                 }
+                svg::ElementEnd::CloseXml(_) |
+                svg::ElementEnd::CloseSvg(_) => {
+                    local_depth -= 1;
+                    if local_depth == 0 {
+                        break;
+                    }
+                }
+                svg::ElementEnd::Open => {
+                    local_depth += 1;
+                }
             }
-            svg::Token::EndOfStream => break,
-            _ => {}
         }
     }
+
+    tokens.error()?;
 
     Ok(())
 }

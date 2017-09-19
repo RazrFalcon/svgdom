@@ -146,13 +146,13 @@ fn write_start_edge(
 fn write_non_element_node(node: &Node, out: &mut Vec<u8>) {
     match node.node_type() {
         NodeType::Declaration => {
-            write_node(b"<?xml ", node.text(), b"?>", out);
+            write_node(b"<?xml ", &node.text(), b"?>", out);
         }
         NodeType::Comment => {
-            write_node(b"<!--", node.text(), b"-->", out);
+            write_node(b"<!--", &node.text(), b"-->", out);
         }
         NodeType::Cdata => {
-            write_node(b"<![CDATA[", node.text(), b"]]>", out);
+            write_node(b"<![CDATA[", &node.text(), b"]]>", out);
         }
         NodeType::Text => {
             write_escaped_text(node.text().as_ref(), out);
@@ -162,7 +162,7 @@ fn write_non_element_node(node: &Node, out: &mut Vec<u8>) {
 }
 
 #[inline]
-fn write_node(prefix: &[u8], data: Ref<String>, suffix: &[u8], out: &mut Vec<u8>) {
+fn write_node(prefix: &[u8], data: &Ref<String>, suffix: &[u8], out: &mut Vec<u8>) {
     out.extend_from_slice(prefix);
     out.extend_from_slice(data.as_bytes());
     out.extend_from_slice(suffix);

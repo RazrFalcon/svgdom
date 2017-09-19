@@ -27,11 +27,11 @@ impl FromStream for Path {
     fn from_stream(s: TextFrame) -> Result<Path, ParseError> {
         use svgparser::path::Token;
 
-        let mut t = svgparser::path::Tokenizer::from_frame(s);
+        let mut tokens = svgparser::path::Tokenizer::from_frame(s).tokens();
         let mut p = Path::new();
 
-        loop {
-            let seg = match t.parse_next()? {
+        for seg in &mut tokens {
+            let seg = match seg {
                 Token::MoveTo { abs, x, y } => {
                     Segment {
                         absolute: abs,
@@ -97,13 +97,12 @@ impl FromStream for Path {
                         data: SegmentData::ClosePath,
                     }
                 }
-                Token::EndOfStream => {
-                    break;
-                }
             };
 
             p.d.push(seg);
         }
+
+        tokens.error()?;
 
         Ok(p)
     }
