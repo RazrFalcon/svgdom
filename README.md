@@ -3,6 +3,8 @@
 *libsvgdom* is an [SVG Full 1.1](https://www.w3.org/TR/SVG/) processing library,
 which allows you to parse, manipulate and generate SVG content.
 
+**Note:** the library itself is pretty stable, but API is constantly changing.
+
 ## Table of Contents
 
 - [libsvgdom](#libsvgdom)
