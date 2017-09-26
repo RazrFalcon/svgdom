@@ -7,19 +7,18 @@ which allows you to parse, manipulate and generate SVG content.
 
 ## Table of Contents
 
-- [libsvgdom](#libsvgdom)
-   - [Purpose](#purpose)
-      - [Example](#example)
-   - [Documentation](#documentation)
-   - [Benefits](#benefits)
-   - [Limitations](#limitations)
-   - [Non-goal](#non-goal)
-   - [Differences between libsvgdom and SVG spec](#differences-between-libsvgdom-and-svg-spec)
-   - [Usage](#usage)
-   - [Build features](#build-features)
-   - [Performance](#performance)
-   - [Contributing](#contributing)
-   - [License](#license)
+ - [Purpose](#purpose)
+    - [Example](#example)
+ - [Documentation](#documentation)
+ - [Benefits](#benefits)
+ - [Limitations](#limitations)
+ - [Non-goal](#non-goal)
+ - [Differences between libsvgdom and SVG spec](#differences-between-libsvgdom-and-svg-spec)
+ - [Usage](#usage)
+ - [Build features](#build-features)
+ - [Performance](#performance)
+ - [Contributing](#contributing)
+ - [License](#license)
 
 ### Purpose
 
@@ -174,7 +173,7 @@ All features are enabled by default.
 ### Performance
 
 There will be no comparisons with other XML parsers since they do not parse SVG data.
-And no comparisons with other SVG parsers, since there are no such\*.
+And no comparisons with other SVG parsers, since there are no such.
 
 Note that most of the time is spent during string to number and number to string conversion.
 
