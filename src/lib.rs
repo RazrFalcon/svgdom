@@ -36,10 +36,6 @@ At last, the `id` attribute is stored as a separate value and not as part of the
 
 See modules and structs documentation for details.
 
-&nbsp;
-
-DOM structure itself based on: https://github.com/SimonSapin/rust-forest/tree/master/rctree
-
 [`Attribute`]: struct.Attribute.html
 [`Attributes`]: struct.Attributes.html
 [`Document`]: struct.Document.html
@@ -48,6 +44,8 @@ DOM structure itself based on: https://github.com/SimonSapin/rust-forest/tree/ma
 [`TagName`]: type.TagName.html
 
 */
+
+#![doc(html_root_url = "https://docs.rs/svgdom/0.7.0")]
 
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]

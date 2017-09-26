@@ -11,18 +11,18 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - `WriteOptions::attributes_indent`.
 - `Length::new_number`.
 - Text escaping before saving to file.
-- Enforced mutability. Many `Document`'s and `Node`'s methods require `&mut self` now.
+- **Breaking change.** Enforced mutability. Many `Document`'s and `Node`'s methods require `&mut self` now.
   This will prevent many runtime errors caused by borrowing `Rc` as mutable more than once.
 - `Debug` for `Attributes`.
 
 ### Changed
 - `writer` module is private now.
-- `Node::set_attribute` accepts only `Attribute` or tuple with attribute name and value now.
+- **Breaking change.** `Node::set_attribute` accepts only `Attribute` or tuple with attribute name and value now.
 - `Attributes` methods: `insert`, `remove` and `retain` will panic on an invalid
   input in debug mode now.
 - `postproc::resolve_stop_attributes` no longer converts `offset` attribute
   into a `Number` type, leaving it in a `Length` type.
-- This methods are require `&mut self` now:
+- **Breaking change.** This methods are require `&mut self` now:
   - `Document`: create_element, create_node, append, drain.
   - `Node`: detach, remove, drain, append, prepend, insert_after,
     insert_before, text_mut, set_text, set_id, set_tag_name,

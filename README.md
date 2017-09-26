@@ -1,9 +1,7 @@
-## libsvgdom
+## libsvgdom [![Build Status](https://travis-ci.org/RazrFalcon/libsvgdom.svg?branch=master)](https://travis-ci.org/RazrFalcon/libsvgdom)
 
 *libsvgdom* is an [SVG Full 1.1](https://www.w3.org/TR/SVG/) processing library,
 which allows you to parse, manipulate and generate SVG content.
-
-[![Build Status](https://travis-ci.org/RazrFalcon/libsvgdom.svg?branch=master)](https://travis-ci.org/RazrFalcon/libsvgdom)
 
 ## Table of Contents
 
@@ -108,6 +106,7 @@ And even though the file is a bit different now - it will be rendered exactly th
 ### Benefits
  - The element link(IRI, FuncIRI) is not just text, but actual link to another node.
  - At any time you can check which elements linked to the selected element. See `Node` doc for details.
+ - A complete support of text nodes: XML escaping, `xml:space`.
  - Many options that control data loading and saving.
  - See [libsvgparser](https://github.com/RazrFalcon/libsvgparser)'s README for parsing benefits.
 
@@ -117,10 +116,8 @@ And even though the file is a bit different now - it will be rendered exactly th
  - Encoding should be UTF-8.
  - Only most popular attributes are parsed, other stored as strings.
  - Compressed SVG (.svgz). You should decompress it by yourself.
- - XML text escape is not implemented yet. Parsed text will be stored as is.
  - Not supported (mostly rare cases, but still valid by the SVG spec):
    - Complex CSS. Only simple selectors are supported.
-   - Whitespacing using a numerical Unicode references, aka `&#x0020;`.
    - Custom namespaces, like:
 
       ```
@@ -158,7 +155,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-svgdom = "0.6"
+svgdom = "0.7"
 ```
 
 See [documentation](https://docs.rs/svgdom/) and [examples](examples/) for details.
@@ -168,7 +165,7 @@ See [documentation](https://docs.rs/svgdom/) and [examples](examples/) for detai
 All features are enabled by default.
 
  - `parsing` - enables SVG parsing from a string.
-   It enables `FromStream` trait, `ParseOptions` struct and `Document::from_data` methods.
+   It enables `FromStream` trait, `ParseOptions` struct and `Document::from_str` methods.
 
    Disabling it doesn't disable `svgparser` dependency, because we export a lot of types from it.
 
