@@ -6,9 +6,7 @@ use std::cell::RefCell;
 use std::fmt;
 use std::rc::Rc;
 
-#[cfg(feature = "parsing")]
 use parser::parse_svg;
-#[cfg(feature = "parsing")]
 use {
     ParseOptions,
     Error,
@@ -53,7 +51,6 @@ impl Document {
     /// Constructs a new `Document` from the text using a default [`ParseOptions`].
     ///
     /// [`ParseOptions`]: struct.ParseOptions.html
-    #[cfg(feature = "parsing")]
     pub fn from_str(text: &str) -> Result<Document, Error> {
         // TODO: to FromStr trait
         Document::from_str_with_opt(text, &ParseOptions::default())
@@ -62,7 +59,6 @@ impl Document {
     /// Constructs a new `Document` from the text using a supplied [`ParseOptions`].
     ///
     /// [`ParseOptions`]: struct.ParseOptions.html
-    #[cfg(feature = "parsing")]
     pub fn from_str_with_opt(text: &str, opt: &ParseOptions) -> Result<Document, Error> {
         parse_svg(text, opt)
     }

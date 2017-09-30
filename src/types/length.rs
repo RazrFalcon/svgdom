@@ -4,9 +4,7 @@
 
 use std::fmt;
 
-#[cfg(feature = "parsing")]
 use FromStream;
-#[cfg(feature = "parsing")]
 use svgparser::{
     Error as ParseError,
     Stream,
@@ -63,7 +61,6 @@ impl Length {
     }
 }
 
-#[cfg(feature = "parsing")]
 impl FromStream for Length {
     type Err = ParseError;
 

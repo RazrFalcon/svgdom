@@ -73,7 +73,6 @@ pub use writer::{
     Indent
 };
 
-#[cfg(feature = "parsing")]
 pub use parser::ParseOptions;
 
 pub use svgparser::AttributeId;
@@ -105,8 +104,6 @@ mod dom;
 mod error;
 mod name;
 mod writer;
-
-#[cfg(feature = "parsing")]
 mod parser;
 
 pub mod types;

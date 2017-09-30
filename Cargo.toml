@@ -31,10 +31,6 @@ version = "0.5"
 time = "0.1"
 bencher = "0.1"
 
-[features]
-default = ["parsing"]
-parsing = []
-
 [[bench]]
 name = "parser"
 harness = false

@@ -4,9 +4,7 @@
 
 use std::fmt;
 
-#[cfg(feature = "parsing")]
 use FromStream;
-#[cfg(feature = "parsing")]
 use svgparser::{
     Color as ParserColor,
     Error as ParseError,
@@ -40,7 +38,6 @@ impl Color {
     }
 }
 
-#[cfg(feature = "parsing")]
 impl FromStream for Color {
     type Err = ParseError;
 

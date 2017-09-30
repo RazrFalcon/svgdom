@@ -15,7 +15,6 @@ which allows you to parse, manipulate and generate SVG content.
  - [Non-goal](#non-goal)
  - [Differences between libsvgdom and SVG spec](#differences-between-libsvgdom-and-svg-spec)
  - [Usage](#usage)
- - [Build features](#build-features)
  - [Performance](#performance)
  - [Contributing](#contributing)
  - [License](#license)
@@ -160,15 +159,6 @@ svgdom = "0.7"
 ```
 
 See [documentation](https://docs.rs/svgdom/) and [examples](examples/) for details.
-
-### Build features
-
-All features are enabled by default.
-
- - `parsing` - enables SVG parsing from a string.
-   It enables `FromStream` trait, `ParseOptions` struct and `Document::from_str` methods.
-
-   Disabling it doesn't disable `svgparser` dependency, because we export a lot of types from it.
 
 ### Performance
 

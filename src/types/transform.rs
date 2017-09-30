@@ -6,9 +6,7 @@ use std::f64;
 use std::fmt;
 use std::ops::Mul;
 
-#[cfg(feature = "parsing")]
 use FromStream;
-#[cfg(feature = "parsing")]
 use svgparser::{
     Error as ParseError,
     TextFrame,
@@ -231,7 +229,6 @@ impl Default for Transform {
     }
 }
 
-#[cfg(feature = "parsing")]
 impl FromStream for Transform {
     type Err = ParseError;
 
