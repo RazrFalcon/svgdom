@@ -234,8 +234,9 @@ impl fmt::Debug for Path {
 
 #[cfg(test)]
 mod to_absolute {
+    use std::str::FromStr;
+
     use types::path;
-    use FromStream;
 
     macro_rules! test {
         ($name:ident, $in_text:expr, $out_text:expr) => (
@@ -298,8 +299,9 @@ mod to_absolute {
 
 #[cfg(test)]
 mod to_relative {
+    use std::str::FromStr;
+
     use types::path;
-    use FromStream;
 
     macro_rules! test {
         ($name:ident, $in_text:expr, $out_text:expr) => (

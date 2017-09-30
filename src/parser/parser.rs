@@ -25,7 +25,7 @@ use {
     ElementId,
     Error,
     ErrorPos,
-    FromStream,
+    FromFrame,
     Node,
     NodeType,
     ParseOptions,
@@ -379,13 +379,13 @@ fn parse_svg_attribute<'a>(
           AttributeId::Transform
         | AttributeId::GradientTransform
         | AttributeId::PatternTransform => {
-            let ts = Transform::from_stream(value)?;
+            let ts = Transform::from_frame(value)?;
             if !ts.is_default() {
                 node.set_attribute((id, AttributeValue::Transform(ts)));
             }
         }
         AttributeId::D => {
-            let p = path::Path::from_stream(value)?;
+            let p = path::Path::from_frame(value)?;
             node.set_attribute((AttributeId::D, AttributeValue::Path(p)));
         }
         AttributeId::Class => {

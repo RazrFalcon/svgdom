@@ -2,22 +2,31 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+use std::str::FromStr;
+
 use svgparser::TextFrame;
 
 use WriteOptions;
 
 /// The trait for parsing data from the data stream.
-pub trait FromStream: Sized {
+pub trait FromFrame: FromStr {
     /// Error type.
     type Err;
 
-    /// Parses data from a `Stream`.
-    fn from_stream(s: TextFrame) -> Result<Self, Self::Err>;
+    /// Parses data from a `TextFrame`.
+    fn from_frame(s: TextFrame) -> Result<Self, <Self as FromFrame>::Err>;
+}
 
-    /// Parses data from a string.
-    fn from_str(data: &str) -> Result<Self, Self::Err> {
-        FromStream::from_stream(TextFrame::from_str(data))
-    }
+macro_rules! impl_from_str {
+    ($t:ty) => (
+        impl FromStr for $t {
+            type Err = ParseError;
+
+            fn from_str(s: &str) -> Result<$t, ParseError> {
+                FromFrame::from_frame(TextFrame::from_str(s))
+            }
+        }
+    )
 }
 
 /// The trait for writing a data to the buffer.

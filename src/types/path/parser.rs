@@ -2,6 +2,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+use std::str::FromStr;
+
 use svgparser;
 use svgparser::{
     Error as ParseError,
@@ -9,7 +11,7 @@ use svgparser::{
     Tokenize,
 };
 
-use FromStream;
+use FromFrame;
 
 use super::{
     Path,
@@ -17,10 +19,12 @@ use super::{
     SegmentData,
 };
 
-impl FromStream for Path {
+impl_from_str!(Path);
+
+impl FromFrame for Path {
     type Err = ParseError;
 
-    fn from_stream(s: TextFrame) -> Result<Path, ParseError> {
+    fn from_frame(s: TextFrame) -> Result<Path, ParseError> {
         use svgparser::path::Token;
 
         let mut tokens = svgparser::path::Tokenizer::from_frame(s).tokens();

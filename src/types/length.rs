@@ -3,8 +3,9 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 use std::fmt;
+use std::str::FromStr;
 
-use FromStream;
+use FromFrame;
 use svgparser::{
     Error as ParseError,
     Stream,
@@ -61,10 +62,12 @@ impl Length {
     }
 }
 
-impl FromStream for Length {
+impl_from_str!(Length);
+
+impl FromFrame for Length {
     type Err = ParseError;
 
-    fn from_stream(s: TextFrame) -> Result<Length, ParseError> {
+    fn from_frame(s: TextFrame) -> Result<Length, ParseError> {
         let mut ss = Stream::from_frame(s);
         let l = ss.parse_length()?;
         Ok(Length::new(l.num, l.unit))

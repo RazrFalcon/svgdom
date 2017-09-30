@@ -263,8 +263,10 @@ impl_display!(Path);
 
 #[cfg(test)]
 mod tests {
+    use std::str::FromStr;
+
     use types::path::*;
-    use {WriteOptions, FromStream, WriteToString};
+    use {WriteOptions, WriteToString};
 
     #[test]
     fn gen_path_1() {

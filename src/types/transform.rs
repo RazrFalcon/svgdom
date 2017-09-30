@@ -5,8 +5,9 @@
 use std::f64;
 use std::fmt;
 use std::ops::Mul;
+use std::str::FromStr;
 
-use FromStream;
+use FromFrame;
 use svgparser::{
     Error as ParseError,
     TextFrame,
@@ -229,10 +230,12 @@ impl Default for Transform {
     }
 }
 
-impl FromStream for Transform {
+impl_from_str!(Transform);
+
+impl FromFrame for Transform {
     type Err = ParseError;
 
-    fn from_stream(s: TextFrame) -> Result<Transform, ParseError> {
+    fn from_frame(s: TextFrame) -> Result<Transform, ParseError> {
         use svgparser::transform::Tokenizer;
         use svgparser::transform::Token;
 
@@ -367,10 +370,11 @@ impl Mul for TransformMatrix {
 
 #[cfg(test)]
 mod tests {
+    use std::str::FromStr;
+
     use super::*;
     use {
         Document,
-        FromStream,
         WriteOptions,
         WriteBuffer,
         AttributeId as AId,

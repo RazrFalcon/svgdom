@@ -3,8 +3,9 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 use std::fmt;
+use std::str::FromStr;
 
-use FromStream;
+use FromFrame;
 use svgparser::{
     Color as ParserColor,
     Error as ParseError,
@@ -38,10 +39,12 @@ impl Color {
     }
 }
 
-impl FromStream for Color {
+impl_from_str!(Color);
+
+impl FromFrame for Color {
     type Err = ParseError;
 
-    fn from_stream(s: TextFrame) -> Result<Color, ParseError> {
+    fn from_frame(s: TextFrame) -> Result<Color, ParseError> {
         let c = ParserColor::from_frame(s)?;
         Ok(Color::new(c.red, c.green, c.blue))
     }

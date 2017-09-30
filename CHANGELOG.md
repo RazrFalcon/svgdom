@@ -5,6 +5,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Changed
+- Rename `FromStream` into `FromFrame`.
+- `FromFrame` no longer implements the `from_str` method
+  and inherits from `FromStr` instead.
+
 ### Removed
 - `parsing` build feature.
 
