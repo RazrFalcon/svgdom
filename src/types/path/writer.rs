@@ -16,7 +16,7 @@ use super::{
 use {
     WriteBuffer,
     WriteOptions,
-    WriteToString,
+    ToStringWithOptions,
 };
 
 struct PrevCmd {
@@ -266,7 +266,7 @@ mod tests {
     use std::str::FromStr;
 
     use types::path::*;
-    use {WriteOptions, WriteToString};
+    use {WriteOptions, ToStringWithOptions};
 
     #[test]
     fn gen_path_1() {

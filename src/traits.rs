@@ -8,7 +8,7 @@ use svgparser::TextFrame;
 
 use WriteOptions;
 
-/// The trait for parsing data from the data stream.
+/// A trait for parsing data from a string.
 pub trait FromFrame: FromStr {
     /// Error type.
     type Err;
@@ -29,20 +29,22 @@ macro_rules! impl_from_str {
     )
 }
 
-/// The trait for writing a data to the buffer.
+/// A trait for writing a data to the buffer.
 pub trait WriteBuffer {
-    /// Writes data to the `Vec<u8>` buffer using specified WriteOptions.
+    /// Writes data to the `Vec<u8>` buffer using specified `WriteOptions`.
     fn write_buf_opt(&self, opt: &WriteOptions, buf: &mut Vec<u8>);
 
-    /// Writes data to the `Vec<u8>` buffer using default WriteOptions.
+    /// Writes data to the `Vec<u8>` buffer using default `WriteOptions`.
     fn write_buf(&self, buf: &mut Vec<u8>) {
         self.write_buf_opt(&WriteOptions::default(), buf);
     }
 }
 
-/// The trait for writing data to the `String`. Tunable `to_string()` alternative.
-pub trait WriteToString: WriteBuffer {
-    /// Writes data to the `String` using specified WriteOptions.
+/// A trait for converting a value to a `String` with `WriteOptions`.
+///
+/// A tunable `to_string()` alternative.
+pub trait ToStringWithOptions: WriteBuffer {
+    /// Writes data to the `String` using specified `WriteOptions`.
     fn to_string_with_opt(&self, opt: &WriteOptions) -> String {
         let mut out = Vec::with_capacity(32);
         self.write_buf_opt(opt, &mut out);
@@ -62,6 +64,6 @@ macro_rules! impl_display {
             }
         }
 
-        impl WriteToString for $t {}
+        impl ToStringWithOptions for $t {}
     )
 }

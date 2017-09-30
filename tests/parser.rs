@@ -18,7 +18,7 @@ use svgdom::{
     ParseOptions,
     ValueId,
     WriteOptions,
-    WriteToString,
+    ToStringWithOptions,
 };
 use svgdom::types::Color;
 

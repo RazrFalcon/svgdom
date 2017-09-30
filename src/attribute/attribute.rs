@@ -12,7 +12,7 @@ use {
     SvgId,
     WriteBuffer,
     WriteOptions,
-    WriteToString,
+    ToStringWithOptions,
 };
 
 /// Type alias for `Name<AttributeId>`.

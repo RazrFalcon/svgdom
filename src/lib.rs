@@ -32,10 +32,6 @@ The [`Attributes`] container wraps a `Vec` of [`Attribute`]'s.
 
 At last, the `id` attribute is stored as a separate value and not as part of the [`Attributes`].
 
-&nbsp;
-
-See modules and structs documentation for details.
-
 [`Attribute`]: struct.Attribute.html
 [`Attributes`]: struct.Attributes.html
 [`Document`]: struct.Document.html

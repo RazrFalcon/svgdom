@@ -10,7 +10,7 @@ use {
     ValueId,
     WriteBuffer,
     WriteOptions,
-    WriteToString,
+    ToStringWithOptions,
 };
 use types::{
     path,

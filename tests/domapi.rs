@@ -12,7 +12,7 @@ use svgdom::{
     ElementId as EId,
     Error,
     WriteOptions,
-    WriteToString,
+    ToStringWithOptions,
 };
 
 #[test]

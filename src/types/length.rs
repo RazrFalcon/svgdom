@@ -15,7 +15,7 @@ use svgparser::{
 use {
     WriteBuffer,
     WriteOptions,
-    WriteToString,
+    ToStringWithOptions,
 };
 use types::LengthUnit;
 

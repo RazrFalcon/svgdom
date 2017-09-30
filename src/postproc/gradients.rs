@@ -210,7 +210,7 @@ macro_rules! base_test {
 #[cfg(test)]
 mod lg_tests {
     use super::*;
-    use {Document, WriteToString};
+    use {Document, ToStringWithOptions};
 
     macro_rules! test {
         ($name:ident, $in_text:expr, $out_text:expr) => (
@@ -233,7 +233,7 @@ mod lg_tests {
 #[cfg(test)]
 mod rg_tests {
     use super::*;
-    use {Document, WriteToString};
+    use {Document, ToStringWithOptions};
 
     macro_rules! test_rg {
         ($name:ident, $in_text:expr, $out_text:expr) => (
@@ -348,7 +348,7 @@ mod rg_tests {
 #[cfg(test)]
 mod stop_tests {
     use super::*;
-    use {Document, WriteToString};
+    use {Document, ToStringWithOptions};
 
     macro_rules! test {
         ($name:ident, $in_text:expr, $out_text:expr) => (

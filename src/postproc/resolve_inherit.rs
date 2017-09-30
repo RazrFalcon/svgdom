@@ -81,7 +81,7 @@ fn resolve_impl(node: &mut Node, curr_attr: AttributeId, parent_attr: AttributeI
 #[cfg(test)]
 mod tests {
     use super::*;
-    use {Document, WriteToString};
+    use {Document, ToStringWithOptions};
 
     macro_rules! test {
         ($name:ident, $in_text:expr, $out_text:expr) => (

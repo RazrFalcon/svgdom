@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Rename `FromStream` into `FromFrame`.
 - `FromFrame` no longer implements the `from_str` method
   and inherits from `FromStr` instead.
+- Rename `WriteToString` into `ToStringWithOptions`.
 
 ### Removed
 - `parsing` build feature.

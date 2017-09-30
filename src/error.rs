@@ -13,13 +13,13 @@ use simplecss::Error as CssParseError;
 
 // TODO: split to Dom errors and Parser errors
 
-/// List of all errors that can occur during processing of the SVG DOM.
+/// List of all errors.
 #[derive(PartialEq)]
 pub enum Error {
     /// If you want to use referenced element inside link attribute,
     /// such element must have a non-empty ID.
     ElementMustHaveAnId,
-    /// Linked nodes can't reference each other.
+    /// Linked nodes can't reference each other or itself.
     ///
     /// # Examples
     ///

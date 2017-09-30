@@ -21,7 +21,7 @@ use {
     TagNameRef,
     WriteBuffer,
     WriteOptions,
-    WriteToString,
+    ToStringWithOptions,
     Children,
     Descendants,
     Node,

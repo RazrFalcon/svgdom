@@ -17,7 +17,7 @@ use svgparser::{
 use {
     WriteBuffer,
     WriteOptions,
-    WriteToString,
+    ToStringWithOptions,
 };
 use super::number::{
     write_num,

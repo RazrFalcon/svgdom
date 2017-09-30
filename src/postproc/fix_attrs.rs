@@ -40,7 +40,7 @@ pub fn fix_rect_attributes(node: &mut Node) {
 #[cfg(test)]
 mod test_rect {
     use super::*;
-    use {Document, ElementId, WriteToString};
+    use {Document, ElementId, ToStringWithOptions};
 
     macro_rules! test {
         ($name:ident, $in_text:expr, $out_text:expr) => (
@@ -133,7 +133,7 @@ pub fn fix_poly_attributes(node: &mut Node) {
 #[cfg(test)]
 mod test_poly {
     use super::*;
-    use {Document, ElementId, WriteToString};
+    use {Document, ElementId, ToStringWithOptions};
 
     macro_rules! test {
         ($name:ident, $in_text:expr, $out_text:expr) => (
@@ -216,7 +216,7 @@ pub fn fix_stop_attributes(node: &Node) {
 #[cfg(test)]
 mod test_stop {
     use super::*;
-    use {Document, WriteToString, ElementType};
+    use {Document, ToStringWithOptions, ElementType};
     use postproc::resolve_stop_attributes;
 
     macro_rules! test {

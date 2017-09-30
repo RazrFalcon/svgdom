@@ -12,7 +12,7 @@ use svgdom::{
     Indent,
     NodeType,
     WriteOptions,
-    WriteToString,
+    ToStringWithOptions,
 };
 use svgdom::types::{
     Color,
