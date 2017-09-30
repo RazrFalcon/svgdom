@@ -7,7 +7,7 @@
 pub enum Indent {
     /// Disable indention and new lines.
     None,
-    /// Indent with spaces. Prefer range 0..4.
+    /// Indent with spaces. Preferred range is 0..4.
     Spaces(u8),
     /// Indent with tabs.
     Tabs,
@@ -31,14 +31,14 @@ pub struct WriteOptionsPaths {
     /// Elliptical arc curve segment has flags parameters, which can have values of `0` or `1`.
     /// Since we have fixed-width values, we can skip spaces between them.
     ///
+    /// **Note:** Sadly, but most of the viewers doesn't support such notation,
+    /// even through it's valid by SVG spec.
+    ///
     /// # Examples
     ///
     /// `A 5 5 30 1 1 10 10` -> `A 5 5 30 1110 10`
     ///
     /// Default: disabled
-    ///
-    /// **Note:** Sadly, but most of the viewers doesn't support such notation,
-    /// even throw it's valid by SVG spec.
     pub join_arc_to_flags: bool,
 
     /// Remove duplicated commands.
@@ -123,8 +123,15 @@ pub struct WriteOptions {
     ///
     /// # Examples
     ///
+    /// Before:
+    ///
     /// ```text
     /// <rect fill="red"/>
+    /// ```
+    ///
+    /// After:
+    ///
+    /// ```text
     /// <rect fill='red'/>
     /// ```
     ///
@@ -155,7 +162,8 @@ pub struct WriteOptions {
     ///
     /// # Examples
     ///
-    /// `0.1` -> `.1`, `-0.1` -> `-.1`
+    /// - `0.1` -> `.1`
+    /// - `-0.1` -> `-.1`
     ///
     /// Default: disabled
     pub remove_leading_zero: bool,

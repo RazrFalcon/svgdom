@@ -30,12 +30,7 @@ pub type SvgAttrFilter<'a> = Filter<Iter<'a, Attribute>, fn(&&Attribute) -> bool
 /// Mutable filter iterator over SVG attributes.
 pub type SvgAttrFilterMut<'a> = Filter<IterMut<'a, Attribute>, fn(&&mut Attribute) -> bool>;
 
-/// Wrapper around attributes list.
-///
-/// More low level API than in [`Node`], but it supports getting a reference to the attribute,
-/// and not a copy.
-///
-/// [`Node`]: struct.Node.html
+/// An attributes list.
 pub struct Attributes(Vec<Attribute>);
 
 impl Attributes {

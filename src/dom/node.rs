@@ -80,7 +80,7 @@ impl<'a> From<(AttributeId, Node)> for Attribute {
 /// - Unique ID of the `Element` node. Can be set to nodes with other types,
 ///   but without any affect.
 /// - [`Attributes`] - list of [`Attribute`]s.
-/// - List of linked nodes. [Details.](#method.set_attribute)
+/// - List of linked nodes. [Details.](#method.set_attribute_checked)
 /// - Text data, which is used by non-element nodes. Empty by default.
 ///
 /// [`Attribute`]: struct.Attribute.html
@@ -798,7 +798,8 @@ impl Node {
     ///
     /// # Errors
     ///
-    /// [`ElementMustHaveAnId`], [`ElementCrosslink`].
+    /// - [`ElementMustHaveAnId`]
+    /// - [`ElementCrosslink`]
     ///
     /// # Panics
     ///
