@@ -41,7 +41,7 @@ At last, the `id` attribute is stored as a separate value and not as part of the
 
 */
 
-#![doc(html_root_url = "https://docs.rs/svgdom/0.7.0")]
+#![doc(html_root_url = "https://docs.rs/svgdom/0.8.0")]
 
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]

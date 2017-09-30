@@ -155,7 +155,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-svgdom = "0.7"
+svgdom = "0.8"
 ```
 
 See [documentation](https://docs.rs/svgdom/) and [examples](examples/) for details.

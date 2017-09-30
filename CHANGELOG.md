@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+
+## [0.8.0] - 2017-09-30
 ### Changed
 - Rename `FromStream` into `FromFrame`.
 - `FromFrame` no longer implements the `from_str` method
@@ -21,13 +23,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - `WriteOptions::attributes_indent`.
 - `Length::new_number`.
 - Text escaping before saving to file.
-- **Breaking change.** Enforced mutability. Many `Document`'s and `Node`'s methods require `&mut self` now.
+- **Breaking change.** Enforced mutability. Many `Document`'s
+  and `Node`'s methods require `&mut self` now.
   This will prevent many runtime errors caused by borrowing `Rc` as mutable more than once.
 - `Debug` for `Attributes`.
 
 ### Changed
 - `writer` module is private now.
-- **Breaking change.** `Node::set_attribute` accepts only `Attribute` or tuple with attribute name and value now.
+- **Breaking change.** `Node::set_attribute` accepts only `Attribute`
+  or tuple with attribute name and value now.
 - `Attributes` methods: `insert`, `remove` and `retain` will panic on an invalid
   input in debug mode now.
 - `postproc::resolve_stop_attributes` no longer converts `offset` attribute
@@ -271,7 +275,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/RazrFalcon/libsvgdom/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/RazrFalcon/libsvgdom/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/RazrFalcon/libsvgdom/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/RazrFalcon/libsvgdom/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/RazrFalcon/libsvgdom/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/RazrFalcon/libsvgdom/compare/v0.4.0...v0.5.0
