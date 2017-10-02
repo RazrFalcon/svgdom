@@ -15,17 +15,17 @@ use {
 use writer;
 use {
     Attributes,
-    ElementId,
-    NameRef,
-    TagName,
-    TagNameRef,
-    WriteBuffer,
-    WriteOptions,
-    ToStringWithOptions,
     Children,
     Descendants,
+    ElementId,
+    NameRef,
     Node,
     NodeType,
+    TagName,
+    TagNameRef,
+    ToStringWithOptions,
+    WriteBuffer,
+    WriteOptions,
 };
 use super::node_data::{
     Link,

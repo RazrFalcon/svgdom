@@ -12,6 +12,7 @@ use {
     Attributes,
     TagName,
     NodeType,
+    Node,
 };
 
 pub type Link = Rc<RefCell<NodeData>>;
@@ -59,6 +60,26 @@ impl NodeData {
         } else if let Some(parent) = parent_weak.as_ref() {
             if let Some(parent) = parent.upgrade() {
                 parent.borrow_mut().first_child = next_strong;
+            }
+        }
+    }
+}
+
+impl Drop for NodeData {
+    /// We have to remove nodes manually, to prevent reference circular references,
+    /// which lead to memory leaks.
+    fn drop(&mut self) {
+        // Remove all children of the root node, aka Document.
+        if self.node_type == NodeType::Root {
+            // Root `Node` itself was already removed, so we have to
+            // iterate over children.
+            if let Some(child) = self.first_child.as_ref() {
+                let mut root = Node(child.clone());
+                while let Some(mut sibling) = root.next_sibling() {
+                    sibling.remove();
+                }
+
+                root.remove();
             }
         }
     }

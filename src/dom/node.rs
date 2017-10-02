@@ -3,7 +3,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 use std::cell::{
-    RefCell,
     Ref,
     RefMut
 };
@@ -31,7 +30,10 @@ use {
     TagNameRef,
     Traverse,
 };
-use super::node_data::NodeData;
+use super::node_data::{
+    Link,
+    NodeData,
+};
 
 macro_rules! try_opt {
     ($expr: expr) => {
@@ -87,7 +89,7 @@ impl<'a> From<(AttributeId, Node)> for Attribute {
 /// [`Attributes`]: struct.Attributes.html
 /// [`NodeType`]: enum.NodeType.html
 /// [`TagName`]: type.TagName.html
-pub struct Node(pub Rc<RefCell<NodeData>>);
+pub struct Node(pub Link);
 
 impl Node {
     /// Returns a `Document` that owns this node.
@@ -273,21 +275,24 @@ impl Node {
     /// assert_eq!(use_elem.has_attribute(AttributeId::XlinkHref), false);
     /// ```
     pub fn remove(&mut self) {
-        Node::_remove(self);
+        let mut ids = Vec::with_capacity(16);
+        Node::_remove(self, &mut ids);
         self.detach();
     }
 
-    fn _remove(node: &mut Node) {
-        // remove link attributes, which will trigger nodes unlink
-        let mut ids: Vec<AttributeId>
-            = node.attributes().iter_svg()
-                  .filter(|&(_, a)| a.is_link() || a.is_func_link())
-                  .map(|(id, _)| id)
-                  .collect();
+    fn _remove(node: &mut Node, ids: &mut Vec<AttributeId>) {
+        ids.clear();
 
-        for id in &ids {
-            node.remove_attribute(*id);
+        for (aid, attr) in node.attributes().iter_svg() {
+            match attr.value {
+                AttributeValue::Link(_) | AttributeValue::FuncLink(_) => {
+                    ids.push(aid)
+                }
+                _ => {}
+            }
         }
+
+        node.remove_attributes(&ids);
 
         // remove all attributes that linked to this node
         for mut linked in node.linked_nodes().collect::<Vec<Node>>() {
@@ -305,14 +310,12 @@ impl Node {
                 }
             }
 
-            for id in &ids {
-                linked.remove_attribute(*id);
-            }
+            linked.remove_attributes(&ids);
         }
 
         // repeat for children
-        for mut child in node.children().svg() {
-            Node::_remove(&mut child);
+        for mut child in node.children() {
+            Node::_remove(&mut child, ids);
         }
     }
 

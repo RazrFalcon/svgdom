@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.8.1] - 2017-10-02
+### Fixed
+- Memory leak.
+
 ## [0.8.0] - 2017-09-30
 ### Changed
 - Rename `FromStream` into `FromFrame`.
