@@ -24,7 +24,7 @@ pub fn resolve_inherit(doc: &Document) {
     let mut vec_inherit = Vec::new();
     let mut vec_curr_color = Vec::new();
 
-    for mut node in doc.descendants().svg() {
+    for (_, mut node) in doc.descendants().svg() {
         vec_inherit.clear();
         vec_curr_color.clear();
 

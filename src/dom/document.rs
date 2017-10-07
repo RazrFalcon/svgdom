@@ -139,8 +139,8 @@ impl Document {
     ///
     /// [`Node`]: struct.Node.html
     pub fn svg_element(&self) -> Option<Node> {
-        for n in self.root.children().svg() {
-            if n.is_tag_name(ElementId::Svg) {
+        for (id, n) in self.root.children().svg() {
+            if id == ElementId::Svg {
                 return Some(n.clone());
             }
         }

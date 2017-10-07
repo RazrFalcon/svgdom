@@ -3,25 +3,32 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 use std::cell::Ref;
-use std::iter::Filter;
+use std::iter::FilterMap;
 
 use {
+    ElementId,
+    Name,
     Node,
     NodeType,
 };
 use super::node_data::WeakLink;
 
-// TODO: maybe can be implemented as a trait
-// TODO: return ElementId with Node
 macro_rules! filter_svg {
     ($name:ty) => (
         impl $name {
             /// Returns an iterator over descendant SVG elements.
-            ///
-            /// Shorthand for: `filter(|n| n.is_svg_element())`
-            pub fn svg(self) -> Filter<$name, fn(&Node) -> bool> {
-                fn is_svg(n: &Node) -> bool { n.is_svg_element() }
-                self.filter(is_svg)
+            pub fn svg(self) -> FilterMap<$name, fn(Node) -> Option<(ElementId, Node)>> {
+                fn is_svg(node: Node) -> Option<(ElementId, Node)> {
+                    if let Some(tag) = node.tag_name() {
+                        if let Name::Id(id) = *tag {
+                            return Some((id, node.clone()));
+                        }
+                    }
+
+                    None
+                }
+
+                self.filter_map(is_svg)
             }
         }
     )

@@ -137,7 +137,7 @@ pub fn resolve_stop_attributes(doc: &Document) -> Result<(), Error> {
 
 // TODO: explain algorithm
 fn gen_order(doc: &Document, eid: ElementId) -> Vec<Node> {
-    let nodes = doc.descendants().svg().filter(|n| n.is_tag_name(eid))
+    let nodes = doc.descendants().filter(|n| n.is_tag_name(eid))
                    .collect::<Vec<Node>>();
 
     let mut order = Vec::with_capacity(nodes.len());

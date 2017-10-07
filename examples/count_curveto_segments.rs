@@ -4,7 +4,7 @@ use std::env;
 use std::io::Read;
 use std::fs::File;
 
-use svgdom::{Document, AttributeId, AttributeValue};
+use svgdom::{Document, ElementId, AttributeId, AttributeValue};
 use svgdom::types::path::Command;
 
 fn main() {
@@ -25,10 +25,12 @@ fn main() {
 
     let mut count = 0;
 
-    for node in doc.descendants().svg() {
-        let attrs = node.attributes();
-        if let Some(&AttributeValue::Path(ref path)) = attrs.get_value(AttributeId::D) {
-            count += path.d.iter().filter(|seg| seg.cmd() == Command::CurveTo).count();
+    for (id, node) in doc.descendants().svg() {
+        if id == ElementId::Path {
+            let attrs = node.attributes();
+            if let Some(&AttributeValue::Path(ref path)) = attrs.get_value(AttributeId::D) {
+                count += path.d.iter().filter(|seg| seg.cmd() == Command::CurveTo).count();
+            }
         }
     }
 

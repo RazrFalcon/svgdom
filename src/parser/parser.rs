@@ -141,8 +141,8 @@ pub fn parse_svg(text: &str, opt: &ParseOptions) -> Result<Document, Error> {
 
     // first element must be an 'svg'
     match doc.children().svg().nth(0) {
-        Some(n) => {
-            if !n.is_tag_name(ElementId::Svg) {
+        Some((id, _)) => {
+            if id != ElementId::Svg {
                 return Err(Error::NoSvgElement);
             }
         }
@@ -284,8 +284,8 @@ fn process_token<'a>(
     // which is faster
     if parent.node_type() == NodeType::Root {
         // check that the first element of the doc is 'svg'
-        if let Some(n) = doc.children().svg().nth(0) {
-            if !n.is_tag_name(ElementId::Svg) {
+        if let Some((id, _)) = doc.children().svg().nth(0) {
+            if id != ElementId::Svg {
                 return Err(Error::NoSvgElement);
             }
         }
@@ -699,16 +699,18 @@ fn resolve_css<'a>(
             for selector in &selectors {
                 match *selector {
                     CssSelector::Universal => {
-                        for mut node in doc.descendants().svg() {
+                        for (_, mut node) in doc.descendants().svg() {
                             apply_css_attributes(&values, &mut node, &mut post_data.links,
                                                  &post_data.entitis, opt)?;
                         }
                     }
                     CssSelector::Type(name) => {
                         if let Some(eid) = ElementId::from_name(name) {
-                            for mut node in doc.descendants().svg().filter(|n| n.is_tag_name(eid)) {
-                                apply_css_attributes(&values, &mut node, &mut post_data.links,
-                                                     &post_data.entitis, opt)?;
+                            for (id, mut node) in doc.descendants().svg() {
+                                if id == eid {
+                                    apply_css_attributes(&values, &mut node, &mut post_data.links,
+                                                         &post_data.entitis, opt)?;
+                                }
                             }
                         } else {
                             warnln!("CSS styles for a non-SVG element ('{}') are ignored.",
@@ -716,7 +718,7 @@ fn resolve_css<'a>(
                         }
                     }
                     CssSelector::Id(name) => {
-                        if let Some(mut node) = doc.descendants().svg().find(|n| *n.id() == name) {
+                        if let Some(mut node) = doc.descendants().find(|n| *n.id() == name) {
                             apply_css_attributes(&values, &mut node, &mut post_data.links,
                                                  &post_data.entitis, opt)?;
                         }

@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Changed
+- **Breaking change.** `Descendants::svg`, `Children::svg` and `Parents::svg`
+  returns `(ElementId, Node)` instead of `Node` now.
 
 ## [0.8.1] - 2017-10-02
 ### Fixed

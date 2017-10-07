@@ -47,7 +47,7 @@ mod test_rect {
             #[test]
             fn $name() {
                 let doc = Document::from_str($in_text).unwrap();
-                for mut node in doc.descendants().svg().filter(|n| n.is_tag_name(ElementId::Rect)) {
+                for mut node in doc.descendants().filter(|n| n.is_tag_name(ElementId::Rect)) {
                     fix_rect_attributes(&mut node);
                 }
                 assert_eq_text!(doc.to_string_with_opt(&write_opt_for_tests!()), $out_text);
@@ -140,9 +140,10 @@ mod test_poly {
             #[test]
             fn $name() {
                 let doc = Document::from_str($in_text).unwrap();
-                for mut node in doc.descendants().svg()
-                    .filter(|n| n.is_tag_name(ElementId::Polygon) || n.is_tag_name(ElementId::Polyline)) {
-                    fix_poly_attributes(&mut node);
+                for (id, mut node) in doc.descendants().svg() {
+                    if id == ElementId::Polygon || id == ElementId::Polyline {
+                        fix_poly_attributes(&mut node);
+                    }
                 }
                 assert_eq_text!(doc.to_string_with_opt(&write_opt_for_tests!()), $out_text);
             }
@@ -225,7 +226,7 @@ mod test_stop {
             fn $name() {
                 let doc = Document::from_str($in_text).unwrap();
                 resolve_stop_attributes(&doc).unwrap();
-                for node in doc.descendants().svg().filter(|n| n.is_gradient()) {
+                for node in doc.descendants().filter(|n| n.is_gradient()) {
                     fix_stop_attributes(&node);
                 }
                 assert_eq_text!(doc.to_string_with_opt(&write_opt_for_tests!()), $out_text);
