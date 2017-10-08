@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - **Breaking change.** `Descendants::svg`, `Children::svg` and `Parents::svg`
   returns `(ElementId, Node)` instead of `Node` now.
 
+### Removed
+- `postproc` module.
+
 ## [0.8.1] - 2017-10-02
 ### Fixed
 - Memory leak.
