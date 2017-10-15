@@ -418,9 +418,7 @@ fn find_xmlspace(node: &Node) -> XmlSpace {
 fn write_escaped_text(text: &str, out: &mut Vec<u8>) {
     for c in text.as_bytes() {
         match *c {
-            b'"'  => out.extend_from_slice(b"&quot;"),
             b'&'  => out.extend_from_slice(b"&amp;"),
-            b'\'' => out.extend_from_slice(b"&apos;"),
             b'<'  => out.extend_from_slice(b"&lt;"),
             b'>'  => out.extend_from_slice(b"&gt;"),
             _     => out.push(*c),
