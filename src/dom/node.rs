@@ -963,6 +963,31 @@ impl Node {
         Ok(())
     }
 
+    /// Inserts a new attribute into attributes list if it doesn't contain one.
+    ///
+    /// `value` will be cloned if needed.
+    ///
+    /// Shorthand for:
+    ///
+    /// ```ignore
+    /// if !node.has_attribute(...) {
+    ///     node.set_attribute(...);
+    /// }
+    /// ```
+    ///
+    /// # Panics
+    ///
+    /// Will panic on any error produced by the [`set_attribute_checked`] method.
+    ///
+    /// [`set_attribute_checked`]: #method.set_attribute_checked
+    pub fn set_attribute_if_none<'a, N, T>(&mut self, name: N, value: &T)
+        where AttributeNameRef<'a>: From<N>, N: Copy, AttributeValue: From<T>, T: Clone
+    {
+        if !self.has_attribute(name) {
+            self.set_attribute((name, value.clone()));
+        }
+    }
+
     /// Removes an attribute from the node.
     ///
     /// It will also unlink it, if it was an referenced attribute.

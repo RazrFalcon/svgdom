@@ -299,16 +299,16 @@ test_resave!(text_6,
 // Escape.
 test_resave!(text_7,
 "<svg>
-    <text>&quot;&amp;&apos;&lt;&gt;</text>
-    <nontext>&quot;&amp;&apos;&lt;&gt;</nontext>
+    <text>&amp;&lt;&gt;</text>
+    <nontext>&amp;&lt;&gt;</nontext>
 </svg>
 ",
 "<svg>
     <text>
-        &quot;&amp;&apos;&lt;&gt;
+        &amp;&lt;&gt;
     </text>
     <nontext>
-        &quot;&amp;&apos;&lt;&gt;
+        &amp;&lt;&gt;
     </nontext>
 </svg>
 ");
