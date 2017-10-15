@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 - **Breaking change.** `Descendants::svg`, `Children::svg` and `Parents::svg`
   returns `(ElementId, Node)` instead of `Node` now.
+- New text saving algorithm. Now with a proper indent.
 
 ### Removed
 - `postproc` module.

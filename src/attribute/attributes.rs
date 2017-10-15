@@ -302,6 +302,10 @@ impl Attributes {
 
 impl fmt::Debug for Attributes {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        if self.is_empty() {
+            return write!(f, "Attributes()");
+        }
+
         let mut out = Vec::with_capacity(256);
 
         out.extend_from_slice(b"Attributes(");

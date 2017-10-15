@@ -296,7 +296,7 @@ fn process_token<'a>(
 
 fn parse_svg_element<'a>(
     doc: &mut Document,
-    mut tokens: &mut SvgTokens<'a>,
+    tokens: &mut SvgTokens<'a>,
     id: ElementId,
     styles: &mut Vec<TextFrame<'a>>,
 ) -> Result<Option<Node>, Error> {
@@ -891,7 +891,7 @@ fn resolve_fallback(d: &mut LinkData) -> Result<(), Error> {
     Ok(())
 }
 
-fn skip_current_element(mut tokens: &mut SvgTokens) -> Result<(), Error> {
+fn skip_current_element(tokens: &mut SvgTokens) -> Result<(), Error> {
     let mut local_depth = 0;
 
     while let Some(token) = tokens.next() {
