@@ -10,9 +10,9 @@ use svgdom::{
     AttributeValue,
     Document,
     ElementId as EId,
-    Error,
     WriteOptions,
     ToStringWithOptions,
+    ChainedErrorExt,
 };
 
 #[test]
@@ -49,8 +49,8 @@ fn linked_attributes_2() {
     n1.set_attribute((AId::XlinkHref, n2.clone()));
 
     // recursion error
-    assert_eq!(n2.set_attribute_checked((AId::XlinkHref, n1.clone())).unwrap_err(),
-               Error::ElementCrosslink);
+    assert_eq!(n2.set_attribute_checked((AId::XlinkHref, n1.clone())).unwrap_err().full_chain(),
+               "Error: element crosslink");
 }
 
 #[test]

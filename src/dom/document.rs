@@ -9,9 +9,9 @@ use std::rc::Rc;
 use parser::parse_svg;
 use {
     ParseOptions,
-    Error,
 };
 
+use error::Result;
 use writer;
 use {
     Attributes,
@@ -51,7 +51,7 @@ impl Document {
     /// Constructs a new `Document` from the text using a default [`ParseOptions`].
     ///
     /// [`ParseOptions`]: struct.ParseOptions.html
-    pub fn from_str(text: &str) -> Result<Document, Error> {
+    pub fn from_str(text: &str) -> Result<Document> {
         // TODO: to FromStr trait
         Document::from_str_with_opt(text, &ParseOptions::default())
     }
@@ -59,7 +59,7 @@ impl Document {
     /// Constructs a new `Document` from the text using a supplied [`ParseOptions`].
     ///
     /// [`ParseOptions`]: struct.ParseOptions.html
-    pub fn from_str_with_opt(text: &str, opt: &ParseOptions) -> Result<Document, Error> {
+    pub fn from_str_with_opt(text: &str, opt: &ParseOptions) -> Result<Document> {
         parse_svg(text, opt)
     }
 

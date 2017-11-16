@@ -105,7 +105,7 @@ fn prepare_text_children(parent: &Node, xmlspace: XmlSpace) {
             let child_xmlspace = get_xmlspace(&mut child.parent().unwrap(), xmlspace);
             let new_text = {
                 let text = child.text();
-                TextUnescape::unescape(text.as_ref(), child_xmlspace).unwrap()
+                TextUnescape::unescape(text.as_ref(), child_xmlspace)
             };
             child.set_text(&new_text);
         }

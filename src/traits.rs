@@ -4,17 +4,19 @@
 
 use std::str::FromStr;
 
-use svgparser::TextFrame;
+use svgparser::{
+    StrSpan,
+};
 
 use WriteOptions;
 
 /// A trait for parsing data from a string.
-pub trait FromFrame: FromStr {
+pub trait ParseFromSpan: FromStr {
     /// Error type.
     type Err;
 
-    /// Parses data from a `TextFrame`.
-    fn from_frame(s: TextFrame) -> Result<Self, <Self as FromFrame>::Err>;
+    /// Parses data from a `StrSpan`.
+    fn from_span(s: StrSpan) -> Result<Self, <Self as ParseFromSpan>::Err>;
 }
 
 macro_rules! impl_from_str {
@@ -23,7 +25,7 @@ macro_rules! impl_from_str {
             type Err = ParseError;
 
             fn from_str(s: &str) -> Result<$t, ParseError> {
-                FromFrame::from_frame(TextFrame::from_str(s))
+                ParseFromSpan::from_span(StrSpan::from_str(s))
             }
         }
     )

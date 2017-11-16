@@ -5,14 +5,14 @@
 use std::fmt;
 use std::str::FromStr;
 
-use FromFrame;
 use svgparser::{
     Color as ParserColor,
     Error as ParseError,
-    TextFrame,
+    StrSpan,
 };
 
 use {
+    ParseFromSpan,
     WriteBuffer,
     WriteOptions,
     ToStringWithOptions,
@@ -41,11 +41,11 @@ impl Color {
 
 impl_from_str!(Color);
 
-impl FromFrame for Color {
+impl ParseFromSpan for Color {
     type Err = ParseError;
 
-    fn from_frame(s: TextFrame) -> Result<Color, ParseError> {
-        let c = ParserColor::from_frame(s)?;
+    fn from_span(span: StrSpan) -> Result<Color, ParseError> {
+        let c = ParserColor::from_span(span)?;
         Ok(Color::new(c.red, c.green, c.blue))
     }
 }

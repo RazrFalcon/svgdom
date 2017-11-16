@@ -9,6 +9,7 @@ use std::cell::{
 use std::rc::Rc;
 use std::fmt;
 
+use error::Result;
 use {
     Attribute,
     AttributeId,
@@ -19,7 +20,7 @@ use {
     Descendants,
     Document,
     ElementId,
-    Error,
+    ErrorKind,
     LinkedNodes,
     Name,
     NameRef,
@@ -891,7 +892,7 @@ impl Node {
     ///
     /// [`ElementMustHaveAnId`]: enum.Error.html
     /// [`ElementCrosslink`]: enum.Error.html
-    pub fn set_attribute_checked<T>(&mut self, v: T) -> Result<(), Error>
+    pub fn set_attribute_checked<T>(&mut self, v: T) -> Result<()>
         where T: Into<Attribute>
     {
         // TODO: to error in _checked mode
@@ -926,19 +927,19 @@ impl Node {
         attrs.insert(attr);
     }
 
-    fn set_link_attribute(&mut self, id: AttributeId, node: Node) -> Result<(), Error> {
+    fn set_link_attribute(&mut self, id: AttributeId, node: Node) -> Result<()> {
         if node.id().is_empty() {
-            return Err(Error::ElementMustHaveAnId);
+            return Err(ErrorKind::ElementMustHaveAnId.into());
         }
 
         // check for recursion
         if *self.id() == *node.id() {
-            return Err(Error::ElementCrosslink);
+            return Err(ErrorKind::ElementCrosslink.into());
         }
 
         // check for recursion 2
         if self.linked_nodes().any(|n| n == node) {
-            return Err(Error::ElementCrosslink);
+            return Err(ErrorKind::ElementCrosslink.into());
         }
 
         // we must remove existing attribute to prevent dangling links

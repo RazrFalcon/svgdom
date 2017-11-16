@@ -11,18 +11,15 @@ use svgdom::{
     AttributeValue,
     Document,
     ElementId as EId,
-    Error,
-    ErrorPos,
     Name,
     NodeType,
     ParseOptions,
     ValueId,
     WriteOptions,
     ToStringWithOptions,
+    ChainedErrorExt,
 };
 use svgdom::types::Color;
-
-use simplecss::Error as CssParseError;
 
 fn write_options() -> WriteOptions {
     let mut opt = WriteOptions::default();
@@ -42,22 +39,26 @@ macro_rules! test_resave {
 
 #[test]
 fn parse_empty_1() {
-    assert_eq!(Document::from_str("").err().unwrap(), Error::EmptyDocument);
+    assert_eq!(Document::from_str("").err().unwrap().full_chain(),
+        "Error: document didn\'t have any nodes");
 }
 
 #[test]
 fn parse_empty_2() {
-    assert_eq!(Document::from_str("\n \t").err().unwrap(), Error::EmptyDocument);
+    assert_eq!(Document::from_str("\n \t").err().unwrap().full_chain(),
+        "Error: document didn\'t have any nodes");
 }
 
 #[test]
 fn parse_empty_3() {
-    assert_eq!(Document::from_str("<rect/>").err().unwrap(), Error::NoSvgElement);
+    assert_eq!(Document::from_str("<rect/>").err().unwrap().full_chain(),
+        "Error: document didn\'t have an SVG element");
 }
 
 #[test]
 fn parse_empty_4() {
-    assert_eq!(Document::from_str("<?xml version='1.0'?>").err().unwrap(), Error::NoSvgElement);
+    assert_eq!(Document::from_str("<?xml version='1.0'?>").err().unwrap().full_chain(),
+        "Error: document didn\'t have an SVG element");
 }
 
 #[test]
@@ -287,10 +288,8 @@ fn parse_css_11() {
     </style>
 </svg>");
 
-    // super ugly error
-    assert_eq!(res.err().unwrap(), Error::CssParseError(
-                                     CssParseError::UnsupportedToken(
-                                       simplecss::ErrorPos::new(3,9))));
+    assert_eq!(res.err().unwrap().full_chain(),
+        "Error: Unsupported token at 3:9");
 }
 
 test_resave!(parse_css_12,
@@ -316,7 +315,8 @@ fn parse_css_13() {
     </style>
 </svg>");
 
-    assert_eq!(res.err().unwrap(), Error::UnsupportedCSS(ErrorPos::new(3,9)));
+    assert_eq!(res.err().unwrap().full_chain(),
+        "Error: unsupported CSS at 3:9");
 }
 
 test_resave!(parse_css_14,
@@ -348,7 +348,8 @@ fn parse_css_15() {
     </style>
 </svg>");
 
-    assert_eq!(res.err().unwrap(), Error::UnsupportedCSS(ErrorPos::new(3,10)));
+    assert_eq!(res.err().unwrap().full_chain(),
+        "Error: unsupported CSS at 3:10");
 }
 
 #[test]
@@ -361,7 +362,8 @@ fn parse_css_16() {
     </style>
 </svg>");
 
-    assert_eq!(res.err().unwrap(), Error::UnsupportedCSS(ErrorPos::new(3,10)));
+    assert_eq!(res.err().unwrap().full_chain(),
+        "Error: unsupported CSS at 3:10");
 }
 
 // empty style
@@ -595,7 +597,8 @@ fn parse_iri_with_fallback_3() {
     <rect fill='url(#rg1) none'/>
 </svg>");
 
-    assert_eq!(doc.err().unwrap(), Error::UnsupportedPaintFallback("rg1".to_string()));
+    assert_eq!(doc.err().unwrap().full_chain(),
+               "Error: valid FuncIRI(#rg1) with fallback value is not supported");
 }
 
 #[test]
@@ -608,7 +611,8 @@ fn parse_iri_with_fallback_4() {
     <radialGradient id='rg1'/>
 </svg>");
 
-    assert_eq!(doc.err().unwrap(), Error::UnsupportedPaintFallback("rg1".to_string()));
+    assert_eq!(doc.err().unwrap().full_chain(),
+               "Error: valid FuncIRI(#rg1) with fallback value is not supported");
 }
 
 test_resave!(parse_filter_iri_1,
@@ -675,7 +679,8 @@ fn parse_entity_5() {
     <!ENTITY Viewport1 \"<rect/>\">
 ]>
 <svg fill='&st1;'/>");
-    assert_eq!(doc.err().unwrap(), Error::UnsupportedEntity(ErrorPos::new(2, 25)));
+    assert_eq!(doc.err().unwrap().full_chain(),
+               "Error: unsupported ENTITY data at 2:25");
 }
 
 #[test]
@@ -685,7 +690,8 @@ fn parse_entity_6() {
     <!ENTITY Viewport1 \" \t\n<rect/>\">
 ]>
 <svg fill='&st1;'/>");
-    assert_eq!(doc.err().unwrap(), Error::UnsupportedEntity(ErrorPos::new(3, 28)));
+    assert_eq!(doc.err().unwrap().full_chain(),
+               "Error: unsupported ENTITY data at 2:25");
 }
 
 test_resave!(skip_unknown_refs_1,

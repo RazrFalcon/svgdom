@@ -7,14 +7,15 @@ use std::fmt;
 use std::ops::Mul;
 use std::str::FromStr;
 
-use FromFrame;
 use svgparser::{
+    // TODO: why we use this error?
     Error as ParseError,
-    TextFrame,
-    Tokenize,
+    StrSpan,
+    FromSpan,
 };
 
 use {
+    ParseFromSpan,
     WriteBuffer,
     WriteOptions,
     ToStringWithOptions,
@@ -232,18 +233,18 @@ impl Default for Transform {
 
 impl_from_str!(Transform);
 
-impl FromFrame for Transform {
+impl ParseFromSpan for Transform {
     type Err = ParseError;
 
-    fn from_frame(s: TextFrame) -> Result<Transform, ParseError> {
+    fn from_span(span: StrSpan) -> Result<Transform, ParseError> {
         use svgparser::transform::Tokenizer;
         use svgparser::transform::Token;
 
-        let mut tokens = Tokenizer::from_frame(s).tokens();
+        let tokens = Tokenizer::from_span(span);
         let mut transform = Transform::default();
 
-        for token in &mut tokens {
-            match token {
+        for token in tokens {
+            match token? {
                 Token::Matrix { a, b, c, d, e, f } =>
                     { transform.append(&Transform::new(a, b, c, d, e, f)); }
                 Token::Translate { tx, ty } => { transform.translate(tx, ty); }
@@ -253,8 +254,6 @@ impl FromFrame for Transform {
                 Token::SkewY { angle } => { transform.skew_y(angle); }
             }
         }
-
-        tokens.error()?;
 
         // TODO: do nothing if the transform is default
 

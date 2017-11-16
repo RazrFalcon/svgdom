@@ -315,7 +315,6 @@ fn _write_text_elem(
     if xml_space == XmlSpace::Default && is_empty_text(&root) {
         write_element_start(root, depth, attrs_depth, opt, out);
         write_element_end(root, out);
-
         return;
     }
 
@@ -328,6 +327,7 @@ fn _write_text_elem(
     }
 
     for child in root.children() {
+
         match child.node_type() {
             NodeType::Element => {
                 _write_text_elem(&child, depth, attrs_depth, opt, out);
@@ -344,10 +344,12 @@ fn _write_text_elem(
                     out.pop();
                 }
             }
-            _ => warnln!("'text' element should contain only element and text nodes"),
+            _ => warn!("'text' element should contain only element and text nodes"),
         }
 
-        if xml_space == XmlSpace::Default && !is_last_sibling(&child) {
+        if     xml_space == XmlSpace::Default
+            && !is_last_sibling(&child)
+        {
             out.push(b'\n');
             depth.write_indent(out);
         }

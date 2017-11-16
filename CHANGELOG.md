@@ -5,14 +5,20 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+**Note:** this update contains breaking changes.
+
 ### Added
 - `Node::set_attribute_if_none`.
+- Ability to skip invalid attributes during parsing.
 
 ### Changed
-- **Breaking change.** `Descendants::svg`, `Children::svg` and `Parents::svg`
+- `Descendants::svg`, `Children::svg` and `Parents::svg`
   returns `(ElementId, Node)` instead of `Node` now.
+- Errors implemented via `error-chain` now.
 - New text saving algorithm. Now with a proper indent.
 - Quotes inside text nodes no longer escaped.
+- All warnings will be printed with `warn!` macro from the `log` crate now.
+- Rename `FromFrame` to `ParseFromSpan`.
 
 ### Removed
 - `postproc` module.

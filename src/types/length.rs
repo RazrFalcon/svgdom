@@ -5,14 +5,15 @@
 use std::fmt;
 use std::str::FromStr;
 
-use FromFrame;
 use svgparser::{
     Error as ParseError,
     Stream,
-    TextFrame,
+    StrSpan,
+    StreamExt,
 };
 
 use {
+    ParseFromSpan,
     WriteBuffer,
     WriteOptions,
     ToStringWithOptions,
@@ -64,11 +65,11 @@ impl Length {
 
 impl_from_str!(Length);
 
-impl FromFrame for Length {
+impl ParseFromSpan for Length {
     type Err = ParseError;
 
-    fn from_frame(s: TextFrame) -> Result<Length, ParseError> {
-        let mut ss = Stream::from_frame(s);
+    fn from_span(span: StrSpan) -> Result<Length, ParseError> {
+        let mut ss = Stream::from_span(span);
         let l = ss.parse_length()?;
         Ok(Length::new(l.num, l.unit))
     }

@@ -2,118 +2,110 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use std::fmt;
+use svgparser;
+use simplecss;
 
-use svgparser::{
-    Error as ParseError,
+use {
     ErrorPos,
 };
 
-use simplecss::Error as CssParseError;
-
 // TODO: split to Dom errors and Parser errors
 
-/// List of all errors.
-#[derive(PartialEq)]
-pub enum Error {
-    /// If you want to use referenced element inside link attribute,
-    /// such element must have a non-empty ID.
-    ElementMustHaveAnId,
-    /// Linked nodes can't reference each other or itself.
-    ///
-    /// # Examples
-    ///
-    /// ```text
-    /// <linearGradient id="lg1" xlink:href="#lg2"/>
-    /// <linearGradient id="lg2" xlink:href="#lg1"/>
-    /// ```
-    ///
-    /// or
-    ///
-    /// ```text
-    /// <linearGradient id="lg1" xlink:href="#lg1"/>
-    /// ```
-    ElementCrosslink,
-    /// Error from *libsvgparser*.
-    ParseError(ParseError),
-    /// Error from *simplecss*.
-    CssParseError(CssParseError),
-    /// Parsed document must have an `svg` element.
-    NoSvgElement,
-    /// Parsed document must have at least one node.
-    EmptyDocument,
-    /// *libsvgdom* didn't support most of the CSS2 spec.
-    UnsupportedCSS(ErrorPos),
-    /// Error during parsing of the CSS2.
-    InvalidCSS(ErrorPos),
-    /// ENTITY with XML Element data is not supported.
-    UnsupportedEntity(ErrorPos),
-    /// We don't support a \<paint\> type with a fallback value and a valid FuncIRI.
-    ///
-    /// # Examples
-    ///
-    /// ```text
-    /// <linearGradient id="lg1"/>
-    /// <rect fill="url(#lg1) red"/>
-    /// ```
-    UnsupportedPaintFallback(String), // FuncIRI name
-    /// We don't support `use` elements with a broken filter attribute.
-    BrokenFuncIri(String), // FuncIRI name
-    /// UTF-8 processing error.
-    InvalidEncoding,
-    /// Failed to find an attribute, which must be set, during post-processing.
-    MissingAttribute(String, String), // tag name, attribute name
-}
+error_chain! {
+    types {
+        Error, ErrorKind, ResultExt, Result;
+    }
 
-impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            Error::ElementMustHaveAnId =>
-                write!(f, "Element must have an id"),
-            Error::ElementCrosslink =>
-                write!(f, "Element crosslink"),
-            Error::ParseError(e) =>
-                write!(f, "{}", e),
-            Error::CssParseError(e) =>
-                write!(f, "{:?}", e),
-            Error::NoSvgElement =>
-                write!(f, "Document didn't have an SVG element"),
-            Error::EmptyDocument =>
-                write!(f, "Document didn't have any nodes"),
-            Error::UnsupportedCSS(ref pos) =>
-                write!(f, "Unsupported CSS at {}", pos),
-            Error::InvalidCSS(ref pos) =>
-                write!(f, "Invalid CSS at {}", pos),
-            Error::UnsupportedEntity(ref pos) =>
-                write!(f, "Unsupported ENTITY data at {}", pos),
-            Error::UnsupportedPaintFallback(ref iri) =>
-                write!(f, "Valid FuncIRI(#{}) with fallback value is not supported", iri),
-            Error::BrokenFuncIri(ref iri) =>
-                write!(f, "The 'use' element with a broken filter attribute('#{}') \
-                           is not supported", iri),
-            Error::InvalidEncoding =>
-                write!(f, "The input data is not a valid UTF-8 string"),
-            Error::MissingAttribute(ref tag_name, ref attr_name) =>
-                write!(f, "The attribute '{}' is missing in the '{}' element", attr_name, tag_name),
+    links {
+        Xml(svgparser::Error, svgparser::ErrorKind) #[doc = "svgparser errors"];
+    }
+
+    errors {
+        /// If you want to use referenced element inside link attribute,
+        /// such element must have a non-empty ID.
+        ElementMustHaveAnId {
+            display("element must have an id")
+        }
+
+        /// Linked nodes can't reference each other or itself.
+        ///
+        /// # Examples
+        ///
+        /// ```text
+        /// <linearGradient id="lg1" xlink:href="#lg2"/>
+        /// <linearGradient id="lg2" xlink:href="#lg1"/>
+        /// ```
+        ///
+        /// or
+        ///
+        /// ```text
+        /// <linearGradient id="lg1" xlink:href="#lg1"/>
+        /// ```
+        ElementCrosslink {
+            display("element crosslink")
+        }
+
+        /// Parsed document must have an `svg` element.
+        NoSvgElement {
+            display("document didn't have an SVG element")
+        }
+
+        /// Parsed document must have at least one node.
+        EmptyDocument {
+            display("document didn't have any nodes")
+        }
+
+        /// *libsvgdom* didn't support most of the CSS2 spec.
+        UnsupportedCSS(pos: ErrorPos) {
+            display("unsupported CSS at {}", pos)
+        }
+
+        /// Error during parsing of the CSS2.
+        InvalidCSS(pos: ErrorPos) {
+            display("invalid CSS at {}", pos)
+        }
+
+        /// ENTITY with XML Element data is not supported.
+        UnsupportedEntity(pos: ErrorPos) {
+            display("unsupported ENTITY data at {}", pos)
+        }
+
+        /// We don't support a \<paint\> type with a fallback value and a valid FuncIRI.
+        ///
+        /// # Examples
+        ///
+        /// ```text
+        /// <linearGradient id="lg1"/>
+        /// <rect fill="url(#lg1) red"/>
+        /// ```
+        UnsupportedPaintFallback(iri: String) {
+            display("valid FuncIRI(#{}) with fallback value is not supported", iri)
+        }
+
+        /// We don't support `use` elements with a broken filter attribute.
+        BrokenFuncIri(iri: String) {
+            display("The 'use' element with a broken filter attribute('#{}') is not supported", iri)
+        }
+
+        /// UTF-8 processing error.
+        InvalidEncoding {
+            display("the input data is not a valid UTF-8 string")
+        }
+
+        /// Failed to find an attribute, which must be set, during post-processing.
+        MissingAttribute(name: String, value: String) {
+            display("the attribute '{}' is missing in the '{}' element", name, value)
+        }
+
+        /// simplecss errors.
+        CssError(e: simplecss::Error) {
+            display("{:?}", e)
         }
     }
 }
 
-// TODO: is needed?
-impl fmt::Debug for Error {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", &self)
-    }
-}
-
-impl From<ParseError> for Error {
-    fn from(value: ParseError) -> Error {
-        Error::ParseError(value)
-    }
-}
-
-impl From<CssParseError> for Error {
-    fn from(value: CssParseError) -> Error {
-        Error::CssParseError(value)
+impl From<simplecss::Error> for Error {
+    fn from(value: simplecss::Error) -> Error {
+        ErrorKind::CssError(value).into()
     }
 }

@@ -30,6 +30,12 @@ pub struct ParseOptions {
     /// It's enabled by default, but if you disable it - all unresolved classes will be kept
     /// in the `class` attribute.
     pub skip_unresolved_classes: bool,
+
+    /// Skip attributes with invalid values.
+    ///
+    /// By default, attribute with an invalid value will lead to parsing error.
+    /// This flag allows converting this error into a warning.
+    pub skip_invalid_attributes: bool,
 }
 
 impl Default for ParseOptions {
@@ -41,6 +47,7 @@ impl Default for ParseOptions {
             parse_unknown_attributes: true,
             parse_px_unit: true,
             skip_unresolved_classes: true,
+            skip_invalid_attributes: false,
         }
     }
 }

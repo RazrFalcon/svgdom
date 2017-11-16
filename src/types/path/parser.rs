@@ -7,11 +7,13 @@ use std::str::FromStr;
 use svgparser;
 use svgparser::{
     Error as ParseError,
-    TextFrame,
-    Tokenize,
+    StrSpan,
+    FromSpan,
 };
 
-use FromFrame;
+use {
+    ParseFromSpan
+};
 
 use super::{
     Path,
@@ -21,16 +23,16 @@ use super::{
 
 impl_from_str!(Path);
 
-impl FromFrame for Path {
+impl ParseFromSpan for Path {
     type Err = ParseError;
 
-    fn from_frame(s: TextFrame) -> Result<Path, ParseError> {
+    fn from_span(span: StrSpan) -> Result<Path, ParseError> {
         use svgparser::path::Token;
 
-        let mut tokens = svgparser::path::Tokenizer::from_frame(s).tokens();
+        let tokens = svgparser::path::Tokenizer::from_span(span);
         let mut p = Path::new();
 
-        for seg in &mut tokens {
+        for seg in tokens {
             let seg = match seg {
                 Token::MoveTo { abs, x, y } => {
                     Segment {
@@ -101,8 +103,6 @@ impl FromFrame for Path {
 
             p.d.push(seg);
         }
-
-        tokens.error()?;
 
         Ok(p)
     }

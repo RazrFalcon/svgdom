@@ -463,6 +463,19 @@ test_resave!(text_tspan_7,
 </svg>
 ");
 
+test_resave!(text_tspan_8,
+"<svg>
+    <text>
+        <tspan>Te</tspan><tspan>x</tspan>t
+    </text>
+<svg>",
+"<svg>
+    <text>
+        <tspan>Te</tspan><tspan>x</tspan>t
+    </text>
+</svg>
+");
+
 // Test xml:space.
 test_resave!(text_space_preserve_1,
 "<svg>
@@ -506,7 +519,6 @@ test_resave!(text_space_preserve_3,
 </svg>
 ");
 
-// Do not remove spaces around tspan with 'preserve'.
 test_resave!(text_space_preserve_4,
 "<svg>
     <g>
@@ -517,11 +529,25 @@ test_resave!(text_space_preserve_4,
 "<svg>
     <g>
         <text>
-            Text
-            <tspan xml:space='preserve'> Text </tspan>
+            Text<tspan xml:space='preserve'> Text </tspan>
              Text
         </text>
     </g>
+</svg>
+");
+
+test_resave!(text_space_preserve_5,
+"<svg>
+    <text>
+        Text<tspan xml:space='preserve'> Text </tspan>Text
+    </text>
+</svg>
+",
+"<svg>
+    <text>
+        Text<tspan xml:space='preserve'> Text </tspan>
+        Text
+    </text>
 </svg>
 ");
 

@@ -45,6 +45,7 @@ At last, the `id` attribute is stored as a separate value and not as part of the
 
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
+#![recursion_limit="128"] // For error_chain.
 
 #![cfg_attr(feature="clippy", feature(plugin))]
 #![cfg_attr(feature="clippy", plugin(clippy))]
@@ -53,31 +54,12 @@ At last, the `id` attribute is stored as a separate value and not as part of the
 #![cfg_attr(feature="clippy", allow(new_without_default))]
 #![cfg_attr(feature="clippy", allow(new_without_default_derive))]
 
-#[macro_use]
+#[macro_use] extern crate log;
+#[macro_use] extern crate error_chain;
 extern crate svgparser;
 extern crate simplecss;
 extern crate float_cmp;
 
-pub use attribute::*;
-pub use dom::*;
-pub use error::Error;
-pub use name::*;
-pub use traits::*;
-pub use writer::{
-    WriteOptions,
-    WriteOptionsPaths,
-    Indent
-};
-
-pub use parser::ParseOptions;
-
-pub use svgparser::AttributeId;
-pub use svgparser::ElementId;
-pub use svgparser::ErrorPos;
-pub use svgparser::ValueId;
-
-#[macro_use]
-mod traits;
 
 // TODO: #[cfg(test)]
 #[macro_export]
@@ -95,11 +77,37 @@ macro_rules! assert_eq_text {
     })
 }
 
+#[macro_use]
+mod traits;
 mod attribute;
 mod dom;
 mod error;
 mod name;
 mod writer;
 mod parser;
-
 pub mod types;
+
+
+pub use attribute::*;
+pub use dom::*;
+pub use error::{
+    Error,
+    ErrorKind,
+};
+pub use name::*;
+pub use traits::*;
+pub use writer::{
+    Indent,
+    WriteOptions,
+    WriteOptionsPaths,
+};
+
+pub use parser::ParseOptions;
+
+pub use svgparser::{
+    AttributeId,
+    ChainedErrorExt,
+    ElementId,
+    ErrorPos,
+    ValueId,
+};
