@@ -15,7 +15,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - `Descendants::svg`, `Children::svg` and `Parents::svg`
   returns `(ElementId, Node)` instead of `Node` now.
 - Errors implemented via `error-chain` now.
-- New text saving algorithm. Now with a proper indent.
 - Quotes inside text nodes no longer escaped.
 - All warnings will be printed with `warn!` macro from the `log` crate now.
 - Rename `FromFrame` to `ParseFromSpan`.

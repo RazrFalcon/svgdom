@@ -2,6 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+use std::fmt::Write;
 use std::str;
 use std::collections::HashMap;
 
@@ -265,10 +266,22 @@ fn process_token<'a>(
                 create_node!(NodeType::Cdata, s.to_str());
             }
         }
-        svg::Token::Declaration(version, _, _) => {
+        svg::Token::Declaration(version, encoding, sa) => {
             // TODO: check that it UTF-8
+
             if opt.parse_declarations {
-                create_node!(NodeType::Declaration, &format!("version=\"{}\"", version));
+                // TODO: crate a proper way to store this values
+                let mut s = format!("version=\"{}\"", version);
+
+                if let Some(encoding) = encoding {
+                    write!(&mut s, " encoding=\"{}\"", encoding).unwrap();
+                }
+
+                if let Some(sa) = sa {
+                    write!(&mut s, " standalone=\"{}\"", sa).unwrap();
+                }
+
+                create_node!(NodeType::Declaration, &s);
             }
         }
         svg::Token::EntityDeclaration(name, value) => {

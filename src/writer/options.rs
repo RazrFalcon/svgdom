@@ -119,6 +119,7 @@ pub struct WriteOptions {
     /// Default: `None`
     pub attributes_indent: Indent,
 
+    // TODO: use the same quote for declaration and PI
     /// Use single quote marks instead of double quote.
     ///
     /// # Examples

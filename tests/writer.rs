@@ -204,9 +204,7 @@ fn text_1() {
     svg.append(&text);
 
     assert_eq_text!(doc.to_string(),
-"<svg>
-    text
-</svg>
+"<svg>text</svg>
 ");
 }
 
@@ -219,9 +217,7 @@ test_resave!(text_2,
 </svg>
 ",
 "<svg>
-    <p>
-        text
-    </p>
+    <p>text</p>
 </svg>
 ");
 
@@ -234,9 +230,7 @@ test_resave!(text_3,
 </svg>
 ",
 "<svg>
-    <text>
-        text
-    </text>
+    <text>text</text>
 </svg>
 ");
 
@@ -251,9 +245,7 @@ test_resave!(text_4,
 </svg>
 ",
 "<svg>
-    <text>
-        Line 1 Line 2 Line 3
-    </text>
+    <text>Line 1 Line 2 Line 3</text>
 </svg>
 ");
 
@@ -289,9 +281,7 @@ test_resave!(text_6,
     <text></text>
     <text></text>
     <text></text>
-    <text>
-        text text t
-    </text>
+    <text>text text t</text>
     <text xml:space='preserve'>     text    text  t     </text>
 </svg>
 ");
@@ -304,12 +294,8 @@ test_resave!(text_7,
 </svg>
 ",
 "<svg>
-    <text>
-        &amp;&lt;&gt;
-    </text>
-    <nontext>
-        &amp;&lt;&gt;
-    </nontext>
+    <text>&amp;&lt;&gt;</text>
+    <nontext>&amp;&lt;&gt;</nontext>
 </svg>
 ");
 
@@ -320,9 +306,7 @@ test_resave!(text_8,
 </svg>
 ",
 "<svg>
-    <text>
-        Text
-    </text>
+    <text>Text</text>
     <rect/>
 </svg>
 ");
@@ -337,13 +321,7 @@ test_resave!(text_tspan_1,
 </svg>
 ",
 "<svg>
-    <text>
-        Some
-        <tspan>
-            complex
-        </tspan>
-        text
-    </text>
+    <text>Some <tspan>complex </tspan>text</text>
 </svg>
 ");
 
@@ -355,9 +333,7 @@ test_resave!(text_tspan_2,
 ",
 "<svg>
     <text>
-        <tspan>
-            Text
-        </tspan>
+        <tspan>Text</tspan>
     </text>
 </svg>
 ");
@@ -373,17 +349,7 @@ test_resave!(text_tspan_3,
 </svg>
 ",
 "<svg>
-    <text>
-        <tspan>
-            Text
-        </tspan>
-        <tspan>
-            Text
-        </tspan>
-        <tspan>
-            Text
-        </tspan>
-    </text>
+    <text><tspan>Text</tspan><tspan>Text</tspan><tspan>Text</tspan></text>
 </svg>
 ");
 
@@ -394,13 +360,7 @@ test_resave!(text_tspan_4,
 </svg>
 ",
 "<svg>
-    <text>
-        Some
-        <tspan>
-             long
-        </tspan>
-        text
-    </text>
+    <text>Some<tspan> long </tspan>text</text>
 </svg>
 ");
 
@@ -411,13 +371,7 @@ test_resave!(text_tspan_5,
 </svg>
 ",
 "<svg>
-    <text>
-        Some
-        <tspan>
-            long
-        </tspan>
-         text
-    </text>
+    <text>Some <tspan>long</tspan> text</text>
 </svg>
 ");
 
@@ -428,17 +382,7 @@ test_resave!(text_tspan_6,
 </svg>
 ",
 "<svg>
-    <text>
-        Some
-        <tspan>
-            not
-            <tspan>
-                very
-            </tspan>
-            long
-        </tspan>
-        text
-    </text>
+    <text>Some <tspan>not <tspan>very </tspan>long </tspan>text</text>
 </svg>
 ");
 
@@ -455,11 +399,7 @@ test_resave!(text_tspan_7,
             <tspan/>
         </tspan>
     </text>
-    <text>
-        <tspan>
-            <tspan></tspan>
-        </tspan>
-    </text>
+    <text><tspan><tspan></tspan></tspan></text>
 </svg>
 ");
 
@@ -468,11 +408,9 @@ test_resave!(text_tspan_8,
     <text>
         <tspan>Te</tspan><tspan>x</tspan>t
     </text>
-<svg>",
+</svg>",
 "<svg>
-    <text>
-        <tspan>Te</tspan><tspan>x</tspan>t
-    </text>
+    <text><tspan>Te</tspan><tspan>x</tspan>t</text>
 </svg>
 ");
 
@@ -513,9 +451,7 @@ test_resave!(text_space_preserve_3,
 </svg>
 ",
 "<svg xml:space='preserve'>
-    <text>     Text     <tspan xml:space='default'>
-         Text
-    </tspan>     Text     </text>
+    <text>     Text     <tspan xml:space='default'> Text </tspan>     Text     </text>
 </svg>
 ");
 
@@ -528,10 +464,7 @@ test_resave!(text_space_preserve_4,
 ",
 "<svg>
     <g>
-        <text>
-            Text<tspan xml:space='preserve'> Text </tspan>
-             Text
-        </text>
+        <text>Text <tspan xml:space='preserve'> Text </tspan> Text</text>
     </g>
 </svg>
 ");
@@ -544,10 +477,7 @@ test_resave!(text_space_preserve_5,
 </svg>
 ",
 "<svg>
-    <text>
-        Text<tspan xml:space='preserve'> Text </tspan>
-        Text
-    </text>
+    <text>Text<tspan xml:space='preserve'> Text </tspan>Text</text>
 </svg>
 ");
 

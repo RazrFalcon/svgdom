@@ -76,7 +76,8 @@ fn parse_declaration_1() {
 
     let child = doc.root().first_child().unwrap();
     assert_eq!(child.node_type(), NodeType::Declaration);
-    assert_eq!(*child.text(), "version='1.0' encoding='UTF-8' standalone='no'");
+    // we store declaration only with double quotes
+    assert_eq!(*child.text(), "version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"");
     assert_eq!(doc.root().children().count(), 2);
 }
 

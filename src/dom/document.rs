@@ -86,6 +86,8 @@ impl Document {
         Document::new_node(Some(Rc::clone(&self.root.0)), NodeType::Element, Some(tn), String::new())
     }
 
+    // TODO: we can't have continuous text nodes.
+    // TODO: doc should have only one declaration
     /// Constructs a new [`Node`] using the supplied [`NodeType`].
     ///
     /// Constructed node do belong to this document, but not added to it tree structure.

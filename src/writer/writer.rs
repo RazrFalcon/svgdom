@@ -4,12 +4,9 @@
 
 use std::cell::Ref;
 
-use svgparser::XmlSpace;
-
 use {
     Attribute,
     AttributeId,
-    AttributeValue,
     Document,
     ElementId,
     Indent,
@@ -112,12 +109,10 @@ fn write_start_edge(
         NodeType::Element => {
             depth.write_indent(out);
 
-            if let Some(child) = node.first_child() {
-                if child.node_type() == NodeType::Text {
-                    write_text_elem(iter, depth, attrs_depth, opt, node, out);
-                    write_newline(opt.indent, out);
-                    return;
-                }
+            if node.children().any(|c| c.node_type() == NodeType::Text) {
+                write_text_elem(iter, depth, attrs_depth, opt, node, out);
+                write_newline(opt.indent, out);
+                return;
             }
 
             write_element_start(node, depth, attrs_depth, opt, out);
@@ -311,110 +306,25 @@ fn _write_text_elem(
     opt: &WriteOptions,
     out: &mut Vec<u8>,
 ) {
-    let xml_space = find_xmlspace(&root);
-    if xml_space == XmlSpace::Default && is_empty_text(&root) {
-        write_element_start(root, depth, attrs_depth, opt, out);
-        write_element_end(root, out);
-        return;
-    }
-
     write_element_start(root, depth, attrs_depth, opt, out);
 
-    if xml_space == XmlSpace::Default {
-        depth.value += 1;
-        out.push(b'\n');
-        depth.write_indent(out);
-    }
-
     for child in root.children() {
-
         match child.node_type() {
             NodeType::Element => {
                 _write_text_elem(&child, depth, attrs_depth, opt, out);
             }
             NodeType::Text => {
-                if child.text().trim().is_empty() {
-                    continue;
-                }
-
-                write_escaped_text(child.text().as_ref(), out);
-
-                let ends_with_space = child.text().ends_with(' ');
-                if xml_space == XmlSpace::Default && ends_with_space {
-                    out.pop();
+                if !child.text().trim().is_empty() {
+                    write_escaped_text(child.text().as_ref(), out);
                 }
             }
-            _ => warn!("'text' element should contain only element and text nodes"),
+            _ => {
+                warn!("'text' element should contain only element and text nodes");
+            }
         }
-
-        if     xml_space == XmlSpace::Default
-            && !is_last_sibling(&child)
-        {
-            out.push(b'\n');
-            depth.write_indent(out);
-        }
-    }
-
-    if xml_space == XmlSpace::Default {
-        depth.value -= 1;
-        out.push(b'\n');
-        depth.write_indent(out);
     }
 
     write_element_end(&root, out);
-}
-
-fn is_empty_text(node: &Node) -> bool {
-    if !node.has_children() {
-        return true;
-    }
-
-    if node.children().count() == 1 {
-        if let Some(c) = node.first_child() {
-            if c.node_type() == NodeType::Text {
-                return c.text().trim().is_empty();
-            }
-        }
-    }
-
-    false
-}
-
-fn is_last_sibling(node: &Node) -> bool {
-    if let Some(next) = node.next_sibling() {
-        if !is_last_text_sibling(&next) {
-            return false;
-        }
-    }
-
-    true
-}
-
-fn is_last_text_sibling(node: &Node) -> bool {
-       node.node_type() == NodeType::Text
-    && node.text().trim().is_empty()
-    && node.next_sibling().is_none()
-}
-
-fn find_xmlspace(node: &Node) -> XmlSpace {
-    let mut xml_space = XmlSpace::Default;
-
-    for parent in node.parents_with_self() {
-        let attrs = parent.attributes();
-        let av = attrs.get_value(AttributeId::XmlSpace);
-
-        if let Some(&AttributeValue::String(ref s)) = av {
-            xml_space = match s.as_ref() {
-                "default" => XmlSpace::Default,
-                "preserve" => XmlSpace::Preserve,
-                _ => xml_space,
-            };
-
-            break;
-        };
-    }
-
-    xml_space
 }
 
 fn write_escaped_text(text: &str, out: &mut Vec<u8>) {
