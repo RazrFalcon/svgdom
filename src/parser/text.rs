@@ -38,13 +38,15 @@ impl StrTrim for String {
 // - 'xml:space' processing
 // - tabs and newlines removing/replacing
 // - spaces trimming
-pub fn prepare_text(dom: &Document) {
+pub fn prepare_text(dom: &mut Document) {
     _prepare_text(&dom.root(), XmlSpace::Default);
 
     // Remove invisible 'xml:space' attributes created during text processing.
     for mut node in dom.descendants().filter(|n| n.node_type() == NodeType::Element) {
         node.attributes_mut().retain(|attr| attr.visible);
     }
+
+    dom.drain(|n| n.node_type() == NodeType::Text && n.text().is_empty());
 }
 
 fn _prepare_text(parent: &Node, parent_xmlspace: XmlSpace) {
@@ -56,6 +58,7 @@ fn _prepare_text(parent: &Node, parent_xmlspace: XmlSpace) {
         if let Some(child) = node.first_child() {
             if child.node_type() == NodeType::Text {
                 prepare_text_children(&node, xmlspace);
+
                 continue;
             }
         }
@@ -153,7 +156,7 @@ fn prepare_text_children(parent: &Node, xmlspace: XmlSpace) {
         } else {
             // Do nothing when xml:space=preserve.
         }
-    } else {
+    } else if nodes.len() > 1 {
         // Process element with many text node children.
 
         // We manage all text nodes as a single text node
@@ -164,10 +167,17 @@ fn prepare_text_children(parent: &Node, xmlspace: XmlSpace) {
 
         let mut i = 0;
         let len = nodes.len() - 1;
+        let mut last_non_empty: Option<Node> = None;
         while i < len {
             // Process pairs.
             let mut node1 = nodes[i].clone();
             let mut node2 = nodes[i + 1].clone();
+
+            if node1.text().is_empty() {
+                if let Some(ref n) = last_non_empty {
+                    node1 = n.clone();
+                }
+            }
 
             // Parent of the text node is always an element node and always exist,
             // so unwrap is safe.
@@ -191,12 +201,14 @@ fn prepare_text_children(parent: &Node, xmlspace: XmlSpace) {
                 (c1, c2, c3, c4)
             };
 
-            let is_text2_empty = node2.text().is_empty();
-
             // Remove space from the second text node if both nodes has bound spaces.
             // From: '<text>Text <tspan> text</tspan></text>'
             // To:   '<text>Text <tspan>text</tspan></text>'
-            if xmlspace1 == XmlSpace::Default && xmlspace2 == XmlSpace::Default {
+            //
+            // See text-tspan-02-b.svg for details.
+            if     xmlspace1 == XmlSpace::Default
+                && xmlspace2 == XmlSpace::Default
+            {
                 if c2 == Some(b' ') && c2 == c3 {
                     node2.text_mut().remove_first();
                 }
@@ -205,14 +217,32 @@ fn prepare_text_children(parent: &Node, xmlspace: XmlSpace) {
             let is_first = i == 0;
             let is_last  = i == len - 1;
 
-            if is_first && c1 == Some(b' ') && xmlspace1 == XmlSpace::Default {
+            if     is_first
+                && c1 == Some(b' ')
+                && xmlspace1 == XmlSpace::Default
+            {
                 // Remove leading space of the first text node.
                 node1.text_mut().remove_first();
-            } else if    is_last && c4 == Some(b' ') && !is_text2_empty
-                      && xmlspace2 == XmlSpace::Default {
+            } else if    is_last
+                      && c4 == Some(b' ')
+                      && !node2.text().is_empty()
+                      && xmlspace2 == XmlSpace::Default
+            {
                 // Remove trailing space of the last text node.
                 // Also check that 'text2' is not empty already.
                 node2.text_mut().remove_last();
+            }
+
+            if     is_last
+                && c2 == Some(b' ')
+                && !node1.text().is_empty()
+                && node2.text().is_empty()
+            {
+                node1.text_mut().remove_last();
+            }
+
+            if !node1.text().trim().is_empty() {
+                last_non_empty = Some(node1.clone());
             }
 
             i += 1;

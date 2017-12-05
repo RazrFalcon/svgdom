@@ -917,3 +917,77 @@ fn skip_unresolved_classes_1() {
 
 // TODO: this
 // p { font-family: "Font 1", "Font 2", Georgia, Times, serif; }
+
+#[test]
+fn text_content_1() {
+    let doc = Document::from_str(
+"<svg>
+    <text>
+        A <tspan>
+            <tspan>
+                link
+                inside tspan
+            </tspan> for testing
+        </tspan>
+    </text>
+</svg>
+").unwrap();
+
+    let text: String = doc.descendants().map(|n| n.text().to_owned()).collect();
+    assert_eq!(text, "A link inside tspan for testing");
+}
+
+#[test]
+fn text_content_2() {
+    let doc = Document::from_str(
+"<svg>
+    <text>
+        <tspan>Text1</tspan>
+        <tspan>Text2</tspan>
+        <tspan>Text3</tspan>
+    </text>
+</svg>
+").unwrap();
+
+    let text: String = doc.descendants().map(|n| n.text().to_owned()).collect();
+    assert_eq!(text, "Text1 Text2 Text3");
+}
+
+#[test]
+fn text_content_3() {
+    let doc = Document::from_str(
+"<svg>
+    <text>
+      Not
+
+      <tspan>
+        all characters
+
+        <tspan>
+          in
+
+          <tspan>
+            the
+          </tspan>
+        </tspan>
+
+        <tspan>
+          text
+        </tspan>
+
+        have a
+      </tspan>
+
+      <tspan>
+        specified
+      </tspan>
+
+      rotation
+    </text>
+</svg>
+").unwrap();
+
+    let text: String = doc.descendants().map(|n| n.text().to_owned()).collect();
+    assert_eq!(text, "Not all characters in the text have a specified rotation");
+}
+

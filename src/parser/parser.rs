@@ -166,7 +166,7 @@ pub fn parse_svg(text: &str, opt: &ParseOptions) -> Result<Document> {
 
     resolve_links(&mut post_data.links)?;
 
-    text::prepare_text(&doc);
+    text::prepare_text(&mut doc);
 
     Ok(doc)
 }

@@ -278,9 +278,9 @@ test_resave!(text_6,
 ",
 "<svg>
     <text/>
-    <text></text>
-    <text></text>
-    <text></text>
+    <text/>
+    <text/>
+    <text/>
     <text>text text t</text>
     <text xml:space='preserve'>     text    text  t     </text>
 </svg>
@@ -399,7 +399,11 @@ test_resave!(text_tspan_7,
             <tspan/>
         </tspan>
     </text>
-    <text><tspan><tspan></tspan></tspan></text>
+    <text>
+        <tspan>
+            <tspan></tspan>
+        </tspan>
+    </text>
 </svg>
 ");
 
@@ -411,6 +415,57 @@ test_resave!(text_tspan_8,
 </svg>",
 "<svg>
     <text><tspan>Te</tspan><tspan>x</tspan>t</text>
+</svg>
+");
+
+test_resave!(text_tspan_9,
+"<svg>
+    <text>
+        text <tspan>
+            <tspan>
+                text
+            </tspan> text
+        </tspan>
+    </text>
+</svg>",
+"<svg>
+    <text>text <tspan><tspan>text </tspan>text</tspan></text>
+</svg>
+");
+
+test_resave!(text_tspan_10,
+"<svg>
+    <text>
+      Not
+
+      <tspan>
+        all characters
+
+        <tspan>
+          in
+
+          <tspan>
+            the
+          </tspan>
+        </tspan>
+
+        <tspan>
+          text
+        </tspan>
+
+        have a
+      </tspan>
+
+      <tspan>
+        specified
+      </tspan>
+
+      rotation
+    </text>
+</svg>",
+"<svg>
+    <text>Not <tspan>all characters <tspan>in <tspan>the </tspan></tspan><tspan>text </tspan>\
+        have a </tspan><tspan>specified </tspan>rotation</text>
 </svg>
 ");
 

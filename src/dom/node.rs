@@ -895,10 +895,12 @@ impl Node {
     pub fn set_attribute_checked<T>(&mut self, v: T) -> Result<()>
         where T: Into<Attribute>
     {
+        self.set_attribute_checked_impl(v.into())
+    }
+
+    fn set_attribute_checked_impl(&mut self, attr: Attribute) -> Result<()> {
         // TODO: to error in _checked mode
         debug_assert_eq!(self.node_type(), NodeType::Element);
-
-        let attr: Attribute = v.into();
 
         if attr.is_svg() {
             match attr.value {
@@ -1095,12 +1097,12 @@ fn same_rc<T>(a: &Rc<T>, b: &Rc<T>) -> bool {
 impl fmt::Debug for Node {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self.node_type() {
-            NodeType::Root => write!(f, "Root node"),
-            NodeType::Element => write!(f, "<{:?} id={:?}>", self.tag_name().unwrap(), self.id()),
-            NodeType::Declaration => write!(f, "<?{}?>", *self.text()),
-            NodeType::Comment => write!(f, "<!--{}-->", *self.text()),
-            NodeType::Cdata => write!(f, "<![CDATA[{}]]>", *self.text()),
-            NodeType::Text => write!(f, "{}", *self.text()),
+            NodeType::Root => write!(f, "RootNode"),
+            NodeType::Element => write!(f, "ElementNode({:?} id={:?})", self.tag_name().unwrap(), self.id()),
+            NodeType::Declaration => write!(f, "DeclarationNode({:?})", *self.text()),
+            NodeType::Comment => write!(f, "CommentNode({:?})", *self.text()),
+            NodeType::Cdata => write!(f, "CdataNode({:?})", *self.text()),
+            NodeType::Text => write!(f, "TextNode({:?})", *self.text()),
         }
     }
 }

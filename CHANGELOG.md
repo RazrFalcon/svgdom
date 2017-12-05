@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - `Node::set_attribute_if_none`.
 - Ability to skip invalid attributes during parsing.
+- Better text parsing.
 
 ### Changed
 - `Descendants::svg`, `Children::svg` and `Parents::svg`
