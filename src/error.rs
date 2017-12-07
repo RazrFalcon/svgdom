@@ -24,7 +24,7 @@ error_chain! {
         /// If you want to use referenced element inside link attribute,
         /// such element must have a non-empty ID.
         ElementMustHaveAnId {
-            display("element must have an id")
+            display("the element must have an id")
         }
 
         /// Linked nodes can't reference each other or itself.
@@ -47,12 +47,12 @@ error_chain! {
 
         /// Parsed document must have an `svg` element.
         NoSvgElement {
-            display("document didn't have an SVG element")
+            display("the document does not have an SVG element")
         }
 
         /// Parsed document must have at least one node.
         EmptyDocument {
-            display("document didn't have any nodes")
+            display("the document does not have any nodes")
         }
 
         /// *libsvgdom* didn't support most of the CSS2 spec.
@@ -84,7 +84,7 @@ error_chain! {
 
         /// We don't support `use` elements with a broken filter attribute.
         BrokenFuncIri(iri: String) {
-            display("The 'use' element with a broken filter attribute('#{}') is not supported", iri)
+            display("the 'use' element with a broken filter attribute('#{}') is not supported", iri)
         }
 
         /// UTF-8 processing error.
@@ -94,7 +94,7 @@ error_chain! {
 
         /// Failed to find an attribute, which must be set, during post-processing.
         MissingAttribute(name: String, value: String) {
-            display("the attribute '{}' is missing in the '{}' element", name, value)
+            display("attribute '{}' is missing in the '{}' element", name, value)
         }
 
         /// simplecss errors.

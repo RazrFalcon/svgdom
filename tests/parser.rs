@@ -40,25 +40,25 @@ macro_rules! test_resave {
 #[test]
 fn parse_empty_1() {
     assert_eq!(Document::from_str("").err().unwrap().full_chain(),
-        "Error: document didn\'t have any nodes");
+        "Error: the document does not have any nodes");
 }
 
 #[test]
 fn parse_empty_2() {
     assert_eq!(Document::from_str("\n \t").err().unwrap().full_chain(),
-        "Error: document didn\'t have any nodes");
+        "Error: the document does not have any nodes");
 }
 
 #[test]
 fn parse_empty_3() {
     assert_eq!(Document::from_str("<rect/>").err().unwrap().full_chain(),
-        "Error: document didn\'t have an SVG element");
+        "Error: the document does not have an SVG element");
 }
 
 #[test]
 fn parse_empty_4() {
     assert_eq!(Document::from_str("<?xml version='1.0'?>").err().unwrap().full_chain(),
-        "Error: document didn\'t have an SVG element");
+        "Error: the document does not have an SVG element");
 }
 
 #[test]
