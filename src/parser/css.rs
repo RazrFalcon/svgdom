@@ -24,7 +24,7 @@ use {
 use super::parser::{
     Entities,
     Links,
-    NodeTextData,
+    NodeSpanData,
     PostData,
 };
 
@@ -169,7 +169,7 @@ pub fn resolve_css<'a>(
                     }
                     CssSelector::Class(name) => {
                         // we use already collected list of 'class' attributes
-                        for d in post_data.class_attrs.iter_mut().filter(|n| n.text == name) {
+                        for d in post_data.class_attrs.iter_mut().filter(|n| n.span.to_str() == name) {
                             apply_css_attributes(&values, &mut d.node, &mut post_data.links,
                                                  &post_data.entitis, opt)?;
 
@@ -188,15 +188,15 @@ pub fn resolve_css<'a>(
 
 fn postprocess_class_selector<'a>(
     resolved_classes: &[&str],
-    class_attrs: &mut Vec<NodeTextData<'a>>,
+    class_attrs: &mut Vec<NodeSpanData<'a>>,
     opt: &ParseOptions,
 ) {
     // remove resolved classes
-    class_attrs.retain(|n| !resolved_classes.contains(&n.text));
+    class_attrs.retain(|n| !resolved_classes.contains(&n.span.to_str()));
 
     if opt.skip_unresolved_classes {
         for d in class_attrs {
-            warn!("Could not resolve an unknown class: {}.", d.text);
+            warn!("Could not resolve an unknown class: {}.", d.span);
         }
     } else {
         // create 'class' attributes with unresolved classes
@@ -206,10 +206,10 @@ fn postprocess_class_selector<'a>(
                 let class_val = attrs.get_value_mut(AttributeId::Class);
                 if let Some(&mut AttributeValue::String(ref mut text)) = class_val {
                     text.push(' ');
-                    text.push_str(d.text);
+                    text.push_str(d.span.to_str());
                 }
             } else {
-                d.node.set_attribute((AttributeId::Class, d.text));
+                d.node.set_attribute((AttributeId::Class, d.span.to_str()));
             }
         }
     }

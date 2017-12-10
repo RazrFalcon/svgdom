@@ -44,13 +44,8 @@ use super::{
 };
 
 pub struct NodeSpanData<'a> {
-    node: Node,
-    stream: StrSpan<'a>,
-}
-
-pub struct NodeTextData<'a> {
     pub node: Node,
-    pub text: &'a str,
+    pub span: StrSpan<'a>,
 }
 
 pub struct LinkData<'a> {
@@ -86,8 +81,7 @@ impl<'a> Links<'a> {
     }
 }
 
-// TODO: to StrSpan
-pub type Entities<'a> = HashMap<&'a str, &'a str>;
+pub type Entities<'a> = HashMap<&'a str, StrSpan<'a>>;
 
 pub struct PostData<'a> {
     pub css_list: Vec<StrSpan<'a>>,
@@ -95,7 +89,7 @@ pub struct PostData<'a> {
     pub entitis: Entities<'a>,
     // List of element with 'class' attribute.
     // We can't process it inplace, because styles can be set after usage.
-    pub class_attrs: Vec<NodeTextData<'a>>,
+    pub class_attrs: Vec<NodeSpanData<'a>>,
     // List of style attributes.
     pub style_attrs: Vec<NodeSpanData<'a>>,
 }
@@ -160,7 +154,7 @@ pub fn parse_svg(text: &str, opt: &ParseOptions) -> Result<Document> {
 
     // resolve styles
     for d in &mut post_data.style_attrs {
-        parse_style_attribute(&mut d.node, d.stream, &mut post_data.links,
+        parse_style_attribute(&mut d.node, d.span, &mut post_data.links,
                               &post_data.entitis, opt)?;
     }
 
@@ -291,7 +285,7 @@ fn process_token<'a>(
                 return Err(ErrorKind::UnsupportedEntity(s.gen_error_pos()).into());
             }
 
-            post_data.entitis.insert(name, value.to_str());
+            post_data.entitis.insert(name, value);
         }
         svg::Token::ProcessingInstruction(_, _) => {
             // do nothing
@@ -328,7 +322,7 @@ fn parse_svg_attribute<'a>(
             // we store 'class' attributes for later use
             post_data.style_attrs.push(NodeSpanData {
                 node: node.clone(),
-                stream: value,
+                span: value,
             })
         }
           AttributeId::Transform
@@ -352,9 +346,9 @@ fn parse_svg_attribute<'a>(
 
                 let class = s.consume_bytes(|s2, _| !s2.starts_with_space());
 
-                post_data.class_attrs.push(NodeTextData {
+                post_data.class_attrs.push(NodeSpanData {
                     node: node.clone(),
-                    text: class.to_str(),
+                    span: class,
                 });
 
                 s.skip_spaces();
@@ -450,8 +444,7 @@ pub fn parse_svg_attribute_value<'a>(
         ParserAttributeValue::EntityRef(link) => {
             match entitis.get(link) {
                 Some(link_value) => {
-                    let frame = StrSpan::from_str(link_value);
-                    parse_svg_attribute_value(node, id, frame, links, entitis, opt)?;
+                    parse_svg_attribute_value(node, id, *link_value, links, entitis, opt)?;
                     None
                 }
                 None => {
@@ -497,11 +490,11 @@ fn parse_non_svg_attribute<'a>(
             None
         }
     } else {
-        Some(stream.span().to_str())
+        Some(stream.span())
     };
 
     if let Some(val) = new_value {
-        node.set_attribute((name, val));
+        node.set_attribute((name, val.to_str()));
     }
 }
 
@@ -516,12 +509,12 @@ fn prepare_length_unit(unit: LengthUnit, opt: &ParseOptions) -> LengthUnit {
 
 fn parse_style_attribute<'a>(
     node: &mut Node,
-    frame: StrSpan<'a>,
+    span: StrSpan<'a>,
     links: &mut Links<'a>,
     entitis: &Entities<'a>,
     opt: &ParseOptions,
 ) -> Result<()> {
-    for token in style::Tokenizer::from_span(frame) {
+    for token in style::Tokenizer::from_span(span) {
         match token? {
             style::Token::XmlAttribute(name, value) => {
                 if opt.parse_unknown_attributes {
@@ -533,9 +526,7 @@ fn parse_style_attribute<'a>(
             }
             style::Token::EntityRef(name) => {
                 if let Some(value) = entitis.get(name) {
-                    // TODO: to a proper stream
-                    let ss = StrSpan::from_str(value);
-                    parse_style_attribute(node, ss, links, entitis, opt)?;
+                    parse_style_attribute(node, *value, links, entitis, opt)?;
                 }
             }
         }
