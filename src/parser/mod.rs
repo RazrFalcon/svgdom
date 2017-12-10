@@ -5,6 +5,7 @@
 pub use self::parser::parse_svg;
 pub use self::options::*;
 
+mod css;
 mod parser;
 mod options;
 mod text;
