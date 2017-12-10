@@ -33,9 +33,15 @@ pub struct ParseOptions {
 
     /// Skip attributes with invalid values.
     ///
-    /// By default, attribute with an invalid value will lead to parsing error.
+    /// By default, attribute with an invalid value will lead to a parsing error.
     /// This flag allows converting this error into a warning.
     pub skip_invalid_attributes: bool,
+
+    /// Skip invalid/unsupported CSS.
+    ///
+    /// By default, CSS with an invalid/unsupported value will lead to a parsing error.
+    /// This flag allows converting this error into a warning.
+    pub skip_invalid_css: bool,
 }
 
 impl Default for ParseOptions {
@@ -48,6 +54,7 @@ impl Default for ParseOptions {
             parse_px_unit: true,
             skip_unresolved_classes: true,
             skip_invalid_attributes: false,
+            skip_invalid_css: false,
         }
     }
 }

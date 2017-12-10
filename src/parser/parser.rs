@@ -150,7 +150,13 @@ pub fn parse_svg(text: &str, opt: &ParseOptions) -> Result<Document> {
         );
     }
 
-    css::resolve_css(&doc, &mut post_data, opt)?;
+    if let Err(e) = css::resolve_css(&doc, &mut post_data, opt) {
+        if opt.skip_invalid_css {
+            warn!("{}.", e);
+        } else {
+            return Err(e.into());
+        }
+    }
 
     // resolve styles
     for d in &mut post_data.style_attrs {

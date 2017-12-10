@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Ability to skip invalid attributes during parsing.
 - Better text parsing.
 - Implemented `AttributeType` for `AttributeId`.
+- `Option::skip_invalid_attributes`.
+- `Option::skip_invalid_css`.
 
 ### Changed
 - `Descendants::svg`, `Children::svg` and `Parents::svg`
