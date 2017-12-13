@@ -164,7 +164,7 @@ pub fn parse_svg(text: &str, opt: &ParseOptions) -> Result<Document> {
                               &post_data.entitis, opt)?;
     }
 
-    resolve_links(&mut post_data.links)?;
+    resolve_links(&mut post_data.links, opt)?;
 
     text::prepare_text(&mut doc);
 
@@ -541,7 +541,7 @@ fn parse_style_attribute<'a>(
     Ok(())
 }
 
-fn resolve_links(links: &mut Links) -> Result<()> {
+fn resolve_links(links: &mut Links, opt: &ParseOptions) -> Result<()> {
     for mut d in &mut links.list {
         match links.elems_with_id.get(d.iri) {
             Some(node) => {
@@ -552,8 +552,13 @@ fn resolve_links(links: &mut Links) -> Result<()> {
                 // so we just show an error.
                 match d.fallback {
                     Some(_) => {
-                        let s = d.iri.to_string();
-                        return Err(ErrorKind::UnsupportedPaintFallback(s).into())
+                        if opt.skip_paint_fallback {
+                            warn!("Paint fallback is not supported.");
+                            d.node.set_attribute_checked((d.attr_id, node.clone()))?;
+                        } else {
+                            let s = d.iri.to_string();
+                            return Err(ErrorKind::UnsupportedPaintFallback(s).into());
+                        }
                     }
                     None => d.node.set_attribute_checked((d.attr_id, node.clone()))?,
                 }
@@ -615,15 +620,15 @@ fn resolve_fallback(d: &mut LinkData) -> Result<()> {
                     } else {
                         // Imitate invisible element.
                         warn!("Unresolved 'filter' IRI reference: {}. \
-                                 Marking the element as invisible.",
-                                 d.iri);
+                               Marking the element as invisible.",
+                               d.iri);
                         d.node.set_attribute((AttributeId::Visibility, ValueId::Hidden));
                     }
                 }
                 AttributeId::Fill => {
                     warn!("Could not resolve the 'fill' IRI reference: {}. \
-                             Fallback to 'none'.",
-                             d.iri);
+                           Fallback to 'none'.",
+                           d.iri);
                     d.node.set_attribute((AttributeId::Fill, ValueId::None));
                 }
                 _ => {

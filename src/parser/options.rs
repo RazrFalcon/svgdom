@@ -42,6 +42,14 @@ pub struct ParseOptions {
     /// By default, CSS with an invalid/unsupported value will lead to a parsing error.
     /// This flag allows converting this error into a warning.
     pub skip_invalid_css: bool,
+
+    /// Ignore fallback value in paint attributes.
+    ///
+    /// If this option is enabled then the color part in attributes like this
+    /// `fill="url(#lg1) #fff"` will be ignored.
+    ///
+    /// Otherwise `UnsupportedPaintFallback` error will occur during parsing.
+    pub skip_paint_fallback: bool,
 }
 
 impl Default for ParseOptions {
@@ -55,6 +63,7 @@ impl Default for ParseOptions {
             skip_unresolved_classes: true,
             skip_invalid_attributes: false,
             skip_invalid_css: false,
+            skip_paint_fallback: false,
         }
     }
 }

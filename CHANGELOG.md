@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Implemented `AttributeType` for `AttributeId`.
 - `Option::skip_invalid_attributes`.
 - `Option::skip_invalid_css`.
+- `Option::skip_paint_fallback`.
 
 ### Changed
 - `Descendants::svg`, `Children::svg` and `Parents::svg`
