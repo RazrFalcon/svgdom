@@ -349,7 +349,7 @@ test_resave!(text_tspan_3,
 </svg>
 ",
 "<svg>
-    <text><tspan>Text</tspan><tspan>Text</tspan><tspan>Text</tspan></text>
+    <text><tspan>Text</tspan> <tspan>Text</tspan> <tspan>Text</tspan></text>
 </svg>
 ");
 
