@@ -282,6 +282,11 @@ mod to_absolute {
           "m 10 20 l 10 10 Z m 10 10 l 10 10",
           "M 10 20 L 20 30 Z M 20 30 L 30 40");
 
+    // MoveTo after ClosePath can be skipped
+    test!(move_to_4,
+          "m 10 20 l 10 10 Z l 10 10",
+          "M 10 20 L 20 30 Z L 20 30");
+
     test!(smooth_curve,
           "m 10 20 s 10 10 10 10",
           "M 10 20 S 20 30 20 30");
@@ -345,6 +350,11 @@ mod to_relative {
     test!(move_to_3,
           "M 10 20 L 20 30 z M 20 30 L 30 40",
           "m 10 20 l 10 10 z m 10 10 l 10 10");
+
+    // MoveTo after ClosePath can be skipped
+    test!(move_to_4,
+          "M 10 20 L 20 30 Z L 20 30",
+          "m 10 20 l 10 10 z l 10 10");
 
     test!(smooth_curve,
           "M 10 20 S 20 30 20 30",

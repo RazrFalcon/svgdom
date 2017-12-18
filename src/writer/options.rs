@@ -13,6 +13,21 @@ pub enum Indent {
     Tabs,
 }
 
+
+/// A separator type for a list of values.
+///
+/// https://www.w3.org/TR/SVG/types.html#DataTypeList
+#[derive(Clone,Copy,PartialEq)]
+pub enum ListSeparator {
+    /// `10,20`
+    Comma,
+    /// `10 20`
+    Space,
+    /// `10, 20`
+    CommaSpace,
+}
+
+
 /// Options that defines SVG paths writing.
 pub struct WriteOptionsPaths {
     /// Use compact path notation.
@@ -190,6 +205,11 @@ pub struct WriteOptions {
     ///
     /// Default: disabled
     pub simplify_transform_matrices: bool,
+
+    /// Set the separator type for `NumberList` and `LengthList`.
+    ///
+    /// Default: `ListSeparator::Space`
+    pub list_separator: ListSeparator,
 }
 
 impl Default for WriteOptions {
@@ -208,6 +228,7 @@ impl Default for WriteOptions {
                 use_implicit_lineto_commands: false,
             },
             simplify_transform_matrices: false,
+            list_separator: ListSeparator::Space,
         }
     }
 }

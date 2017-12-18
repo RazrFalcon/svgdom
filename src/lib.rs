@@ -98,6 +98,7 @@ pub use name::*;
 pub use traits::*;
 pub use writer::{
     Indent,
+    ListSeparator,
     WriteOptions,
     WriteOptionsPaths,
 };

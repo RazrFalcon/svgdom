@@ -190,13 +190,13 @@ impl WriteBuffer for AttributeValue {
                 n.write_buf_opt(opt, buf);
             },
             AttributeValue::NumberList(ref list) => {
-                write_list(list, opt, buf)
+                list.write_buf_opt(opt, buf);
             },
             AttributeValue::Length(ref l) => {
                 l.write_buf_opt(opt, buf);
             },
             AttributeValue::LengthList(ref list) => {
-                write_list(list, opt, buf);
+                list.write_buf_opt(opt, buf);
             },
             AttributeValue::Transform(ref t) => {
                 t.write_buf_opt(opt, buf);
@@ -219,15 +219,6 @@ impl WriteBuffer for AttributeValue {
             AttributeValue::PredefValue(ref v) => {
                 buf.extend_from_slice(v.name().as_bytes())
             },
-        }
-    }
-}
-
-fn write_list<T: WriteBuffer>(list: &[T], opt: &WriteOptions, buf: &mut Vec<u8>) {
-    for (n, l) in list.iter().enumerate() {
-        l.write_buf_opt(opt, buf);
-        if n < list.len() - 1 {
-            buf.push(b' ');
         }
     }
 }
