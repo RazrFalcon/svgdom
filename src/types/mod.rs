@@ -62,7 +62,6 @@ fn write_list<T: WriteBuffer>(list: &[T], opt: &WriteOptions, buf: &mut Vec<u8>)
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use {WriteOptions, ToStringWithOptions, ListSeparator};
 
     #[test]

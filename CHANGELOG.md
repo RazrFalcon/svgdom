@@ -7,7 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 ### Added
 - `WriteOptions::list_separator`
-- Implemented `WriteBuffer` and `ToStringWithOptions` for `NumberList` and `LengthList`. 
+- Implemented `WriteBuffer` and `ToStringWithOptions` for `NumberList` and `LengthList`.
+
+### Changed
+- The value of the 'unicode' attribute is always escaped now.
 
 ## [0.9.1] - 2017-12-15
 ### Fixed

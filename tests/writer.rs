@@ -720,14 +720,23 @@ fn attrs_indent_1() {
 ");
 }
 
-
 #[test]
 fn single_quote_1() {
-    let doc = Document::from_str(
-"<svg id=\"svg1\"/>").unwrap();
+    let doc = Document::from_str("<svg id=\"svg1\"/>").unwrap();
 
     let mut opt = WriteOptions::default();
     opt.indent = Indent::None;
     opt.use_single_quote = true;
     assert_eq_text!(doc.to_string_with_opt(&opt), "<svg id='svg1'/>");
 }
+
+test_resave!(escape_1,
+"<svg unicode='ffl'/>",
+"<svg unicode='&#x66;&#x66;&#x6c;'/>
+");
+
+// Do not escape already escaped.
+test_resave!(escape_2,
+"<svg unicode='&#x66;&#x66;&#x6c;'/>",
+"<svg unicode='&#x66;&#x66;&#x6c;'/>
+");
