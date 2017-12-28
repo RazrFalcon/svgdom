@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 - The value of the 'unicode' attribute is always escaped now.
+- The minimal Rust version is 1.16 now. Because of `log`.
 
 ## [0.9.1] - 2017-12-15
 ### Fixed
