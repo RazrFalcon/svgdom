@@ -66,7 +66,7 @@ impl NodeData {
 }
 
 impl Drop for NodeData {
-    /// We have to remove nodes manually, to prevent reference circular references,
+    /// We have to remove nodes manually, to prevent circular references,
     /// which lead to memory leaks.
     fn drop(&mut self) {
         // Remove all children of the root node, aka Document.
@@ -74,12 +74,10 @@ impl Drop for NodeData {
             // Root `Node` itself was already removed, so we have to
             // iterate over children.
             if let Some(child) = self.first_child.as_ref() {
-                let mut root = Node(child.clone());
+                let root = Node(child.clone());
                 while let Some(mut sibling) = root.next_sibling() {
                     sibling.remove();
                 }
-
-                root.remove();
             }
         }
     }

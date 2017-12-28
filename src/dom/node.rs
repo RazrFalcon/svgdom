@@ -314,6 +314,7 @@ impl Node {
             linked.remove_attributes(&ids);
         }
 
+
         // repeat for children
         for mut child in node.children() {
             Node::_remove(&mut child, ids);
