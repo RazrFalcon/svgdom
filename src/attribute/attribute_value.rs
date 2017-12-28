@@ -184,7 +184,13 @@ impl WriteBuffer for AttributeValue {
     fn write_buf_opt(&self, opt: &WriteOptions, buf: &mut Vec<u8>) {
         match *self {
             AttributeValue::String(ref s) => {
-                buf.extend_from_slice(s.as_bytes());
+                for c in s.as_bytes() {
+                    match *c {
+                        b'"' if !opt.use_single_quote => buf.extend_from_slice(b"&quot;"),
+                        b'\'' if opt.use_single_quote => buf.extend_from_slice(b"&apos;"),
+                        _ => buf.push(*c),
+                    }
+                }
             },
             AttributeValue::Number(ref n) => {
                 n.write_buf_opt(opt, buf);

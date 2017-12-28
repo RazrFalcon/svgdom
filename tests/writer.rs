@@ -740,3 +740,31 @@ test_resave!(escape_2,
 "<svg unicode='&#x66;&#x66;&#x6c;'/>",
 "<svg unicode='&#x66;&#x66;&#x6c;'/>
 ");
+
+// Escape attribute values according to the current quote type.
+#[test]
+fn escape_3() {
+    let doc = Document::from_str("<svg font-family=\"'Noto Sans'\"/>").unwrap();
+
+    let mut opt = WriteOptions::default();
+    opt.indent = Indent::None;
+
+    assert_eq_text!(doc.to_string_with_opt(&opt), "<svg font-family=\"'Noto Sans'\"/>");
+
+    opt.use_single_quote = true;
+    assert_eq_text!(doc.to_string_with_opt(&opt), "<svg font-family='&apos;Noto Sans&apos;'/>");
+}
+
+// Escape attribute values according to the current quote type.
+#[test]
+fn escape_4() {
+    let doc = Document::from_str("<svg font-family='\"Noto Sans\"'/>").unwrap();
+
+    let mut opt = WriteOptions::default();
+    opt.indent = Indent::None;
+
+    assert_eq_text!(doc.to_string_with_opt(&opt), "<svg font-family=\"&quot;Noto Sans&quot;\"/>");
+
+    opt.use_single_quote = true;
+    assert_eq_text!(doc.to_string_with_opt(&opt), "<svg font-family='\"Noto Sans\"'/>");
+}

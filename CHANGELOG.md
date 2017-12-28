@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - `WriteOptions::list_separator`
 - Implemented `WriteBuffer` and `ToStringWithOptions` for `NumberList` and `LengthList`.
+- Quotes escape in attribute values.
 
 ### Changed
 - The value of the 'unicode' attribute is always escaped now.
