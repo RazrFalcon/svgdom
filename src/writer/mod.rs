@@ -291,122 +291,7 @@ fn write_attributes(
 
             // collect element-specific attributes
             if let Some(eid) = node.tag_id() {
-                let elem_ids: &[AttributeId] = match eid {
-                    ElementId::Svg => &[
-                        AttributeId::X,
-                        AttributeId::Y,
-                        AttributeId::Width,
-                        AttributeId::Height,
-                        AttributeId::ViewBox,
-                        AttributeId::PreserveAspectRatio,
-                        AttributeId::Version,
-                        AttributeId::BaseProfile,
-                    ],
-                    ElementId::Rect => &[
-                        AttributeId::Transform,
-                        AttributeId::X,
-                        AttributeId::Y,
-                        AttributeId::Width,
-                        AttributeId::Height,
-                        AttributeId::Rx,
-                        AttributeId::Ry,
-                    ],
-                    ElementId::Circle => &[
-                        AttributeId::Transform,
-                        AttributeId::Cx,
-                        AttributeId::Cy,
-                        AttributeId::R,
-                    ],
-                    ElementId::Ellipse => &[
-                        AttributeId::Transform,
-                        AttributeId::Cx,
-                        AttributeId::Cy,
-                        AttributeId::Rx,
-                        AttributeId::Ry,
-                    ],
-                    ElementId::Line => &[
-                        AttributeId::Transform,
-                        AttributeId::X1,
-                        AttributeId::Y1,
-                        AttributeId::X2,
-                        AttributeId::Y2,
-                    ],
-                    ElementId::Polyline | ElementId::Polygon => &[
-                        AttributeId::Transform,
-                        AttributeId::Points,
-                    ],
-                    ElementId::Path => &[
-                        AttributeId::Transform,
-                        AttributeId::D,
-                    ],
-                    ElementId::Use => &[
-                        AttributeId::Transform,
-                        AttributeId::X,
-                        AttributeId::Y,
-                        AttributeId::Width,
-                        AttributeId::Height,
-                        AttributeId::XlinkHref,
-                    ],
-                    ElementId::Image => &[
-                        AttributeId::PreserveAspectRatio,
-                        AttributeId::Transform,
-                        AttributeId::X,
-                        AttributeId::Y,
-                        AttributeId::Width,
-                        AttributeId::Height,
-                        AttributeId::XlinkHref,
-                    ],
-                    ElementId::Text => &[
-                        AttributeId::Transform,
-                        AttributeId::X,
-                        AttributeId::Y,
-                        AttributeId::Dx,
-                        AttributeId::Dy,
-                        AttributeId::Rotate,
-                    ],
-                    ElementId::Tspan => &[
-                        AttributeId::X,
-                        AttributeId::Y,
-                        AttributeId::Dx,
-                        AttributeId::Dy,
-                        AttributeId::Rotate,
-                    ],
-                    ElementId::LinearGradient => &[
-                        AttributeId::X1,
-                        AttributeId::Y1,
-                        AttributeId::X2,
-                        AttributeId::Y2,
-                        AttributeId::GradientUnits,
-                        AttributeId::GradientTransform,
-                        AttributeId::SpreadMethod,
-                        AttributeId::XlinkHref,
-                    ],
-                    ElementId::RadialGradient => &[
-                        AttributeId::Cx,
-                        AttributeId::Cy,
-                        AttributeId::R,
-                        AttributeId::Fx,
-                        AttributeId::Fy,
-                        AttributeId::GradientUnits,
-                        AttributeId::GradientTransform,
-                        AttributeId::SpreadMethod,
-                        AttributeId::XlinkHref,
-                    ],
-                    ElementId::Pattern => &[
-                        AttributeId::ViewBox,
-                        AttributeId::X,
-                        AttributeId::Y,
-                        AttributeId::Width,
-                        AttributeId::Height,
-                        AttributeId::PatternUnits,
-                        AttributeId::PatternContentUnits,
-                        AttributeId::PatternTransform,
-                        AttributeId::XlinkHref,
-                    ],
-                    _ => &[],
-                };
-
-                for aid in elem_ids {
+                for aid in attrs_order_by_element(eid) {
                     if ids.contains(aid) {
                         ids2.push(*aid);
                     }
@@ -434,6 +319,151 @@ fn write_attributes(
                 }
             }
         }
+    }
+}
+
+static SVG_ATTRIBUTES: &'static [AttributeId] = &[
+    AttributeId::X,
+    AttributeId::Y,
+    AttributeId::Width,
+    AttributeId::Height,
+    AttributeId::ViewBox,
+    AttributeId::PreserveAspectRatio,
+    AttributeId::Version,
+    AttributeId::BaseProfile,
+];
+
+static RECT_ATTRIBUTES: &'static [AttributeId] = &[
+    AttributeId::Transform,
+    AttributeId::X,
+    AttributeId::Y,
+    AttributeId::Width,
+    AttributeId::Height,
+    AttributeId::Rx,
+    AttributeId::Ry,
+];
+
+static CIRCLE_ATTRIBUTES: &'static [AttributeId] = &[
+    AttributeId::Transform,
+    AttributeId::Cx,
+    AttributeId::Cy,
+    AttributeId::R,
+];
+
+static ELLIPSE_ATTRIBUTES: &'static [AttributeId] = &[
+    AttributeId::Transform,
+    AttributeId::Cx,
+    AttributeId::Cy,
+    AttributeId::Rx,
+    AttributeId::Ry,
+];
+
+static LINE_ATTRIBUTES: &'static [AttributeId] = &[
+    AttributeId::Transform,
+    AttributeId::X1,
+    AttributeId::Y1,
+    AttributeId::X2,
+    AttributeId::Y2,
+];
+
+static POLYLINE_ATTRIBUTES: &'static [AttributeId] = &[
+    AttributeId::Transform,
+    AttributeId::Points,
+];
+
+static PATH_ATTRIBUTES: &'static [AttributeId] = &[
+    AttributeId::Transform,
+    AttributeId::D,
+];
+
+static USE_ATTRIBUTES: &'static [AttributeId] = &[
+    AttributeId::Transform,
+    AttributeId::X,
+    AttributeId::Y,
+    AttributeId::Width,
+    AttributeId::Height,
+    AttributeId::XlinkHref,
+];
+
+static IMAGE_ATTRIBUTES: &'static [AttributeId] = &[
+    AttributeId::PreserveAspectRatio,
+    AttributeId::Transform,
+    AttributeId::X,
+    AttributeId::Y,
+    AttributeId::Width,
+    AttributeId::Height,
+    AttributeId::XlinkHref,
+];
+
+static TEXT_ATTRIBUTES: &'static [AttributeId] = &[
+    AttributeId::Transform,
+    AttributeId::X,
+    AttributeId::Y,
+    AttributeId::Dx,
+    AttributeId::Dy,
+    AttributeId::Rotate,
+];
+
+static TSPAN_ATTRIBUTES: &'static [AttributeId] = &[
+    AttributeId::X,
+    AttributeId::Y,
+    AttributeId::Dx,
+    AttributeId::Dy,
+    AttributeId::Rotate,
+];
+
+static LINEAR_GRADIENT_ATTRIBUTES: &'static [AttributeId] = &[
+    AttributeId::X1,
+    AttributeId::Y1,
+    AttributeId::X2,
+    AttributeId::Y2,
+    AttributeId::GradientUnits,
+    AttributeId::GradientTransform,
+    AttributeId::SpreadMethod,
+    AttributeId::XlinkHref,
+];
+
+static RADIAL_GRADIENT_ATTRIBUTES: &'static [AttributeId] = &[
+    AttributeId::Cx,
+    AttributeId::Cy,
+    AttributeId::R,
+    AttributeId::Fx,
+    AttributeId::Fy,
+    AttributeId::GradientUnits,
+    AttributeId::GradientTransform,
+    AttributeId::SpreadMethod,
+    AttributeId::XlinkHref,
+];
+
+static PATTERN_ATTRIBUTES: &'static [AttributeId] = &[
+    AttributeId::ViewBox,
+    AttributeId::X,
+    AttributeId::Y,
+    AttributeId::Width,
+    AttributeId::Height,
+    AttributeId::PatternUnits,
+    AttributeId::PatternContentUnits,
+    AttributeId::PatternTransform,
+    AttributeId::XlinkHref,
+];
+
+fn attrs_order_by_element(eid: ElementId) -> &'static [AttributeId] {
+    match eid {
+        ElementId::Svg => SVG_ATTRIBUTES,
+        ElementId::Rect => RECT_ATTRIBUTES,
+        ElementId::Circle => CIRCLE_ATTRIBUTES,
+        ElementId::Ellipse => ELLIPSE_ATTRIBUTES,
+        ElementId::Line => LINE_ATTRIBUTES,
+        ElementId::Polyline | ElementId::Polygon => POLYLINE_ATTRIBUTES,
+        ElementId::Path => PATH_ATTRIBUTES,
+        ElementId::Use => USE_ATTRIBUTES,
+        ElementId::Image => IMAGE_ATTRIBUTES,
+        ElementId::Text => TEXT_ATTRIBUTES,
+        ElementId::Tspan => TSPAN_ATTRIBUTES,
+        ElementId::LinearGradient => LINEAR_GRADIENT_ATTRIBUTES,
+        ElementId::RadialGradient => RADIAL_GRADIENT_ATTRIBUTES,
+        ElementId::Pattern => PATTERN_ATTRIBUTES,
+        _ => &[],
     }
 }
 
