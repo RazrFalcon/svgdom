@@ -14,7 +14,7 @@ readme = "README.md"
 travis-ci = { repository = "RazrFalcon/libsvgdom" }
 
 [dependencies]
-log = "0.3"
+log = "0.4"
 float-cmp = "0.2.3"
 # simplecss = { git = "https://github.com/RazrFalcon/simplecss.git" }
 simplecss = "0.1.0"

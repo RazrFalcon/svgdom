@@ -302,7 +302,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - `has_parent`, `has_text_children`, `document` methods to the `Node`.
 
 ### Changed
-- Use `dtoa::write()` insted of `write!()`.
+- Use `dtoa::write()` instead of `write!()`.
 - `Document::append` now returns added node.
 
 ### Fixed
