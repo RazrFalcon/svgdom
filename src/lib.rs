@@ -83,9 +83,9 @@ mod attribute;
 mod dom;
 mod error;
 mod name;
-mod writer;
 mod parser;
-pub mod types;
+mod types;
+mod writer;
 
 
 pub use attribute::*;
@@ -96,6 +96,7 @@ pub use error::{
 };
 pub use name::*;
 pub use traits::*;
+pub use types::*;
 pub use writer::{
     Indent,
     ListSeparator,
@@ -103,7 +104,9 @@ pub use writer::{
     WriteOptionsPaths,
 };
 
-pub use parser::ParseOptions;
+pub use parser::{
+    ParseOptions,
+};
 
 pub use svgparser::{
     AttributeId,

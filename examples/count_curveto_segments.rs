@@ -5,7 +5,7 @@ use std::io::Read;
 use std::fs::File;
 
 use svgdom::{Document, ElementId, AttributeId, AttributeValue};
-use svgdom::types::path::Command;
+use svgdom::path::Command;
 
 fn main() {
     let args: Vec<_> = env::args().collect();

@@ -7,18 +7,16 @@ extern crate svgdom;
 
 use svgdom::{
     AttributeId as AId,
+    Color,
     Document,
     ElementId as EId,
     Indent,
-    NodeType,
-    WriteOptions,
-    ToStringWithOptions,
-};
-use svgdom::types::{
-    Color,
     Length,
     LengthUnit,
+    NodeType,
+    ToStringWithOptions,
     Transform,
+    WriteOptions,
 };
 
 macro_rules! test_resave {

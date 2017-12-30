@@ -9,17 +9,17 @@ extern crate simplecss;
 use svgdom::{
     AttributeId as AId,
     AttributeValue,
+    ChainedErrorExt,
+    Color,
     Document,
     ElementId as EId,
     Name,
     NodeType,
     ParseOptions,
+    ToStringWithOptions,
     ValueId,
     WriteOptions,
-    ToStringWithOptions,
-    ChainedErrorExt,
 };
-use svgdom::types::Color;
 
 fn write_options() -> WriteOptions {
     let mut opt = WriteOptions::default();
