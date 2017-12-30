@@ -97,12 +97,7 @@ pub use error::{
 pub use name::*;
 pub use traits::*;
 pub use types::*;
-pub use writer::{
-    Indent,
-    ListSeparator,
-    WriteOptions,
-    WriteOptionsPaths,
-};
+pub use writer::*;
 
 pub use parser::{
     ParseOptions,

@@ -28,6 +28,27 @@ pub enum ListSeparator {
 }
 
 
+/// An attributes order.
+///
+/// Note: the `id` attribute is always first.
+#[derive(Clone,Copy,PartialEq)]
+pub enum AttributesOrder {
+    /// Attributes are stored in the `Vec` and with this option,
+    /// they will be written in the same order an in the `Vec`.
+    AsIs,
+    /// Write attributes in the alphabetical order.
+    ///
+    /// Only SVG attributes will be sorted. Non-SVG attributes will be written as-is.
+    Alphabetical,
+    /// Write attributes in the same order as they listed in the SVG spec.
+    ///
+    /// The current set of rules is pretty limited and doesn't follow the spec strictly.
+    ///
+    /// Only SVG attributes will be sorted. Non-SVG attributes will be written as-is.
+    Specification,
+}
+
+
 /// Options that defines SVG paths writing.
 pub struct WriteOptionsPaths {
     /// Use compact path notation.
@@ -210,6 +231,11 @@ pub struct WriteOptions {
     ///
     /// Default: `ListSeparator::Space`
     pub list_separator: ListSeparator,
+
+    /// Set attributes order.
+    ///
+    /// Default: `AttributesOrder::Alphabetical`
+    pub attributes_order: AttributesOrder,
 }
 
 impl Default for WriteOptions {
@@ -229,6 +255,7 @@ impl Default for WriteOptions {
             },
             simplify_transform_matrices: false,
             list_separator: ListSeparator::Space,
+            attributes_order: AttributesOrder::Alphabetical,
         }
     }
 }

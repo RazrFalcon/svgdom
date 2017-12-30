@@ -7,6 +7,8 @@ use std::cell::Ref;
 use {
     Attribute,
     AttributeId,
+    AttributesOrder,
+    AttributeType,
     Document,
     ElementId,
     Indent,
@@ -234,27 +236,201 @@ fn write_attributes(
 
     let attrs = node.attributes();
 
-    // write sorted SVG attributes
-
-    // TODO: make optional
-    // sort attributes
-    let mut ids: Vec<AttributeId> = attrs.iter_svg().map(|(aid, _)| aid).collect();
-    ids.sort_by_key(|x| *x as usize);
-
-    for aid in &ids {
-        let attr = attrs.get(*aid).unwrap();
-
-        if !opt.write_hidden_attributes && !attr.visible {
-            continue;
+    match opt.attributes_order {
+        AttributesOrder::AsIs => {
+            for attr in attrs.iter() {
+                write_attribute(attr, depth, attrs_depth, opt, out);
+            }
         }
+        AttributesOrder::Alphabetical => {
+            // sort attributes
+            let mut ids: Vec<AttributeId> = attrs.iter_svg().map(|(aid, _)| aid).collect();
+            ids.sort_by_key(|x| *x as usize);
 
-        write_attribute(attr, depth, attrs_depth, opt, out);
-    }
+            for aid in &ids {
+                let attr = attrs.get(*aid).unwrap();
+                write_attribute(attr, depth, attrs_depth, opt, out);
+            }
 
-    // write non-SVG attributes
-    for attr in attrs.iter() {
-        if let Name::Name(_) = attr.name {
-            write_attribute(attr, depth, attrs_depth, opt, out);
+            // write non-SVG attributes
+            for attr in attrs.iter() {
+                if let Name::Name(_) = attr.name {
+                    write_attribute(attr, depth, attrs_depth, opt, out);
+                }
+            }
+        }
+        AttributesOrder::Specification => {
+            // sort attributes
+            let mut ids: Vec<AttributeId> = attrs.iter_svg().map(|(aid, _)| aid).collect();
+            ids.sort_by_key(|x| *x as usize);
+
+            let mut ids2: Vec<AttributeId> = Vec::with_capacity(ids.len());
+
+            // collect fill attributes
+            for aid in &ids {
+                if aid.is_fill() {
+                    ids2.push(*aid);
+                }
+            }
+
+            // collect stroke attributes
+            for aid in &ids {
+                if aid.is_stroke() {
+                    ids2.push(*aid);
+                }
+            }
+
+            // collect style attributes
+            for aid in &ids {
+                if aid.is_presentation() && !aid.is_fill() && !aid.is_stroke() {
+                    ids2.push(*aid);
+                }
+            }
+
+            // collect element-specific attributes
+            if let Some(eid) = node.tag_id() {
+                let elem_ids: &[AttributeId] = match eid {
+                    ElementId::Svg => &[
+                        AttributeId::X,
+                        AttributeId::Y,
+                        AttributeId::Width,
+                        AttributeId::Height,
+                        AttributeId::ViewBox,
+                        AttributeId::PreserveAspectRatio,
+                        AttributeId::Version,
+                        AttributeId::BaseProfile,
+                    ],
+                    ElementId::Rect => &[
+                        AttributeId::Transform,
+                        AttributeId::X,
+                        AttributeId::Y,
+                        AttributeId::Width,
+                        AttributeId::Height,
+                        AttributeId::Rx,
+                        AttributeId::Ry,
+                    ],
+                    ElementId::Circle => &[
+                        AttributeId::Transform,
+                        AttributeId::Cx,
+                        AttributeId::Cy,
+                        AttributeId::R,
+                    ],
+                    ElementId::Ellipse => &[
+                        AttributeId::Transform,
+                        AttributeId::Cx,
+                        AttributeId::Cy,
+                        AttributeId::Rx,
+                        AttributeId::Ry,
+                    ],
+                    ElementId::Line => &[
+                        AttributeId::Transform,
+                        AttributeId::X1,
+                        AttributeId::Y1,
+                        AttributeId::X2,
+                        AttributeId::Y2,
+                    ],
+                    ElementId::Polyline | ElementId::Polygon => &[
+                        AttributeId::Transform,
+                        AttributeId::Points,
+                    ],
+                    ElementId::Path => &[
+                        AttributeId::Transform,
+                        AttributeId::D,
+                    ],
+                    ElementId::Use => &[
+                        AttributeId::Transform,
+                        AttributeId::X,
+                        AttributeId::Y,
+                        AttributeId::Width,
+                        AttributeId::Height,
+                        AttributeId::XlinkHref,
+                    ],
+                    ElementId::Image => &[
+                        AttributeId::PreserveAspectRatio,
+                        AttributeId::Transform,
+                        AttributeId::X,
+                        AttributeId::Y,
+                        AttributeId::Width,
+                        AttributeId::Height,
+                        AttributeId::XlinkHref,
+                    ],
+                    ElementId::Text => &[
+                        AttributeId::Transform,
+                        AttributeId::X,
+                        AttributeId::Y,
+                        AttributeId::Dx,
+                        AttributeId::Dy,
+                        AttributeId::Rotate,
+                    ],
+                    ElementId::Tspan => &[
+                        AttributeId::X,
+                        AttributeId::Y,
+                        AttributeId::Dx,
+                        AttributeId::Dy,
+                        AttributeId::Rotate,
+                    ],
+                    ElementId::LinearGradient => &[
+                        AttributeId::X1,
+                        AttributeId::Y1,
+                        AttributeId::X2,
+                        AttributeId::Y2,
+                        AttributeId::GradientUnits,
+                        AttributeId::GradientTransform,
+                        AttributeId::SpreadMethod,
+                        AttributeId::XlinkHref,
+                    ],
+                    ElementId::RadialGradient => &[
+                        AttributeId::Cx,
+                        AttributeId::Cy,
+                        AttributeId::R,
+                        AttributeId::Fx,
+                        AttributeId::Fy,
+                        AttributeId::GradientUnits,
+                        AttributeId::GradientTransform,
+                        AttributeId::SpreadMethod,
+                        AttributeId::XlinkHref,
+                    ],
+                    ElementId::Pattern => &[
+                        AttributeId::ViewBox,
+                        AttributeId::X,
+                        AttributeId::Y,
+                        AttributeId::Width,
+                        AttributeId::Height,
+                        AttributeId::PatternUnits,
+                        AttributeId::PatternContentUnits,
+                        AttributeId::PatternTransform,
+                        AttributeId::XlinkHref,
+                    ],
+                    _ => &[],
+                };
+
+                for aid in elem_ids {
+                    if ids.contains(aid) {
+                        ids2.push(*aid);
+                    }
+                }
+            }
+
+            // write sorted
+            for aid in &ids2 {
+                let attr = attrs.get(*aid).unwrap();
+                write_attribute(attr, depth, attrs_depth, opt, out);
+            }
+
+            // write what is left
+            for aid in &ids {
+                if !ids2.contains(aid) {
+                    let attr = attrs.get(*aid).unwrap();
+                    write_attribute(attr, depth, attrs_depth, opt, out);
+                }
+            }
+
+            // write non-SVG attributes
+            for attr in attrs.iter() {
+                if let Name::Name(_) = attr.name {
+                    write_attribute(attr, depth, attrs_depth, opt, out);
+                }
+            }
         }
     }
 }
@@ -266,6 +442,10 @@ fn write_attribute(
     opt: &WriteOptions,
     out: &mut Vec<u8>
 ) {
+    if !opt.write_hidden_attributes && !attr.visible {
+        return;
+    }
+
     if opt.attributes_indent == Indent::None {
         out.push(b' ');
     } else {

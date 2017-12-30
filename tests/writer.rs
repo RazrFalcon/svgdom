@@ -7,6 +7,7 @@ extern crate svgdom;
 
 use svgdom::{
     AttributeId as AId,
+    AttributesOrder,
     Color,
     Document,
     ElementId as EId,
@@ -765,4 +766,46 @@ fn escape_4() {
 
     opt.use_single_quote = true;
     assert_eq_text!(doc.to_string_with_opt(&opt), "<svg font-family='\"Noto Sans\"'/>");
+}
+
+#[test]
+fn attrs_order_1() {
+    let doc = Document::from_str(
+        "<svg id='svg1' custom='qwe' width='100' height='100' fill='#ff0000' stroke='#0000ff'/>").unwrap();
+
+    let mut opt = WriteOptions::default();
+    opt.indent = Indent::None;
+    opt.use_single_quote = true;
+
+    opt.attributes_order = AttributesOrder::AsIs;
+    assert_eq_text!(doc.to_string_with_opt(&opt),
+        "<svg id='svg1' custom='qwe' width='100' height='100' fill='#ff0000' stroke='#0000ff'/>");
+
+    opt.attributes_order = AttributesOrder::Alphabetical;
+    assert_eq_text!(doc.to_string_with_opt(&opt),
+        "<svg id='svg1' fill='#ff0000' height='100' stroke='#0000ff' width='100' custom='qwe'/>");
+}
+
+#[test]
+fn attrs_order_2() {
+    let doc = Document::from_str(
+"<svg>
+    <linearGradient x1='1' gradientTransform='scale(2)' y1='1' gradientUnits='userSpaceOnUse' \
+        spreadMethod='pad' x2='1' y2='1'/>
+    <rect fill='#ff0000' height='5' y='5' x='5' width='5' stroke='#ff0000'/>
+
+</svg>"
+).unwrap();
+
+    let mut opt = WriteOptions::default();
+    opt.use_single_quote = true;
+    opt.attributes_order = AttributesOrder::Specification;
+    assert_eq_text!(doc.to_string_with_opt(&opt),
+"<svg>
+    <linearGradient x1='1' y1='1' x2='1' y2='1' gradientUnits='userSpaceOnUse' \
+        gradientTransform='matrix(2 0 0 2 0 0)' spreadMethod='pad'/>
+    <rect fill='#ff0000' stroke='#ff0000' x='5' y='5' width='5' height='5'/>
+</svg>
+"
+);
 }

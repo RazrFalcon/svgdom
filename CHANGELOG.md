@@ -8,7 +8,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 **Note:** this update contain breaking changes.
 
 ### Added
-- `WriteOptions::list_separator`
+- `WriteOptions::list_separator`.
+- `WriteOptions::attributes_order`.
 - Implemented `WriteBuffer` and `ToStringWithOptions` for `NumberList` and `LengthList`.
 - Quotes escape in attribute values.
 
