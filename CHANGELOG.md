@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 - The `types` module is private now and all types are available in the global namespace.
+- `WriteOptionsPaths` merged to `WriteOptions`.
 - The value of the 'unicode' attribute is always escaped now.
 - The minimal Rust version is 1.16 now. Because of `log`.
 

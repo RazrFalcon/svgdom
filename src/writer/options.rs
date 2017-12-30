@@ -48,59 +48,6 @@ pub enum AttributesOrder {
     Specification,
 }
 
-
-/// Options that defines SVG paths writing.
-pub struct WriteOptionsPaths {
-    /// Use compact path notation.
-    ///
-    /// SVG allow us to remove some symbols from path notation without breaking parsing.
-    ///
-    /// # Examples
-    ///
-    /// `M 10 -20 A 5.5 0.3 -4 1 1 0 -0.1` -> `M10-20A5.5.3-4 1 1 0-.1`
-    ///
-    /// Default: disabled
-    pub use_compact_notation: bool,
-
-    /// Join ArcTo flags.
-    ///
-    /// Elliptical arc curve segment has flags parameters, which can have values of `0` or `1`.
-    /// Since we have fixed-width values, we can skip spaces between them.
-    ///
-    /// **Note:** Sadly, but most of the viewers doesn't support such notation,
-    /// even through it's valid by SVG spec.
-    ///
-    /// # Examples
-    ///
-    /// `A 5 5 30 1 1 10 10` -> `A 5 5 30 1110 10`
-    ///
-    /// Default: disabled
-    pub join_arc_to_flags: bool,
-
-    /// Remove duplicated commands.
-    ///
-    /// If the segment has the same type as previous - we can skip command specifier.
-    ///
-    /// # Examples
-    ///
-    /// `M 10 10 L 20 20 L 30 30 L 40 40` -> `M 10 10 L 20 20 30 30 40 40`
-    ///
-    /// Default: disabled
-    pub remove_duplicated_commands: bool,
-
-    /// Use implicit LineTo commands.
-    ///
-    /// 'If a MoveTo is followed by multiple pairs of coordinates,
-    /// the subsequent pairs are treated as implicit LineTo commands.'
-    ///
-    /// # Examples
-    ///
-    /// `M 10 10 L 20 20 L 30 30` -> `M 10 10 20 20 30 30`
-    ///
-    /// Default: disabled
-    pub use_implicit_lineto_commands: bool,
-}
-
 /// Options that defines SVG writing.
 pub struct WriteOptions {
     /// Set XML nodes indention.
@@ -205,10 +152,54 @@ pub struct WriteOptions {
     /// Default: disabled
     pub remove_leading_zero: bool,
 
-    /// Paths options.
+    /// Use compact path notation.
     ///
-    /// See `WriteOptionsPaths` documentation.
-    pub paths: WriteOptionsPaths,
+    /// SVG allow us to remove some symbols from path notation without breaking parsing.
+    ///
+    /// # Examples
+    ///
+    /// `M 10 -20 A 5.5 0.3 -4 1 1 0 -0.1` -> `M10-20A5.5.3-4 1 1 0-.1`
+    ///
+    /// Default: disabled
+    pub use_compact_path_notation: bool,
+
+    /// Join ArcTo flags.
+    ///
+    /// Elliptical arc curve segment has flags parameters, which can have values of `0` or `1`.
+    /// Since we have fixed-width values, we can skip spaces between them.
+    ///
+    /// **Note:** Sadly, but most of the viewers doesn't support such notation,
+    /// even through it's valid by SVG spec.
+    ///
+    /// # Examples
+    ///
+    /// `A 5 5 30 1 1 10 10` -> `A 5 5 30 1110 10`
+    ///
+    /// Default: disabled
+    pub join_arc_to_flags: bool,
+
+    /// Remove duplicated commands.
+    ///
+    /// If the segment has the same type as previous - we can skip command specifier.
+    ///
+    /// # Examples
+    ///
+    /// `M 10 10 L 20 20 L 30 30 L 40 40` -> `M 10 10 L 20 20 30 30 40 40`
+    ///
+    /// Default: disabled
+    pub remove_duplicated_path_commands: bool,
+
+    /// Use implicit LineTo commands.
+    ///
+    /// 'If a MoveTo is followed by multiple pairs of coordinates,
+    /// the subsequent pairs are treated as implicit LineTo commands.'
+    ///
+    /// # Examples
+    ///
+    /// `M 10 10 L 20 20 L 30 30` -> `M 10 10 20 20 30 30`
+    ///
+    /// Default: disabled
+    pub use_implicit_lineto_commands: bool,
 
     /// Simplify transform matrices into short equivalent when possible.
     ///
@@ -247,12 +238,10 @@ impl Default for WriteOptions {
             trim_hex_colors: false,
             write_hidden_attributes: false,
             remove_leading_zero: false,
-            paths: WriteOptionsPaths {
-                use_compact_notation: false,
-                join_arc_to_flags: false,
-                remove_duplicated_commands: false,
-                use_implicit_lineto_commands: false,
-            },
+            use_compact_path_notation: false,
+            join_arc_to_flags: false,
+            remove_duplicated_path_commands: false,
+            use_implicit_lineto_commands: false,
             simplify_transform_matrices: false,
             list_separator: ListSeparator::Space,
             attributes_order: AttributesOrder::Alphabetical,

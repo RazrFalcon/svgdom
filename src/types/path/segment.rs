@@ -340,7 +340,7 @@ impl fmt::Display for Segment {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let mut buf: Vec<u8> = Vec::new();
         let mut opt = WriteOptions::default();
-        opt.paths.use_compact_notation = true;
+        opt.use_compact_path_notation = true;
 
         writer::write_cmd_char(self, &mut buf);
 

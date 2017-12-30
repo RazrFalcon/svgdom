@@ -39,7 +39,7 @@ impl WriteBuffer for Path {
             write_segment(seg.data(), is_written, &mut prev_coord_has_dot, opt, buf);
         }
 
-        if !opt.paths.use_compact_notation {
+        if !opt.use_compact_path_notation {
             let len = buf.len();
             buf.truncate(len - 1);
         }
@@ -53,7 +53,7 @@ fn write_cmd(
     buf: &mut Vec<u8>
 ) -> bool {
     let mut print_cmd = true;
-    if opt.paths.remove_duplicated_commands {
+    if opt.remove_duplicated_path_commands {
         // check that previous command is the same as current
         if let Some(ref pcmd) = *prev_cmd {
             if seg.cmd() == pcmd.cmd && seg.absolute == pcmd.absolute {
@@ -63,7 +63,7 @@ fn write_cmd(
     }
 
     let mut is_implicit = false;
-    if opt.paths.use_implicit_lineto_commands {
+    if opt.use_implicit_lineto_commands {
 
         let check_implicit = || {
             if let Some(ref pcmd) = *prev_cmd {
@@ -104,7 +104,7 @@ fn write_cmd(
 
     write_cmd_char(seg, buf);
 
-    if !(seg.cmd() == Command::ClosePath || opt.paths.use_compact_notation) {
+    if !(seg.cmd() == Command::ClosePath || opt.use_compact_path_notation) {
         buf.push(b' ');
     }
 
@@ -181,17 +181,17 @@ pub fn write_segment(
             write_coords(&[rx, ry, x_axis_rotation], is_written,
                          prev_coord_has_dot, opt, buf);
 
-            if opt.paths.use_compact_notation {
+            if opt.use_compact_path_notation {
                 // flags must always have a space before it
                 buf.push(b' ');
             }
 
             write_flag(large_arc, buf);
-            if !opt.paths.join_arc_to_flags {
+            if !opt.join_arc_to_flags {
                 buf.push(b' ');
             }
             write_flag(sweep, buf);
-            if !opt.paths.join_arc_to_flags {
+            if !opt.join_arc_to_flags {
                 buf.push(b' ');
             }
 
@@ -203,7 +203,7 @@ pub fn write_segment(
             write_coords(&[x, y], true, prev_coord_has_dot, opt, buf);
         }
         SegmentData::ClosePath => {
-            if !opt.paths.use_compact_notation {
+            if !opt.use_compact_path_notation {
                 buf.push(b' ');
             }
         }
@@ -217,7 +217,7 @@ fn write_coords(
     opt: &WriteOptions,
     buf: &mut Vec<u8>
 ) {
-    if opt.paths.use_compact_notation {
+    if opt.use_compact_path_notation {
         for (i, num) in coords.iter().enumerate() {
             let start_pos = buf.len() - 1;
 
@@ -319,7 +319,7 @@ mod tests {
                 let path = Path::from_str($in_text).unwrap();
 
                 let mut opt = WriteOptions::default();
-                opt.paths.$flag = true;
+                opt.$flag = true;
 
                 assert_eq_text!(path.to_string_with_opt(&opt), $out_text);
             }
@@ -329,30 +329,30 @@ mod tests {
     test_gen_path_opt!(gen_path_6,
         "M 10 20 L 30 40 L 50 60 l 70 80",
         "M 10 20 L 30 40 50 60 l 70 80",
-        remove_duplicated_commands);
+        remove_duplicated_path_commands);
 
     test_gen_path_opt!(gen_path_7,
         "M 10 20 30 40 50 60",
         "M 10 20 L 30 40 50 60",
-        remove_duplicated_commands);
+        remove_duplicated_path_commands);
 
     test_gen_path_opt!(gen_path_8,
         "M 10 20 L 30 40",
         "M10 20L30 40",
-        use_compact_notation);
+        use_compact_path_notation);
 
     test_gen_path_opt!(gen_path_9,
         "M 10 20 V 30 H 40 V 50 H 60 Z",
         "M10 20V30H40V50H60Z",
-        use_compact_notation);
+        use_compact_path_notation);
 
     #[test]
     fn gen_path_10() {
         let path = Path::from_str("M 10 -20 A 5.5 0.3 -4 1 1 0 -0.1").unwrap();
 
         let mut opt = WriteOptions::default();
-        opt.paths.use_compact_notation = true;
-        opt.paths.join_arc_to_flags = true;
+        opt.use_compact_path_notation = true;
+        opt.join_arc_to_flags = true;
         opt.remove_leading_zero = true;
 
         assert_eq_text!(path.to_string_with_opt(&opt), "M10-20A5.5.3-4 110-.1");
@@ -361,12 +361,12 @@ mod tests {
     test_gen_path_opt!(gen_path_11,
         "M 10-10 a 1 1 0 1 1 -1 1",
         "M10-10a1 1 0 1 1 -1 1",
-        use_compact_notation);
+        use_compact_path_notation);
 
     test_gen_path_opt!(gen_path_12,
         "M 10-10 a 1 1 0 1 1 0.1 1",
         "M10-10a1 1 0 1 1 0.1 1",
-        use_compact_notation);
+        use_compact_path_notation);
 
     test_gen_path_opt!(gen_path_13,
         "M 10 20 L 30 40 L 50 60 H 10",
@@ -399,8 +399,8 @@ mod tests {
         let path = Path::from_str("M 10 20 L 30 40 L 50 60 M 10 20 L 30 40 L 50 60").unwrap();
 
         let mut opt = WriteOptions::default();
-        opt.paths.use_implicit_lineto_commands = true;
-        opt.paths.remove_duplicated_commands = true;
+        opt.use_implicit_lineto_commands = true;
+        opt.remove_duplicated_path_commands = true;
 
         assert_eq_text!(path.to_string_with_opt(&opt), "M 10 20 30 40 50 60 M 10 20 30 40 50 60");
     }
@@ -410,8 +410,8 @@ mod tests {
         let path = Path::from_str("m10 20 A 10 10 0 1 0 0 0 A 2 2 0 1 0 2 0").unwrap();
 
         let mut opt = WriteOptions::default();
-        opt.paths.use_compact_notation = true;
-        opt.paths.remove_duplicated_commands = true;
+        opt.use_compact_path_notation = true;
+        opt.remove_duplicated_path_commands = true;
         opt.remove_leading_zero = true;
 
         // may generate as 'm10 20A10 10 0 1 0 0 0 2 2 0 1 0  2 0' <- two spaces
@@ -424,8 +424,8 @@ mod tests {
         let path = Path::from_str("M 0.1 0.1 L 1 0.1 2 -0.1").unwrap();
 
         let mut opt = WriteOptions::default();
-        opt.paths.use_compact_notation = true;
-        opt.paths.remove_duplicated_commands = true;
+        opt.use_compact_path_notation = true;
+        opt.remove_duplicated_path_commands = true;
         opt.remove_leading_zero = true;
 
         assert_eq_text!(path.to_string_with_opt(&opt), "M.1.1L1 .1 2-.1");
