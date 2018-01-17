@@ -157,8 +157,7 @@ pub fn resolve_css<'a>(
                                 }
                             }
                         } else {
-                            warn!("CSS styles for a non-SVG element ('{}') are ignored.",
-                                     name);
+                            warn!("CSS styles for a non-SVG element ('{}') are ignored.", name);
                         }
                     }
                     CssSelector::Id(name) => {
@@ -216,7 +215,7 @@ fn postprocess_class_selector<'a>(
 }
 
 fn apply_css_attributes<'a>(
-    values: &[(&str,&'a str)],
+    values: &[(&str, &'a str)],
     node: &mut Node,
     links: &mut Links<'a>,
     entitis: &Entities<'a>,
@@ -225,11 +224,29 @@ fn apply_css_attributes<'a>(
     for &(aname, avalue) in values {
         match AttributeId::from_name(aname) {
             Some(aid) => {
-                // TODO: to a proper stream
-                super::parser::parse_svg_attribute_value(
-                    node, aid, StrSpan::from_str(avalue),
-                    links, entitis, opt
-                )?;
+                let mut parse_attr = |aid: AttributeId| {
+                    // TODO: to a proper stream
+                    super::parser::parse_svg_attribute_value(
+                        node, aid, StrSpan::from_str(avalue),
+                        links, entitis, opt
+                    )
+                };
+
+                if aid == AttributeId::Marker {
+                    // The SVG specification defines three properties to reference markers:
+                    // `marker-start`, `marker-mid`, `marker-end`.
+                    // It also provides a shorthand property, marker.
+                    // Using the marker property from a style sheet
+                    // is equivalent to using all three (start, mid, end).
+                    // However, shorthand properties cannot be used as presentation attributes.
+                    // So we have to convert it to presentation attributes.
+
+                    parse_attr(AttributeId::MarkerStart)?;
+                    parse_attr(AttributeId::MarkerMid)?;
+                    parse_attr(AttributeId::MarkerEnd)?;
+                } else {
+                    parse_attr(aid)?;
+                }
             }
             None => {
                 if opt.parse_unknown_attributes {

@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.10.1] - 2018-01-17
+### Fixed
+- `marker` property resolving from CSS.
+
 ## [0.10.0] - 2018-01-17
 **Note:** this update contain breaking changes.
 

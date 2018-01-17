@@ -446,6 +446,22 @@ rect {fill:red;}
 </svg>
 ");
 
+// marker property
+test_resave!(parse_css_23,
+"<svg>
+    <style type='text/css' >
+        rect { marker: url(#marker1); }
+    </style>
+    <marker id='marker1'/>
+    <rect/>
+</svg>
+",
+"<svg>
+    <marker id='marker1'/>
+    <rect marker-end='url(#marker1)' marker-mid='url(#marker1)' marker-start='url(#marker1)'/>
+</svg>
+");
+
 // style must be ungroupped after presentation attributes
 test_resave!(parse_style_1,
 "<svg>
