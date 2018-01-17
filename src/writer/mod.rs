@@ -211,8 +211,7 @@ fn write_tag_name(tag_name: &Name<ElementId>, out: &mut Vec<u8>) {
             out.extend_from_slice(id.name().as_bytes());
         }
         Name::Name(ref name) => {
-            let n = name.clone();
-            out.extend_from_slice(n.as_bytes());
+            out.extend_from_slice(name.as_bytes());
         }
     }
 }
