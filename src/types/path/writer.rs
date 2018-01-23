@@ -56,8 +56,11 @@ fn write_cmd(
     if opt.remove_duplicated_path_commands {
         // check that previous command is the same as current
         if let Some(ref pcmd) = *prev_cmd {
-            if seg.cmd() == pcmd.cmd && seg.absolute == pcmd.absolute {
-                print_cmd = false;
+            // MoveTo commands can't be skipped
+            if pcmd.cmd != Command::MoveTo {
+                if seg.cmd() == pcmd.cmd && seg.absolute == pcmd.absolute {
+                    print_cmd = false;
+                }
             }
         }
     }
@@ -430,4 +433,9 @@ mod tests {
 
         assert_eq_text!(path.to_string_with_opt(&opt), "M.1.1L1 .1 2-.1");
     }
+
+    test_gen_path_opt!(gen_path_21,
+        "M 10 20 M 30 40 M 50 60 L 30 40",
+        "M 10 20 M 30 40 M 50 60 L 30 40",
+        remove_duplicated_path_commands);
 }

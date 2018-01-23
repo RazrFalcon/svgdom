@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Fixed
+- `WriteOptions::remove_duplicated_path_commands` ignores `MoveTo` now.
 
 ## [0.10.1] - 2018-01-17
 ### Fixed
@@ -22,7 +24,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 - The `types` module is private now and all types are available in the global namespace.
 - `WriteOptionsPaths` merged to `WriteOptions`.
-- The value of the 'unicode' attribute is always escaped now.
+- The value of the `unicode` attribute is always escaped now.
 - The minimal Rust version is 1.16 now. Because of `log`.
 
 ## [0.9.1] - 2017-12-15
@@ -325,7 +327,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Initial release.
 
 [Unreleased]: https://github.com/RazrFalcon/libsvgdom/compare/v0.10.1...HEAD
-[0.10.0]: https://github.com/RazrFalcon/libsvgdom/compare/v0.10.0...v0.10.1
+[0.10.1]: https://github.com/RazrFalcon/libsvgdom/compare/v0.10.0...v0.10.1
 [0.10.0]: https://github.com/RazrFalcon/libsvgdom/compare/v0.9.1...v0.10.0
 [0.9.1]: https://github.com/RazrFalcon/libsvgdom/compare/v0.9.0...v0.9.1
 [0.9.0]: https://github.com/RazrFalcon/libsvgdom/compare/v0.8.1...v0.9.0
