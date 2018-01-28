@@ -97,7 +97,7 @@ impl Node {
     ///
     /// # Panics
     ///
-    /// - Panics if the node is currently mutability borrowed.
+    /// - Panics if the node is currently mutably borrowed.
     /// - Panics if the node is a root node.
     pub fn document(&self) -> Document {
         // TODO: will fail on root node
@@ -111,7 +111,7 @@ impl Node {
     ///
     /// # Panics
     ///
-    /// Panics if the node is currently mutability borrowed.
+    /// Panics if the node is currently mutably borrowed.
     pub fn parent(&self) -> Option<Node> {
         Some(Node(try_opt!(try_opt!(self.0.borrow().parent.as_ref()).upgrade())))
     }
@@ -122,7 +122,7 @@ impl Node {
     ///
     /// # Panics
     ///
-    /// Panics if the node is currently mutability borrowed.
+    /// Panics if the node is currently mutably borrowed.
     ///
     /// # Examples
     /// ```
@@ -152,7 +152,7 @@ impl Node {
     ///
     /// # Panics
     ///
-    /// Panics if the node is currently mutability borrowed.
+    /// Panics if the node is currently mutably borrowed.
     pub fn parents(&self) -> Parents {
         Parents::new(self.parent())
     }
@@ -163,7 +163,7 @@ impl Node {
     ///
     /// # Panics
     ///
-    /// Panics if the node is currently mutability borrowed.
+    /// Panics if the node is currently mutably borrowed.
     pub fn parents_with_self(&self) -> Parents {
         Parents::new(Some(self.clone()))
     }
@@ -172,7 +172,7 @@ impl Node {
     ///
     /// # Panics
     ///
-    /// Panics if the node is currently mutability borrowed.
+    /// Panics if the node is currently mutably borrowed.
     pub fn children(&self) -> Children {
         Children::new(self.first_child())
     }
@@ -181,7 +181,7 @@ impl Node {
     ///
     /// # Panics
     ///
-    /// Panics if the node is currently mutability borrowed.
+    /// Panics if the node is currently mutably borrowed.
     pub fn has_children(&self) -> bool {
         self.first_child().is_some()
     }
@@ -192,7 +192,7 @@ impl Node {
     ///
     /// # Panics
     ///
-    /// Panics if the node is currently mutability borrowed.
+    /// Panics if the node is currently mutably borrowed.
     pub fn first_child(&self) -> Option<Node> {
         Some(Node(Rc::clone(try_opt!(self.0.borrow().first_child.as_ref()))))
     }
@@ -201,7 +201,7 @@ impl Node {
     ///
     /// # Panics
     ///
-    /// Panics if the node is currently mutability borrowed.
+    /// Panics if the node is currently mutably borrowed.
     pub fn last_child(&self) -> Option<Node> {
         Some(Node(try_opt!(try_opt!(self.0.borrow().last_child.as_ref()).upgrade())))
     }
@@ -210,16 +210,16 @@ impl Node {
     ///
     /// # Panics
     ///
-    /// Panics if the node is currently mutability borrowed.
+    /// Panics if the node is currently mutably borrowed.
     pub fn previous_sibling(&self) -> Option<Node> {
         Some(Node(try_opt!(try_opt!(self.0.borrow().prev_sibling.as_ref()).upgrade())))
     }
 
-    /// Returns the previous sibling of this node, unless it is a first child.
+    /// Returns the next sibling of this node, unless it is a first child.
     ///
     /// # Panics
     ///
-    /// Panics if the node is currently mutability borrowed.
+    /// Panics if the node is currently mutably borrowed.
     pub fn next_sibling(&self) -> Option<Node> {
         Some(Node(Rc::clone(try_opt!(self.0.borrow().next_sibling.as_ref()))))
     }
@@ -359,7 +359,7 @@ impl Node {
     ///
     /// # Panics
     ///
-    /// Panics if the node is currently mutability borrowed.
+    /// Panics if the node is currently mutably borrowed.
     pub fn make_copy(&self) -> Node {
         match self.node_type() {
             NodeType::Element => {
@@ -383,7 +383,7 @@ impl Node {
     ///
     /// # Panics
     ///
-    /// Panics if the node or any children node are currently mutability borrowed.
+    /// Panics if the node or any children node are currently mutably borrowed.
     pub fn make_deep_copy(&self) -> Node {
         let mut root = self.make_copy();
         Node::_make_deep_copy(&mut root, self);
@@ -552,7 +552,7 @@ impl Node {
     ///
     /// # Panics
     ///
-    /// Panics if the node is currently mutability borrowed.
+    /// Panics if the node is currently mutably borrowed.
     pub fn node_type(&self) -> NodeType {
         self.0.borrow().node_type
     }
@@ -563,7 +563,7 @@ impl Node {
     ///
     /// # Panics
     ///
-    /// Panics if the node is currently mutability borrowed.
+    /// Panics if the node is currently mutably borrowed.
     pub fn text(&self) -> Ref<String> {
         Ref::map(self.0.borrow(), |n| &n.text)
     }
@@ -574,7 +574,7 @@ impl Node {
     ///
     /// # Panics
     ///
-    /// Panics if the node is currently mutability borrowed.
+    /// Panics if the node is currently mutably borrowed.
     pub fn text_mut(&mut self) -> RefMut<String> {
         RefMut::map(self.0.borrow_mut(), |n| &mut n.text)
     }
@@ -583,7 +583,7 @@ impl Node {
     ///
     /// # Panics
     ///
-    /// Panics if the node is currently mutability borrowed.
+    /// Panics if the node is currently mutably borrowed.
     pub fn set_text(&mut self, text: &str) {
         debug_assert_ne!(self.node_type(), NodeType::Element);
         let mut b = self.0.borrow_mut();
@@ -594,7 +594,7 @@ impl Node {
     ///
     /// # Panics
     ///
-    /// Panics if the node is currently mutability borrowed.
+    /// Panics if the node is currently mutably borrowed.
     pub fn id(&self) -> Ref<String> {
         Ref::map(self.0.borrow(), |n| &n.id)
     }
@@ -603,7 +603,7 @@ impl Node {
     ///
     /// # Panics
     ///
-    /// Panics if the node is currently mutability borrowed.
+    /// Panics if the node is currently mutably borrowed.
     pub fn has_id(&self) -> bool {
         !self.0.borrow().id.is_empty()
     }
@@ -626,7 +626,7 @@ impl Node {
     ///
     /// # Panics
     ///
-    /// Panics if the node is currently mutability borrowed.
+    /// Panics if the node is currently mutably borrowed.
     pub fn is_svg_element(&self) -> bool {
         let b = self.0.borrow();
         match b.tag_name {
@@ -644,7 +644,7 @@ impl Node {
     ///
     /// # Panics
     ///
-    /// Panics if the node is currently mutability borrowed.
+    /// Panics if the node is currently mutably borrowed.
     pub fn tag_name(&self) -> Option<Ref<TagName>> {
         // TODO: return NameRef somehow
         let b = self.0.borrow();
@@ -658,7 +658,7 @@ impl Node {
     ///
     /// # Panics
     ///
-    /// Panics if the node is currently mutability borrowed.
+    /// Panics if the node is currently mutably borrowed.
     pub fn tag_id(&self) -> Option<ElementId> {
         let b = self.0.borrow();
         match b.tag_name {
@@ -676,7 +676,7 @@ impl Node {
     ///
     /// # Panics
     ///
-    /// Panics if the node is currently mutability borrowed.
+    /// Panics if the node is currently mutably borrowed.
     pub fn is_tag_name<'a, T>(&self, tag_name: T) -> bool
         where TagNameRef<'a>: From<T>
     {
@@ -719,7 +719,7 @@ impl Node {
     ///
     /// # Panics
     ///
-    /// Panics if the node is currently mutability borrowed.
+    /// Panics if the node is currently mutably borrowed.
     pub fn attributes(&self) -> Ref<Attributes> {
         Ref::map(self.0.borrow(), |n| &n.attributes)
     }
@@ -737,7 +737,7 @@ impl Node {
     ///
     /// # Panics
     ///
-    /// Panics if the node is currently mutability borrowed.
+    /// Panics if the node is currently mutably borrowed.
     #[inline]
     pub fn has_attribute<'a, N>(&self, name: N) -> bool
         where AttributeNameRef<'a>: From<N>
@@ -749,7 +749,7 @@ impl Node {
     ///
     /// # Panics
     ///
-    /// Panics if the node is currently mutability borrowed.
+    /// Panics if the node is currently mutably borrowed.
     pub fn has_visible_attribute(&self, id: AttributeId) -> bool {
         if let Some(attr) = self.attributes().get(id) { attr.visible } else { false }
     }
@@ -759,7 +759,7 @@ impl Node {
     ///
     /// # Panics
     ///
-    /// Panics if the node is currently mutability borrowed.
+    /// Panics if the node is currently mutably borrowed.
     pub fn has_attributes(&self, ids: &[AttributeId]) -> bool {
         let attrs = self.attributes();
         for id in ids {
@@ -1045,7 +1045,7 @@ impl Node {
     ///
     /// # Panics
     ///
-    /// Panics if the node is currently mutability borrowed.
+    /// Panics if the node is currently mutably borrowed.
     pub fn linked_nodes(&self) -> LinkedNodes {
         LinkedNodes::new(Ref::map(self.0.borrow(), |n| &n.linked_nodes))
     }
@@ -1056,7 +1056,7 @@ impl Node {
     ///
     /// # Panics
     ///
-    /// Panics if the node is currently mutability borrowed.
+    /// Panics if the node is currently mutably borrowed.
     pub fn is_used(&self) -> bool {
         let self_borrow = self.0.borrow();
         !self_borrow.linked_nodes.is_empty()
@@ -1068,7 +1068,7 @@ impl Node {
     ///
     /// # Panics
     ///
-    /// Panics if the node is currently mutability borrowed.
+    /// Panics if the node is currently mutably borrowed.
     pub fn uses_count(&self) -> usize {
         let self_borrow = self.0.borrow();
         self_borrow.linked_nodes.len()

@@ -28,7 +28,7 @@ pub struct NodeData {
     pub prev_sibling: Option<WeakLink>,
     pub next_sibling: Option<Link>,
 
-    pub node_type: NodeType, // TODO: should be immutable/const somehow
+    pub node_type: NodeType,
     pub tag_name: Option<TagName>,
     pub id: String,
     pub attributes: Attributes,
