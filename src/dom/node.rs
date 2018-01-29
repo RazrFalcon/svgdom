@@ -278,7 +278,6 @@ impl Node {
     pub fn remove(&mut self) {
         let mut ids = Vec::with_capacity(16);
         Node::_remove(self, &mut ids);
-        self.detach();
     }
 
     fn _remove(node: &mut Node, ids: &mut Vec<AttributeId>) {
@@ -319,6 +318,8 @@ impl Node {
         for mut child in node.children() {
             Node::_remove(&mut child, ids);
         }
+
+        node.detach();
     }
 
     /// Removes only the children nodes specified by the predicate.

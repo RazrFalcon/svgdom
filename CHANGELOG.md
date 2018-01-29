@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 ### Fixed
 - Memory leak.
+- Stack overflow when `Document` has a lot of nodes (>100k).
 
 ## [0.10.2] - 2018-01-23
 ### Fixed
