@@ -74,10 +74,11 @@ impl Drop for NodeData {
             // Root `Node` itself was already removed, so we have to
             // iterate over children.
             if let Some(child) = self.first_child.as_ref() {
-                let root = Node(child.clone());
+                let mut root = Node(child.clone());
                 while let Some(mut sibling) = root.next_sibling() {
                     sibling.remove();
                 }
+                root.remove();
             }
         }
     }
