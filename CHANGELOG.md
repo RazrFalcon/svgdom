@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.10.4] - 2018-02-03
+### Fixed
+- Invalid files in the crate package.
+
 ## [0.10.3] - 2018-01-29
 ### Fixed
 - Memory leak.
@@ -333,7 +337,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/RazrFalcon/libsvgdom/compare/v0.10.3...HEAD
+[Unreleased]: https://github.com/RazrFalcon/libsvgdom/compare/v0.10.4...HEAD
+[0.10.4]: https://github.com/RazrFalcon/libsvgdom/compare/v0.10.3...v0.10.4
 [0.10.3]: https://github.com/RazrFalcon/libsvgdom/compare/v0.10.2...v0.10.3
 [0.10.2]: https://github.com/RazrFalcon/libsvgdom/compare/v0.10.1...v0.10.2
 [0.10.1]: https://github.com/RazrFalcon/libsvgdom/compare/v0.10.0...v0.10.1
