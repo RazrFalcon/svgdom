@@ -619,8 +619,7 @@ impl Node {
     pub fn set_id<S: Into<String>>(&mut self, id: S) {
         // TODO: check that it's unique.
         debug_assert_eq!(self.node_type(), NodeType::Element);
-        let mut self_borrow = self.0.borrow_mut();
-        self_borrow.id = id.into();
+        self.0.borrow_mut().id = id.into();
     }
 
     /// Returns `true` if node has an `Element` type and an SVG tag name.

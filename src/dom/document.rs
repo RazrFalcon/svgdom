@@ -194,9 +194,12 @@ impl Document {
         self.root().drain(f)
     }
 
-    fn new_node(doc: Option<Link>, node_type: NodeType, tag_name: Option<TagNameRef>,
-                text: String)
-                -> Node {
+    fn new_node(
+        doc: Option<Link>,
+        node_type: NodeType,
+        tag_name: Option<TagNameRef>,
+        text: String
+    ) -> Node {
         Node(Rc::new(RefCell::new(NodeData {
             doc: doc.map(|a| Rc::downgrade(&a)),
             parent: None,
