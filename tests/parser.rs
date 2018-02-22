@@ -767,6 +767,11 @@ test_resave!(parse_script_1,
 </svg>
 ");
 
+test_resave!(parse_viewbox_1,
+"<svg viewBox='10 20 30 40'/>",
+"<svg viewBox='10 20 30 40'/>
+");
+
 #[test]
 fn skip_comments_1() {
     let mut opt = ParseOptions::default();

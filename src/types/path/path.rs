@@ -3,6 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 use std::fmt;
+use std::ops::{Deref, DerefMut};
 
 use super::{
     Command,
@@ -12,20 +13,17 @@ use super::{
 
 /// Representation of the SVG path data.
 #[derive(Default,PartialEq,Clone)]
-pub struct Path {
-    /// Vector which contain all segments.
-    pub d: Vec<Segment>
-}
+pub struct Path(Vec<Segment>);
 
 impl Path {
     /// Constructs a new path.
-    pub fn new() -> Path {
-        Path { d: Vec::new() }
+    pub fn new() -> Self {
+        Path(Vec::new())
     }
 
-    /// Constructs a new path with the specified capacity.
-    pub fn with_capacity(capacity: usize) -> Path {
-        Path { d: Vec::with_capacity(capacity) }
+    /// Constructs a new path with a specified capacity.
+    pub fn with_capacity(capacity: usize) -> Self {
+        Path(Vec::with_capacity(capacity))
     }
 
     // TODO: append Path
@@ -45,7 +43,7 @@ impl Path {
         let mut prev_my = 0.0;
 
         let mut prev_cmd = Command::MoveTo;
-        for seg in &mut self.d {
+        for seg in self.iter_mut() {
             if seg.cmd() == Command::ClosePath {
                 prev_x = prev_mx;
                 prev_y = prev_my;
@@ -110,7 +108,7 @@ impl Path {
         let mut prev_my = 0.0;
 
         let mut prev_cmd = Command::MoveTo;
-        for seg in &mut self.d {
+        for seg in self.iter_mut() {
             if seg.cmd() == Command::ClosePath {
                 prev_x = prev_mx;
                 prev_y = prev_my;
@@ -229,6 +227,20 @@ impl fmt::Debug for Path {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         // Overload Display.
         write!(f, "{}", &self)
+    }
+}
+
+impl Deref for Path {
+    type Target = Vec<Segment>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl DerefMut for Path {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
     }
 }
 

@@ -27,14 +27,14 @@ struct PrevCmd {
 
 impl WriteBuffer for Path {
     fn write_buf_opt(&self, opt: &WriteOptions, buf: &mut Vec<u8>) {
-        if self.d.is_empty() {
+        if self.is_empty() {
             return;
         }
 
         let mut prev_cmd: Option<PrevCmd> = None;
         let mut prev_coord_has_dot = false;
 
-        for seg in &self.d {
+        for seg in self.iter() {
             let is_written = write_cmd(seg, &mut prev_cmd, opt, buf);
             write_segment(seg.data(), is_written, &mut prev_coord_has_dot, opt, buf);
         }
@@ -274,8 +274,8 @@ mod tests {
     #[test]
     fn gen_path_1() {
         let mut path = Path::new();
-        path.d.push(Segment::new_move_to(10.0, 20.0));
-        path.d.push(Segment::new_line_to(10.0, 20.0));
+        path.push(Segment::new_move_to(10.0, 20.0));
+        path.push(Segment::new_line_to(10.0, 20.0));
         assert_eq!(path.to_string(), "M 10 20 L 10 20");
     }
 

@@ -26,6 +26,7 @@ impl_from_str!(Path);
 impl ParseFromSpan for Path {
     type Err = ParseError;
 
+    // TODO: can't fail
     fn from_span(span: StrSpan) -> Result<Path, ParseError> {
         use svgparser::path::Token;
 
@@ -101,7 +102,7 @@ impl ParseFromSpan for Path {
                 }
             };
 
-            p.d.push(seg);
+            p.push(seg);
         }
 
         Ok(p)

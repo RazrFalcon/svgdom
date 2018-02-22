@@ -18,16 +18,15 @@ log = "0.4"
 float-cmp = "0.3"
 # simplecss = { git = "https://github.com/RazrFalcon/simplecss.git" }
 simplecss = "0.1.0"
-# clippy = { version = "*", optional = true }
 
 [dependencies.svgparser]
 # latest public
-# git = "https://github.com/RazrFalcon/libsvgparser.git"
+git = "https://github.com/RazrFalcon/libsvgparser.git"
 # branch = "master"
 # local copy
 # path = "../svgparser"
 # from crates
-version = "0.6"
+# version = "0.6"
 
 [dependencies.error-chain]
 version = "0.11"

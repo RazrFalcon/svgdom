@@ -5,6 +5,16 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Added
+- Implemented `Deref` and `DerefMut` for `Path`.
+- **Breaking**. `AttributeValue::Points`.
+- **Breaking**. `AttributeValue::ViewBox`.
+
+### Changed
+- **Breaking**. `Path`'s fields are private now. Use deref instead.
+
+### Removed
+- **Breaking**. `AttributeValue::name`.
 
 ## [0.10.4] - 2018-02-03
 ### Fixed

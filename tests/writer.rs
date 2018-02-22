@@ -17,6 +17,7 @@ use svgdom::{
     NodeType,
     ToStringWithOptions,
     Transform,
+    ViewBox,
     WriteOptions,
 };
 
@@ -143,25 +144,30 @@ fn attributes_types_1() {
 
     doc.append(&svg);
 
+    svg.set_attribute((AId::ViewBox, ViewBox::new(10.0, 20.0, 30.0, 40.0)));
     svg.set_attribute((AId::Version, "1.0"));
     svg.set_attribute((AId::Width, 1.5));
     svg.set_attribute((AId::Height, Length::new(1.5, LengthUnit::Percent)));
     svg.set_attribute((AId::Fill, Color::new(255, 255, 255)));
     svg.set_attribute((AId::Transform, Transform::new(2.0, 0.0, 0.0, 3.0, 20.0, 30.0)));
-    svg.set_attribute((AId::StdDeviation, vec![1.5, 2.5, 3.5]));
+    svg.set_attribute((AId::StdDeviation, vec![1.5, 2.5]));
 
-    let mut len_list = Vec::new();
-    len_list.push(Length::new(1.5, LengthUnit::Mm));
-    len_list.push(Length::new(2.5, LengthUnit::Mm));
-    len_list.push(Length::new(3.5, LengthUnit::Mm));
-    svg.set_attribute((AId::StrokeDasharray, len_list));
+    svg.set_attribute((AId::StrokeDasharray, vec![
+        Length::new(1.5, LengthUnit::Mm),
+        Length::new(2.5, LengthUnit::Mm),
+        Length::new(3.5, LengthUnit::Mm),
+    ]));
 
     // TODO: add path
 
-    assert_eq_text!(doc.to_string(),
-        "<svg fill=\"#ffffff\" height=\"1.5%\" \
-         stdDeviation=\"1.5 2.5 3.5\" stroke-dasharray=\"1.5mm 2.5mm 3.5mm\" \
-         transform=\"matrix(2 0 0 3 20 30)\" version=\"1.0\" width=\"1.5\"/>\n");
+    let mut opt = WriteOptions::default();
+    opt.use_single_quote = true;
+
+    assert_eq_text!(doc.to_string_with_opt(&opt),
+        "<svg fill='#ffffff' height='1.5%' \
+         stdDeviation='1.5 2.5' stroke-dasharray='1.5mm 2.5mm 3.5mm' \
+         transform='matrix(2 0 0 3 20 30)' version='1.0' viewBox='10 20 30 40' \
+         width='1.5'/>\n");
 }
 
 #[test]

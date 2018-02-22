@@ -19,7 +19,9 @@ use types::{
     LengthList,
     LengthUnit,
     NumberList,
+    Points,
     Transform,
+    ViewBox,
 };
 
 // TODO: custom debug
@@ -38,9 +40,11 @@ pub enum AttributeValue {
     Number(f64),
     NumberList(NumberList),
     Path(path::Path),
+    Points(Points),
     PredefValue(ValueId),
     String(String),
     Transform(Transform),
+    ViewBox(ViewBox),
 }
 
 macro_rules! impl_from {
@@ -54,6 +58,7 @@ macro_rules! impl_from {
 }
 
 impl_from!(String, String);
+impl_from!(ViewBox, ViewBox);
 impl_from!(f64, Number);
 impl_from!(NumberList, NumberList);
 impl_from!(Length, Length);
@@ -62,6 +67,7 @@ impl_from!(Transform, Transform);
 impl_from!(Color, Color);
 impl_from!(ValueId, PredefValue);
 impl_from!(path::Path, Path);
+impl_from!(Points, Points);
 
 // TODO: bad, hidden allocation
 impl<'a> From<&'a str> for AttributeValue {
@@ -161,23 +167,6 @@ impl AttributeValue {
             _ => None,
         }
     }
-
-    /// Returns type's name. For the debug purposes.
-    pub fn name(&self) -> &str {
-        match *self {
-            AttributeValue::Color(_) => "Color",
-            AttributeValue::Length(_) => "Length",
-            AttributeValue::LengthList(_) => "LengthList",
-            AttributeValue::Link(_) => "Link",
-            AttributeValue::FuncLink(_) => "FuncLink",
-            AttributeValue::Number(_) => "Number",
-            AttributeValue::NumberList(_) => "NumberList",
-            AttributeValue::Path(_) => "Path",
-            AttributeValue::PredefValue(_) => "PredefValue",
-            AttributeValue::String(_) => "String",
-            AttributeValue::Transform(_) => "Transform",
-        }
-    }
 }
 
 impl WriteBuffer for AttributeValue {
@@ -191,40 +180,52 @@ impl WriteBuffer for AttributeValue {
                         _ => buf.push(*c),
                     }
                 }
-            },
+            }
             AttributeValue::Number(ref n) => {
                 n.write_buf_opt(opt, buf);
-            },
+            }
             AttributeValue::NumberList(ref list) => {
                 list.write_buf_opt(opt, buf);
-            },
+            }
             AttributeValue::Length(ref l) => {
                 l.write_buf_opt(opt, buf);
-            },
+            }
             AttributeValue::LengthList(ref list) => {
                 list.write_buf_opt(opt, buf);
-            },
+            }
             AttributeValue::Transform(ref t) => {
                 t.write_buf_opt(opt, buf);
             }
             AttributeValue::Path(ref p) => {
                 p.write_buf_opt(opt, buf);
             }
+            AttributeValue::Points(ref p) => {
+                p.write_buf_opt(opt, buf);
+            }
             AttributeValue::Link(ref n) => {
                 buf.push(b'#');
                 buf.extend_from_slice(n.id().as_bytes());
-            },
+            }
             AttributeValue::FuncLink(ref n) => {
                 buf.extend_from_slice(b"url(#");
                 buf.extend_from_slice(n.id().as_bytes());
                 buf.push(b')');
-            },
+            }
             AttributeValue::Color(ref c) => {
                 c.write_buf_opt(opt, buf);
-            },
+            }
             AttributeValue::PredefValue(ref v) => {
                 buf.extend_from_slice(v.name().as_bytes())
-            },
+            }
+            AttributeValue::ViewBox(vb) => {
+                vb.x.write_buf_opt(opt, buf);
+                buf.push(b' ');
+                vb.y.write_buf_opt(opt, buf);
+                buf.push(b' ');
+                vb.w.write_buf_opt(opt, buf);
+                buf.push(b' ');
+                vb.h.write_buf_opt(opt, buf);
+            }
         }
     }
 }

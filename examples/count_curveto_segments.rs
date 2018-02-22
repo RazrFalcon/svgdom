@@ -29,7 +29,7 @@ fn main() {
         if id == ElementId::Path {
             let attrs = node.attributes();
             if let Some(&AttributeValue::Path(ref path)) = attrs.get_value(AttributeId::D) {
-                count += path.d.iter().filter(|seg| seg.cmd() == Command::CurveTo).count();
+                count += path.iter().filter(|seg| seg.cmd() == Command::CurveTo).count();
             }
         }
     }

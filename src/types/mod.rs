@@ -4,12 +4,16 @@
 
 //! This module contains submodules which represent SVG value types.
 
-pub use self::transform::Transform;
 pub use self::color::Color;
 pub use self::length::Length;
 pub use self::number::{FuzzyEq, FuzzyOrd};
+pub use self::points::Points;
+pub use self::transform::Transform;
 
-pub use svgparser::LengthUnit;
+pub use svgparser::{
+    LengthUnit,
+    ViewBox,
+};
 
 use {
     ListSeparator,
@@ -27,6 +31,7 @@ pub mod path;
 mod color;
 mod length;
 mod number;
+mod points;
 mod transform;
 
 

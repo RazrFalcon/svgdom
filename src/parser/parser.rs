@@ -19,23 +19,22 @@ use svgparser::{
 
 use error::Result;
 use {
+    path,
     AttributeId,
     AttributeValue,
+    Color,
     Document,
     ElementId,
     ErrorKind,
+    Length,
+    LengthUnit,
     Node,
     NodeType,
     ParseFromSpan,
     ParseOptions,
-    ValueId,
-};
-use types::{
-    path,
-    Color,
-    Length,
-    LengthUnit,
+    Points,
     Transform,
+    ValueId,
 };
 
 use super::{
@@ -325,6 +324,8 @@ fn parse_svg_attribute<'a>(
             post_data.links.elems_with_id.insert(value.to_str(), node.clone());
         }
         AttributeId::Style => {
+            // TODO: use svgparser AttributeValue instead
+
             // we store 'class' attributes for later use
             post_data.style_attrs.push(NodeSpanData {
                 node: node.clone(),
@@ -334,16 +335,25 @@ fn parse_svg_attribute<'a>(
           AttributeId::Transform
         | AttributeId::GradientTransform
         | AttributeId::PatternTransform => {
+            // TODO: use svgparser AttributeValue instead
             let ts = Transform::from_span(value)?;
             if !ts.is_default() {
-                node.set_attribute((id, AttributeValue::Transform(ts)));
+                node.set_attribute((id, ts));
             }
         }
         AttributeId::D => {
+            // TODO: use svgparser AttributeValue instead
             let p = path::Path::from_span(value)?;
-            node.set_attribute((AttributeId::D, AttributeValue::Path(p)));
+            node.set_attribute((AttributeId::D, p));
+        }
+        AttributeId::Points => {
+            // TODO: use svgparser AttributeValue instead
+            let p = Points::from_span(value)?;
+            node.set_attribute((AttributeId::Points, p));
         }
         AttributeId::Class => {
+            // TODO: to svgparser
+
             // we store 'class' attributes for later use
 
             let mut s = Stream::from_span(value);
@@ -467,6 +477,13 @@ pub fn parse_svg_attribute_value<'a>(
                 }
             }
         }
+        ParserAttributeValue::ViewBox(v) => {
+            Some(AttributeValue::ViewBox(v))
+        }
+        ParserAttributeValue::Path(_) => unreachable!(),
+        ParserAttributeValue::Points(_) => unreachable!(),
+        ParserAttributeValue::Style(_) => unreachable!(),
+        ParserAttributeValue::Transform(_) => unreachable!(),
     };
 
     if let Some(v) = val {
