@@ -12,7 +12,6 @@ use {
     AttributeId,
     AttributeValue,
     Document,
-    Name,
     Node,
     NodeType,
 };
@@ -70,7 +69,7 @@ fn _prepare_text(parent: &Node, parent_xmlspace: XmlSpace) {
 fn get_xmlspace(node: &mut Node, default: XmlSpace) -> XmlSpace {
     {
         let attrs = node.attributes();
-        let v = attrs.get_value(AttributeId::XmlSpace);
+        let v = attrs.get_value(("xml", AttributeId::Space));
         if let Some(&AttributeValue::String(ref s)) = v {
             if s == "preserve" {
                 return XmlSpace::Preserve;
@@ -92,11 +91,8 @@ fn set_xmlspace(node: &mut Node, xmlspace: XmlSpace) {
         XmlSpace::Preserve => "preserve",
     };
 
-    let attr = Attribute {
-        name: Name::Id(AttributeId::XmlSpace),
-        value: AttributeValue::String(xmlspace_str.to_owned()),
-        visible: false,
-    };
+    let mut attr = Attribute::new(("xml", AttributeId::Space), xmlspace_str);
+    attr.visible = false;
 
     node.set_attribute(attr);
 }

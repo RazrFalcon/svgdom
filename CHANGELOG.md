@@ -11,10 +11,22 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - **Breaking**. `AttributeValue::ViewBox`.
 
 ### Changed
-- **Breaking**. `Path`'s fields are private now. Use deref instead.
+- **Breaking**. `Path`'s fields are private now. Use `Deref` instead.
+- **Breaking**. `Attribute::name` is `QName` and not `Name` now.
+  So it has namespace prefix in it. Example:
+  ```rust
+  // before
+  node.set_attribute(AttributeId::XmlSpace, "preserve");
+  // from now
+  node.set_attribute(("xml", AttributeId::Space)), "preserve");
+  ```
+- **Breaking**. `Name::into_ref` to `Name::as_ref`.
+- **Breaking**. `Node::tag_name` returns `Ref<TagName>`
+  and not `Option<Ref<TagName>>` now.
 
 ### Removed
 - **Breaking**. `AttributeValue::name`.
+- **Breaking**. `Node::remove_attributes`.
 
 ## [0.10.4] - 2018-02-03
 ### Fixed

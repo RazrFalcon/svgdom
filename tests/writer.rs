@@ -105,7 +105,7 @@ fn links_1() {
     doc.append(&svg_n);
     svg_n.append(&use_n);
 
-    use_n.set_attribute((AId::XlinkHref, svg_n));
+    use_n.set_attribute((("xlink", AId::Href), svg_n));
 
     assert_eq_text!(doc.to_string(),
 "<svg id=\"svg1\">
@@ -798,7 +798,7 @@ fn attrs_order_2() {
 "<svg>
     <linearGradient x1='1' gradientTransform='scale(2)' y1='1' gradientUnits='userSpaceOnUse' \
         spreadMethod='pad' x2='1' y2='1'/>
-    <rect fill='#ff0000' height='5' y='5' x='5' width='5' stroke='#ff0000'/>
+    <rect non-svg='test' fill='#ff0000' height='5' y='5' x='5' width='5' stroke='#ff0000'/>
 
 </svg>"
 ).unwrap();
@@ -810,8 +810,43 @@ fn attrs_order_2() {
 "<svg>
     <linearGradient x1='1' y1='1' x2='1' y2='1' gradientUnits='userSpaceOnUse' \
         gradientTransform='matrix(2 0 0 2 0 0)' spreadMethod='pad'/>
-    <rect fill='#ff0000' stroke='#ff0000' x='5' y='5' width='5' height='5'/>
+    <rect fill='#ff0000' stroke='#ff0000' x='5' y='5' width='5' height='5' non-svg='test'/>
 </svg>
 "
 );
 }
+
+test_resave!(namespaces_1,
+"<svg:svg/>",
+"<svg:svg/>
+");
+
+test_resave!(namespaces_2,
+"<svg:svg svg:x='0'/>",
+"<svg:svg svg:x='0'/>
+");
+
+test_resave!(namespaces_3,
+"<svg:svg xmlns:svg='http://www.w3.org/2000/svg'/>",
+"<svg:svg xmlns:svg='http://www.w3.org/2000/svg'/>
+");
+
+test_resave!(namespaces_4,
+"<svg:svg svg:x='0'>Text</svg:svg>",
+"<svg:svg svg:x='0'>Text</svg:svg>
+");
+
+test_resave!(namespaces_5,
+"<svg>
+    <g id='g1'>
+        <rect/>
+    </g>
+    <use xlink:href='#g1'/>
+</svg>",
+"<svg>
+    <g id='g1'>
+        <rect/>
+    </g>
+    <use xlink:href='#g1'/>
+</svg>
+");

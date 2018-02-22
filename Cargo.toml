@@ -16,16 +16,11 @@ travis-ci = { repository = "RazrFalcon/libsvgdom" }
 [dependencies]
 log = "0.4"
 float-cmp = "0.3"
-# simplecss = { git = "https://github.com/RazrFalcon/simplecss.git" }
 simplecss = "0.1.0"
 
 [dependencies.svgparser]
-# latest public
-git = "https://github.com/RazrFalcon/libsvgparser.git"
-# branch = "master"
-# local copy
+git = "https://github.com/RazrFalcon/svgparser.git"
 # path = "../svgparser"
-# from crates
 # version = "0.6"
 
 [dependencies.error-chain]

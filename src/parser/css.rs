@@ -227,7 +227,7 @@ fn apply_css_attributes<'a>(
                 let mut parse_attr = |aid: AttributeId| {
                     // TODO: to a proper stream
                     super::parser::parse_svg_attribute_value(
-                        node, aid, StrSpan::from_str(avalue),
+                        node, "", aid, StrSpan::from_str(avalue),
                         links, entitis, opt
                     )
                 };

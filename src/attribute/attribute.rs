@@ -7,28 +7,24 @@ use std::fmt;
 use {
     AttributeId,
     AttributeValue,
-    Name,
-    NameRef,
-    SvgId,
+    QName,
+    QNameRef,
+    ToStringWithOptions,
     WriteBuffer,
     WriteOptions,
-    ToStringWithOptions,
 };
 
-/// Type alias for `Name<AttributeId>`.
-pub type AttributeName = Name<AttributeId>;
-/// Type alias for `NameRef<AttributeId>`.
-pub type AttributeNameRef<'a> = NameRef<'a, AttributeId>;
+/// Type alias for `QName<AttributeId>`.
+pub type AttributeQName = QName<AttributeId>;
+/// Type alias for `QNameRef<AttributeId>`.
+pub type AttributeQNameRef<'a> = QNameRef<'a, AttributeId>;
 
-impl SvgId for AttributeId {
-    fn name(&self) -> &str { self.name() }
-}
 
 /// Representation of the SVG attribute object.
 #[derive(PartialEq,Clone,Debug)]
 pub struct Attribute {
     /// Attribute name.
-    pub name: AttributeName,
+    pub name: AttributeQName,
     /// Attribute value.
     pub value: AttributeValue,
     /// Visibility.
@@ -59,11 +55,10 @@ macro_rules! impl_is_type {
 impl Attribute {
     /// Constructs a new attribute.
     pub fn new<'a, N, T>(name: N, value: T) -> Attribute
-        where AttributeNameRef<'a>: From<N>, AttributeValue: From<T>
+        where AttributeQNameRef<'a>: From<N>, AttributeValue: From<T>
     {
-        let n = AttributeNameRef::from(name);
         Attribute {
-            name: AttributeName::from(n),
+            name: AttributeQNameRef::from(name).into(),
             value: AttributeValue::from(value),
             visible: true,
         }
@@ -72,24 +67,21 @@ impl Attribute {
     /// Returns an SVG attribute ID.
     pub fn id(&self) -> Option<AttributeId> {
         match self.name {
-            Name::Id(id) => Some(id),
-            Name::Name(_) => None,
+            QName::Id(_, id) => Some(id),
+            QName::Name(_, _) => None,
         }
     }
 
     /// Returns `true` if the attribute has the selected ID.
-    pub fn has_id(&self, id: AttributeId) -> bool {
-        match self.name {
-            Name::Id(id2) => id2 == id,
-            Name::Name(_) => false,
-        }
+    pub fn has_id(&self, prefix: &str, id: AttributeId) -> bool {
+        self.name.has_id(prefix, id)
     }
 
     /// Returns `true` if the attribute is an SVG attribute.
     pub fn is_svg(&self) -> bool {
         match self.name {
-            Name::Id(_) => true,
-            Name::Name(_) => false,
+            QName::Id(_, _) => true,
+            QName::Name(_, _) => false,
         }
     }
 
@@ -103,7 +95,7 @@ impl Attribute {
 
     /// Returns `true` if the current attribute's value is equal to a default by the SVG spec.
     pub fn check_is_default(&self) -> bool {
-        if let Name::Id(id) = self.name {
+        if let QName::Id(_, id) = self.name {
             match AttributeValue::default_value(id) {
                 Some(v) => self.value == v,
                 None => false,
@@ -121,21 +113,32 @@ impl Attribute {
     impl_is_type!(is_number, Number);
     impl_is_type!(is_number_list, NumberList);
     impl_is_type!(is_path, Path);
-    impl_is_type!(is_predef_value, PredefValue);
+    impl_is_type!(is_points, Points);
+    impl_is_type!(is_predef, PredefValue);
     impl_is_type!(is_string, String);
     impl_is_type!(is_transform, Transform);
+    impl_is_type!(is_viewbox, ViewBox);
 }
 
 impl WriteBuffer for Attribute {
     fn write_buf_opt(&self, opt: &WriteOptions, buf: &mut Vec<u8>) {
         match self.name {
-            Name::Id(id) => buf.extend_from_slice(id.name().as_bytes()),
-            Name::Name(ref name) => buf.extend_from_slice(name.as_bytes()),
+            QName::Id(ref prefix, _) | QName::Name(ref prefix, _) => {
+                if !prefix.is_empty() {
+                    buf.extend_from_slice(prefix.as_bytes());
+                    buf.push(b':');
+                }
+            }
+        }
+
+        match self.name {
+            QName::Id(_, id) => buf.extend_from_slice(id.name().as_bytes()),
+            QName::Name(_, ref name) => buf.extend_from_slice(name.as_bytes()),
         }
         buf.push(b'=');
         write_quote(opt, buf);
 
-        if self.has_id(AttributeId::Unicode) {
+        if self.has_id("", AttributeId::Unicode) {
             if let AttributeValue::String(ref s) = self.value {
                 write_escaped(s, buf);
             } else {

@@ -18,9 +18,9 @@ use {
     Children,
     Descendants,
     ElementId,
-    NameRef,
     Node,
     NodeType,
+    QNameRef,
     TagName,
     TagNameRef,
     ToStringWithOptions,
@@ -44,7 +44,7 @@ impl Document {
     /// Constructs a new `Document`.
     pub fn new() -> Document {
         Document {
-            root: Document::new_node(None, NodeType::Root, None, String::new())
+            root: Document::new_node(None, NodeType::Root, "", String::new())
         }
     }
 
@@ -74,16 +74,16 @@ impl Document {
     /// [`Node`]: struct.Node.html
     /// [`NodeType`]: enum.NodeType.html
     pub fn create_element<'a, T>(&mut self, tag_name: T) -> Node
-        where TagNameRef<'a>: From<T>
+        where TagNameRef<'a>: From<T>, T: Copy
     {
-        let tn = TagNameRef::from(tag_name);
-        if let NameRef::Name(name) = tn {
+        let tn = QNameRef::from(tag_name);
+        if let QNameRef::Name(_, name) = tn {
             if name.is_empty() {
                 panic!("supplied tag name is empty");
             }
         }
 
-        Document::new_node(Some(Rc::clone(&self.root.0)), NodeType::Element, Some(tn), String::new())
+        Document::new_node(Some(Rc::clone(&self.root.0)), NodeType::Element, tag_name, String::new())
     }
 
     // TODO: we can't have continuous text nodes.
@@ -100,7 +100,7 @@ impl Document {
         // TODO: use Into<String> trait
 
         debug_assert!(node_type != NodeType::Element && node_type != NodeType::Root);
-        Document::new_node(Some(Rc::clone(&self.root.0)), node_type, None, text.to_owned())
+        Document::new_node(Some(Rc::clone(&self.root.0)), node_type, text, text.to_owned())
     }
 
     /// Returns the root [`Node`].
@@ -194,12 +194,14 @@ impl Document {
         self.root().drain(f)
     }
 
-    fn new_node(
+    fn new_node<'a, N>(
         doc: Option<Link>,
         node_type: NodeType,
-        tag_name: Option<TagNameRef>,
+        tag_name: N,
         text: String
-    ) -> Node {
+    ) -> Node
+        where TagNameRef<'a>: From<N>
+    {
         Node(Rc::new(RefCell::new(NodeData {
             doc: doc.map(|a| Rc::downgrade(&a)),
             parent: None,
@@ -208,7 +210,7 @@ impl Document {
             prev_sibling: None,
             next_sibling: None,
             node_type: node_type,
-            tag_name: tag_name.map(TagName::from),
+            tag_name: TagName::from(TagNameRef::from(tag_name)),
             id: String::new(),
             attributes: Attributes::new(),
             linked_nodes: Vec::new(),

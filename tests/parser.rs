@@ -13,7 +13,7 @@ use svgdom::{
     Color,
     Document,
     ElementId as EId,
-    Name,
+    TagNameRef,
     NodeType,
     ParseOptions,
     ToStringWithOptions,
@@ -66,7 +66,7 @@ fn parse_single_node_1() {
     let doc = Document::from_str("<svg/>").unwrap();
 
     let child = doc.root().first_child().unwrap();
-    assert_eq!(*child.tag_name().unwrap(), Name::Id(EId::Svg));
+    assert_eq!(child.tag_name().as_ref(), TagNameRef::from(EId::Svg));
     assert_eq!(doc.root().children().count(), 1);
 }
 
@@ -107,11 +107,11 @@ fn parse_text_2() {
     let mut nodes = doc.root().first_child().unwrap().descendants();
 
     let svg_node = nodes.next().unwrap();
-    assert_eq!(*svg_node.tag_name().unwrap(), Name::Id(EId::Svg));
+    assert_eq!(svg_node.tag_name().as_ref(), TagNameRef::from(EId::Svg));
     assert_eq!(svg_node.node_type(), NodeType::Element);
 
     let text_node = nodes.next().unwrap();
-    assert_eq!(*text_node.tag_name().unwrap(), Name::Id(EId::Text));
+    assert_eq!(text_node.tag_name().as_ref(), TagNameRef::from(EId::Text));
     assert_eq!(text_node.node_type(), NodeType::Element);
 
     let text_data_node = nodes.next().unwrap();
@@ -119,7 +119,7 @@ fn parse_text_2() {
     assert_eq!(text_data_node.node_type(), NodeType::Text);
 
     let tspan_node = nodes.next().unwrap();
-    assert_eq!(*tspan_node.tag_name().unwrap(), Name::Id(EId::Tspan));
+    assert_eq!(tspan_node.tag_name().as_ref(), TagNameRef::from(EId::Tspan));
     assert_eq!(tspan_node.node_type(), NodeType::Element);
 
     let text_data_node_2 = nodes.next().unwrap();
@@ -669,7 +669,7 @@ test_resave!(parse_entity_2,
     <!ENTITY ns_xlink \"http://www.w3.org/1999/xlink\">
 ]>
 <svg xmlns='&ns_svg;' xmlns:xlink='&ns_xlink;'/>",
-"<svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'/>
+"<svg xmlns:xlink='http://www.w3.org/1999/xlink' xmlns='http://www.w3.org/2000/svg'/>
 ");
 
 // inside external attribute
@@ -884,8 +884,8 @@ fn skip_unknown_attributes_1() {
 xmlns:xlink='http://www.w3.org/1999/xlink'/>", &opt).unwrap();
 
     assert_eq_text!(doc.to_string_with_opt(&write_options()),
-"<svg fill='#ff0000' xmlns='http://www.w3.org/2000/svg' \
-xmlns:xlink='http://www.w3.org/1999/xlink'/>
+"<svg fill='#ff0000' xmlns:xlink='http://www.w3.org/1999/xlink' \
+xmlns='http://www.w3.org/2000/svg'/>
 ");
 }
 

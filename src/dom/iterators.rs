@@ -7,9 +7,9 @@ use std::iter::FilterMap;
 
 use {
     ElementId,
-    Name,
     Node,
     NodeType,
+    QName,
 };
 use super::node_data::WeakLink;
 
@@ -19,10 +19,8 @@ macro_rules! filter_svg {
             /// Returns an iterator over descendant SVG elements.
             pub fn svg(self) -> FilterMap<$name, fn(Node) -> Option<(ElementId, Node)>> {
                 fn is_svg(node: Node) -> Option<(ElementId, Node)> {
-                    if let Some(tag) = node.tag_name() {
-                        if let Name::Id(id) = *tag {
-                            return Some((id, node.clone()));
-                        }
+                    if let QName::Id(_, id) = *node.tag_name() {
+                        return Some((id, node.clone()));
                     }
 
                     None

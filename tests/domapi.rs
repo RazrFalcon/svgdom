@@ -26,7 +26,7 @@ fn linked_attributes_1() {
 
     n2.set_id("2");
 
-    n1.set_attribute((AId::XlinkHref, n2.clone()));
+    n1.set_attribute((AId::Href, n2.clone()));
 
     assert_eq!(n1.is_used(), false);
     assert_eq!(n2.is_used(), true);
@@ -46,10 +46,10 @@ fn linked_attributes_2() {
     doc.root().append(&n1);
     doc.root().append(&n2);
 
-    n1.set_attribute((AId::XlinkHref, n2.clone()));
+    n1.set_attribute((AId::Href, n2.clone()));
 
     // recursion error
-    assert_eq!(n2.set_attribute_checked((AId::XlinkHref, n1.clone())).unwrap_err().full_chain(),
+    assert_eq!(n2.set_attribute_checked((AId::Href, n1.clone())).unwrap_err().full_chain(),
                "Error: element crosslink");
 }
 
@@ -67,7 +67,7 @@ fn linked_attributes_3() {
         n1.set_id("1");
         n2.set_id("2");
 
-        n1.set_attribute((AId::XlinkHref, n2.clone()));
+        n1.set_attribute((AId::Href, n2.clone()));
 
         assert_eq!(n1.is_used(), false);
         assert_eq!(n2.is_used(), true);
@@ -100,7 +100,7 @@ fn linked_attributes_4() {
         n1.set_id("1");
         n2.set_id("2");
 
-        n1.set_attribute((AId::XlinkHref, n2.clone()));
+        n1.set_attribute((AId::Href, n2.clone()));
 
         assert_eq!(n1.is_used(), false);
         assert_eq!(n2.is_used(), true);
@@ -115,7 +115,7 @@ fn linked_attributes_4() {
     {
         // xlink:href attribute from n1 should be removed
         let n = doc.descendants().next().unwrap();
-        assert_eq!(n.has_attribute(AId::XlinkHref), false);
+        assert_eq!(n.has_attribute(AId::Href), false);
     }
 }
 
@@ -183,7 +183,7 @@ fn attributes_exist_2() {
 
     n.set_attribute((AId::StrokeWidth, 1.0));
 
-    assert_eq!(n.attributes().iter().find(|ref attr| attr.has_id(AId::StrokeWidth)).is_some(), true);
+    assert_eq!(n.attributes().iter().find(|ref attr| attr.has_id("", AId::StrokeWidth)).is_some(), true);
 }
 
 #[test]
@@ -434,8 +434,8 @@ fn set_attr_1() {
     rect.set_attribute(attr);
     assert_eq!(rect.attributes().get(AId::Y).unwrap().to_string(), "y=\"1\"");
 
-    rect.set_attribute((AId::XlinkHref, rect2));
-    assert_eq!(rect.attributes().get(AId::XlinkHref).unwrap().to_string(), "xlink:href=\"#rect2\"");
+    rect.set_attribute((("xlink", AId::Href), rect2));
+    assert_eq!(rect.attributes().get(("xlink", AId::Href)).unwrap().to_string(), "xlink:href=\"#rect2\"");
 }
 
 #[test]
@@ -446,8 +446,8 @@ fn set_attr_2() {
     let mut rect2 = doc.create_element(EId::Rect);
     rect2.set_id("rect2");
 
-    rect.set_attribute((AId::XlinkHref, rect2));
-    let attr = rect.attributes().get(AId::XlinkHref).cloned().unwrap();
+    rect.set_attribute((AId::Href, rect2));
+    let attr = rect.attributes().get(AId::Href).cloned().unwrap();
 
     // must panic
     rect.attributes_mut().insert(attr);
@@ -461,10 +461,10 @@ fn remove_attr_1() {
     let mut rect2 = doc.create_element(EId::Rect);
     rect2.set_id("rect2");
 
-    rect.set_attribute((AId::XlinkHref, rect2));
+    rect.set_attribute((AId::Href, rect2));
 
     // must panic
-    rect.attributes_mut().remove(AId::XlinkHref);
+    rect.attributes_mut().remove(AId::Href);
 }
 
 #[test]
@@ -475,8 +475,21 @@ fn remove_attr_2() {
     let mut rect2 = doc.create_element(EId::Rect);
     rect2.set_id("rect2");
 
-    rect.set_attribute((AId::XlinkHref, rect2));
+    rect.set_attribute((AId::Href, rect2));
 
     // must panic
-    rect.attributes_mut().retain(|a| !a.has_id(AId::XlinkHref));
+    rect.attributes_mut().retain(|a| !a.has_id("", AId::Href));
+}
+
+#[test]
+fn query_attr_1() {
+    let mut doc = Document::new();
+    let mut rect = doc.create_element(EId::Rect);
+    let mut rect2 = doc.create_element(EId::Rect);
+    rect2.set_id("rect2");
+
+    rect.set_attribute((("xlink", AId::Href), rect2));
+
+    assert_eq!(rect.has_attribute(AId::Href), false);
+    assert_eq!(rect.has_attribute(("xlink", AId::Href)), true);
 }

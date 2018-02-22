@@ -17,7 +17,7 @@ use std::slice::{
 use {
     Attribute,
     AttributeId,
-    AttributeNameRef,
+    AttributeQNameRef,
     AttributeValue,
     WriteBuffer,
 };
@@ -47,11 +47,11 @@ impl Attributes {
     /// [`Attribute`]: struct.Attribute.html
     #[inline]
     pub fn get<'a, N>(&self, name: N) -> Option<&Attribute>
-        where AttributeNameRef<'a>: From<N>
+        where AttributeQNameRef<'a>: From<N>
     {
-        let name = AttributeNameRef::from(name);
+        let name = AttributeQNameRef::from(name);
         for v in &self.0 {
-            if v.name.into_ref() == name {
+            if v.name.as_ref() == name {
                 return Some(v);
             }
         }
@@ -64,11 +64,11 @@ impl Attributes {
     /// [`Attribute`]: struct.Attribute.html
     #[inline]
     pub fn get_mut<'a, N>(&mut self, name: N) -> Option<&mut Attribute>
-        where AttributeNameRef<'a>: From<N>
+        where AttributeQNameRef<'a>: From<N>
     {
-        let name = AttributeNameRef::from(name);
+        let name = AttributeQNameRef::from(name);
         for v in &mut self.0 {
-            if v.name.into_ref() == name {
+            if v.name.as_ref() == name {
                 return Some(v);
             }
         }
@@ -81,11 +81,11 @@ impl Attributes {
     /// [`AttributeValue`]: enum.AttributeValue.html
     #[inline]
     pub fn get_value<'a, N>(&self, name: N) -> Option<&AttributeValue>
-        where AttributeNameRef<'a>: From<N>
+        where AttributeQNameRef<'a>: From<N>
     {
-        let name = AttributeNameRef::from(name);
+        let name = AttributeQNameRef::from(name);
         for v in &self.0 {
-            if v.name.into_ref() == name {
+            if v.name.as_ref() == name {
                 return Some(&v.value);
             }
         }
@@ -98,11 +98,11 @@ impl Attributes {
     /// [`AttributeValue`]: enum.AttributeValue.html
     #[inline]
     pub fn get_value_mut<'a, N>(&mut self, name: N) -> Option<&mut AttributeValue>
-        where AttributeNameRef<'a>: From<N>
+        where AttributeQNameRef<'a>: From<N>
     {
-        let name = AttributeNameRef::from(name);
+        let name = AttributeQNameRef::from(name);
         for v in &mut self.0 {
-            if v.name.into_ref() == name {
+            if v.name.as_ref() == name {
                 return Some(&mut v.value);
             }
         }
@@ -136,7 +136,7 @@ impl Attributes {
     /// [`Node`]: struct.Node.html
     /// [`Node::set_attribute()`]: struct.Node.html#method.set_attribute
     pub fn insert_from<'a, N, T>(&mut self, name: N, value: T)
-        where AttributeNameRef<'a>: From<N>, AttributeValue: From<T>
+        where AttributeQNameRef<'a>: From<N>, AttributeValue: From<T>
     {
         self.insert(Attribute::new(name, value));
     }
@@ -168,14 +168,14 @@ impl Attributes {
     ///
     /// [`Node::remove_attribute()`]: struct.Node.html#method.remove_attribute
     pub fn remove<'a, N>(&mut self, name: N)
-        where AttributeNameRef<'a>: From<N>, N: Copy
+        where AttributeQNameRef<'a>: From<N>, N: Copy
     {
         // Checks that removed attribute is not linked.
         //
         // Since this check is expensive - we do it only in debug build.
         if cfg!(debug_assertions) {
-            let name = AttributeNameRef::from(name);
-            let attr = self.0.iter().find(|x| x.name.into_ref() == name);
+            let name = AttributeQNameRef::from(name);
+            let attr = self.0.iter().find(|x| x.name.as_ref() == name);
             if let Some(attr) = attr {
                 if attr.is_link() || attr.is_func_link() {
                     panic!("attribute with Link/FuncLink value must be remove \
@@ -191,22 +191,22 @@ impl Attributes {
     ///
     /// **Warning:** this method is for private use only. Never invoke it directly.
     pub fn remove_impl<'a, N>(&mut self, name: N)
-        where AttributeNameRef<'a>: From<N>
+        where AttributeQNameRef<'a>: From<N>
     {
-        let name = AttributeNameRef::from(name);
-        let idx = self.0.iter().position(|x| x.name.into_ref() == name);
+        let name = AttributeQNameRef::from(name);
+        let idx = self.0.iter().position(|x| x.name.as_ref() == name);
         if let Some(i) = idx {
             self.0.remove(i);
         }
     }
 
-    /// Returns `true` if the container contains an attribute with such `id`.
+    /// Returns `true` if the container contains an attribute with such name.
     #[inline]
     pub fn contains<'a, N>(&self, name: N) -> bool
-        where AttributeNameRef<'a>: From<N>
+        where AttributeQNameRef<'a>: From<N>
     {
-        let name = AttributeNameRef::from(name);
-        self.0.iter().any(|a| a.name.into_ref() == name)
+        let name = AttributeQNameRef::from(name);
+        self.0.iter().any(|a| a.name.as_ref() == name)
     }
 
     /// Returns count of the attributes.

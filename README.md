@@ -168,12 +168,12 @@ And no comparisons with other SVG parsers, since there are no such.
 Note that most of the time is spent during string to number and number to string conversion.
 
 ```
-test parse_large  ... bench:  13,173,652 ns/iter (+/- 56,338)
-test parse_medium ... bench:   2,584,977 ns/iter (+/- 3,722)
-test parse_small  ... bench:      51,426 ns/iter (+/- 47)
-test write_large  ... bench:  12,214,537 ns/iter (+/- 288,881)
-test write_medium ... bench:   1,148,366 ns/iter (+/- 4,905)
-test write_small  ... bench:      21,740 ns/iter (+/- 77)
+test parse_large  ... bench:  15,708,740 ns/iter (+/- 225,513)
+test parse_medium ... bench:   2,794,459 ns/iter (+/- 46,399)
+test parse_small  ... bench:      59,412 ns/iter (+/- 1,042)
+test write_large  ... bench:  13,101,705 ns/iter (+/- 46,979)
+test write_medium ... bench:   1,305,637 ns/iter (+/- 5,454)
+test write_small  ... bench:      24,504 ns/iter (+/- 153)
 ```
 
 Tested on i5-3570k 3.4GHz.

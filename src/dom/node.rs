@@ -13,7 +13,8 @@ use error::Result;
 use {
     Attribute,
     AttributeId,
-    AttributeNameRef,
+    AttributeQName,
+    AttributeQNameRef,
     Attributes,
     AttributeValue,
     Children,
@@ -22,11 +23,10 @@ use {
     ElementId,
     ErrorKind,
     LinkedNodes,
-    Name,
-    NameRef,
     NodeType,
     Parents,
-    SvgId,
+    QName,
+    QNameRef,
     TagName,
     TagNameRef,
     Traverse,
@@ -45,22 +45,21 @@ macro_rules! try_opt {
     }
 }
 
-impl SvgId for ElementId {
-    fn name(&self) -> &str { self.name() }
-}
-
-
 impl<'a, N, V> From<(N, V)> for Attribute
-    where AttributeNameRef<'a>: From<N>, AttributeValue: From<V>
+    where AttributeQNameRef<'a>: From<N>, AttributeValue: From<V>
 {
     fn from(v: (N, V)) -> Self {
         Attribute::new(v.0, v.1)
     }
 }
 
-impl<'a> From<(AttributeId, Node)> for Attribute {
-    fn from(v: (AttributeId, Node)) -> Self {
-        if v.0 == AttributeId::XlinkHref {
+impl<'a, N> From<(N, Node)> for Attribute
+    where AttributeQNameRef<'a>: From<N>, N: Clone
+{
+    fn from(v: (N, Node)) -> Self {
+        let n = AttributeQNameRef::from(v.0.clone());
+
+        if n.has_id("xlink", AttributeId::Href) {
             Attribute::new(v.0, AttributeValue::Link(v.1))
         } else {
             Attribute::new(v.0, AttributeValue::FuncLink(v.1))
@@ -266,51 +265,55 @@ impl Node {
     /// let mut rect_elem = doc.descendants().filter(|n| *n.id() == "rect1").next().unwrap();
     /// let use_elem = doc.descendants().filter(|n| n.is_tag_name(ElementId::Use)).next().unwrap();
     ///
-    /// assert_eq!(use_elem.has_attribute(AttributeId::XlinkHref), true);
+    /// assert_eq!(use_elem.has_attribute(("xlink", AttributeId::Href)), true);
     ///
     /// // The 'remove' method will remove 'rect' element and all it's children.
     /// // Also it will remove all links to this element and it's children,
     /// // so 'use' element will no longer have the 'xlink:href' attribute.
     /// rect_elem.remove();
     ///
-    /// assert_eq!(use_elem.has_attribute(AttributeId::XlinkHref), false);
+    /// assert_eq!(use_elem.has_attribute(("xlink", AttributeId::Href)), false);
     /// ```
     pub fn remove(&mut self) {
         let mut ids = Vec::with_capacity(16);
         Node::_remove(self, &mut ids);
     }
 
-    fn _remove(node: &mut Node, ids: &mut Vec<AttributeId>) {
+    fn _remove(node: &mut Node, ids: &mut Vec<AttributeQName>) {
         ids.clear();
 
-        for (aid, attr) in node.attributes().iter_svg() {
+        for (_, attr) in node.attributes().iter_svg() {
             match attr.value {
                 AttributeValue::Link(_) | AttributeValue::FuncLink(_) => {
-                    ids.push(aid)
+                    ids.push(attr.name.clone())
                 }
                 _ => {}
             }
         }
 
-        node.remove_attributes(&ids);
+        for name in ids.iter() {
+            node.remove_attribute(name.as_ref());
+        }
 
         // remove all attributes that linked to this node
         for mut linked in node.linked_nodes().collect::<Vec<Node>>() {
             ids.clear();
 
-            for (aid, attr) in linked.attributes().iter_svg() {
+            for (_, attr) in linked.attributes().iter_svg() {
                 match attr.value {
                       AttributeValue::Link(ref link)
                     | AttributeValue::FuncLink(ref link) => {
                         if link == node {
-                            ids.push(aid);
+                            ids.push(attr.name.clone())
                         }
                     }
                     _ => {}
                 }
             }
 
-            linked.remove_attributes(&ids);
+            for name in ids.iter() {
+                linked.remove_attribute(name.as_ref());
+            }
         }
 
 
@@ -364,7 +367,7 @@ impl Node {
     pub fn make_copy(&self) -> Node {
         match self.node_type() {
             NodeType::Element => {
-                let mut elem = self.document().create_element(self.tag_name().unwrap().into_ref());
+                let mut elem = self.document().create_element(self.tag_name().as_ref());
 
                 for attr in self.attributes().iter() {
                     elem.set_attribute(attr.clone());
@@ -628,15 +631,14 @@ impl Node {
     ///
     /// Panics if the node is currently mutably borrowed.
     pub fn is_svg_element(&self) -> bool {
+        if self.node_type() != NodeType::Element {
+            return false;
+        }
+
         let b = self.0.borrow();
         match b.tag_name {
-            Some(ref tag) => {
-                match *tag {
-                    Name::Id(_) => true,
-                    Name::Name(_) => false,
-                }
-            }
-            None => false,
+            QName::Id(_, _) => true,
+            QName::Name(_, _) => false,
         }
     }
 
@@ -645,13 +647,8 @@ impl Node {
     /// # Panics
     ///
     /// Panics if the node is currently mutably borrowed.
-    pub fn tag_name(&self) -> Option<Ref<TagName>> {
-        // TODO: return NameRef somehow
-        let b = self.0.borrow();
-        match b.tag_name {
-            Some(_) => Some(Ref::map(self.0.borrow(), |n| n.tag_name.as_ref().unwrap())),
-            None => None,
-        }
+    pub fn tag_name(&self) -> Ref<TagName> {
+        Ref::map(self.0.borrow(), |n| &n.tag_name)
     }
 
     /// Returns a tag name id of the SVG element node.
@@ -662,13 +659,8 @@ impl Node {
     pub fn tag_id(&self) -> Option<ElementId> {
         let b = self.0.borrow();
         match b.tag_name {
-            Some(ref t) => {
-                match *t {
-                    Name::Id(ref id) => Some(*id),
-                    Name::Name(_) => None,
-                }
-            }
-            None => None,
+            QName::Id(_, ref id) => Some(*id),
+            QName::Name(_, _) => None,
         }
     }
 
@@ -681,10 +673,7 @@ impl Node {
         where TagNameRef<'a>: From<T>
     {
         let b = self.0.borrow();
-        match b.tag_name {
-            Some(ref v) => v.into_ref() == TagNameRef::from(tag_name),
-            None => false,
-        }
+        b.tag_name.as_ref() == TagNameRef::from(tag_name)
     }
 
     /// Sets a tag name of the element node.
@@ -705,14 +694,14 @@ impl Node {
         debug_assert_eq!(self.node_type(), NodeType::Element);
 
         let tn = TagNameRef::from(tag_name);
-        if let NameRef::Name(name) = tn {
+        if let QNameRef::Name(_, name) = tn {
             if name.is_empty() {
                 panic!("supplied tag name is empty");
             }
         }
 
         let mut self_borrow = self.0.borrow_mut();
-        self_borrow.tag_name = Some(Name::from(tn));
+        self_borrow.tag_name = TagName::from(tn);
     }
 
     /// Returns a reference to the `Attributes` of the current node.
@@ -740,7 +729,7 @@ impl Node {
     /// Panics if the node is currently mutably borrowed.
     #[inline]
     pub fn has_attribute<'a, N>(&self, name: N) -> bool
-        where AttributeNameRef<'a>: From<N>
+        where AttributeQNameRef<'a>: From<N>
     {
         self.0.borrow().attributes.contains(name)
     }
@@ -842,7 +831,7 @@ impl Node {
     /// svg.set_attribute(Attribute::new(AId::X, 1.0));
     /// svg.set_attribute(Attribute::new("non-svg-attr", 1.0));
     /// // Using an existing node as an attribute value.
-    /// svg.set_attribute((AId::XlinkHref, rect));
+    /// svg.set_attribute((("xlink", AId::Href), rect));
     /// ```
     ///
     /// Linked attributes:
@@ -903,16 +892,13 @@ impl Node {
         // TODO: to error in _checked mode
         debug_assert_eq!(self.node_type(), NodeType::Element);
 
-        if attr.is_svg() {
-            match attr.value {
-                  AttributeValue::Link(ref iri)
-                | AttributeValue::FuncLink(ref iri) => {
-                    let aid = attr.id().unwrap();
-                    self.set_link_attribute(aid, iri.clone())?;
-                    return Ok(());
-                }
-                _ => {}
+        match attr.value {
+              AttributeValue::Link(ref iri)
+            | AttributeValue::FuncLink(ref iri) => {
+                self.set_link_attribute(attr.name, iri.clone())?;
+                return Ok(());
             }
+            _ => {}
         }
 
         self.set_simple_attribute(attr);
@@ -924,13 +910,13 @@ impl Node {
         debug_assert!(!attr.is_link() && !attr.is_func_link());
 
         // we must remove existing attribute to prevent dangling links
-        self.remove_attribute(attr.name.into_ref());
+        self.remove_attribute(attr.name.as_ref());
 
         let mut attrs = self.attributes_mut();
         attrs.insert(attr);
     }
 
-    fn set_link_attribute(&mut self, id: AttributeId, node: Node) -> Result<()> {
+    fn set_link_attribute(&mut self, name: AttributeQName, node: Node) -> Result<()> {
         if node.id().is_empty() {
             return Err(ErrorKind::ElementMustHaveAnId.into());
         }
@@ -946,13 +932,13 @@ impl Node {
         }
 
         // we must remove existing attribute to prevent dangling links
-        self.remove_attribute(id);
+        self.remove_attribute(name.as_ref());
 
         {
-            let a = if id == AttributeId::XlinkHref {
-                Attribute::new(id, AttributeValue::Link(node.clone()))
+            let a = if name.has_id("xlink", AttributeId::Href) {
+                Attribute::new(name.as_ref(), AttributeValue::Link(node.clone()))
             } else {
-                Attribute::new(id, AttributeValue::FuncLink(node.clone()))
+                Attribute::new(name.as_ref(), AttributeValue::FuncLink(node.clone()))
             };
 
             let mut attributes = self.attributes_mut();
@@ -985,7 +971,7 @@ impl Node {
     ///
     /// [`set_attribute_checked`]: #method.set_attribute_checked
     pub fn set_attribute_if_none<'a, N, T>(&mut self, name: N, value: &T)
-        where AttributeNameRef<'a>: From<N>, N: Copy, AttributeValue: From<T>, T: Clone
+        where AttributeQNameRef<'a>: From<N>, N: Copy, AttributeValue: From<T>, T: Clone
     {
         if !self.has_attribute(name) {
             self.set_attribute((name, value.clone()));
@@ -1000,7 +986,7 @@ impl Node {
     ///
     /// Panics if the node is currently borrowed.
     pub fn remove_attribute<'a, N>(&mut self, name: N)
-        where AttributeNameRef<'a>: From<N>, N: Copy
+        where AttributeQNameRef<'a>: From<N>, N: Copy
     {
         if !self.has_attribute(name) {
             return;
@@ -1024,19 +1010,6 @@ impl Node {
         }
 
         self.attributes_mut().remove_impl(name);
-    }
-
-    // TODO: remove
-    /// Removes attributes from the node.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the node is currently borrowed.
-    pub fn remove_attributes(&mut self, ids: &[AttributeId]) {
-        // TODO: to AttributeNameRef
-        for id in ids {
-            self.remove_attribute(*id);
-        }
     }
 
     /// Returns an iterator over linked nodes.
@@ -1088,7 +1061,7 @@ impl PartialEq for Node {
     }
 }
 
-// TODO: move to Rc::ptr_eq (since 1.17) when we drop 1.13 version support
+// TODO: move to Rc::ptr_eq (since 1.17) when we drop 1.16 version support
 fn same_rc<T>(a: &Rc<T>, b: &Rc<T>) -> bool {
     let a: *const T = &**a;
     let b: *const T = &**b;
@@ -1099,7 +1072,7 @@ impl fmt::Debug for Node {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self.node_type() {
             NodeType::Root => write!(f, "RootNode"),
-            NodeType::Element => write!(f, "ElementNode({:?} id={:?})", self.tag_name().unwrap(), self.id()),
+            NodeType::Element => write!(f, "ElementNode({:?} id={:?})", self.tag_name(), self.id()),
             NodeType::Declaration => write!(f, "DeclarationNode({:?})", *self.text()),
             NodeType::Comment => write!(f, "CommentNode({:?})", *self.text()),
             NodeType::Cdata => write!(f, "CdataNode({:?})", *self.text()),

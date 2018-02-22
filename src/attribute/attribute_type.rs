@@ -208,9 +208,9 @@ impl AttributeType for AttributeId {
 
     fn is_core(&self) -> bool {
         match *self {
-              AttributeId::XmlBase
-            | AttributeId::XmlLang
-            | AttributeId::XmlSpace => true,
+              AttributeId::Base
+            | AttributeId::Lang
+            | AttributeId::Space => true,
             _ => false,
         }
     }

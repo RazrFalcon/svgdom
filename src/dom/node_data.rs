@@ -10,9 +10,9 @@ use std::rc::{
 
 use {
     Attributes,
-    TagName,
-    NodeType,
     Node,
+    NodeType,
+    TagName,
 };
 
 pub type Link = Rc<RefCell<NodeData>>;
@@ -29,7 +29,7 @@ pub struct NodeData {
     pub next_sibling: Option<Link>,
 
     pub node_type: NodeType,
-    pub tag_name: Option<TagName>,
+    pub tag_name: TagName,
     pub id: String,
     pub attributes: Attributes,
     pub linked_nodes: Vec<WeakLink>,

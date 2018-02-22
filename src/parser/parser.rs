@@ -48,6 +48,7 @@ pub struct NodeSpanData<'a> {
 }
 
 pub struct LinkData<'a> {
+    prefix: &'a str,
     attr_id: AttributeId,
     iri: &'a str,
     fallback: Option<PaintFallback>,
@@ -66,12 +67,14 @@ pub struct Links<'a> {
 impl<'a> Links<'a> {
     fn append(
         &mut self,
+        prefix: &'a str,
         id: AttributeId,
         iri: &'a str,
         fallback: Option<PaintFallback>,
         node: &Node,
     ) {
         self.list.push(LinkData {
+            prefix: prefix,
             attr_id: id,
             iri: iri,
             fallback: fallback,
@@ -188,12 +191,12 @@ fn process_token<'a>(
 
     match token {
         svg::Token::ElementStart(tag_name) => {
-            let curr_node = match tag_name {
+            let curr_node = match tag_name.local {
                 svg::Name::Xml(name) => {
-                    doc.create_element(name)
+                    doc.create_element((tag_name.prefix, name))
                 }
                 svg::Name::Svg(eid) => {
-                    doc.create_element(eid)
+                    doc.create_element((tag_name.prefix, eid))
                 }
             };
 
@@ -202,19 +205,19 @@ fn process_token<'a>(
         }
         svg::Token::Attribute(name, value) => {
             let curr_node = node.as_mut().unwrap();
-            match name {
-                svg::Name::Xml(name) => {
+            match name.local {
+                svg::Name::Xml(aname) => {
                     if opt.parse_unknown_attributes {
                         if curr_node.is_svg_element() {
-                            parse_non_svg_attribute(curr_node, name, value, post_data);
+                            parse_non_svg_attribute(curr_node, name.prefix, aname, value, post_data);
                         } else {
-                            curr_node.set_attribute((name, value.to_str()));
+                            curr_node.set_attribute(((name.prefix, aname), value.to_str()));
                         }
                     }
                 }
                 svg::Name::Svg(aid) => {
                     if curr_node.is_svg_element() {
-                        parse_svg_attribute(curr_node, aid, value, post_data, opt)?;
+                        parse_svg_attribute(curr_node, name.prefix, aid, value, post_data, opt)?;
                     }
                 }
             }
@@ -313,6 +316,7 @@ fn process_token<'a>(
 
 fn parse_svg_attribute<'a>(
     node: &mut Node,
+    prefix: &'a str,
     id: AttributeId,
     value: StrSpan<'a>,
     post_data: &mut PostData<'a>,
@@ -338,18 +342,18 @@ fn parse_svg_attribute<'a>(
             // TODO: use svgparser AttributeValue instead
             let ts = Transform::from_span(value)?;
             if !ts.is_default() {
-                node.set_attribute((id, ts));
+                node.set_attribute(((prefix, id), ts));
             }
         }
         AttributeId::D => {
             // TODO: use svgparser AttributeValue instead
             let p = path::Path::from_span(value)?;
-            node.set_attribute((AttributeId::D, p));
+            node.set_attribute(((prefix, AttributeId::D), p));
         }
         AttributeId::Points => {
             // TODO: use svgparser AttributeValue instead
             let p = Points::from_span(value)?;
-            node.set_attribute((AttributeId::Points, p));
+            node.set_attribute(((prefix, AttributeId::Points), p));
         }
         AttributeId::Class => {
             // TODO: to svgparser
@@ -371,7 +375,7 @@ fn parse_svg_attribute<'a>(
             }
         }
         _ => {
-            parse_svg_attribute_value(node, id, value, &mut post_data.links,
+            parse_svg_attribute_value(node, prefix, id, value, &mut post_data.links,
                                       &post_data.entitis, opt)?;
         }
     }
@@ -381,6 +385,7 @@ fn parse_svg_attribute<'a>(
 
 pub fn parse_svg_attribute_value<'a>(
     node: &mut Node,
+    prefix: &'a str,
     id: AttributeId,
     span: StrSpan<'a>,
     links: &mut Links<'a>,
@@ -389,7 +394,7 @@ pub fn parse_svg_attribute_value<'a>(
 ) -> Result<()> {
     let tag_id = node.tag_id().unwrap();
 
-    let av = match ParserAttributeValue::from_span(tag_id, id, span) {
+    let av = match ParserAttributeValue::from_span(tag_id, prefix, id, span) {
         Ok(av) => av,
         Err(e) => {
             return if opt.skip_invalid_attributes {
@@ -407,12 +412,12 @@ pub fn parse_svg_attribute_value<'a>(
         }
         ParserAttributeValue::IRI(link) | ParserAttributeValue::FuncIRI(link) => {
             // collect links for later processing
-            links.append(id, link, None, node);
+            links.append(prefix, id, link, None, node);
             None
         }
         ParserAttributeValue::FuncIRIWithFallback(link, fallback) => {
             // collect links for later processing
-            links.append(id, link, Some(fallback), node);
+            links.append(prefix, id, link, Some(fallback), node);
             None
         }
         ParserAttributeValue::Number(v) => {
@@ -460,7 +465,7 @@ pub fn parse_svg_attribute_value<'a>(
         ParserAttributeValue::EntityRef(link) => {
             match entitis.get(link) {
                 Some(link_value) => {
-                    parse_svg_attribute_value(node, id, *link_value, links, entitis, opt)?;
+                    parse_svg_attribute_value(node, prefix, id, *link_value, links, entitis, opt)?;
                     None
                 }
                 None => {
@@ -487,7 +492,7 @@ pub fn parse_svg_attribute_value<'a>(
     };
 
     if let Some(v) = val {
-        node.set_attribute((id, v));
+        node.set_attribute(((prefix, id), v));
     }
 
     Ok(())
@@ -495,6 +500,7 @@ pub fn parse_svg_attribute_value<'a>(
 
 fn parse_non_svg_attribute<'a>(
     node: &mut Node,
+    prefix: &str,
     name: &str,
     value: StrSpan<'a>,
     post_data: &PostData<'a>,
@@ -517,7 +523,7 @@ fn parse_non_svg_attribute<'a>(
     };
 
     if let Some(val) = new_value {
-        node.set_attribute((name, val.to_str()));
+        node.set_attribute(((prefix, name), val.to_str()));
     }
 }
 
@@ -545,7 +551,7 @@ fn parse_style_attribute<'a>(
                 }
             }
             style::Token::SvgAttribute(id, value) => {
-                parse_svg_attribute_value(node, id, value, links, entitis, opt)?;
+                parse_svg_attribute_value(node, "", id, value, links, entitis, opt)?;
             }
             style::Token::EntityRef(name) => {
                 if let Some(value) = entitis.get(name) {
@@ -571,13 +577,13 @@ fn resolve_links(links: &mut Links, opt: &ParseOptions) -> Result<()> {
                     Some(_) => {
                         if opt.skip_paint_fallback {
                             warn!("Paint fallback is not supported.");
-                            d.node.set_attribute_checked((d.attr_id, node.clone()))?;
+                            d.node.set_attribute_checked(((d.prefix, d.attr_id), node.clone()))?;
                         } else {
                             let s = d.iri.to_string();
                             return Err(ErrorKind::UnsupportedPaintFallback(s).into());
                         }
                     }
-                    None => d.node.set_attribute_checked((d.attr_id, node.clone()))?,
+                    None => d.node.set_attribute_checked(((d.prefix, d.attr_id), node.clone()))?,
                 }
             }
             None => {
@@ -595,10 +601,10 @@ fn resolve_fallback(d: &mut LinkData) -> Result<()> {
         Some(fallback) => {
             match fallback {
                 PaintFallback::PredefValue(v) => {
-                    d.node.set_attribute((d.attr_id, v));
+                    d.node.set_attribute(((d.prefix, d.attr_id), v));
                 }
                 PaintFallback::Color(c) => {
-                    d.node.set_attribute((d.attr_id, Color::new(c.red, c.green, c.blue)));
+                    d.node.set_attribute(((d.prefix, d.attr_id), Color::new(c.red, c.green, c.blue)));
                 }
             }
         }

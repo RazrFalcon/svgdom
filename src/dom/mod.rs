@@ -8,11 +8,12 @@ pub use self::iterators::*;
 pub use self::node::Node;
 pub use self::node_type::NodeType;
 
-use {Name, NameRef, ElementId};
+use {QName, QNameRef, ElementId};
+
 /// Type alias for `NameRef<ElementId>`.
-pub type TagNameRef<'a> = NameRef<'a, ElementId>;
+pub type TagNameRef<'a> = QNameRef<'a, ElementId>;
 /// Type alias for `Name<ElementId>`.
-pub type TagName = Name<ElementId>;
+pub type TagName = QName<ElementId>;
 
 mod document;
 mod element_type;

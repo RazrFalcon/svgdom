@@ -9,9 +9,7 @@ use std::ops::{Deref, DerefMut};
 use svgparser::{
     self,
     Error as ParseError,
-    ErrorKind,
     FromSpan,
-    Stream,
     StrSpan,
 };
 
@@ -47,12 +45,6 @@ impl ParseFromSpan for Points {
     fn from_span(span: StrSpan) -> Result<Points, ParseError> {
         let tokenizer = svgparser::Points::from_span(span);
         let p: Vec<_> = tokenizer.collect();
-
-        if p.len() < 2 {
-            let mut stream = Stream::from_span(span);
-            return Err(ErrorKind::InvalidAttributeValue(stream.gen_error_pos_from(0)).into())
-        }
-
         Ok(Points(p))
     }
 }
@@ -123,18 +115,12 @@ mod tests {
 
     #[test]
     fn parse_points_3() {
-        let points = Points::from_str("10 20 30");
-        assert_eq!(points.is_err(), true);
-    }
-
-    #[test]
-    fn parse_points_4() {
         let points = Points::from_str("10 20 30 40").unwrap();
         assert_eq!(points.to_string(), "10 20 30 40");
     }
 
     #[test]
-    fn parse_points_5() {
+    fn parse_points_4() {
         let points = Points::from_str("10 20 30 40").unwrap();
 
         let opt = WriteOptions {
