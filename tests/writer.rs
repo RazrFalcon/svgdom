@@ -511,7 +511,7 @@ test_resave!(text_space_preserve_3,
 </svg>
 ",
 "<svg xml:space='preserve'>
-    <text>     Text     <tspan xml:space='default'> Text </tspan>     Text     </text>
+    <text>     Text     <tspan xml:space='default'>Text </tspan>     Text     </text>
 </svg>
 ");
 
@@ -524,7 +524,7 @@ test_resave!(text_space_preserve_4,
 ",
 "<svg>
     <g>
-        <text>Text <tspan xml:space='preserve'> Text </tspan> Text</text>
+        <text>Text <tspan xml:space='preserve'> Text </tspan>Text</text>
     </g>
 </svg>
 ");

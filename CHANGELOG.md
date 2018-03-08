@@ -28,6 +28,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - **Breaking**. `AttributeValue::name`.
 - **Breaking**. `Node::remove_attributes`.
 
+### Fixed
+- Text with `xml:space` preprocessing.
+
 ## [0.10.4] - 2018-02-03
 ### Fixed
 - Invalid files in the crate package.

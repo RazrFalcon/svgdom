@@ -202,9 +202,7 @@ fn prepare_text_children(parent: &Node, xmlspace: XmlSpace) {
             // To:   '<text>Text <tspan>text</tspan></text>'
             //
             // See text-tspan-02-b.svg for details.
-            if     xmlspace1 == XmlSpace::Default
-                && xmlspace2 == XmlSpace::Default
-            {
+            if xmlspace2 == XmlSpace::Default {
                 if c2 == Some(b' ') && c2 == c3 {
                     node2.text_mut().remove_first();
                 }
