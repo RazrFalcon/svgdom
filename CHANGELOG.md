@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - **Breaking**. `Name::into_ref` to `Name::as_ref`.
 - **Breaking**. `Node::tag_name` returns `Ref<TagName>`
   and not `Option<Ref<TagName>>` now.
+- `Transform`'s `Debug` prints matrix transform for default transform instead of nothing.
 
 ### Removed
 - **Breaking**. `AttributeValue::name`.
