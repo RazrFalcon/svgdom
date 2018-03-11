@@ -32,13 +32,14 @@ use types::{
 #[derive(Clone,PartialEq,Debug)]
 #[allow(missing_docs)]
 pub enum AttributeValue {
+    AspectRatio(AspectRatio),
     Color(Color),
+    /// FuncIRI
+    FuncLink(Node),
     Length(Length),
     LengthList(LengthList),
     /// IRI
     Link(Node),
-    /// FuncIRI
-    FuncLink(Node),
     Number(f64),
     NumberList(NumberList),
     Path(path::Path),
@@ -47,7 +48,6 @@ pub enum AttributeValue {
     String(String),
     Transform(Transform),
     ViewBox(ViewBox),
-    AspectRatio(AspectRatio),
 }
 
 macro_rules! impl_from {
@@ -60,17 +60,18 @@ macro_rules! impl_from {
     )
 }
 
-impl_from!(String, String);
-impl_from!(ViewBox, ViewBox);
-impl_from!(f64, Number);
-impl_from!(NumberList, NumberList);
+impl_from!(AspectRatio, AspectRatio);
+impl_from!(Color, Color);
 impl_from!(Length, Length);
 impl_from!(LengthList, LengthList);
-impl_from!(Transform, Transform);
-impl_from!(Color, Color);
-impl_from!(ValueId, PredefValue);
+impl_from!(f64, Number);
+impl_from!(NumberList, NumberList);
 impl_from!(path::Path, Path);
 impl_from!(Points, Points);
+impl_from!(ValueId, PredefValue);
+impl_from!(String, String);
+impl_from!(Transform, Transform);
+impl_from!(ViewBox, ViewBox);
 
 // TODO: bad, hidden allocation
 impl<'a> From<&'a str> for AttributeValue {

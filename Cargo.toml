@@ -19,9 +19,9 @@ float-cmp = "0.3"
 simplecss = "0.1.0"
 
 [dependencies.svgparser]
-git = "https://github.com/RazrFalcon/svgparser.git"
+# git = "https://github.com/RazrFalcon/svgparser.git"
 # path = "../svgparser"
-# version = "0.6"
+version = "0.7"
 
 [dependencies.error-chain]
 version = "0.11"
