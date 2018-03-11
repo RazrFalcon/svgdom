@@ -487,7 +487,7 @@ impl Node {
                         let mut next = next.borrow_mut();
                         debug_assert!({
                             let weak = next.prev_sibling.as_ref().unwrap();
-                            same_rc(&weak.upgrade().unwrap(), &self.0)
+                            Rc::ptr_eq(&weak.upgrade().unwrap(), &self.0)
                         });
                         next.prev_sibling = Some(Rc::downgrade(&new_sibling.0));
                     }
@@ -529,7 +529,7 @@ impl Node {
             let mut prev = prev.borrow_mut();
             debug_assert!({
                 let rc = prev.next_sibling.as_ref().unwrap();
-                same_rc(rc, &self.0)
+                Rc::ptr_eq(rc, &self.0)
             });
             prev.next_sibling = Some(new_sibling.clone().0);
         } else {
@@ -1001,7 +1001,7 @@ impl Node {
                     let ln = &mut node_borrow.linked_nodes;
                     // this code can't panic, because we know that such node exist
                     let index = ln.iter().position(|x| {
-                        same_rc(&x.upgrade().unwrap(), self_borrow)
+                        Rc::ptr_eq(&x.upgrade().unwrap(), self_borrow)
                     }).unwrap();
                     ln.remove(index);
                 }
@@ -1057,15 +1057,8 @@ impl Clone for Node {
 
 impl PartialEq for Node {
     fn eq(&self, other: &Node) -> bool {
-        same_rc(&self.0, &other.0)
+        Rc::ptr_eq(&self.0, &other.0)
     }
-}
-
-// TODO: move to Rc::ptr_eq (since 1.17) when we drop 1.16 version support
-fn same_rc<T>(a: &Rc<T>, b: &Rc<T>) -> bool {
-    let a: *const T = &**a;
-    let b: *const T = &**b;
-    a == b
 }
 
 impl fmt::Debug for Node {

@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - **Breaking**. `AttributeValue::AspectRatio`.
 
 ### Changed
+- **Breaking**. Minimal Rust version is 1.17.
 - **Breaking**. `Path`'s fields are private now. Use `Deref` instead.
 - **Breaking**. `Attribute::name` is `QName` and not `Name` now.
   So it has namespace prefix in it. Example:

@@ -149,7 +149,7 @@ And even though the file is a bit different now - it will be rendered exactly th
 
 ### Usage
 
-Dependency: [Rust](https://www.rust-lang.org/) >= 1.16
+Dependency: [Rust](https://www.rust-lang.org/) >= 1.17
 
 Add this to your `Cargo.toml`:
 
