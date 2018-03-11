@@ -851,6 +851,20 @@ test_resave!(namespaces_5,
 </svg>
 ");
 
+// Non-SVG element.
+test_resave!(namespaces_6,
+"<svg>
+    <d:SVGTestCase xmlns:d='http://www.w3.org/2000/02/svg/testsuite/description/'>
+        <rect/>
+    </d:SVGTestCase>
+</svg>",
+"<svg>
+    <d:SVGTestCase xmlns:d='http://www.w3.org/2000/02/svg/testsuite/description/'>
+        <rect/>
+    </d:SVGTestCase>
+</svg>
+");
+
 test_resave!(aspect_ratio_1,
 "<svg preserveAspectRatio='defer none slice'/>",
 "<svg preserveAspectRatio='defer none slice'/>

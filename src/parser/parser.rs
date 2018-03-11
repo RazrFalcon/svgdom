@@ -218,6 +218,8 @@ fn process_token<'a>(
                 svg::Name::Svg(aid) => {
                     if curr_node.is_svg_element() {
                         parse_svg_attribute(curr_node, name.prefix, aid, value, post_data, opt)?;
+                    } else {
+                        curr_node.set_attribute(((name.prefix, aid.name()), value.to_str()));
                     }
                 }
             }
