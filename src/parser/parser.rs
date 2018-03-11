@@ -485,6 +485,9 @@ pub fn parse_svg_attribute_value<'a>(
         ParserAttributeValue::ViewBox(v) => {
             Some(AttributeValue::ViewBox(v))
         }
+        ParserAttributeValue::AspectRatio(v) => {
+            Some(AttributeValue::AspectRatio(v))
+        }
         ParserAttributeValue::Path(_) => unreachable!(),
         ParserAttributeValue::Points(_) => unreachable!(),
         ParserAttributeValue::Style(_) => unreachable!(),

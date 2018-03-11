@@ -14,6 +14,8 @@ use {
 };
 use types::{
     path,
+    Align,
+    AspectRatio,
     Color,
     Length,
     LengthList,
@@ -45,6 +47,7 @@ pub enum AttributeValue {
     String(String),
     Transform(Transform),
     ViewBox(ViewBox),
+    AspectRatio(AspectRatio),
 }
 
 macro_rules! impl_from {
@@ -225,6 +228,30 @@ impl WriteBuffer for AttributeValue {
                 vb.w.write_buf_opt(opt, buf);
                 buf.push(b' ');
                 vb.h.write_buf_opt(opt, buf);
+            }
+            AttributeValue::AspectRatio(ratio) => {
+                if ratio.defer {
+                    buf.extend_from_slice(b"defer ");
+                }
+
+                let align = match ratio.align {
+                    Align::None     => "none",
+                    Align::XMinYMin => "xMinYMin",
+                    Align::XMidYMin => "xMidYMin",
+                    Align::XMaxYMin => "xMaxYMin",
+                    Align::XMinYMid => "xMinYMid",
+                    Align::XMidYMid => "xMidYMid",
+                    Align::XMaxYMid => "xMaxYMid",
+                    Align::XMinYMax => "xMinYMax",
+                    Align::XMidYMax => "xMidYMax",
+                    Align::XMaxYMax => "xMaxYMax",
+                };
+
+                buf.extend_from_slice(align.as_bytes());
+
+                if ratio.slice {
+                    buf.extend_from_slice(b" slice");
+                }
             }
         }
     }

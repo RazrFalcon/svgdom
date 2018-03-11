@@ -11,6 +11,8 @@ pub use self::points::Points;
 pub use self::transform::Transform;
 
 pub use svgparser::{
+    Align,
+    AspectRatio,
     LengthUnit,
     ViewBox,
 };

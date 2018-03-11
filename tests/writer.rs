@@ -850,3 +850,8 @@ test_resave!(namespaces_5,
     <use xlink:href='#g1'/>
 </svg>
 ");
+
+test_resave!(aspect_ratio_1,
+"<svg preserveAspectRatio='defer none slice'/>",
+"<svg preserveAspectRatio='defer none slice'/>
+");

@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Implemented `Deref` and `DerefMut` for `Path`.
 - **Breaking**. `AttributeValue::Points`.
 - **Breaking**. `AttributeValue::ViewBox`.
+- **Breaking**. `AttributeValue::AspectRatio`.
 
 ### Changed
 - **Breaking**. `Path`'s fields are private now. Use `Deref` instead.
