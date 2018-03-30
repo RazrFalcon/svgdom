@@ -21,7 +21,7 @@ use {
     Descendants,
     Document,
     ElementId,
-    ErrorKind,
+    Error,
     LinkedNodes,
     NodeType,
     Parents,
@@ -918,17 +918,17 @@ impl Node {
 
     fn set_link_attribute(&mut self, name: AttributeQName, node: Node) -> Result<()> {
         if node.id().is_empty() {
-            return Err(ErrorKind::ElementMustHaveAnId.into());
+            return Err(Error::ElementMustHaveAnId);
         }
 
         // check for recursion
         if *self.id() == *node.id() {
-            return Err(ErrorKind::ElementCrosslink.into());
+            return Err(Error::ElementCrosslink);
         }
 
         // check for recursion 2
         if self.linked_nodes().any(|n| n == node) {
-            return Err(ErrorKind::ElementCrosslink.into());
+            return Err(Error::ElementCrosslink);
         }
 
         // we must remove existing attribute to prevent dangling links

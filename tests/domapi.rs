@@ -12,7 +12,6 @@ use svgdom::{
     ElementId as EId,
     WriteOptions,
     ToStringWithOptions,
-    ChainedErrorExt,
 };
 
 #[test]
@@ -49,8 +48,8 @@ fn linked_attributes_2() {
     n1.set_attribute((AId::Href, n2.clone()));
 
     // recursion error
-    assert_eq!(n2.set_attribute_checked((AId::Href, n1.clone())).unwrap_err().full_chain(),
-               "Error: element crosslink");
+    assert_eq!(n2.set_attribute_checked((AId::Href, n1.clone())).unwrap_err().to_string(),
+               "element crosslink");
 }
 
 #[test]

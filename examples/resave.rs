@@ -25,11 +25,11 @@ fn main() {
 
     let doc = Document::from_str(&input_data).unwrap();
 
-    let mut ouput_data = Vec::new();
-    doc.write_buf(&mut ouput_data);
+    let mut output_data = Vec::new();
+    doc.write_buf(&mut output_data);
 
     let mut f = File::create(&args[2]).unwrap();
-    f.write_all(&ouput_data).unwrap();
+    f.write_all(&output_data).unwrap();
 
     let end = time::precise_time_ns();
     println!("Elapsed: {:.4}ms", (end - start) as f64 / 1_000_000.0);

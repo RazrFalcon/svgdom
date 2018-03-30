@@ -4,9 +4,10 @@
 
 use simplecss;
 
-use svgparser::{
+use svgparser::xmlparser::{
     Stream,
     StrSpan,
+    ErrorPos,
 };
 
 use error::Result;
@@ -15,8 +16,7 @@ use {
     AttributeValue,
     Document,
     ElementId,
-    ErrorKind,
-    ErrorPos,
+    Error,
     Node,
     ParseOptions,
 };
@@ -114,10 +114,10 @@ pub fn resolve_css<'a>(
                     | CssToken::PseudoClass(_)
                     | CssToken::LangPseudoClass(_)
                     | CssToken::Combinator(_) => {
-                        return Err(ErrorKind::UnsupportedCSS(gen_err_pos(*style, last_pos)).into());
+                        return Err(Error::UnsupportedCSS(gen_err_pos(*style, last_pos)));
                     }
                     _ => {
-                        return Err(ErrorKind::InvalidCSS(gen_err_pos(*style, last_pos)).into());
+                        return Err(Error::InvalidCSS(gen_err_pos(*style, last_pos)));
                     }
                 };
 
@@ -134,7 +134,7 @@ pub fn resolve_css<'a>(
                     CssToken::BlockEnd => break,
                     CssToken::EndOfStream => break 'root,
                     _ => {
-                        return Err(ErrorKind::InvalidCSS(gen_err_pos(*style, last_pos)).into());
+                        return Err(Error::InvalidCSS(gen_err_pos(*style, last_pos)));
                     }
                 }
             }

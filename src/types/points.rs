@@ -8,7 +8,10 @@ use std::ops::{Deref, DerefMut};
 
 use svgparser::{
     self,
-    Error as ParseError,
+    StreamError,
+};
+
+use svgparser::xmlparser::{
     FromSpan,
     StrSpan,
 };
@@ -40,9 +43,7 @@ impl Points {
 impl_from_str!(Points);
 
 impl ParseFromSpan for Points {
-    type Err = ParseError;
-
-    fn from_span(span: StrSpan) -> Result<Points, ParseError> {
+    fn from_span(span: StrSpan) -> Result<Points, Self::Err> {
         let tokenizer = svgparser::Points::from_span(span);
         let p: Vec<_> = tokenizer.collect();
         Ok(Points(p))

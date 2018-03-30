@@ -7,12 +7,16 @@ use std::str;
 use std::collections::HashMap;
 
 use svgparser::{
-    xmlparser,
     style,
     svg,
     AttributeValue as ParserAttributeValue,
-    FromSpan,
     PaintFallback,
+    StreamError,
+};
+
+use svgparser::xmlparser::{
+    self,
+    FromSpan,
     Stream,
     StrSpan,
 };
@@ -25,7 +29,7 @@ use {
     Color,
     Document,
     ElementId,
-    ErrorKind,
+    Error,
     Length,
     LengthUnit,
     Node,
@@ -41,6 +45,9 @@ use super::{
     css,
     text,
 };
+
+
+type StreamResult<T> = ::std::result::Result<T, StreamError>;
 
 pub struct NodeSpanData<'a> {
     pub node: Node,
@@ -74,10 +81,10 @@ impl<'a> Links<'a> {
         node: &Node,
     ) {
         self.list.push(LinkData {
-            prefix: prefix,
+            prefix,
             attr_id: id,
-            iri: iri,
-            fallback: fallback,
+            iri,
+            fallback,
             node: node.clone(),
         });
     }
@@ -129,18 +136,18 @@ pub fn parse_svg(text: &str, opt: &ParseOptions) -> Result<Document> {
 
     // document must contain any children
     if !doc.root().has_children() {
-        return Err(ErrorKind::EmptyDocument.into());
+        return Err(Error::EmptyDocument);
     }
 
     // first element must be an 'svg'
     match doc.children().svg().nth(0) {
         Some((id, _)) => {
             if id != ElementId::Svg {
-                return Err(ErrorKind::NoSvgElement.into());
+                return Err(Error::NoSvgElement);
             }
         }
         None => {
-            return Err(ErrorKind::NoSvgElement.into());
+            return Err(Error::NoSvgElement);
         }
     }
 
@@ -292,7 +299,7 @@ fn process_token<'a>(
             // check that ENTITY does not contain an element(s)
             if value.to_str().trim().starts_with("<") {
                 let s = Stream::from_span(value);
-                return Err(ErrorKind::UnsupportedEntity(s.gen_error_pos()).into());
+                return Err(Error::UnsupportedEntity(s.gen_error_pos()));
             }
 
             post_data.entitis.insert(name, value);
@@ -308,7 +315,7 @@ fn process_token<'a>(
         // check that the first element of the doc is 'svg'
         if let Some((id, _)) = doc.children().svg().nth(0) {
             if id != ElementId::Svg {
-                return Err(ErrorKind::NoSvgElement.into());
+                return Err(Error::NoSvgElement);
             }
         }
     }
@@ -323,7 +330,7 @@ fn parse_svg_attribute<'a>(
     value: StrSpan<'a>,
     post_data: &mut PostData<'a>,
     opt: &ParseOptions,
-) -> Result<()> {
+) -> StreamResult<()> {
     match id {
         AttributeId::Id => {
             node.set_id(value.to_str());
@@ -393,7 +400,7 @@ pub fn parse_svg_attribute_value<'a>(
     links: &mut Links<'a>,
     entitis: &Entities<'a>,
     opt: &ParseOptions,
-) -> Result<()> {
+) -> StreamResult<()> {
     let tag_id = node.tag_id().unwrap();
 
     let av = match ParserAttributeValue::from_span(tag_id, prefix, id, span) {
@@ -585,7 +592,7 @@ fn resolve_links(links: &mut Links, opt: &ParseOptions) -> Result<()> {
                             d.node.set_attribute_checked(((d.prefix, d.attr_id), node.clone()))?;
                         } else {
                             let s = d.iri.to_string();
-                            return Err(ErrorKind::UnsupportedPaintFallback(s).into());
+                            return Err(Error::UnsupportedPaintFallback(s));
                         }
                     }
                     None => d.node.set_attribute_checked(((d.prefix, d.attr_id), node.clone()))?,
@@ -630,7 +637,7 @@ fn resolve_fallback(d: &mut LinkData) -> Result<()> {
                         // You can test this issue on:
                         // breeze-icons/icons/actions/22/color-management.svg
                         let s = d.iri.to_string();
-                        return Err(ErrorKind::BrokenFuncIri(s).into());
+                        return Err(Error::BrokenFuncIri(s));
                     }
 
                     let flag = d.node.parents().any(|n| {

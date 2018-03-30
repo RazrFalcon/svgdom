@@ -6,10 +6,13 @@ use std::fmt;
 use std::str::FromStr;
 
 use svgparser::{
-    Error as ParseError,
+    StreamError,
+    StreamExt,
+};
+
+use svgparser::xmlparser::{
     Stream,
     StrSpan,
-    StreamExt,
 };
 
 use {
@@ -66,9 +69,7 @@ impl Length {
 impl_from_str!(Length);
 
 impl ParseFromSpan for Length {
-    type Err = ParseError;
-
-    fn from_span(span: StrSpan) -> Result<Length, ParseError> {
+    fn from_span(span: StrSpan) -> Result<Length, Self::Err> {
         let mut ss = Stream::from_span(span);
         let l = ss.parse_length()?;
         Ok(Length::new(l.num, l.unit))

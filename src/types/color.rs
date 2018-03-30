@@ -7,7 +7,10 @@ use std::str::FromStr;
 
 use svgparser::{
     Color as ParserColor,
-    Error as ParseError,
+    StreamError,
+};
+
+use svgparser::xmlparser::{
     StrSpan,
 };
 
@@ -22,12 +25,10 @@ use {
 ///
 /// [`<color>`]: https://www.w3.org/TR/SVG/types.html#DataTypeColor
 #[derive(Clone,Copy,PartialEq,Debug)]
+#[allow(missing_docs)]
 pub struct Color {
-    #[allow(missing_docs)]
     pub red: u8,
-    #[allow(missing_docs)]
     pub green: u8,
-    #[allow(missing_docs)]
     pub blue: u8,
 }
 
@@ -35,16 +36,14 @@ impl Color {
     /// Constructs a new color.
     #[inline]
     pub fn new(red: u8, green: u8, blue: u8) -> Color {
-        Color { red: red, green: green, blue: blue }
+        Color { red, green, blue }
     }
 }
 
 impl_from_str!(Color);
 
 impl ParseFromSpan for Color {
-    type Err = ParseError;
-
-    fn from_span(span: StrSpan) -> Result<Color, ParseError> {
+    fn from_span(span: StrSpan) -> Result<Color, Self::Err> {
         let c = ParserColor::from_span(span)?;
         Ok(Color::new(c.red, c.green, c.blue))
     }

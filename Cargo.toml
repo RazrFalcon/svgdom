@@ -14,18 +14,15 @@ readme = "README.md"
 travis-ci = { repository = "RazrFalcon/libsvgdom" }
 
 [dependencies]
-log = "0.4"
+failure = "0.1.1"
 float-cmp = "0.3"
+log = "0.4"
 simplecss = "0.1.0"
 
 [dependencies.svgparser]
-# git = "https://github.com/RazrFalcon/svgparser.git"
+git = "https://github.com/RazrFalcon/svgparser.git"
 # path = "../svgparser"
-version = "0.7"
-
-[dependencies.error-chain]
-version = "0.11"
-default-features = false
+# version = "0.7"
 
 [dev-dependencies]
 time = "0.1"

@@ -4,7 +4,7 @@
 
 use std::str::FromStr;
 
-use svgparser::{
+use svgparser::xmlparser::{
     StrSpan,
 };
 
@@ -12,19 +12,16 @@ use WriteOptions;
 
 /// A trait for parsing data from a string.
 pub trait ParseFromSpan: FromStr {
-    /// Error type.
-    type Err;
-
     /// Parses data from a `StrSpan`.
-    fn from_span(s: StrSpan) -> Result<Self, <Self as ParseFromSpan>::Err>;
+    fn from_span(s: StrSpan) -> Result<Self, <Self as FromStr>::Err>;
 }
 
 macro_rules! impl_from_str {
     ($t:ty) => (
         impl FromStr for $t {
-            type Err = ParseError;
+            type Err = StreamError;
 
-            fn from_str(s: &str) -> Result<$t, ParseError> {
+            fn from_str(s: &str) -> Result<$t, Self::Err> {
                 ParseFromSpan::from_span(StrSpan::from_str(s))
             }
         }

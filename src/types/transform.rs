@@ -8,8 +8,10 @@ use std::ops::Mul;
 use std::str::FromStr;
 
 use svgparser::{
-    // TODO: why we use this error?
-    Error as ParseError,
+    StreamError,
+};
+
+use svgparser::xmlparser::{
     StrSpan,
     FromSpan,
 };
@@ -41,15 +43,8 @@ pub struct Transform {
 
 impl Transform {
     /// Constructs a new transform.
-    pub fn new(a: f64, b: f64, c: f64, d: f64,  e: f64, f: f64) -> Transform {
-        Transform {
-            a: a,
-            b: b,
-            c: c,
-            d: d,
-            e: e,
-            f: f,
-        }
+    pub fn new(a: f64, b: f64, c: f64, d: f64,  e: f64, f: f64) -> Self {
+        Transform { a, b, c, d, e, f, }
     }
 
     /// Translates the current transform.
@@ -234,9 +229,7 @@ impl Default for Transform {
 impl_from_str!(Transform);
 
 impl ParseFromSpan for Transform {
-    type Err = ParseError;
-
-    fn from_span(span: StrSpan) -> Result<Transform, ParseError> {
+    fn from_span(span: StrSpan) -> Result<Transform, Self::Err> {
         use svgparser::transform::Tokenizer;
         use svgparser::transform::Token;
 
