@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 - Moved to `failure`.
 - Moved to `rcc-tree` from own tree implementation.
+- Relicense from MPL-2.0 to MIT/Apache-2.0.
 - Minimal Rust version is 1.18.
 - `Path`'s fields are private now. Use `Deref` instead.
 - `Attribute::name` is `QName` and not `Name` now.
