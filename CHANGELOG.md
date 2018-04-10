@@ -27,7 +27,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - `Name::into_ref` to `Name::as_ref`.
 - `Node::tag_name` returns `Ref<TagName>`
   and not `Option<Ref<TagName>>` now.
-- `Transform`'s `Debug` prints matrix transform for default transform instead of nothing.
 - Rename `Node::parents` to `ancestors`.
 - `Node::ancestors`(parents) starts with a current node now and returns the root node too.
 
@@ -44,9 +43,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - `Document::descendants`.
 - `Document::children`.
 - `LinkedNodes` iterator.
-
-### Fixed
-- Text with `xml:space` preprocessing.
 
 ## [0.10.5] - 2018-04-10
 ### Changed
