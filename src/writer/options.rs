@@ -16,7 +16,7 @@ pub enum Indent {
 
 /// A separator type for a list of values.
 ///
-/// https://www.w3.org/TR/SVG/types.html#DataTypeList
+/// <https://www.w3.org/TR/SVG/types.html#DataTypeList>
 #[derive(Clone,Copy,PartialEq)]
 pub enum ListSeparator {
     /// `10,20`

@@ -85,7 +85,7 @@ pub enum SegmentData {
 /// Representation of the path segment.
 ///
 /// If you want to change the segment type (for example MoveTo to LineTo)
-/// - you should create a new segment.
+/// you should create a new segment.
 /// But you still can change points or make segment relative or absolute.
 #[derive(Copy,Clone,Debug,PartialEq)]
 pub struct Segment {

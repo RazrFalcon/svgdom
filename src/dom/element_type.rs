@@ -25,7 +25,7 @@ pub trait ElementType {
     /// List: `altGlyphDef`, `clipPath`, `cursor`, `filter`, `linearGradient`, `marker`,
     /// `mask`, `pattern`, `radialGradient` and `symbol`.
     ///
-    /// Details: https://www.w3.org/TR/SVG/struct.html#Head
+    /// Details: <https://www.w3.org/TR/SVG/struct.html#Head>
     ///
     /// # Examples
     ///
@@ -44,14 +44,14 @@ pub trait ElementType {
     ///
     /// List: `rect`, `circle`, `ellipse`, `line`, `polyline`, `polygon`.
     ///
-    /// Details: https://www.w3.org/TR/SVG/shapes.html
+    /// Details: <https://www.w3.org/TR/SVG/shapes.html>
     fn is_basic_shape(&self) -> bool;
 
     /// Returns true if the current node is a shape element.
     ///
     /// List: `path`, `rect`, `circle`, `ellipse`, `line`, `polyline` and `polygon`.
     ///
-    /// Details: https://www.w3.org/TR/SVG/intro.html#TermShape
+    /// Details: <https://www.w3.org/TR/SVG/intro.html#TermShape>
     fn is_shape(&self) -> bool;
 
     /// Returns true if the current node is a container element.
@@ -59,21 +59,21 @@ pub trait ElementType {
     /// List: `a`, `defs`, `glyph`, `g`, `marker`, `mask`, `missing-glyph`, `pattern`, `svg`,
     /// `switch` and `symbol`.
     ///
-    /// Details: https://www.w3.org/TR/SVG/intro.html#TermContainerElement
+    /// Details: <https://www.w3.org/TR/SVG/intro.html#TermContainerElement>
     fn is_container(&self) -> bool;
 
     /// Returns true if the current node is a text content element.
     ///
     /// List: `altGlyph`, `textPath`, `text`, `tref` and `tspan`.
     ///
-    /// Details: https://www.w3.org/TR/SVG/intro.html#TermTextContentElement
+    /// Details: <https://www.w3.org/TR/SVG/intro.html#TermTextContentElement>
     fn is_text_content(&self) -> bool;
 
     /// Returns true if the current node is a text content child element.
     ///
     /// List: `altGlyph`, `textPath`, `tref` and `tspan`.
     ///
-    /// Details: https://www.w3.org/TR/SVG/intro.html#TermTextContentChildElement
+    /// Details: <https://www.w3.org/TR/SVG/intro.html#TermTextContentChildElement>
     fn is_text_content_child(&self) -> bool;
 
     /// Returns true if the current node is a graphic element.
@@ -81,7 +81,7 @@ pub trait ElementType {
     /// List: `circle`, `ellipse`, `image`, `line`, `path`, `polygon`, `polyline`, `rect`,
     /// `text` and `use`.
     ///
-    /// Details: https://www.w3.org/TR/SVG/intro.html#TermGraphicsElement
+    /// Details: <https://www.w3.org/TR/SVG/intro.html#TermGraphicsElement>
     fn is_graphic(&self) -> bool;
 
     /// Returns true if the current node is a gradient element.
