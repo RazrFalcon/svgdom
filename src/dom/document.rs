@@ -34,7 +34,7 @@ use super::{
 
 /// Container of [`Node`]s.
 ///
-/// [`Node`]: struct.Node.html
+/// [`Node`]: type.Node.html
 pub struct Document(tree::Document<NodeData>);
 
 impl Document {
@@ -75,7 +75,7 @@ impl Document {
     ///
     /// Panics if a string tag name is empty.
     ///
-    /// [`Node`]: struct.Node.html
+    /// [`Node`]: type.Node.html
     /// [`NodeType`]: enum.NodeType.html
     pub fn create_element<'a, T>(&mut self, tag_name: T) -> Node
         where TagNameRef<'a>: From<T>, T: Copy
@@ -105,7 +105,7 @@ impl Document {
     ///
     /// This method should be used for any non-element nodes.
     ///
-    /// [`Node`]: struct.Node.html
+    /// [`Node`]: type.Node.html
     /// [`NodeType`]: enum.NodeType.html
     pub fn create_node(&mut self, node_type: NodeType, text: &str) -> Node {
         // TODO: use Into<String> trait
@@ -124,7 +124,7 @@ impl Document {
 
     /// Returns the root [`Node`].
     ///
-    /// [`Node`]: struct.Node.html
+    /// [`Node`]: type.Node.html
     pub fn root(&self) -> Node {
         self.0.root().clone()
     }
@@ -147,7 +147,7 @@ impl Document {
     /// assert_eq!(doc.svg_element().unwrap().is_tag_name(ElementId::Svg), true);
     /// ```
     ///
-    /// [`Node`]: struct.Node.html
+    /// [`Node`]: type.Node.html
     pub fn svg_element(&self) -> Option<Node> {
         for (id, n) in self.root().children().svg() {
             if id == ElementId::Svg {

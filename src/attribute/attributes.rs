@@ -118,7 +118,7 @@ impl Attributes {
     ///
     /// Will panic only in debug build.
     ///
-    /// [`Node::set_attribute()`]: struct.Node.html#method.set_attribute
+    /// [`Node::set_attribute()`]: type.Node.html#method.set_attribute
     pub fn insert(&mut self, attr: Attribute) {
         if cfg!(debug_assertions) {
             if attr.is_link() || attr.is_func_link() {
@@ -133,8 +133,8 @@ impl Attributes {
     ///
     /// [`Node`] attribute value can be set only via [`Node::set_attribute()`] method.
     ///
-    /// [`Node`]: struct.Node.html
-    /// [`Node::set_attribute()`]: struct.Node.html#method.set_attribute
+    /// [`Node`]: type.Node.html
+    /// [`Node::set_attribute()`]: type.Node.html#method.set_attribute
     pub fn insert_from<'a, N, T>(&mut self, name: N, value: T)
         where AttributeQNameRef<'a>: From<N>, AttributeValue: From<T>
     {
@@ -166,7 +166,7 @@ impl Attributes {
     ///
     /// Will panic only in debug build.
     ///
-    /// [`Node::remove_attribute()`]: struct.Node.html#method.remove_attribute
+    /// [`Node::remove_attribute()`]: type.Node.html#method.remove_attribute
     pub fn remove<'a, N>(&mut self, name: N)
         where AttributeQNameRef<'a>: From<N>, N: Copy
     {
@@ -277,7 +277,7 @@ impl Attributes {
     ///
     /// Will panic only in debug build.
     ///
-    /// [`Node::remove_attribute()`]: struct.Node.html#method.remove_attribute
+    /// [`Node::remove_attribute()`]: type.Node.html#method.remove_attribute
     #[inline]
     pub fn retain<F>(&mut self, mut f: F)
         where F: FnMut(&Attribute) -> bool

@@ -36,7 +36,7 @@ At last, the `id` attribute is stored as a separate value and not as part of the
 [`Attributes`]: struct.Attributes.html
 [`Document`]: struct.Document.html
 [`ElementId`]: enum.ElementId.html
-[`Node`]: struct.Node.html
+[`Node`]: type.Node.html
 [`TagName`]: type.TagName.html
 
 */

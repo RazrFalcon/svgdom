@@ -11,9 +11,9 @@ pub use self::tree::iterators::*;
 
 use {Attributes, QName, QNameRef, ElementId};
 
-/// Type alias for `NameRef<ElementId>`.
+/// Type alias for `QNameRef<ElementId>`.
 pub type TagNameRef<'a> = QNameRef<'a, ElementId>;
-/// Type alias for `Name<ElementId>`.
+/// Type alias for `QName<ElementId>`.
 pub type TagName = QName<ElementId>;
 
 

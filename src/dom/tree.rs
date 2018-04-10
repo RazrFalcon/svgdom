@@ -542,10 +542,10 @@ impl<T> Document<T> {
     ///
     /// Node belongs to the tree, but not added to it.
     ///
-    /// See: [Node::append](struct.Node.html#method.append),
-    /// [Node::prepend](struct.Node.html#method.prepend),
-    /// [Node::insert_after](struct.Node.html#method.insert_after) and
-    /// [Node::insert_before](struct.Node.html#method.insert_before).
+    /// See: [Node::append](type.Node.html#method.append),
+    /// [Node::prepend](type.Node.html#method.prepend),
+    /// [Node::insert_after](type.Node.html#method.insert_after) and
+    /// [Node::insert_before](type.Node.html#method.insert_before).
     pub fn create_node(&mut self, data: T) -> Node<T> {
         let new_data = Box::new(NodeData {
             count: 0,

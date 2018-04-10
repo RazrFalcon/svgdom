@@ -331,7 +331,7 @@ impl Node {
     ///
     /// [`AttributeId`]: enum.AttributeId.html
     /// [`Attribute`]: struct.Attribute.html
-    /// [`Node`]: struct.Node.html
+    /// [`Node`]: type.Node.html
     /// [`AttributeValue`]: enum.AttributeValue.html
     ///
     /// This method will overwrite an existing attribute with the same name.

@@ -75,7 +75,7 @@ impl Depth {
 }
 
 /// Writes a document into the buffer.
-pub fn write_dom(doc: &Document, opt: &WriteOptions, out: &mut Vec<u8>) {
+pub(crate) fn write_dom(doc: &Document, opt: &WriteOptions, out: &mut Vec<u8>) {
     let mut depth = Depth::new(opt.indent);
     let mut attrs_depth = Depth::new(opt.attributes_indent);
     let mut iter = doc.root().traverse();
