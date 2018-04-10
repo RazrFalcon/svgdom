@@ -43,8 +43,7 @@ At last, the `id` attribute is stored as a separate value and not as part of the
 
 #![doc(html_root_url = "https://docs.rs/svgdom/0.10.4")]
 
-#![forbid(unsafe_code)]
-#![warn(missing_docs)]
+//#![warn(missing_docs)]
 
 #[macro_use] extern crate log;
 #[macro_use] extern crate failure;

@@ -17,6 +17,7 @@ use {
     Document,
     ElementId,
     Error,
+    FilterSvg,
     Node,
     ParseOptions,
 };
@@ -143,14 +144,14 @@ pub fn resolve_css<'a>(
             for selector in &selectors {
                 match *selector {
                     CssSelector::Universal => {
-                        for (_, mut node) in doc.descendants().svg() {
+                        for (_, mut node) in doc.root().descendants().svg() {
                             apply_css_attributes(&values, &mut node, &mut post_data.links,
                                                  &post_data.entitis, opt)?;
                         }
                     }
                     CssSelector::Type(name) => {
                         if let Some(eid) = ElementId::from_name(name) {
-                            for (id, mut node) in doc.descendants().svg() {
+                            for (id, mut node) in doc.root().descendants().svg() {
                                 if id == eid {
                                     apply_css_attributes(&values, &mut node, &mut post_data.links,
                                                          &post_data.entitis, opt)?;
@@ -161,7 +162,7 @@ pub fn resolve_css<'a>(
                         }
                     }
                     CssSelector::Id(name) => {
-                        if let Some(mut node) = doc.descendants().find(|n| *n.id() == name) {
+                        if let Some(mut node) = doc.root().descendants().find(|n| n.id() == name) {
                             apply_css_attributes(&values, &mut node, &mut post_data.links,
                                                  &post_data.entitis, opt)?;
                         }

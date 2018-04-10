@@ -45,7 +45,7 @@ fn single_node_1() {
     let mut doc = Document::new();
     let n = doc.create_element(EId::Svg);
 
-    doc.append(&n);
+    doc.root().append(n.clone());
 
     assert_eq_text!(doc.to_string(), "<svg/>\n");
 }
@@ -56,8 +56,8 @@ fn child_node_1() {
     let mut svg = doc.create_element(EId::Svg);
     let defs = doc.create_element(EId::Defs);
 
-    doc.append(&svg);
-    svg.append(&defs);
+    doc.root().append(svg.clone());
+    svg.append(defs.clone());
 
     assert_eq_text!(doc.to_string(),
 "<svg>
@@ -70,13 +70,13 @@ fn child_node_1() {
 fn child_nodes_1() {
     let mut doc = Document::new();
     let svg = doc.create_element(EId::Svg);
-    doc.append(&svg);
+    doc.root().append(svg.clone());
 
     let mut parent = svg;
     for n in 1..5 {
         let mut r = doc.create_element(EId::Rect);
         r.set_id(n.to_string());
-        parent.append(&r);
+        parent.append(r.clone());
 
         parent = r;
     }
@@ -102,8 +102,8 @@ fn links_1() {
 
     svg_n.set_id("svg1");
 
-    doc.append(&svg_n);
-    svg_n.append(&use_n);
+    doc.root().append(svg_n.clone());
+    svg_n.append(use_n.clone());
 
     use_n.set_attribute((("xlink", AId::Href), svg_n));
 
@@ -123,9 +123,9 @@ fn links_2() {
 
     lg_n.set_id("lg1");
 
-    doc.append(&svg_n);
-    svg_n.append(&lg_n);
-    svg_n.append(&rect_n);
+    doc.root().append(svg_n.clone());
+    svg_n.append(lg_n.clone());
+    svg_n.append(rect_n.clone());
 
     rect_n.set_attribute((AId::Fill, lg_n));
 
@@ -142,7 +142,7 @@ fn attributes_types_1() {
     let mut doc = Document::new();
     let mut svg = doc.create_element(EId::Svg);
 
-    doc.append(&svg);
+    doc.root().append(svg.clone());
 
     svg.set_attribute((AId::ViewBox, ViewBox::new(10.0, 20.0, 30.0, 40.0)));
     svg.set_attribute((AId::Version, "1.0"));
@@ -178,8 +178,8 @@ fn declaration_1() {
         "version=\"1.0\" encoding=\"UTF-8\"");
     let svg = doc.create_element(EId::Svg);
 
-    doc.append(&dec);
-    doc.append(&svg);
+    doc.root().append(dec);
+    doc.root().append(svg);
 
     assert_eq_text!(doc.to_string(), "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<svg/>\n");
 }
@@ -191,8 +191,8 @@ fn comment_1() {
     let comm = doc.create_node(NodeType::Comment, "comment");
     let svg = doc.create_element(EId::Svg);
 
-    doc.append(&comm);
-    doc.append(&svg);
+    doc.root().append(comm);
+    doc.root().append(svg);
 
     assert_eq_text!(doc.to_string(), "<!--comment-->\n<svg/>\n");
 }
@@ -205,8 +205,8 @@ fn text_1() {
     let mut svg = doc.create_element(EId::Svg);
     let text = doc.create_node(NodeType::Text, "text");
 
-    doc.append(&svg);
-    svg.append(&text);
+    doc.root().append(svg.clone());
+    svg.append(text.clone());
 
     assert_eq_text!(doc.to_string(),
 "<svg>text</svg>

@@ -37,15 +37,16 @@ impl StrTrim for String {
 // - 'xml:space' processing
 // - tabs and newlines removing/replacing
 // - spaces trimming
-pub fn prepare_text(dom: &mut Document) {
-    _prepare_text(&dom.root(), XmlSpace::Default);
+pub fn prepare_text(doc: &mut Document) {
+    _prepare_text(&doc.root(), XmlSpace::Default);
 
     // Remove invisible 'xml:space' attributes created during text processing.
-    for mut node in dom.descendants().filter(|n| n.node_type() == NodeType::Element) {
+    for mut node in doc.root().descendants().filter(|n| n.node_type() == NodeType::Element) {
         node.attributes_mut().retain(|attr| attr.visible);
     }
 
-    dom.drain(|n| n.node_type() == NodeType::Text && n.text().is_empty());
+    let root = doc.root().clone();
+    doc.drain(root, |n| n.node_type() == NodeType::Text && n.text().is_empty());
 }
 
 fn _prepare_text(parent: &Node, parent_xmlspace: XmlSpace) {
@@ -124,7 +125,7 @@ fn prepare_text_children(parent: &Node, xmlspace: XmlSpace) {
         let node = &mut nodes[0];
 
         if xmlspace == XmlSpace::Default {
-            let mut text = node.text_mut();
+            let text = node.text_mut();
 
             match text.len() {
                 0 => {} // An empty string. Do nothing.

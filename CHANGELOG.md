@@ -7,15 +7,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 ### Added
 - Implemented `Deref` and `DerefMut` for `Path`.
-- **Breaking**. `AttributeValue::Points`.
-- **Breaking**. `AttributeValue::ViewBox`.
-- **Breaking**. `AttributeValue::AspectRatio`.
+- `AttributeValue::Points`.
+- `AttributeValue::ViewBox`.
+- `AttributeValue::AspectRatio`.
 
 ### Changed
-- **Breaking**. Moved to `failure`.
-- **Breaking**. Minimal Rust version is 1.18.
-- **Breaking**. `Path`'s fields are private now. Use `Deref` instead.
-- **Breaking**. `Attribute::name` is `QName` and not `Name` now.
+- Moved to `failure`.
+- Moved to `rcc-tree` from own tree implementation.
+- Minimal Rust version is 1.18.
+- `Path`'s fields are private now. Use `Deref` instead.
+- `Attribute::name` is `QName` and not `Name` now.
   So it has namespace prefix in it. Example:
   ```rust
   // before
@@ -23,14 +24,26 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
   // from now
   node.set_attribute(("xml", AttributeId::Space)), "preserve");
   ```
-- **Breaking**. `Name::into_ref` to `Name::as_ref`.
-- **Breaking**. `Node::tag_name` returns `Ref<TagName>`
+- `Name::into_ref` to `Name::as_ref`.
+- `Node::tag_name` returns `Ref<TagName>`
   and not `Option<Ref<TagName>>` now.
 - `Transform`'s `Debug` prints matrix transform for default transform instead of nothing.
+- Rename `Node::parents` to `ancestors`.
+- `Node::ancestors`(parents) starts with a current node now and returns the root node too.
 
 ### Removed
-- **Breaking**. `AttributeValue::name`.
-- **Breaking**. `Node::remove_attributes`.
+- `AttributeValue::name`.
+- `Node::document`.
+- `Node::remove`. Use `Document::remove_node`.
+- `Node::remove_attributes`.
+- `Node::remove_attributes`.
+- `Node::make_copy`. Use `Document::copy_node`.
+- `Node::make_copy_deep`. Use `Document::copy_node_deep`.
+- `Document::first_child`.
+- `Document::append`.
+- `Document::descendants`.
+- `Document::children`.
+- `LinkedNodes` iterator.
 
 ### Fixed
 - Text with `xml:space` preprocessing.

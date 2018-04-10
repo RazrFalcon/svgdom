@@ -10,6 +10,7 @@ use svgdom::{
     AttributeValue,
     Document,
     ElementId as EId,
+    NodeType,
     WriteOptions,
     ToStringWithOptions,
 };
@@ -20,8 +21,8 @@ fn linked_attributes_1() {
     let mut n1 = doc.create_element(EId::Svg);
     let mut n2 = doc.create_element(EId::Svg);
 
-    doc.root().append(&n1);
-    doc.root().append(&n2);
+    doc.root().append(n1.clone());
+    doc.root().append(n2.clone());
 
     n2.set_id("2");
 
@@ -30,7 +31,7 @@ fn linked_attributes_1() {
     assert_eq!(n1.is_used(), false);
     assert_eq!(n2.is_used(), true);
 
-    assert_eq!(n2.linked_nodes().next().unwrap(), n1);
+    assert_eq!(*n2.linked_nodes().iter().next().unwrap(), n1);
 }
 
 #[test]
@@ -42,8 +43,8 @@ fn linked_attributes_2() {
     n1.set_id("1");
     n2.set_id("2");
 
-    doc.root().append(&n1);
-    doc.root().append(&n2);
+    doc.root().append(n1.clone());
+    doc.root().append(n2.clone());
 
     n1.set_attribute((AId::Href, n2.clone()));
 
@@ -60,8 +61,8 @@ fn linked_attributes_3() {
         let mut n1 = doc.create_element(EId::Svg);
         let mut n2 = doc.create_element(EId::Svg);
 
-        doc.root().append(&n1);
-        doc.root().append(&n2);
+        doc.root().append(n1.clone());
+        doc.root().append(n2.clone());
 
         n1.set_id("1");
         n2.set_id("2");
@@ -74,13 +75,15 @@ fn linked_attributes_3() {
 
     {
         // remove n1
-        let mut n = doc.descendants().next().unwrap();
-        n.remove();
+        let n = doc.root().descendants().skip(1).next().unwrap();
+        assert_eq!(n.id(), "1");
+        doc.remove_node(n);
     }
 
     {
         // n2 should became unused
-        let n = doc.descendants().next().unwrap();
+        let n = doc.root().descendants().skip(1).next().unwrap();
+        assert_eq!(n.id(), "2");
         assert_eq!(n.is_used(), false);
     }
 }
@@ -93,8 +96,8 @@ fn linked_attributes_4() {
         let mut n1 = doc.create_element(EId::Svg);
         let mut n2 = doc.create_element(EId::Svg);
 
-        doc.root().append(&n1);
-        doc.root().append(&n2);
+        doc.root().append(n1.clone());
+        doc.root().append(n2.clone());
 
         n1.set_id("1");
         n2.set_id("2");
@@ -107,13 +110,13 @@ fn linked_attributes_4() {
 
     {
         // remove n2
-        let mut n = doc.descendants().nth(1).unwrap();
-        n.remove();
+        let n = doc.root().descendants().nth(1).unwrap();
+        doc.remove_node(n);
     }
 
     {
         // xlink:href attribute from n1 should be removed
-        let n = doc.descendants().next().unwrap();
+        let n = doc.root().descendants().next().unwrap();
         assert_eq!(n.has_attribute(AId::Href), false);
     }
 }
@@ -124,8 +127,8 @@ fn linked_attributes_5() {
     let mut n1 = doc.create_element(EId::Svg);
     let mut n2 = doc.create_element(EId::Svg);
 
-    doc.root().append(&n1);
-    doc.root().append(&n2);
+    doc.root().append(n1.clone());
+    doc.root().append(n2.clone());
 
     n1.set_id("1");
     n2.set_id("2");
@@ -204,7 +207,8 @@ fn drain_1() {
     <rect/>
 </svg>").unwrap();
 
-    assert_eq!(doc.drain(|n| n.is_tag_name(EId::Rect)), 1);
+    let root = doc.root().clone();
+    assert_eq!(doc.drain(root, |n| n.is_tag_name(EId::Rect)), 1);
 
     assert_eq_text!(doc.to_string(), "<svg/>\n");
 }
@@ -220,7 +224,8 @@ fn drain_2() {
     <rect/>
 </svg>").unwrap();
 
-    assert_eq!(doc.drain(|n| n.is_tag_name(EId::Path)), 1);
+    let root = doc.root().clone();
+    assert_eq!(doc.drain(root, |n| n.is_tag_name(EId::Path)), 1);
 
     assert_eq_text!(doc.to_string(),
 "<svg>
@@ -242,7 +247,8 @@ fn drain_3() {
     <rect/>
 </svg>").unwrap();
 
-    assert_eq!(doc.drain(|n| n.is_tag_name(EId::G)), 1);
+    let root = doc.root().clone();
+    assert_eq!(doc.drain(root, |n| n.is_tag_name(EId::G)), 1);
 
     assert_eq_text!(doc.to_string(),
 "<svg>
@@ -263,7 +269,8 @@ fn drain_4() {
     <rect/>
 </svg>").unwrap();
 
-    assert_eq!(doc.drain(|n| n.is_tag_name(EId::Rect)), 3);
+    let root = doc.root().clone();
+    assert_eq!(doc.drain(root, |n| n.is_tag_name(EId::Rect)), 3);
 
     assert_eq_text!(doc.to_string(),
 "<svg>
@@ -283,11 +290,13 @@ fn parents_1() {
     <rect/>
 </svg>").unwrap();
 
-    let node = doc.descendants().filter(|n| n.is_tag_name(EId::Path)).nth(0).unwrap();
+    let node = doc.root().descendants().filter(|n| n.is_tag_name(EId::Path)).nth(0).unwrap();
 
-    let mut iter = node.parents();
+    let mut iter = node.ancestors();
+    assert_eq!(iter.next().unwrap().is_tag_name(EId::Path), true);
     assert_eq!(iter.next().unwrap().is_tag_name(EId::G), true);
     assert_eq!(iter.next().unwrap().is_tag_name(EId::Svg), true);
+    assert_eq!(iter.next().unwrap().node_type(), NodeType::Root);
     assert_eq!(iter.next(), None);
 }
 
@@ -307,19 +316,21 @@ fn parents_2() {
     </g>
 </svg>").unwrap();
 
-    let node = doc.descendants().filter(|n| n.is_tag_name(EId::Tspan)).nth(0).unwrap();
+    let node = doc.root().descendants().filter(|n| n.is_tag_name(EId::Tspan)).nth(0).unwrap();
 
-    let mut iter = node.parents();
+    let mut iter = node.ancestors();
+    assert_eq!(iter.next().unwrap().is_tag_name(EId::Tspan), true);
     assert_eq!(iter.next().unwrap().is_tag_name(EId::Text), true);
     assert_eq!(iter.next().unwrap().is_tag_name(EId::G), true);
     assert_eq!(iter.next().unwrap().is_tag_name(EId::G), true);
     assert_eq!(iter.next().unwrap().is_tag_name(EId::Svg), true);
+    assert_eq!(iter.next().unwrap().node_type(), NodeType::Root);
     assert_eq!(iter.next(), None);
 }
 
 #[test]
 fn deep_copy_1() {
-    let doc = Document::from_str(
+    let mut doc = Document::from_str(
 "<svg>
     <g id='g1'>
         <rect id='rect1'/>
@@ -327,10 +338,10 @@ fn deep_copy_1() {
 </svg>").unwrap();
 
     let mut svg = doc.svg_element().unwrap();
-    let g = doc.descendants().find(|n| n.is_tag_name(EId::G)).unwrap();
+    let g = doc.root().descendants().find(|n| n.is_tag_name(EId::G)).unwrap();
 
     // simple copy
-    svg.append(&g.make_deep_copy());
+    svg.append(doc.copy_node_deep(g));
 
     let mut opt = WriteOptions::default();
     opt.use_single_quote = true;
@@ -348,20 +359,20 @@ fn deep_copy_1() {
 
 #[test]
 fn deep_copy_2() {
-    let doc = Document::from_str(
+    let mut doc = Document::from_str(
 "<svg>
     <g id='g1'>
         <rect id='rect1'/>
     </g>
 </svg>").unwrap();
 
-    let mut g = doc.descendants().find(|n| n.is_tag_name(EId::G)).unwrap();
+    let mut g = doc.root().descendants().find(|n| n.is_tag_name(EId::G)).unwrap();
 
     // copy itself
-    let g1 = g.make_deep_copy();
-    g.append(&g1);
-    let g2 = g.make_deep_copy();
-    g.append(&g2);
+    let g1 = doc.copy_node_deep(g.clone());
+    g.append(g1);
+    let g2 = doc.copy_node_deep(g.clone());
+    g.append(g2);
 
     let mut opt = WriteOptions::default();
     opt.use_single_quote = true;
@@ -385,7 +396,7 @@ fn deep_copy_2() {
 
 #[test]
 fn deep_copy_3() {
-    let doc = Document::from_str(
+    let mut doc = Document::from_str(
 "<svg>
     <linearGradient id='lg1'/>
     <g id='g1' stroke-width='5'>
@@ -394,10 +405,10 @@ fn deep_copy_3() {
 </svg>").unwrap();
 
     let mut svg = doc.svg_element().unwrap();
-    let g = doc.descendants().find(|n| n.is_tag_name(EId::G)).unwrap();
+    let g = doc.root().descendants().find(|n| n.is_tag_name(EId::G)).unwrap();
 
     // test attributes copying
-    svg.append(&g.make_deep_copy());
+    svg.append(doc.copy_node_deep(g));
 
     let mut opt = WriteOptions::default();
     opt.use_single_quote = true;
@@ -439,13 +450,14 @@ fn set_attr_1() {
 
 #[test]
 #[should_panic]
+#[cfg(debug_assertions)]
 fn set_attr_2() {
     let mut doc = Document::new();
     let mut rect = doc.create_element(EId::Rect);
     let mut rect2 = doc.create_element(EId::Rect);
     rect2.set_id("rect2");
 
-    rect.set_attribute((AId::Href, rect2));
+    rect.set_attribute((AId::Href, rect2.clone()));
     let attr = rect.attributes().get(AId::Href).cloned().unwrap();
 
     // must panic
@@ -454,6 +466,7 @@ fn set_attr_2() {
 
 #[test]
 #[should_panic]
+#[cfg(debug_assertions)]
 fn remove_attr_1() {
     let mut doc = Document::new();
     let mut rect = doc.create_element(EId::Rect);
@@ -468,6 +481,7 @@ fn remove_attr_1() {
 
 #[test]
 #[should_panic]
+#[cfg(debug_assertions)]
 fn remove_attr_2() {
     let mut doc = Document::new();
     let mut rect = doc.create_element(EId::Rect);

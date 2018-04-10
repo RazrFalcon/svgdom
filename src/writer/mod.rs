@@ -2,8 +2,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use std::cell::Ref;
-
 mod attrs_order;
 mod options;
 
@@ -16,6 +14,7 @@ use {
     AttributeType,
     Document,
     Node,
+    NodeData,
     NodeEdge,
     NodeType,
     QName,
@@ -104,7 +103,7 @@ pub fn write_dom(doc: &Document, opt: &WriteOptions, out: &mut Vec<u8>) {
 /// Writes node's start edge.
 fn write_start_edge(
     node: &Node,
-    iter: &mut Traverse,
+    iter: &mut Traverse<NodeData>,
     depth: &mut Depth,
     attrs_depth: &Depth,
     opt: &WriteOptions,
@@ -176,7 +175,7 @@ fn write_non_element_node(node: &Node, out: &mut Vec<u8>) {
 }
 
 #[inline]
-fn write_node(prefix: &[u8], data: &Ref<String>, suffix: &[u8], out: &mut Vec<u8>) {
+fn write_node(prefix: &[u8], data: &str, suffix: &[u8], out: &mut Vec<u8>) {
     out.extend_from_slice(prefix);
     out.extend_from_slice(data.as_bytes());
     out.extend_from_slice(suffix);
@@ -356,7 +355,7 @@ fn write_attribute(
 
 /// Writes a `text` element node and it's children.
 fn write_text_elem(
-    iter: &mut Traverse,
+    iter: &mut Traverse<NodeData>,
     depth: &mut Depth,
     attrs_depth: &Depth,
     opt: &WriteOptions,

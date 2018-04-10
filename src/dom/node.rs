@@ -2,11 +2,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use std::cell::{
-    Ref,
-    RefMut
-};
-use std::rc::Rc;
 use std::fmt;
 
 use error::Result;
@@ -17,33 +12,18 @@ use {
     AttributeQNameRef,
     Attributes,
     AttributeValue,
-    Children,
-    Descendants,
-    Document,
     ElementId,
     Error,
-    LinkedNodes,
     NodeType,
-    Parents,
     QName,
     QNameRef,
     TagName,
     TagNameRef,
-    Traverse,
 };
-use super::node_data::{
-    Link,
+use super::{
+    tree,
     NodeData,
 };
-
-macro_rules! try_opt {
-    ($expr: expr) => {
-        match $expr {
-            Some(value) => value,
-            None => return None
-        }
-    }
-}
 
 impl<'a, N, V> From<(N, V)> for Attribute
     where AttributeQNameRef<'a>: From<N>, AttributeValue: From<V>
@@ -89,32 +69,9 @@ impl<'a, N> From<(N, Node)> for Attribute
 /// [`Attributes`]: struct.Attributes.html
 /// [`NodeType`]: enum.NodeType.html
 /// [`TagName`]: type.TagName.html
-pub struct Node(pub Link);
+pub type Node = tree::Node<NodeData>;
 
 impl Node {
-    /// Returns a `Document` that owns this node.
-    ///
-    /// # Panics
-    ///
-    /// - Panics if the node is currently mutably borrowed.
-    /// - Panics if the node is a root node.
-    pub fn document(&self) -> Document {
-        // TODO: will fail on root node
-        debug_assert_ne!(self.node_type(), NodeType::Root);
-        Document { root: Node(self.0.borrow().doc.as_ref().unwrap().upgrade().unwrap()) }
-    }
-
-    /// Returns a parent node, unless this node is the root of the tree.
-    ///
-    /// This method also returns `NodeType::Root`.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the node is currently mutably borrowed.
-    pub fn parent(&self) -> Option<Node> {
-        Some(Node(try_opt!(try_opt!(self.0.borrow().parent.as_ref()).upgrade())))
-    }
-
     /// Returns `true` if the node has a parent node.
     ///
     /// This method ignores root node.
@@ -132,7 +89,7 @@ impl Node {
     ///     <rect/>
     /// </svg>").unwrap();
     ///
-    /// let svg = doc.first_child().unwrap();
+    /// let svg = doc.root().first_child().unwrap();
     /// let rect = svg.first_child().unwrap();
     /// assert_eq!(svg.has_parent(), false);
     /// assert_eq!(rect.has_parent(), true);
@@ -144,412 +101,6 @@ impl Node {
         }
     }
 
-    // TODO: place before has_parent
-    /// Returns an iterator over node's parents.
-    ///
-    /// Current node is not included.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the node is currently mutably borrowed.
-    pub fn parents(&self) -> Parents {
-        Parents::new(self.parent())
-    }
-
-    /// Returns an iterator over parent nodes.
-    ///
-    /// Current node is included.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the node is currently mutably borrowed.
-    pub fn parents_with_self(&self) -> Parents {
-        Parents::new(Some(self.clone()))
-    }
-
-    /// Returns an iterator to this node's children nodes.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the node is currently mutably borrowed.
-    pub fn children(&self) -> Children {
-        Children::new(self.first_child())
-    }
-
-    /// Returns `true` if this node has children nodes.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the node is currently mutably borrowed.
-    pub fn has_children(&self) -> bool {
-        self.first_child().is_some()
-    }
-
-    // TODO: add has_single_child
-
-    /// Returns the first child of this node, unless it has no child.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the node is currently mutably borrowed.
-    pub fn first_child(&self) -> Option<Node> {
-        Some(Node(Rc::clone(try_opt!(self.0.borrow().first_child.as_ref()))))
-    }
-
-    /// Returns the last child of this node, unless it has no child.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the node is currently mutably borrowed.
-    pub fn last_child(&self) -> Option<Node> {
-        Some(Node(try_opt!(try_opt!(self.0.borrow().last_child.as_ref()).upgrade())))
-    }
-
-    /// Returns the previous sibling of this node, unless it is a first child.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the node is currently mutably borrowed.
-    pub fn previous_sibling(&self) -> Option<Node> {
-        Some(Node(try_opt!(try_opt!(self.0.borrow().prev_sibling.as_ref()).upgrade())))
-    }
-
-    /// Returns the next sibling of this node, unless it is a first child.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the node is currently mutably borrowed.
-    pub fn next_sibling(&self) -> Option<Node> {
-        Some(Node(Rc::clone(try_opt!(self.0.borrow().next_sibling.as_ref()))))
-    }
-
-    /// Returns an iterator over descendant nodes.
-    pub fn descendants(&self) -> Descendants {
-        Descendants::new(self)
-    }
-
-    /// Returns an iterator over descendant nodes.
-    ///
-    /// More low-level alternative to [descendants()](#method.descendants).
-    pub fn traverse(&self) -> Traverse {
-        Traverse::new(self)
-    }
-
-    /// Detaches a node from its parent and siblings. Children are not affected.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the node or one of its adjoining nodes is currently borrowed.
-    pub fn detach(&mut self) {
-        self.0.borrow_mut().detach();
-    }
-
-    /// Removes this node and all it children from the tree.
-    ///
-    /// Same as `detach()`, but also removes all linked attributes from the tree.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the node or one of its adjoining nodes or any children node is currently borrowed.
-    ///
-    /// # Examples
-    /// ```
-    /// use svgdom::{Document, ElementId, AttributeId};
-    ///
-    /// let doc = Document::from_str(
-    /// "<svg>
-    ///     <rect id='rect1'/>
-    ///     <use xlink:href='#rect1'/>
-    /// </svg>").unwrap();
-    ///
-    /// let mut rect_elem = doc.descendants().filter(|n| *n.id() == "rect1").next().unwrap();
-    /// let use_elem = doc.descendants().filter(|n| n.is_tag_name(ElementId::Use)).next().unwrap();
-    ///
-    /// assert_eq!(use_elem.has_attribute(("xlink", AttributeId::Href)), true);
-    ///
-    /// // The 'remove' method will remove 'rect' element and all it's children.
-    /// // Also it will remove all links to this element and it's children,
-    /// // so 'use' element will no longer have the 'xlink:href' attribute.
-    /// rect_elem.remove();
-    ///
-    /// assert_eq!(use_elem.has_attribute(("xlink", AttributeId::Href)), false);
-    /// ```
-    pub fn remove(&mut self) {
-        let mut ids = Vec::with_capacity(16);
-        Node::_remove(self, &mut ids);
-    }
-
-    fn _remove(node: &mut Node, ids: &mut Vec<AttributeQName>) {
-        ids.clear();
-
-        for (_, attr) in node.attributes().iter_svg() {
-            match attr.value {
-                AttributeValue::Link(_) | AttributeValue::FuncLink(_) => {
-                    ids.push(attr.name.clone())
-                }
-                _ => {}
-            }
-        }
-
-        for name in ids.iter() {
-            node.remove_attribute(name.as_ref());
-        }
-
-        // remove all attributes that linked to this node
-        for mut linked in node.linked_nodes().collect::<Vec<Node>>() {
-            ids.clear();
-
-            for (_, attr) in linked.attributes().iter_svg() {
-                match attr.value {
-                      AttributeValue::Link(ref link)
-                    | AttributeValue::FuncLink(ref link) => {
-                        if link == node {
-                            ids.push(attr.name.clone())
-                        }
-                    }
-                    _ => {}
-                }
-            }
-
-            for name in ids.iter() {
-                linked.remove_attribute(name.as_ref());
-            }
-        }
-
-
-        // repeat for children
-        for mut child in node.children() {
-            Node::_remove(&mut child, ids);
-        }
-
-        node.detach();
-    }
-
-    /// Removes only the children nodes specified by the predicate.
-    ///
-    /// Uses [remove()](#method.remove), not [detach()](#method.detach) internally.
-    ///
-    /// Current node ignored.
-    pub fn drain<P>(&mut self, f: P) -> usize
-        where P: Fn(&Node) -> bool
-    {
-        let mut count = 0;
-        Node::_drain(self, &f, &mut count);
-        count
-    }
-
-    fn _drain<P>(parent: &mut Node, f: &P, count: &mut usize)
-        where P: Fn(&Node) -> bool
-    {
-        let mut node = parent.first_child();
-        while let Some(mut n) = node {
-            if f(&n) {
-                node = n.next_sibling();
-                n.remove();
-                *count += 1;
-            } else {
-                if n.has_children() {
-                    Node::_drain(&mut n, f, count);
-                }
-
-                node = n.next_sibling();
-            }
-        }
-    }
-
-    /// Returns a copy of a current node without children.
-    ///
-    /// All attributes except `id` will be copied, because `id` must be unique.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the node is currently mutably borrowed.
-    pub fn make_copy(&self) -> Node {
-        match self.node_type() {
-            NodeType::Element => {
-                let mut elem = self.document().create_element(self.tag_name().as_ref());
-
-                for attr in self.attributes().iter() {
-                    elem.set_attribute(attr.clone());
-                }
-
-                elem
-            }
-            _ => {
-                self.document().create_node(self.node_type(), &*self.text())
-            }
-        }
-    }
-
-    /// Returns a deep copy of a current node with all it's children.
-    ///
-    /// All attributes except `id` will be copied, because `id` must be unique.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the node or any children node are currently mutably borrowed.
-    pub fn make_deep_copy(&self) -> Node {
-        let mut root = self.make_copy();
-        Node::_make_deep_copy(&mut root, self);
-        root
-    }
-
-    fn _make_deep_copy(parent: &mut Node, node: &Node) {
-        for child in node.children() {
-            let mut new_node = child.make_copy();
-            parent.append(&new_node);
-
-            if child.has_children() {
-                Node::_make_deep_copy(&mut new_node, &child);
-            }
-        }
-    }
-
-    /// Appends a new child to this node, after existing children.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the node, the new child, or one of their adjoining nodes is currently borrowed.
-    pub fn append(&mut self, new_child: &Node) {
-        let mut this = self.0.borrow_mut();
-        let mut last = None;
-        let nc = new_child.clone();
-        {
-            let mut child = nc.0.borrow_mut();
-            child.detach();
-            child.parent = Some(Rc::downgrade(&self.0));
-            if let Some(last_weak) = this.last_child.take() {
-                if let Some(last_strong) = last_weak.upgrade() {
-                    child.prev_sibling = Some(last_weak);
-                    last = Some(last_strong);
-                }
-            }
-            this.last_child = Some(Rc::downgrade(&nc.0));
-        }
-
-        if let Some(last) = last {
-            let mut last = last.borrow_mut();
-            debug_assert!(last.next_sibling.is_none());
-            last.next_sibling = Some(nc.0);
-        } else {
-            // No last child
-            debug_assert!(this.first_child.is_none());
-            this.first_child = Some(nc.0);
-        }
-    }
-
-    /// Prepends a new child to this node, before existing children.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the node, the new child, or one of their adjoining nodes is currently borrowed.
-    pub fn prepend(&mut self, new_child: &Node) {
-        let mut this = self.0.borrow_mut();
-        {
-            let mut child = new_child.0.borrow_mut();
-            child.detach();
-            child.parent = Some(Rc::downgrade(&self.0));
-            match this.first_child.take() {
-                Some(first) => {
-                    {
-                        let mut first = first.borrow_mut();
-                        debug_assert!(first.prev_sibling.is_none());
-                        first.prev_sibling = Some(Rc::downgrade(&new_child.0));
-                    }
-                    child.next_sibling = Some(first);
-                }
-                None => {
-                    debug_assert!(this.first_child.is_none());
-                    this.last_child = Some(Rc::downgrade(&new_child.0));
-                }
-            }
-        }
-        this.first_child = Some(new_child.clone().0);
-    }
-
-    /// Insert a new sibling after this node.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the node, the new sibling, or one of their adjoining nodes is currently borrowed.
-    pub fn insert_after(&mut self, new_sibling: &Node) {
-        // TODO: add an example, since we need to detach 'new_sibling'
-        //       before passing it to this method
-        let mut this = self.0.borrow_mut();
-        {
-            let mut child = new_sibling.0.borrow_mut();
-            child.detach();
-            child.parent = this.parent.clone();
-            child.prev_sibling = Some(Rc::downgrade(&self.0));
-            match this.next_sibling.take() {
-                Some(next) => {
-                    {
-                        let mut next = next.borrow_mut();
-                        debug_assert!({
-                            let weak = next.prev_sibling.as_ref().unwrap();
-                            Rc::ptr_eq(&weak.upgrade().unwrap(), &self.0)
-                        });
-                        next.prev_sibling = Some(Rc::downgrade(&new_sibling.0));
-                    }
-                    child.next_sibling = Some(next);
-                }
-                None => {
-                    Node::update_parent(&this, |mut p| {
-                        p.last_child = Some(Rc::downgrade(&new_sibling.0))
-                    });
-                }
-            }
-        }
-        this.next_sibling = Some(new_sibling.clone().0);
-    }
-
-    /// Insert a new sibling before this node.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the node, the new sibling, or one of their adjoining nodes is currently borrowed.
-    pub fn insert_before(&mut self, new_sibling: &Node) {
-        let mut this = self.0.borrow_mut();
-        let mut prev_opt = None;
-        {
-            let mut child = new_sibling.0.borrow_mut();
-            child.detach();
-            child.parent = this.parent.clone();
-            child.next_sibling = Some(Rc::clone(&self.0));
-            if let Some(prev_weak) = this.prev_sibling.take() {
-                if let Some(prev_strong) = prev_weak.upgrade() {
-                    child.prev_sibling = Some(prev_weak);
-                    prev_opt = Some(prev_strong);
-                }
-            }
-            this.prev_sibling = Some(Rc::downgrade(&new_sibling.0));
-        }
-
-        if let Some(prev) = prev_opt {
-            let mut prev = prev.borrow_mut();
-            debug_assert!({
-                let rc = prev.next_sibling.as_ref().unwrap();
-                Rc::ptr_eq(rc, &self.0)
-            });
-            prev.next_sibling = Some(new_sibling.clone().0);
-        } else {
-            // No prev sibling.
-            Node::update_parent(&this, |mut p| {
-                p.first_child = Some(new_sibling.clone().0)
-            });
-        }
-    }
-
-    fn update_parent<F>(this: &RefMut<NodeData>, mut f: F)
-        where F: FnMut(RefMut<NodeData>)
-    {
-        if let Some(parent) = this.parent.as_ref() {
-            if let Some(parent) = parent.upgrade() {
-                f(parent.borrow_mut());
-            }
-        }
-    }
-
     /// Returns node's type.
     ///
     /// You can't change the type of the node. Only create a new one.
@@ -558,7 +109,7 @@ impl Node {
     ///
     /// Panics if the node is currently mutably borrowed.
     pub fn node_type(&self) -> NodeType {
-        self.0.borrow().node_type
+        self.borrow().node_type
     }
 
     /// Returns a text data of the node.
@@ -568,8 +119,8 @@ impl Node {
     /// # Panics
     ///
     /// Panics if the node is currently mutably borrowed.
-    pub fn text(&self) -> Ref<String> {
-        Ref::map(self.0.borrow(), |n| &n.text)
+    pub fn text(&self) -> &str {
+        self.borrow().text.as_str()
     }
 
     /// Returns a mutable text data of the node.
@@ -579,8 +130,8 @@ impl Node {
     /// # Panics
     ///
     /// Panics if the node is currently mutably borrowed.
-    pub fn text_mut(&mut self) -> RefMut<String> {
-        RefMut::map(self.0.borrow_mut(), |n| &mut n.text)
+    pub fn text_mut(&mut self) -> &mut String {
+        &mut self.borrow_mut().text
     }
 
     /// Sets a text data to the node.
@@ -590,8 +141,7 @@ impl Node {
     /// Panics if the node is currently mutably borrowed.
     pub fn set_text(&mut self, text: &str) {
         debug_assert_ne!(self.node_type(), NodeType::Element);
-        let mut b = self.0.borrow_mut();
-        b.text = text.to_owned();
+        self.borrow_mut().text = text.to_owned();
     }
 
     /// Returns an ID of the element node.
@@ -599,8 +149,8 @@ impl Node {
     /// # Panics
     ///
     /// Panics if the node is currently mutably borrowed.
-    pub fn id(&self) -> Ref<String> {
-        Ref::map(self.0.borrow(), |n| &n.id)
+    pub fn id(&self) -> &str {
+        self.borrow().id.as_str()
     }
 
     /// Returns `true` if node has a not empty ID.
@@ -609,7 +159,7 @@ impl Node {
     ///
     /// Panics if the node is currently mutably borrowed.
     pub fn has_id(&self) -> bool {
-        !self.0.borrow().id.is_empty()
+        !self.id().is_empty()
     }
 
     /// Sets an ID of the element.
@@ -622,7 +172,7 @@ impl Node {
     pub fn set_id<S: Into<String>>(&mut self, id: S) {
         // TODO: check that it's unique.
         debug_assert_eq!(self.node_type(), NodeType::Element);
-        self.0.borrow_mut().id = id.into();
+        self.borrow_mut().id = id.into().to_owned();
     }
 
     /// Returns `true` if node has an `Element` type and an SVG tag name.
@@ -635,8 +185,7 @@ impl Node {
             return false;
         }
 
-        let b = self.0.borrow();
-        match b.tag_name {
+        match self.borrow().tag_name {
             QName::Id(_, _) => true,
             QName::Name(_, _) => false,
         }
@@ -647,8 +196,8 @@ impl Node {
     /// # Panics
     ///
     /// Panics if the node is currently mutably borrowed.
-    pub fn tag_name(&self) -> Ref<TagName> {
-        Ref::map(self.0.borrow(), |n| &n.tag_name)
+    pub fn tag_name(&self) -> &TagName {
+        &self.borrow().tag_name
     }
 
     /// Returns a tag name id of the SVG element node.
@@ -657,8 +206,7 @@ impl Node {
     ///
     /// Panics if the node is currently mutably borrowed.
     pub fn tag_id(&self) -> Option<ElementId> {
-        let b = self.0.borrow();
-        match b.tag_name {
+        match self.borrow().tag_name {
             QName::Id(_, ref id) => Some(*id),
             QName::Name(_, _) => None,
         }
@@ -672,8 +220,7 @@ impl Node {
     pub fn is_tag_name<'a, T>(&self, tag_name: T) -> bool
         where TagNameRef<'a>: From<T>
     {
-        let b = self.0.borrow();
-        b.tag_name.as_ref() == TagNameRef::from(tag_name)
+        self.borrow().tag_name.as_ref() == TagNameRef::from(tag_name)
     }
 
     /// Sets a tag name of the element node.
@@ -700,8 +247,7 @@ impl Node {
             }
         }
 
-        let mut self_borrow = self.0.borrow_mut();
-        self_borrow.tag_name = TagName::from(tn);
+        self.borrow_mut().tag_name = TagName::from(tn);
     }
 
     /// Returns a reference to the `Attributes` of the current node.
@@ -709,8 +255,8 @@ impl Node {
     /// # Panics
     ///
     /// Panics if the node is currently mutably borrowed.
-    pub fn attributes(&self) -> Ref<Attributes> {
-        Ref::map(self.0.borrow(), |n| &n.attributes)
+    pub fn attributes(&self) -> &Attributes {
+        &self.borrow().attributes
     }
 
     /// Returns a mutable reference to the `Attributes` of the current node.
@@ -718,8 +264,8 @@ impl Node {
     /// # Panics
     ///
     /// Panics if the node is currently borrowed.
-    pub fn attributes_mut(&mut self) -> RefMut<Attributes> {
-        RefMut::map(self.0.borrow_mut(), |n| &mut n.attributes)
+    pub fn attributes_mut(&mut self) -> &mut Attributes {
+        &mut self.borrow_mut().attributes
     }
 
     /// Returns `true` if the node has an attribute with such `id`.
@@ -731,7 +277,7 @@ impl Node {
     pub fn has_attribute<'a, N>(&self, name: N) -> bool
         where AttributeQNameRef<'a>: From<N>
     {
-        self.0.borrow().attributes.contains(name)
+        self.borrow().attributes.contains(name)
     }
 
     /// Returns `true` if the node has an attribute with such `id` and this attribute is visible.
@@ -816,8 +362,8 @@ impl Node {
     /// let mut svg = doc.create_element(EId::Svg);
     /// let mut rect = doc.create_element(EId::Rect);
     ///
-    /// doc.append(&svg);
-    /// svg.append(&rect);
+    /// doc.root().append(svg.clone());
+    /// svg.append(rect.clone());
     ///
     /// // In order to set element as an attribute value, we must set id first.
     /// rect.set_id("rect1");
@@ -849,8 +395,8 @@ impl Node {
     /// let mut gradient = doc.create_element(EId::LinearGradient);
     /// let mut rect = doc.create_element(EId::Rect);
     ///
-    /// doc.append(&gradient);
-    /// doc.append(&rect);
+    /// doc.root().append(gradient.clone());
+    /// doc.root().append(rect.clone());
     ///
     /// gradient.set_id("lg1");
     /// rect.set_id("rect1");
@@ -873,10 +419,10 @@ impl Node {
     /// // Also, we can check how many elements are uses this `gradient`.
     /// assert_eq!(gradient.uses_count(), 1);
     /// // And even get this elements.
-    /// assert_eq!(gradient.linked_nodes().next().unwrap(), rect);
+    /// assert_eq!(gradient.linked_nodes()[0], rect);
     ///
     /// // And now, if we remove our `rect` - `gradient` will became unused again.
-    /// rect.remove();
+    /// doc.remove_node(rect);
     /// assert_eq!(gradient.is_used(), false);
     /// ```
     ///
@@ -912,11 +458,11 @@ impl Node {
         // we must remove existing attribute to prevent dangling links
         self.remove_attribute(attr.name.as_ref());
 
-        let mut attrs = self.attributes_mut();
+        let attrs = self.attributes_mut();
         attrs.insert(attr);
     }
 
-    fn set_link_attribute(&mut self, name: AttributeQName, node: Node) -> Result<()> {
+    fn set_link_attribute(&mut self, name: AttributeQName, mut node: Node) -> Result<()> {
         if node.id().is_empty() {
             return Err(Error::ElementMustHaveAnId);
         }
@@ -927,7 +473,7 @@ impl Node {
         }
 
         // check for recursion 2
-        if self.linked_nodes().any(|n| n == node) {
+        if self.linked_nodes().iter().any(|n| *n == node) {
             return Err(Error::ElementCrosslink);
         }
 
@@ -941,14 +487,11 @@ impl Node {
                 Attribute::new(name.as_ref(), AttributeValue::FuncLink(node.clone()))
             };
 
-            let mut attributes = self.attributes_mut();
+            let attributes = self.attributes_mut();
             attributes.insert_impl(a);
         }
 
-        {
-            let mut value_borrow = node.0.borrow_mut();
-            value_borrow.linked_nodes.push(Rc::downgrade(&self.0));
-        }
+        node.borrow_mut().linked_nodes.push(self.clone());
 
         Ok(())
     }
@@ -996,14 +539,11 @@ impl Node {
         if let Some(value) = self.attributes().get_value(name) {
             match *value {
                 AttributeValue::Link(ref node) | AttributeValue::FuncLink(ref node) => {
-                    let self_borrow = &self.0;
-                    let mut node_borrow = node.0.borrow_mut();
-                    let ln = &mut node_borrow.linked_nodes;
+                    let mut node = node.clone();
+
                     // this code can't panic, because we know that such node exist
-                    let index = ln.iter().position(|x| {
-                        Rc::ptr_eq(&x.upgrade().unwrap(), self_borrow)
-                    }).unwrap();
-                    ln.remove(index);
+                    let index = node.borrow().linked_nodes.iter().position(|n| n == self).unwrap();
+                    node.borrow_mut().linked_nodes.remove(index);
                 }
                 _ => {}
             }
@@ -1019,8 +559,12 @@ impl Node {
     /// # Panics
     ///
     /// Panics if the node is currently mutably borrowed.
-    pub fn linked_nodes(&self) -> LinkedNodes {
-        LinkedNodes::new(Ref::map(self.0.borrow(), |n| &n.linked_nodes))
+    pub fn linked_nodes(&self) -> &[Node] {
+        &self.borrow().linked_nodes
+    }
+
+    pub fn linked_nodes_mut(&mut self) -> &mut [Node] {
+        &mut self.borrow_mut().linked_nodes
     }
 
     /// Returns `true` if the current node is linked to any of the DOM nodes.
@@ -1031,8 +575,7 @@ impl Node {
     ///
     /// Panics if the node is currently mutably borrowed.
     pub fn is_used(&self) -> bool {
-        let self_borrow = self.0.borrow();
-        !self_borrow.linked_nodes.is_empty()
+        !self.borrow().linked_nodes.is_empty()
     }
 
     /// Returns a number of nodes, which is linked to this node.
@@ -1043,21 +586,7 @@ impl Node {
     ///
     /// Panics if the node is currently mutably borrowed.
     pub fn uses_count(&self) -> usize {
-        let self_borrow = self.0.borrow();
-        self_borrow.linked_nodes.len()
-    }
-}
-
-/// Cloning a `Node` only increments a reference count. It does not copy the data.
-impl Clone for Node {
-    fn clone(&self) -> Node {
-        Node(Rc::clone(&self.0))
-    }
-}
-
-impl PartialEq for Node {
-    fn eq(&self, other: &Node) -> bool {
-        Rc::ptr_eq(&self.0, &other.0)
+        self.borrow().linked_nodes.len()
     }
 }
 
@@ -1066,10 +595,10 @@ impl fmt::Debug for Node {
         match self.node_type() {
             NodeType::Root => write!(f, "RootNode"),
             NodeType::Element => write!(f, "ElementNode({:?} id={:?})", self.tag_name(), self.id()),
-            NodeType::Declaration => write!(f, "DeclarationNode({:?})", *self.text()),
-            NodeType::Comment => write!(f, "CommentNode({:?})", *self.text()),
-            NodeType::Cdata => write!(f, "CdataNode({:?})", *self.text()),
-            NodeType::Text => write!(f, "TextNode({:?})", *self.text()),
+            NodeType::Declaration => write!(f, "DeclarationNode({:?})", self.text()),
+            NodeType::Comment => write!(f, "CommentNode({:?})", self.text()),
+            NodeType::Cdata => write!(f, "CdataNode({:?})", self.text()),
+            NodeType::Text => write!(f, "TextNode({:?})", self.text()),
         }
     }
 }

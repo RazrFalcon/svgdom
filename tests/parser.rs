@@ -76,7 +76,7 @@ fn parse_declaration_1() {
     let child = doc.root().first_child().unwrap();
     assert_eq!(child.node_type(), NodeType::Declaration);
     // we store declaration only with double quotes
-    assert_eq!(*child.text(), "version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"");
+    assert_eq!(child.text(), "version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"");
     assert_eq!(doc.root().children().count(), 2);
 }
 
@@ -86,7 +86,7 @@ fn parse_comment_1() {
 
     let child = doc.root().children().nth(1).unwrap();
     assert_eq!(child.node_type(), NodeType::Comment);
-    assert_eq!(*child.text(), "comment");
+    assert_eq!(child.text(), "comment");
     assert_eq!(doc.root().children().count(), 2);
 }
 
@@ -96,7 +96,7 @@ fn parse_text_1() {
 
     let child = doc.root().first_child().unwrap().first_child().unwrap();
     assert_eq!(child.node_type(), NodeType::Text);
-    assert_eq!(*child.text(), "text");
+    assert_eq!(child.text(), "text");
 }
 
 #[test]
@@ -114,7 +114,7 @@ fn parse_text_2() {
     assert_eq!(text_node.node_type(), NodeType::Element);
 
     let text_data_node = nodes.next().unwrap();
-    assert_eq!(*text_data_node.text(), "Some");
+    assert_eq!(text_data_node.text(), "Some");
     assert_eq!(text_data_node.node_type(), NodeType::Text);
 
     let tspan_node = nodes.next().unwrap();
@@ -122,11 +122,11 @@ fn parse_text_2() {
     assert_eq!(tspan_node.node_type(), NodeType::Element);
 
     let text_data_node_2 = nodes.next().unwrap();
-    assert_eq!(*text_data_node_2.text(), "complex");
+    assert_eq!(text_data_node_2.text(), "complex");
     assert_eq!(text_data_node_2.node_type(), NodeType::Text);
 
     let text_data_node_3 = nodes.next().unwrap();
-    assert_eq!(*text_data_node_3.text(), "text");
+    assert_eq!(text_data_node_3.text(), "text");
     assert_eq!(text_data_node_3.node_type(), NodeType::Text);
 }
 
@@ -549,7 +549,7 @@ fn parse_iri_1() {
     <rect fill='url(#rg1)'/>
 </svg>").unwrap();
 
-    let child = doc.first_child().unwrap();
+    let child = doc.root().first_child().unwrap();
     let rg = child.children().nth(0).unwrap();
     let rect = child.children().nth(1).unwrap();
 
@@ -567,7 +567,7 @@ fn parse_iri_2() {
     <radialGradient id='rg1'/>
 </svg>").unwrap();
 
-    let child = doc.first_child().unwrap();
+    let child = doc.root().first_child().unwrap();
     let rect = child.children().nth(0).unwrap();
     let rg = child.children().nth(1).unwrap();
 
@@ -582,7 +582,7 @@ fn parse_iri_with_fallback_1() {
     <rect fill='url(#lg1) none'/>
 </svg>").unwrap();
 
-    let child = doc.first_child().unwrap();
+    let child = doc.root().first_child().unwrap();
     let rect = child.children().nth(0).unwrap();
 
     assert_eq!(rect.attributes().get_value(AId::Fill).unwrap(),
@@ -596,7 +596,7 @@ fn parse_iri_with_fallback_2() {
     <rect fill='url(#lg1) red'/>
 </svg>").unwrap();
 
-    let child = doc.first_child().unwrap();
+    let child = doc.root().first_child().unwrap();
     let rect = child.children().nth(0).unwrap();
 
     assert_eq!(rect.attributes().get_value(AId::Fill).unwrap(),
@@ -953,7 +953,7 @@ fn text_content_1() {
 </svg>
 ").unwrap();
 
-    let text: String = doc.descendants().map(|n| n.text().to_owned()).collect();
+    let text: String = doc.root().descendants().map(|n| n.text().to_owned()).collect();
     assert_eq!(text, "A link inside tspan for testing");
 }
 
@@ -969,7 +969,7 @@ fn text_content_2() {
 </svg>
 ").unwrap();
 
-    let text: String = doc.descendants().map(|n| n.text().to_owned()).collect();
+    let text: String = doc.root().descendants().map(|n| n.text().to_owned()).collect();
     assert_eq!(text, "Text1 Text2 Text3");
 }
 
@@ -1007,7 +1007,7 @@ fn text_content_3() {
 </svg>
 ").unwrap();
 
-    let text: String = doc.descendants().map(|n| n.text().to_owned()).collect();
+    let text: String = doc.root().descendants().map(|n| n.text().to_owned()).collect();
     assert_eq!(text, "Not all characters in the text have a specified rotation");
 }
 
@@ -1024,6 +1024,6 @@ fn text_content_4() {
 </svg>
 ").unwrap();
 
-    let text: String = doc.descendants().map(|n| n.text().to_owned()).collect();
+    let text: String = doc.root().descendants().map(|n| n.text().to_owned()).collect();
     assert_eq!(text, "             Text         Text");
 }

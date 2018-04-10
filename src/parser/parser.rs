@@ -30,6 +30,7 @@ use {
     Document,
     ElementId,
     Error,
+    FilterSvg,
     Length,
     LengthUnit,
     Node,
@@ -105,7 +106,7 @@ pub struct PostData<'a> {
 
 pub fn parse_svg(text: &str, opt: &ParseOptions) -> Result<Document> {
     let mut doc = Document::new();
-    let mut parent = doc.root();
+    let mut root = doc.root();
 
     let mut tokens = svg::Tokenizer::from_str(text);
 
@@ -130,17 +131,17 @@ pub fn parse_svg(text: &str, opt: &ParseOptions) -> Result<Document> {
 
     while let Some(token) = tokens.next() {
         process_token(&mut doc, token?,
-                      &mut node, &mut parent,
+                      &mut node, &mut root,
                       &mut post_data, opt)?
     }
 
     // document must contain any children
-    if !doc.root().has_children() {
+    if !root.has_children() {
         return Err(Error::EmptyDocument);
     }
 
     // first element must be an 'svg'
-    match doc.children().svg().nth(0) {
+    match root.children().svg().nth(0) {
         Some((id, _)) => {
             if id != ElementId::Svg {
                 return Err(Error::NoSvgElement);
@@ -151,10 +152,10 @@ pub fn parse_svg(text: &str, opt: &ParseOptions) -> Result<Document> {
         }
     }
 
-    doc.drain(|n| n.is_tag_name(ElementId::Style));
+    doc.drain(root.clone(), |n| n.is_tag_name(ElementId::Style));
 
     if !opt.parse_unknown_elements {
-        doc.drain(|n|
+        doc.drain(root.clone(), |n|
             n.node_type() == NodeType::Element && n.tag_id().is_none()
         );
     }
@@ -192,7 +193,7 @@ fn process_token<'a>(
         ($nodetype:expr, $buf:expr) => ({
             let e = doc.create_node($nodetype, $buf);
             *node = Some(e.clone());
-            parent.append(&e);
+            parent.append(e);
         })
     }
 
@@ -208,7 +209,7 @@ fn process_token<'a>(
             };
 
             *node = Some(curr_node.clone());
-            parent.append(&curr_node);
+            parent.append(curr_node);
         }
         svg::Token::Attribute(name, value) => {
             let curr_node = node.as_mut().unwrap();
@@ -236,7 +237,7 @@ fn process_token<'a>(
             match end {
                 svg::ElementEnd::Empty => {}
                 svg::ElementEnd::Close(_) => {
-                    if *parent != doc.root {
+                    if *parent != doc.root() {
                         *parent = parent.parent().unwrap();
                     }
                 }
@@ -313,7 +314,7 @@ fn process_token<'a>(
     // which is faster
     if parent.node_type() == NodeType::Root {
         // check that the first element of the doc is 'svg'
-        if let Some((id, _)) = doc.children().svg().nth(0) {
+        if let Some((id, _)) = doc.root().children().svg().nth(0) {
             if id != ElementId::Svg {
                 return Err(Error::NoSvgElement);
             }
@@ -640,7 +641,7 @@ fn resolve_fallback(d: &mut LinkData) -> Result<()> {
                         return Err(Error::BrokenFuncIri(s));
                     }
 
-                    let flag = d.node.parents().any(|n| {
+                    let flag = d.node.ancestors().any(|n| {
                            n.is_tag_name(ElementId::Mask)
                         || n.is_tag_name(ElementId::ClipPath)
                         || n.is_tag_name(ElementId::Marker)

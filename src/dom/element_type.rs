@@ -33,7 +33,7 @@ pub trait ElementType {
     /// use svgdom::{Document, ElementType};
     ///
     /// let doc = Document::from_str("<svg><linearGradient/></svg>").unwrap();
-    /// let mut iter = doc.descendants();
+    /// let mut iter = doc.root().descendants();
     /// assert_eq!(iter.next().unwrap().is_referenced(), false); // root
     /// assert_eq!(iter.next().unwrap().is_referenced(), false); // svg
     /// assert_eq!(iter.next().unwrap().is_referenced(), true); // linearGradient

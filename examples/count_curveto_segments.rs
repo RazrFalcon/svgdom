@@ -4,7 +4,7 @@ use std::env;
 use std::io::Read;
 use std::fs::File;
 
-use svgdom::{Document, ElementId, AttributeId, AttributeValue};
+use svgdom::{ AttributeId, AttributeValue, Document, ElementId, FilterSvg };
 use svgdom::path::Command;
 
 fn main() {
@@ -25,7 +25,7 @@ fn main() {
 
     let mut count = 0;
 
-    for (id, node) in doc.descendants().svg() {
+    for (id, node) in doc.root().descendants().svg() {
         if id == ElementId::Path {
             let attrs = node.attributes();
             if let Some(&AttributeValue::Path(ref path)) = attrs.get_value(AttributeId::D) {
