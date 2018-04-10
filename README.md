@@ -1,4 +1,9 @@
-## svgdom [![Build Status](https://travis-ci.org/RazrFalcon/svgdom.svg?branch=master)](https://travis-ci.org/RazrFalcon/svgdom)
+## svgdom
+[![Build Status]](https://travis-ci.org/RazrFalcon/svgdom)
+[![Crates.io](https://img.shields.io/crates/v/svgdom.svg)](https://crates.io/crates/svgdom)
+[![Documentation](https://docs.rs/svgdom/badge.svg)](https://docs.rs/svgdom)
+
+[Build Status]: https://travis-ci.org/RazrFalcon/svgdom.svg?branch=master
 
 *svgdom* is an [SVG Full 1.1](https://www.w3.org/TR/SVG/) processing library,
 which allows you to parse, manipulate and generate SVG content.
@@ -108,7 +113,7 @@ And even though the file is a bit different now - it will be rendered exactly th
  - At any time you can check which elements linked to the selected element. See `Node` doc for details.
  - A complete support of text nodes: XML escaping, `xml:space`.
  - Many options that control data loading and saving.
- - See [libsvgparser](https://github.com/RazrFalcon/libsvgparser)'s README for parsing benefits.
+ - See [svgparser](https://github.com/RazrFalcon/svgparser)'s README for parsing benefits.
 
 ### Limitations
  - Because we convert attributes, CDATA, DOCTYPE data to internal representation - we
@@ -134,7 +139,7 @@ And even though the file is a bit different now - it will be rendered exactly th
        ]>
      <svg>&Rect1;</svg>
      ```
- - See [libsvgparser](https://github.com/RazrFalcon/libsvgparser)'s README for parsing limitations.
+ - See [svgparser](https://github.com/RazrFalcon/svgparser)'s README for parsing limitations.
 
 ### Non-goal
  - Implementation of the full SVG spec.
