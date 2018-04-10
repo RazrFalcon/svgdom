@@ -1,6 +1,6 @@
-## libsvgdom [![Build Status](https://travis-ci.org/RazrFalcon/libsvgdom.svg?branch=master)](https://travis-ci.org/RazrFalcon/libsvgdom)
+## svgdom [![Build Status](https://travis-ci.org/RazrFalcon/svgdom.svg?branch=master)](https://travis-ci.org/RazrFalcon/svgdom)
 
-*libsvgdom* is an [SVG Full 1.1](https://www.w3.org/TR/SVG/) processing library,
+*svgdom* is an [SVG Full 1.1](https://www.w3.org/TR/SVG/) processing library,
 which allows you to parse, manipulate and generate SVG content.
 
 **Note:** the library itself is pretty stable, but API is constantly changing.
@@ -13,7 +13,7 @@ which allows you to parse, manipulate and generate SVG content.
  - [Benefits](#benefits)
  - [Limitations](#limitations)
  - [Non-goal](#non-goal)
- - [Differences between libsvgdom and SVG spec](#differences-between-libsvgdom-and-svg-spec)
+ - [Differences between svgdom and SVG spec](#differences-between-svgdom-and-svg-spec)
  - [Usage](#usage)
  - [Performance](#performance)
  - [Contributing](#contributing)
@@ -21,11 +21,11 @@ which allows you to parse, manipulate and generate SVG content.
 
 ### Purpose
 
-*libsvgdom* is designed to simplify generic SVG processing and manipulations.
+*svgdom* is designed to simplify generic SVG processing and manipulations.
 Unfortunately, an SVG is very complex format (PDF spec is 826 pages long),
 with lots of features and implementing all of them will lead to an enormous library.
 
-That's why *libsvgdom* supports only static subset of an SVG. No scripts, external resources
+That's why *svgdom* supports only static subset of an SVG. No scripts, external resources
 and complex CSS styling.
 Parser will convert as much as possible data to a simple doc->elements->attributes structure.
 
@@ -35,7 +35,7 @@ using a JS code and probably with lots of other methods.
 
 Not to mention, that the `fill` attribute supports 4 different types of data.
 
-With `libsvgdom` you can just use `node.has_attribute(AttributeId::Fill)` and don't worry where this
+With `svgdom` you can just use `node.has_attribute(AttributeId::Fill)` and don't worry where this
 attribute was defined in the original file.
 
 Same goes for transforms, paths and other SVG types.
@@ -97,9 +97,9 @@ How it will be represented and saved using svgdom:
 
 And even though the file is a bit different now - it will be rendered exactly the same.
 
-![Alt text](https://cdn.rawgit.com/RazrFalcon/libsvgdom/master/examples/images/image_before.svg)
+![Alt text](https://cdn.rawgit.com/RazrFalcon/svgdom/master/examples/images/image_before.svg)
 
-![Alt text](https://cdn.rawgit.com/RazrFalcon/libsvgdom/master/examples/images/image_after.svg)
+![Alt text](https://cdn.rawgit.com/RazrFalcon/svgdom/master/examples/images/image_after.svg)
 
 ### [Documentation](https://docs.rs/svgdom/)
 
@@ -141,7 +141,7 @@ And even though the file is a bit different now - it will be rendered exactly th
  - Animation support.
  - Scripting support (via `script` element).
 
-### Differences between libsvgdom and SVG spec
+### Differences between svgdom and SVG spec
  - Library follows SVG spec in the data parsing, writing, but not in the tree structure.
  - Everything is a `Node`. There are no separated `ElementNode`, `TextNode`, etc.
    You still have all the data, but not in the specific *struct's*.
@@ -180,4 +180,4 @@ Tested on i5-3570k 3.4GHz.
 
 ### License
 
-*libsvgdom* is licensed under the [MPLv2.0](https://www.mozilla.org/en-US/MPL/).
+*svgdom* is licensed under the [MPLv2.0](https://www.mozilla.org/en-US/MPL/).

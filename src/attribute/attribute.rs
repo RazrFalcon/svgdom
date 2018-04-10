@@ -29,7 +29,7 @@ pub struct Attribute {
     pub value: AttributeValue,
     /// Visibility.
     ///
-    /// Unlike many other DOM implementations, libsvgdom supports hiding of the attributes,
+    /// Unlike many other DOM implementations, svgdom supports hiding of the attributes,
     /// instead of removing them. Invisible attributes act just like other attributes,
     /// but they will not be printed during SVG writing.
     /// Unless you enable them via [`WriteOptions`].

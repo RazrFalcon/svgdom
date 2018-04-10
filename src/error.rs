@@ -45,7 +45,7 @@ pub enum Error {
     #[fail(display = "the document does not have any nodes")]
     EmptyDocument,
 
-    /// *libsvgdom* didn't support most of the CSS2 spec.
+    /// *svgdom* didn't support most of the CSS2 spec.
     #[fail(display = "unsupported CSS at {}", _0)]
     UnsupportedCSS(ErrorPos),
 

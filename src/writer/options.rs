@@ -135,7 +135,7 @@ pub struct WriteOptions {
 
     /// Write hidden attributes.
     ///
-    /// `libsvgdom` support invisible attributes, which can be dumped to output using this option.
+    /// `svgdom` support invisible attributes, which can be dumped to output using this option.
     ///
     /// See [Attribute](struct.Attribute.html) documentation.
     ///
