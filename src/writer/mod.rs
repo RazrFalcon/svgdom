@@ -99,6 +99,12 @@ pub fn write_dom(doc: &Document, opt: &WriteOptions, out: &mut Vec<u8>) {
     }
 }
 
+fn is_text_node(node: &Node) -> bool {
+       node.node_type() == NodeType::Text
+    || node.is_tag_name(ElementId::Tspan)
+    || node.is_tag_name(ElementId::Tref)
+}
+
 /// Writes node's start edge.
 fn write_start_edge(
     node: &Node,
@@ -113,7 +119,7 @@ fn write_start_edge(
         NodeType::Element => {
             depth.write_indent(out);
 
-            if node.children().any(|c| c.node_type() == NodeType::Text) {
+            if node.children().any(|c| is_text_node(&c)) {
                 write_text_elem(iter, depth, attrs_depth, opt, node, out);
                 write_newline(opt.indent, out);
                 return;

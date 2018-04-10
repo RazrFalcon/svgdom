@@ -1007,3 +1007,19 @@ fn text_content_3() {
     assert_eq!(text, "Not all characters in the text have a specified rotation");
 }
 
+#[test]
+fn text_content_4() {
+let doc = Document::from_str(
+    "<svg>
+    <text>
+        <tspan xml:space='preserve'>
+            Text
+        </tspan>
+        Text
+    </text>
+</svg>
+").unwrap();
+
+    let text: String = doc.descendants().map(|n| n.text().to_owned()).collect();
+    assert_eq!(text, "             Text         Text");
+}

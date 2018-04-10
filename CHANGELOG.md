@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Fixed
+- Text with `xml:space` preprocessing.
 
 ## [0.10.4] - 2018-02-03
 ### Fixed

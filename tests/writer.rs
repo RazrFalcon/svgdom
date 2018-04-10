@@ -331,9 +331,7 @@ test_resave!(text_tspan_2,
 </svg>
 ",
 "<svg>
-    <text>
-        <tspan>Text</tspan>
-    </text>
+    <text><tspan>Text</tspan></text>
 </svg>
 ");
 
@@ -393,16 +391,8 @@ test_resave!(text_tspan_7,
 </svg>
 ",
 "<svg>
-    <text>
-        <tspan>
-            <tspan/>
-        </tspan>
-    </text>
-    <text>
-        <tspan>
-            <tspan></tspan>
-        </tspan>
-    </text>
+    <text><tspan><tspan/></tspan></text>
+    <text><tspan><tspan></tspan></tspan></text>
 </svg>
 ");
 
@@ -505,7 +495,7 @@ test_resave!(text_space_preserve_3,
 </svg>
 ",
 "<svg xml:space='preserve'>
-    <text>     Text     <tspan xml:space='default'> Text </tspan>     Text     </text>
+    <text>     Text     <tspan xml:space='default'>Text </tspan>     Text     </text>
 </svg>
 ");
 
@@ -518,7 +508,7 @@ test_resave!(text_space_preserve_4,
 ",
 "<svg>
     <g>
-        <text>Text <tspan xml:space='preserve'> Text </tspan> Text</text>
+        <text>Text <tspan xml:space='preserve'> Text </tspan>Text</text>
     </g>
 </svg>
 ");
@@ -532,6 +522,16 @@ test_resave!(text_space_preserve_5,
 ",
 "<svg>
     <text>Text<tspan xml:space='preserve'> Text </tspan>Text</text>
+</svg>
+");
+
+test_resave!(text_space_preserve_6,
+"<svg>
+    <text xml:space='preserve'><tspan>Text</tspan></text>
+</svg>
+",
+"<svg>
+    <text xml:space='preserve'><tspan>Text</tspan></text>
 </svg>
 ");
 
