@@ -23,7 +23,9 @@ mod element_type;
 mod node;
 
 
+/// An iterator over SVG elements.
 pub trait FilterSvg: Iterator {
+    /// Filters SVG elements.
     fn svg(self) -> FilterMap<Self, fn(Node) -> Option<(ElementId, Node)>>
         where Self: Iterator<Item = Node> + Sized,
     {
@@ -62,6 +64,7 @@ pub enum NodeType {
     Text,
 }
 
+/// Node's data.
 pub struct NodeData {
     node_type: NodeType,
     tag_name: TagName,
