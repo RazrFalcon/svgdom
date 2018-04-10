@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Changed
+- A default `Transform` will be printed as `matrix(1 0 0 1 0)` and not as an empty string.
+
 ### Fixed
 - Text with `xml:space` preprocessing.
 

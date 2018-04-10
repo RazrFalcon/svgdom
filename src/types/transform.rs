@@ -263,10 +263,6 @@ impl ParseFromSpan for Transform {
 
 impl WriteBuffer for Transform {
     fn write_buf_opt(&self, opt: &WriteOptions, buf: &mut Vec<u8>) {
-        if self.is_default() {
-            return;
-        }
-
         if opt.simplify_transform_matrices {
             write_simplified_transform(self, opt, buf);
         } else {
@@ -493,7 +489,7 @@ mod tests {
         )
     }
 
-    test_ts!(write_buf_1, Transform::default(), false, "");
+    test_ts!(write_buf_1, Transform::default(), false, "matrix(1 0 0 1 0 0)");
 
     test_ts!(write_buf_2,
         Transform::new(2.0, 0.0, 0.0, 3.0, 20.0, 30.0), false,
