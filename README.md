@@ -14,7 +14,6 @@ which allows you to parse, manipulate and generate SVG content.
 
  - [Purpose](#purpose)
     - [Example](#example)
- - [Documentation](#documentation)
  - [Benefits](#benefits)
  - [Limitations](#limitations)
  - [Non-goal](#non-goal)
@@ -105,8 +104,6 @@ And even though the file is a bit different now - it will be rendered exactly th
 ![Alt text](https://cdn.rawgit.com/RazrFalcon/svgdom/master/examples/images/image_before.svg)
 
 ![Alt text](https://cdn.rawgit.com/RazrFalcon/svgdom/master/examples/images/image_after.svg)
-
-### [Documentation](https://docs.rs/svgdom/)
 
 ### Benefits
  - The element link(IRI, FuncIRI) is not just text, but actual link to another node.
