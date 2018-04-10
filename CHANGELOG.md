@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+
+## [0.10.5] - 2018-04-10
 ### Changed
 - A default `Transform` will be printed as `matrix(1 0 0 1 0)` and not as an empty string.
 
@@ -342,7 +344,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/RazrFalcon/libsvgdom/compare/v0.10.4...HEAD
+[Unreleased]: https://github.com/RazrFalcon/libsvgdom/compare/v0.10.5...HEAD
+[0.10.5]: https://github.com/RazrFalcon/libsvgdom/compare/v0.10.4...v0.10.5
 [0.10.4]: https://github.com/RazrFalcon/libsvgdom/compare/v0.10.3...v0.10.4
 [0.10.3]: https://github.com/RazrFalcon/libsvgdom/compare/v0.10.2...v0.10.3
 [0.10.2]: https://github.com/RazrFalcon/libsvgdom/compare/v0.10.1...v0.10.2
