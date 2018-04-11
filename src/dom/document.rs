@@ -7,6 +7,7 @@
 // except according to those terms.
 
 use std::fmt;
+use std::cell::RefCell;
 
 use super::tree;
 
@@ -39,20 +40,20 @@ use super::{
 /// Container of [`Node`]s.
 ///
 /// [`Node`]: type.Node.html
-pub struct Document(tree::Document<NodeData>);
+pub struct Document(tree::Document<RefCell<NodeData>>);
 
 impl Document {
     /// Constructs a new `Document`.
     pub fn new() -> Document {
         Document(
-            tree::Document::new(NodeData {
+            tree::Document::new(RefCell::new(NodeData {
                 node_type: NodeType::Root,
                 tag_name: QName::Name(String::new(), String::new()),
                 id: String::new(),
                 attributes: Attributes::new(),
                 linked_nodes: Vec::new(),
                 text: String::new(),
-            })
+            }))
         )
     }
 
@@ -91,14 +92,14 @@ impl Document {
             }
         }
 
-        self.0.create_node(NodeData {
+        self.0.create_node(RefCell::new(NodeData {
             node_type: NodeType::Element,
             tag_name: QNameRef::from(tag_name).into(),
             id: String::new(),
             attributes: Attributes::new(),
             linked_nodes: Vec::new(),
             text: String::new(),
-        })
+        }))
     }
 
     // TODO: we can't have continuous text nodes.
@@ -116,14 +117,14 @@ impl Document {
 
         assert!(node_type != NodeType::Element && node_type != NodeType::Root);
 
-        self.0.create_node(NodeData {
+        self.0.create_node(RefCell::new(NodeData {
             node_type,
             tag_name: QName::Name(String::new(), String::new()),
             id: String::new(),
             attributes: Attributes::new(),
             linked_nodes: Vec::new(),
             text: text.to_string(),
-        })
+        }))
     }
 
     /// Returns the root [`Node`].
@@ -180,7 +181,7 @@ impl Document {
     ///     <use xlink:href='#rect1'/>
     /// </svg>").unwrap();
     ///
-    /// let mut rect_elem = doc.root().descendants().filter(|n| n.id() == "rect1").next().unwrap();
+    /// let mut rect_elem = doc.root().descendants().filter(|n| *n.id() == "rect1").next().unwrap();
     /// let use_elem = doc.root().descendants().filter(|n| n.is_tag_name(ElementId::Use)).next().unwrap();
     ///
     /// assert_eq!(use_elem.has_attribute(("xlink", AttributeId::Href)), true);
@@ -215,15 +216,15 @@ impl Document {
         }
 
         // remove all attributes that linked to this node
-        let t_node = node.clone();
-        for linked in node.linked_nodes_mut() {
+        let linked_nodes = node.linked_nodes().clone();
+        for mut linked in linked_nodes {
             ids.clear();
 
             for (_, attr) in linked.attributes().iter_svg() {
                 match attr.value {
                       AttributeValue::Link(ref link)
                     | AttributeValue::FuncLink(ref link) => {
-                        if *link == t_node {
+                        if *link == node {
                             ids.push(attr.name.clone())
                         }
                     }
@@ -321,6 +322,15 @@ impl Document {
 impl WriteBuffer for Document {
     fn write_buf_opt(&self, opt: &WriteOptions, buf: &mut Vec<u8>) {
         writer::write_dom(self, opt, buf);
+    }
+}
+
+impl Drop for Document {
+    fn drop(&mut self) {
+        for (_, mut node) in self.0.storage.iter_mut() {
+            node.attributes_mut().clear();
+            node.linked_nodes_mut().clear();
+        }
     }
 }
 

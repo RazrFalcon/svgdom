@@ -166,7 +166,7 @@ pub fn resolve_css<'a>(
                         }
                     }
                     CssSelector::Id(name) => {
-                        if let Some(mut node) = doc.root().descendants().find(|n| n.id() == name) {
+                        if let Some(mut node) = doc.root().descendants().find(|n| *n.id() == name) {
                             apply_css_attributes(&values, &mut node, &mut post_data.links,
                                                  &post_data.entitis, opt)?;
                         }

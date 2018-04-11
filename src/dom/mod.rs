@@ -6,6 +6,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use std::fmt;
 use std::iter::FilterMap;
 
 pub use self::document::Document;
@@ -76,4 +77,17 @@ pub struct NodeData {
     attributes: Attributes,
     linked_nodes: Vec<Node>,
     text: String,
+}
+
+impl fmt::Debug for NodeData {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self.node_type {
+            NodeType::Root => write!(f, "RootNode"),
+            NodeType::Element => write!(f, "ElementNode({:?} id={:?})", self.tag_name, self.id),
+            NodeType::Declaration => write!(f, "DeclarationNode({:?})", self.text),
+            NodeType::Comment => write!(f, "CommentNode({:?})", self.text),
+            NodeType::Cdata => write!(f, "CdataNode({:?})", self.text),
+            NodeType::Text => write!(f, "TextNode({:?})", self.text),
+        }
+    }
 }

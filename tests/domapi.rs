@@ -80,14 +80,14 @@ fn linked_attributes_3() {
     {
         // remove n1
         let n = doc.root().descendants().skip(1).next().unwrap();
-        assert_eq!(n.id(), "1");
+        assert_eq!(*n.id(), "1");
         doc.remove_node(n);
     }
 
     {
         // n2 should became unused
         let n = doc.root().descendants().skip(1).next().unwrap();
-        assert_eq!(n.id(), "2");
+        assert_eq!(*n.id(), "2");
         assert_eq!(n.is_used(), false);
     }
 }

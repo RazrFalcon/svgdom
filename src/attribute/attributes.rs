@@ -302,6 +302,11 @@ impl Attributes {
 
         self.0.retain(f)
     }
+
+    /// Clears the attributes list, removing all values.
+    pub(crate) fn clear(&mut self) {
+        self.0.clear();
+    }
 }
 
 impl fmt::Debug for Attributes {

@@ -53,7 +53,7 @@ a custom reference counting implementation.
 */
 
 // Changes:
-// - `Node::borrow` and `Node::borrow_mut` marked as `pub(crate)`.
+// - `Node::borrow` marked as `pub(crate)`.
 
 extern crate slab;
 
@@ -202,15 +202,6 @@ impl<T> Node<T> {
     /// - If the node was removed.
     pub(crate) fn borrow(&self) -> &T {
         &self.get().data
-    }
-
-    /// Returns a current node mutable data.
-    ///
-    /// # Panics
-    ///
-    /// - If the node was removed.
-    pub(crate) fn borrow_mut(&mut self) -> &mut T {
-        &mut self.get_mut().data
     }
 
     /// Returns a root node.
@@ -505,7 +496,7 @@ impl<T> Node<T> {
 /// A nodes container.
 pub struct Document<T> {
     root: *mut NodeData<T>,
-    storage: Slab<Node<T>>,
+    pub storage: Slab<Node<T>>,
 }
 
 impl<T> Drop for Document<T> {

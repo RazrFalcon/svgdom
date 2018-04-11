@@ -129,7 +129,7 @@ fn prepare_text_children(parent: &Node, xmlspace: XmlSpace) {
         let node = &mut nodes[0];
 
         if xmlspace == XmlSpace::Default {
-            let text = node.text_mut();
+            let mut text = node.text_mut();
 
             match text.len() {
                 0 => {} // An empty string. Do nothing.
