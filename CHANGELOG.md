@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.11.1] - 2018-04-12
+- Moved to `rctree` as a tree backend.
+
 ## [0.11.0] - 2018-04-10
 ### Added
 - Implemented `Deref` and `DerefMut` for `Path`.
@@ -385,7 +388,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/RazrFalcon/svgdom/compare/v0.11.0...HEAD
+[Unreleased]: https://github.com/RazrFalcon/svgdom/compare/v0.11.1...HEAD
+[0.11.1]: https://github.com/RazrFalcon/svgdom/compare/v0.11.0...v0.11.1
 [0.11.0]: https://github.com/RazrFalcon/svgdom/compare/v0.10.5...v0.11.0
 [0.10.5]: https://github.com/RazrFalcon/svgdom/compare/v0.10.4...v0.10.5
 [0.10.4]: https://github.com/RazrFalcon/svgdom/compare/v0.10.3...v0.10.4
