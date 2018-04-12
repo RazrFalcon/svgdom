@@ -7,9 +7,8 @@
 // except according to those terms.
 
 use std::fmt;
-use std::cell::RefCell;
 
-use super::tree;
+use slab::Slab;
 
 use parser::parse_svg;
 use {
@@ -40,21 +39,32 @@ use super::{
 /// Container of [`Node`]s.
 ///
 /// [`Node`]: type.Node.html
-pub struct Document(tree::Document<RefCell<NodeData>>);
+pub struct Document {
+    root: Node,
+    storage: Slab<Node>,
+}
 
 impl Document {
     /// Constructs a new `Document`.
     pub fn new() -> Document {
-        Document(
-            tree::Document::new(RefCell::new(NodeData {
-                node_type: NodeType::Root,
-                tag_name: QName::Name(String::new(), String::new()),
-                id: String::new(),
-                attributes: Attributes::new(),
-                linked_nodes: Vec::new(),
-                text: String::new(),
-            }))
-        )
+        let mut storage = Slab::new();
+        let mut root = Node::new(NodeData {
+            storage_key: None,
+            node_type: NodeType::Root,
+            tag_name: QName::Name(String::new(), String::new()),
+            id: String::new(),
+            attributes: Attributes::new(),
+            linked_nodes: Vec::new(),
+            text: String::new(),
+        });
+
+        let key = storage.insert(root.clone());
+        root.borrow_mut().storage_key = Some(key);
+
+        Document {
+            root,
+            storage,
+        }
     }
 
     /// Constructs a new `Document` from the text using a default [`ParseOptions`].
@@ -92,14 +102,20 @@ impl Document {
             }
         }
 
-        self.0.create_node(RefCell::new(NodeData {
+        let mut node = Node::new(NodeData {
+            storage_key: None,
             node_type: NodeType::Element,
             tag_name: QNameRef::from(tag_name).into(),
             id: String::new(),
             attributes: Attributes::new(),
             linked_nodes: Vec::new(),
             text: String::new(),
-        }))
+        });
+
+        let key = self.storage.insert(node.clone());
+        node.borrow_mut().storage_key = Some(key);
+
+        node
     }
 
     // TODO: we can't have continuous text nodes.
@@ -117,21 +133,27 @@ impl Document {
 
         assert!(node_type != NodeType::Element && node_type != NodeType::Root);
 
-        self.0.create_node(RefCell::new(NodeData {
+        let mut node = Node::new(NodeData {
+            storage_key: None,
             node_type,
             tag_name: QName::Name(String::new(), String::new()),
             id: String::new(),
             attributes: Attributes::new(),
             linked_nodes: Vec::new(),
             text: text.to_string(),
-        }))
+        });
+
+        let key = self.storage.insert(node.clone());
+        node.borrow_mut().storage_key = Some(key);
+
+        node
     }
 
     /// Returns the root [`Node`].
     ///
     /// [`Node`]: type.Node.html
     pub fn root(&self) -> Node {
-        self.0.root().clone()
+        self.root.clone()
     }
 
     /// Returns the first child with `svg` tag name of the root [`Node`].
@@ -195,11 +217,10 @@ impl Document {
     /// ```
     pub fn remove_node(&mut self, node: Node) {
         let mut ids = Vec::with_capacity(16);
-        Document::_remove(node.clone(), &mut ids);
-        self.0.remove_node(node);
+        self._remove(node.clone(), &mut ids);
     }
 
-    fn _remove(mut node: Node, ids: &mut Vec<AttributeQName>) {
+    fn _remove(&mut self, mut node: Node, ids: &mut Vec<AttributeQName>) {
         ids.clear();
 
         for (_, attr) in node.attributes().iter_svg() {
@@ -240,10 +261,11 @@ impl Document {
 
         // repeat for children
         for child in node.children() {
-            Document::_remove(child, ids);
+            self._remove(child, ids);
         }
 
         node.detach();
+        self.storage.remove(node.borrow_mut().storage_key.take().unwrap());
     }
 
     /// Removes only the children nodes specified by the predicate.
@@ -327,9 +349,10 @@ impl WriteBuffer for Document {
 
 impl Drop for Document {
     fn drop(&mut self) {
-        for (_, mut node) in self.0.storage.iter_mut() {
+        for (_, mut node) in self.storage.iter_mut() {
             node.attributes_mut().clear();
             node.linked_nodes_mut().clear();
+            node.detach();
         }
     }
 }

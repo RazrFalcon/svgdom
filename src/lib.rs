@@ -54,6 +54,7 @@ At last, the `id` attribute is stored as a separate value and not as part of the
 extern crate svgparser;
 extern crate simplecss;
 extern crate float_cmp;
+extern crate slab;
 
 
 // TODO: #[cfg(test)]

@@ -6,8 +6,6 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::cell::RefCell;
-
 mod attrs_order;
 mod options;
 
@@ -116,7 +114,7 @@ fn is_text_node(node: &Node) -> bool {
 /// Writes node's start edge.
 fn write_start_edge(
     node: &Node,
-    iter: &mut Traverse<RefCell<NodeData>>,
+    iter: &mut Traverse<NodeData>,
     depth: &mut Depth,
     attrs_depth: &Depth,
     opt: &WriteOptions,
@@ -368,7 +366,7 @@ fn write_attribute(
 
 /// Writes a `text` element node and it's children.
 fn write_text_elem(
-    iter: &mut Traverse<RefCell<NodeData>>,
+    iter: &mut Traverse<NodeData>,
     depth: &mut Depth,
     attrs_depth: &Depth,
     opt: &WriteOptions,

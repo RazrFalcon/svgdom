@@ -12,7 +12,7 @@ use std::iter::FilterMap;
 pub use self::document::Document;
 pub use self::element_type::ElementType;
 pub use self::node::Node;
-pub use self::tree::iterators::*;
+pub use self::tree::*;
 
 use {Attributes, QName, QNameRef, ElementId};
 
@@ -71,6 +71,7 @@ pub enum NodeType {
 
 /// Node's data.
 pub struct NodeData {
+    storage_key: Option<usize>,
     node_type: NodeType,
     tag_name: TagName,
     id: String,

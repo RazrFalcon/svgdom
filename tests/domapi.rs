@@ -151,6 +151,20 @@ fn linked_attributes_5() {
 }
 
 #[test]
+fn linked_attributes_6() {
+    // Linked nodes not added to the tree should not cause a memory leak.
+
+    let mut doc = Document::new();
+    let mut n1 = doc.create_element(EId::Svg);
+    let mut n2 = doc.create_element(EId::Svg);
+
+    n1.set_id("1");
+    n2.set_id("2");
+
+    n2.set_attribute((AId::Fill, n1.clone()));
+}
+
+#[test]
 fn attributes_must_be_uniq() {
     let mut doc = Document::new();
     let mut n = doc.create_element(EId::Svg);

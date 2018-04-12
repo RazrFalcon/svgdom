@@ -6,7 +6,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::cell::{RefCell, Ref, RefMut};
+use std::cell::{Ref, RefMut};
 
 use error::Result;
 use {
@@ -73,7 +73,7 @@ impl<'a, N> From<(N, Node)> for Attribute
 /// [`Attributes`]: struct.Attributes.html
 /// [`NodeType`]: enum.NodeType.html
 /// [`TagName`]: type.TagName.html
-pub type Node = tree::Node<RefCell<NodeData>>;
+pub type Node = tree::Node<NodeData>;
 
 impl Node {
     /// Returns `true` if the node has a parent node.
@@ -113,7 +113,7 @@ impl Node {
     ///
     /// Panics if the node is currently mutably borrowed.
     pub fn node_type(&self) -> NodeType {
-        self.borrow().borrow().node_type
+        self.borrow().node_type
     }
 
     /// Returns a text data of the node.
@@ -124,7 +124,7 @@ impl Node {
     ///
     /// Panics if the node is currently mutably borrowed.
     pub fn text(&self) -> Ref<String> {
-        Ref::map(self.borrow().borrow(), |d| &d.text)
+        Ref::map(self.borrow(), |d| &d.text)
     }
 
     /// Returns a mutable text data of the node.
@@ -135,7 +135,7 @@ impl Node {
     ///
     /// Panics if the node is currently mutably borrowed.
     pub fn text_mut(&mut self) -> RefMut<String> {
-        RefMut::map(self.borrow().borrow_mut(), |d| &mut d.text)
+        RefMut::map(self.borrow_mut(), |d| &mut d.text)
     }
 
     /// Sets a text data to the node.
@@ -145,7 +145,7 @@ impl Node {
     /// Panics if the node is currently mutably borrowed.
     pub fn set_text(&mut self, text: &str) {
         debug_assert_ne!(self.node_type(), NodeType::Element);
-        self.borrow().borrow_mut().text = text.to_owned();
+        self.borrow_mut().text = text.to_owned();
     }
 
     /// Returns an ID of the element node.
@@ -154,7 +154,7 @@ impl Node {
     ///
     /// Panics if the node is currently mutably borrowed.
     pub fn id(&self) -> Ref<String> {
-        Ref::map(self.borrow().borrow(), |d| &d.id)
+        Ref::map(self.borrow(), |d| &d.id)
     }
 
     /// Returns `true` if node has a not empty ID.
@@ -176,7 +176,7 @@ impl Node {
     pub fn set_id<S: Into<String>>(&mut self, id: S) {
         // TODO: check that it's unique.
         debug_assert_eq!(self.node_type(), NodeType::Element);
-        self.borrow().borrow_mut().id = id.into().to_owned();
+        self.borrow_mut().id = id.into().to_owned();
 
     }
 
@@ -190,7 +190,7 @@ impl Node {
             return false;
         }
 
-        match self.borrow().borrow().tag_name {
+        match self.borrow().tag_name {
             QName::Id(_, _) => true,
             QName::Name(_, _) => false,
         }
@@ -202,7 +202,7 @@ impl Node {
     ///
     /// Panics if the node is currently mutably borrowed.
     pub fn tag_name(&self) -> Ref<TagName> {
-        Ref::map(self.borrow().borrow(), |d| &d.tag_name)
+        Ref::map(self.borrow(), |d| &d.tag_name)
     }
 
     /// Returns a tag name id of the SVG element node.
@@ -211,7 +211,7 @@ impl Node {
     ///
     /// Panics if the node is currently mutably borrowed.
     pub fn tag_id(&self) -> Option<ElementId> {
-        match self.borrow().borrow().tag_name {
+        match self.borrow().tag_name {
             QName::Id(_, ref id) => Some(*id),
             QName::Name(_, _) => None,
         }
@@ -225,7 +225,7 @@ impl Node {
     pub fn is_tag_name<'a, T>(&self, tag_name: T) -> bool
         where TagNameRef<'a>: From<T>
     {
-        self.borrow().borrow().tag_name.as_ref() == TagNameRef::from(tag_name)
+        self.borrow().tag_name.as_ref() == TagNameRef::from(tag_name)
     }
 
     /// Sets a tag name of the element node.
@@ -252,7 +252,7 @@ impl Node {
             }
         }
 
-        self.borrow().borrow_mut().tag_name = TagName::from(tn);
+        self.borrow_mut().tag_name = TagName::from(tn);
     }
 
     /// Returns a reference to the `Attributes` of the current node.
@@ -261,7 +261,7 @@ impl Node {
     ///
     /// Panics if the node is currently mutably borrowed.
     pub fn attributes(&self) -> Ref<Attributes> {
-        Ref::map(self.borrow().borrow(), |d| &d.attributes)
+        Ref::map(self.borrow(), |d| &d.attributes)
     }
 
     /// Returns a mutable reference to the `Attributes` of the current node.
@@ -270,7 +270,7 @@ impl Node {
     ///
     /// Panics if the node is currently borrowed.
     pub fn attributes_mut(&mut self) -> RefMut<Attributes> {
-        RefMut::map(self.borrow().borrow_mut(), |d| &mut d.attributes)
+        RefMut::map(self.borrow_mut(), |d| &mut d.attributes)
     }
 
     /// Returns `true` if the node has an attribute with such `id`.
@@ -282,7 +282,7 @@ impl Node {
     pub fn has_attribute<'a, N>(&self, name: N) -> bool
         where AttributeQNameRef<'a>: From<N>
     {
-        self.borrow().borrow().attributes.contains(name)
+        self.borrow().attributes.contains(name)
     }
 
     /// Returns `true` if the node has an attribute with such `id` and this attribute is visible.
@@ -467,7 +467,7 @@ impl Node {
         attrs.insert(attr);
     }
 
-    fn set_link_attribute(&mut self, name: AttributeQName, node: Node) -> Result<()> {
+    fn set_link_attribute(&mut self, name: AttributeQName, mut node: Node) -> Result<()> {
         if node.id().is_empty() {
             return Err(Error::ElementMustHaveAnId);
         }
@@ -496,7 +496,7 @@ impl Node {
             attributes.insert_impl(a);
         }
 
-        node.borrow().borrow_mut().linked_nodes.push(self.clone());
+        node.borrow_mut().linked_nodes.push(self.clone());
 
         Ok(())
     }
@@ -547,8 +547,8 @@ impl Node {
                     let mut node = node.clone();
 
                     // this code can't panic, because we know that such node exist
-                    let index = node.borrow().borrow().linked_nodes.iter().position(|n| n == self).unwrap();
-                    node.borrow().borrow_mut().linked_nodes.remove(index);
+                    let index = node.borrow().linked_nodes.iter().position(|n| n == self).unwrap();
+                    node.borrow_mut().linked_nodes.remove(index);
                 }
                 _ => {}
             }
@@ -565,12 +565,12 @@ impl Node {
     ///
     /// Panics if the node is currently mutably borrowed.
     pub fn linked_nodes(&self) -> Ref<Vec<Node>> {
-        Ref::map(self.borrow().borrow(), |d| &d.linked_nodes)
+        Ref::map(self.borrow(), |d| &d.linked_nodes)
     }
 
     // TODO: doc
     pub fn linked_nodes_mut(&mut self) -> RefMut<Vec<Node>> {
-        RefMut::map(self.borrow().borrow_mut(), |d| &mut d.linked_nodes)
+        RefMut::map(self.borrow_mut(), |d| &mut d.linked_nodes)
     }
 
     /// Returns `true` if the current node is linked to any of the DOM nodes.
