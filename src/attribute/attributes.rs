@@ -182,7 +182,7 @@ impl Attributes {
             let attr = self.0.iter().find(|x| x.name.as_ref() == name);
             if let Some(attr) = attr {
                 if attr.is_link() || attr.is_func_link() {
-                    panic!("attribute with Link/FuncLink value must be remove \
+                    panic!("attribute with Link/FuncLink value must be removed \
                             only via Node::remove_attribute");
                 }
             }
@@ -293,7 +293,7 @@ impl Attributes {
             for attr in &self.0 {
                 if !f(attr) {
                     if attr.is_link() || attr.is_func_link() {
-                        panic!("attribute with Link/FuncLink value must be remove \
+                        panic!("attribute with Link/FuncLink value must be removed \
                                 only via Node::remove_attribute");
                     }
                 }
