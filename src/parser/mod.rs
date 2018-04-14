@@ -100,7 +100,7 @@ pub type Entities<'a> = HashMap<&'a str, StrSpan<'a>>;
 pub struct PostData<'a> {
     pub css_list: Vec<StrSpan<'a>>,
     pub links: Links<'a>,
-    pub entitis: Entities<'a>,
+    pub entities: Entities<'a>,
     // List of element with 'class' attribute.
     // We can't process it inplace, because styles can be set after usage.
     pub class_attrs: Vec<NodeSpanData<'a>>,
@@ -125,7 +125,7 @@ pub fn parse_svg(text: &str, opt: &ParseOptions) -> Result<Document> {
             list: Vec::new(),
             elems_with_id: HashMap::new(),
         },
-        entitis: HashMap::new(),
+        entities: HashMap::new(),
         class_attrs: Vec::new(),
         style_attrs: Vec::new(),
     };
@@ -175,7 +175,7 @@ pub fn parse_svg(text: &str, opt: &ParseOptions) -> Result<Document> {
     // resolve styles
     for d in &mut post_data.style_attrs {
         parse_style_attribute(&mut d.node, d.span, &mut post_data.links,
-                              &post_data.entitis, opt)?;
+                              &post_data.entities, opt)?;
     }
 
     resolve_links(&mut post_data.links, opt)?;
@@ -307,7 +307,7 @@ fn process_token<'a>(
                 return Err(Error::UnsupportedEntity(s.gen_error_pos()));
             }
 
-            post_data.entitis.insert(name, value);
+            post_data.entities.insert(name, value);
         }
         svg::Token::ProcessingInstruction(_, _) => {
             // do nothing
@@ -390,7 +390,7 @@ fn parse_svg_attribute<'a>(
         }
         _ => {
             parse_svg_attribute_value(node, prefix, id, value, &mut post_data.links,
-                                      &post_data.entitis, opt)?;
+                                      &post_data.entities, opt)?;
         }
     }
 
@@ -525,7 +525,7 @@ fn parse_non_svg_attribute<'a>(
     let mut stream = Stream::from_span(value);
     let new_value = if stream.is_curr_byte_eq(b'&') {
         if let Ok(xmlparser::Reference::EntityRef(link)) = stream.consume_reference() {
-            match post_data.entitis.get(link.to_str()) {
+            match post_data.entities.get(link.to_str()) {
                 Some(link_value) => Some(*link_value),
                 None => {
                     warn!("Could not resolve ENTITY: '{}'.", link);

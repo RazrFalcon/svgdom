@@ -150,7 +150,7 @@ pub fn resolve_css<'a>(
                     CssSelector::Universal => {
                         for (_, mut node) in doc.root().descendants().svg() {
                             apply_css_attributes(&values, &mut node, &mut post_data.links,
-                                                 &post_data.entitis, opt)?;
+                                                 &post_data.entities, opt)?;
                         }
                     }
                     CssSelector::Type(name) => {
@@ -158,7 +158,7 @@ pub fn resolve_css<'a>(
                             for (id, mut node) in doc.root().descendants().svg() {
                                 if id == eid {
                                     apply_css_attributes(&values, &mut node, &mut post_data.links,
-                                                         &post_data.entitis, opt)?;
+                                                         &post_data.entities, opt)?;
                                 }
                             }
                         } else {
@@ -168,14 +168,14 @@ pub fn resolve_css<'a>(
                     CssSelector::Id(name) => {
                         if let Some(mut node) = doc.root().descendants().find(|n| *n.id() == name) {
                             apply_css_attributes(&values, &mut node, &mut post_data.links,
-                                                 &post_data.entitis, opt)?;
+                                                 &post_data.entities, opt)?;
                         }
                     }
                     CssSelector::Class(name) => {
                         // we use already collected list of 'class' attributes
                         for d in post_data.class_attrs.iter_mut().filter(|n| n.span.to_str() == name) {
                             apply_css_attributes(&values, &mut d.node, &mut post_data.links,
-                                                 &post_data.entitis, opt)?;
+                                                 &post_data.entities, opt)?;
 
                             resolved_classes.push(name);
                         }
