@@ -26,7 +26,7 @@ use {
     ParseOptions,
 };
 
-use super::parser::{
+use super::{
     Entities,
     Links,
     NodeSpanData,
@@ -223,7 +223,7 @@ fn apply_css_attributes<'a>(
     values: &[(&str, &'a str)],
     node: &mut Node,
     links: &mut Links<'a>,
-    entitis: &Entities<'a>,
+    entities: &Entities<'a>,
     opt: &ParseOptions,
 ) -> Result<()> {
     for &(aname, avalue) in values {
@@ -231,9 +231,9 @@ fn apply_css_attributes<'a>(
             Some(aid) => {
                 let mut parse_attr = |aid: AttributeId| {
                     // TODO: to a proper stream
-                    super::parser::parse_svg_attribute_value(
+                    super::parse_svg_attribute_value(
                         node, "", aid, StrSpan::from_str(avalue),
-                        links, entitis, opt
+                        links, entities, opt
                     )
                 };
 

@@ -103,15 +103,15 @@ impl Segment {
     // TODO: to_relative
     // TODO: to_absolute
 
-    /// Constructs a new MoveTo `Segment`.
+    /// Constructs a new absolute MoveTo `Segment`.
     pub fn new_move_to(x: f64, y: f64) -> Segment {
         Segment {
             absolute: true,
-            data: SegmentData::MoveTo { x: x, y: y },
+            data: SegmentData::MoveTo { x, y },
         }
     }
 
-    /// Constructs a new ClosePath `Segment`.
+    /// Constructs a new absolute ClosePath `Segment`.
     pub fn new_close_path() -> Segment {
         Segment {
             absolute: true,
@@ -119,96 +119,68 @@ impl Segment {
         }
     }
 
-    /// Constructs a new LineTo `Segment`.
+    /// Constructs a new absolute LineTo `Segment`.
     pub fn new_line_to(x: f64, y: f64) -> Segment {
         Segment {
             absolute: true,
-            data: SegmentData::LineTo { x: x, y: y },
+            data: SegmentData::LineTo { x, y },
         }
     }
 
-    /// Constructs a new HorizontalLineTo `Segment`.
+    /// Constructs a new absolute HorizontalLineTo `Segment`.
     pub fn new_hline_to(x: f64) -> Segment {
         Segment {
             absolute: true,
-            data: SegmentData::HorizontalLineTo { x: x },
+            data: SegmentData::HorizontalLineTo { x },
         }
     }
 
-    /// Constructs a new VerticalLineTo `Segment`.
+    /// Constructs a new absolute VerticalLineTo `Segment`.
     pub fn new_vline_to(y: f64) -> Segment {
         Segment {
             absolute: true,
-            data: SegmentData::VerticalLineTo { y: y },
+            data: SegmentData::VerticalLineTo { y },
         }
     }
 
-    /// Constructs a new CurveTo `Segment`.
+    /// Constructs a new absolute CurveTo `Segment`.
     pub fn new_curve_to(x1: f64, y1: f64, x2: f64, y2: f64, x: f64, y: f64) -> Segment {
         Segment {
             absolute: true,
-            data: SegmentData::CurveTo {
-                x1: x1,
-                y1: y1,
-                x2: x2,
-                y2: y2,
-                x: x,
-                y: y,
-            },
+            data: SegmentData::CurveTo { x1, y1, x2, y2, x, y },
         }
     }
 
-    /// Constructs a new SmoothCurveTo `Segment`.
+    /// Constructs a new absolute SmoothCurveTo `Segment`.
     pub fn new_smooth_curve_to(x2: f64, y2: f64, x: f64, y: f64) -> Segment {
         Segment {
             absolute: true,
-            data: SegmentData::SmoothCurveTo {
-                x2: x2,
-                y2: y2,
-                x: x,
-                y: y,
-            },
+            data: SegmentData::SmoothCurveTo { x2, y2, x, y },
         }
     }
 
-    /// Constructs a new QuadTo `Segment`.
+    /// Constructs a new absolute QuadTo `Segment`.
     pub fn new_quad_to(x1: f64, y1: f64, x: f64, y: f64) -> Segment {
         Segment {
             absolute: true,
-            data: SegmentData::Quadratic {
-                x1: x1,
-                y1: y1,
-                x: x,
-                y: y,
-            },
+            data: SegmentData::Quadratic { x1, y1, x, y },
         }
     }
 
-    /// Constructs a new SmoothQuadTo `Segment`.
+    /// Constructs a new absolute SmoothQuadTo `Segment`.
     pub fn new_smooth_quad_to(x: f64, y: f64) -> Segment {
         Segment {
             absolute: true,
-            data: SegmentData::SmoothQuadratic {
-                x: x,
-                y: y,
-            },
+            data: SegmentData::SmoothQuadratic { x, y },
         }
     }
 
-    /// Constructs a new ArcTo `Segment`.
+    /// Constructs a new absolute ArcTo `Segment`.
     pub fn new_arc_to(rx: f64, ry: f64, x_axis_rotation: f64, large_arc: bool, sweep: bool,
-                  x: f64, y: f64) -> Segment {
+                      x: f64, y: f64) -> Segment {
         Segment {
             absolute: true,
-            data: SegmentData::EllipticalArc {
-                rx: rx,
-                ry: ry,
-                x_axis_rotation: x_axis_rotation,
-                large_arc: large_arc,
-                sweep: sweep,
-                x: x,
-                y: y,
-            },
+            data: SegmentData::EllipticalArc { rx, ry, x_axis_rotation, large_arc, sweep, x, y },
         }
     }
 

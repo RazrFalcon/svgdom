@@ -127,7 +127,7 @@ impl Transform {
 
     /// Returns `true` if the transform contains only scale part, aka (sx 0 0 sy 0 0).
     pub fn is_scale(&self) -> bool {
-           (self.a.fuzzy_ne(&1.0) || self.d.fuzzy_ne(&1.0))
+          (self.a.fuzzy_ne(&1.0) || self.d.fuzzy_ne(&1.0))
         && self.b.fuzzy_eq(&0.0)
         && self.c.fuzzy_eq(&0.0)
         && self.e.fuzzy_eq(&0.0)
