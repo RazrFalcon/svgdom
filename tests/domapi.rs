@@ -14,7 +14,6 @@ use svgdom::{
     AttributeValue,
     Document,
     ElementId as EId,
-    NodeType,
     WriteOptions,
     ToStringWithOptions,
 };
@@ -295,55 +294,6 @@ fn drain_4() {
     <g/>
 </svg>
 ");
-}
-
-#[test]
-fn parents_1() {
-    let doc = Document::from_str(
-"<svg>
-    <rect/>
-    <g>
-        <path/>
-    </g>
-    <rect/>
-</svg>").unwrap();
-
-    let node = doc.root().descendants().filter(|n| n.is_tag_name(EId::Path)).nth(0).unwrap();
-
-    let mut iter = node.ancestors();
-    assert_eq!(iter.next().unwrap().is_tag_name(EId::Path), true);
-    assert_eq!(iter.next().unwrap().is_tag_name(EId::G), true);
-    assert_eq!(iter.next().unwrap().is_tag_name(EId::Svg), true);
-    assert_eq!(iter.next().unwrap().node_type(), NodeType::Root);
-    assert_eq!(iter.next(), None);
-}
-
-#[test]
-fn parents_2() {
-    let doc = Document::from_str(
-"<svg>
-    <!--comment-->
-    <g>
-        <!--comment-->
-        <g>
-            <text>
-                text1
-                <tspan>text2</tspan>
-            </text>
-        </g>
-    </g>
-</svg>").unwrap();
-
-    let node = doc.root().descendants().filter(|n| n.is_tag_name(EId::Tspan)).nth(0).unwrap();
-
-    let mut iter = node.ancestors();
-    assert_eq!(iter.next().unwrap().is_tag_name(EId::Tspan), true);
-    assert_eq!(iter.next().unwrap().is_tag_name(EId::Text), true);
-    assert_eq!(iter.next().unwrap().is_tag_name(EId::G), true);
-    assert_eq!(iter.next().unwrap().is_tag_name(EId::G), true);
-    assert_eq!(iter.next().unwrap().is_tag_name(EId::Svg), true);
-    assert_eq!(iter.next().unwrap().node_type(), NodeType::Root);
-    assert_eq!(iter.next(), None);
 }
 
 #[test]
