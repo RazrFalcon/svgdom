@@ -11,8 +11,8 @@ extern crate svgdom;
 
 use svgdom::{
     Document,
-    ToStringWithOptions,
     WriteOptions,
+    WriteBuffer,
 };
 
 fn write_options() -> WriteOptions {
@@ -26,7 +26,7 @@ macro_rules! test_resave {
         #[test]
         fn $name() {
             let doc = Document::from_str($in_text).unwrap();
-            assert_eq_text!(doc.to_string_with_opt(&write_options()), $out_text);
+            assert_eq_text!(doc.with_write_opt(&write_options()).to_string(), $out_text);
         }
     )
 }

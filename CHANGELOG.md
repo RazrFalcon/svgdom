@@ -5,6 +5,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Changed
+- All SVG types implementation move to the `svgtypes` crate.
+
+### Removed
+- `ValueId` type. Now only `none`, `inherit` and `currentColor`
+   will be stored not as strings.
 
 ## [0.11.1] - 2018-04-12
 - Moved to `rctree` as a tree backend.

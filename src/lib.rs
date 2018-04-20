@@ -51,10 +51,9 @@ At last, the `id` attribute is stored as a separate value and not as part of the
 
 #[macro_use] extern crate log;
 #[macro_use] extern crate failure;
-extern crate svgparser;
 extern crate simplecss;
-extern crate float_cmp;
 extern crate slab;
+extern crate svgtypes;
 
 
 // TODO: #[cfg(test)]
@@ -73,14 +72,11 @@ macro_rules! assert_eq_text {
     })
 }
 
-#[macro_use]
-mod traits;
 mod attribute;
 mod dom;
 mod error;
 mod name;
 mod parser;
-mod types;
 mod writer;
 
 
@@ -88,13 +84,31 @@ pub use attribute::*;
 pub use dom::*;
 pub use error::Error;
 pub use name::*;
-pub use traits::*;
-pub use types::*;
 pub use writer::*;
 pub use parser::ParseOptions;
 
-pub use svgparser::{
+pub use svgtypes::{
+    Align,
+    AspectRatio,
     AttributeId,
+    Color,
     ElementId,
-    ValueId,
+    FromSpan,
+    FuzzyEq,
+    FuzzyZero,
+    Length,
+    LengthList,
+    LengthUnit,
+    ListSeparator,
+    NumberList,
+    Path,
+    PathBuilder,
+    PathCommand,
+    PathSegment,
+    Points,
+    StrSpan,
+    Transform,
+    ViewBox,
+    WriteBuffer as ValueWriteBuffer,
+    WriteOptions as ValueWriteOptions,
 };

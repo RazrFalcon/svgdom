@@ -13,7 +13,6 @@ use {
     AttributeValue,
     QName,
     QNameRef,
-    ToStringWithOptions,
     WriteBuffer,
     WriteOptions,
 };
@@ -44,6 +43,7 @@ pub struct Attribute {
     pub visible: bool,
 }
 
+// TODO: fix docs
 macro_rules! impl_is_type {
     ($name:ident, $t:ident) => (
         #[allow(missing_docs)]
@@ -118,7 +118,6 @@ impl Attribute {
     impl_is_type!(is_number_list, NumberList);
     impl_is_type!(is_path, Path);
     impl_is_type!(is_points, Points);
-    impl_is_type!(is_predef, PredefValue);
     impl_is_type!(is_string, String);
     impl_is_type!(is_transform, Transform);
     impl_is_type!(is_viewbox, ViewBox);
@@ -136,7 +135,7 @@ impl WriteBuffer for Attribute {
         }
 
         match self.name {
-            QName::Id(_, id) => buf.extend_from_slice(id.name().as_bytes()),
+            QName::Id(_, id) => buf.extend_from_slice(id.as_str().as_bytes()),
             QName::Name(_, ref name) => buf.extend_from_slice(name.as_bytes()),
         }
         buf.push(b'=');
@@ -146,7 +145,7 @@ impl WriteBuffer for Attribute {
             if let AttributeValue::String(ref s) = self.value {
                 write_escaped(s, buf);
             } else {
-                warn!("An invalid unicode attribute value: {:?}.", self.value);
+                warn!("An invalid 'unicode' attribute value: {:?}.", self.value);
             }
         } else {
             self.value.write_buf_opt(opt, buf);
@@ -174,4 +173,12 @@ fn write_escaped(unicode: &str, out: &mut Vec<u8>) {
     }
 }
 
-impl_display!(Attribute);
+impl ::std::fmt::Display for Attribute {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        use std::str;
+
+        let mut out = Vec::with_capacity(32);
+        self.write_buf_opt(&WriteOptions::default(), &mut out);
+        write!(f, "{}", str::from_utf8(&out).unwrap())
+    }
+}

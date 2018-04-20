@@ -15,7 +15,7 @@ use svgdom::{
     Document,
     ElementId as EId,
     WriteOptions,
-    ToStringWithOptions,
+    WriteBuffer,
 };
 
 #[test]
@@ -313,7 +313,7 @@ fn deep_copy_1() {
 
     let mut opt = WriteOptions::default();
     opt.use_single_quote = true;
-    assert_eq_text!(doc.to_string_with_opt(&opt),
+    assert_eq_text!(doc.with_write_opt(&opt).to_string(),
 "<svg>
     <g id='g1'>
         <rect id='rect1'/>
@@ -344,7 +344,7 @@ fn deep_copy_2() {
 
     let mut opt = WriteOptions::default();
     opt.use_single_quote = true;
-    assert_eq_text!(doc.to_string_with_opt(&opt),
+    assert_eq_text!(doc.with_write_opt(&opt).to_string(),
 "<svg>
     <g id='g1'>
         <rect id='rect1'/>
@@ -380,7 +380,7 @@ fn deep_copy_3() {
 
     let mut opt = WriteOptions::default();
     opt.use_single_quote = true;
-    assert_eq_text!(doc.to_string_with_opt(&opt),
+    assert_eq_text!(doc.with_write_opt(&opt).to_string(),
 "<svg>
     <linearGradient id='lg1'/>
     <g id='g1' stroke-width='5'>

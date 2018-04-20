@@ -8,8 +8,8 @@
 
 use simplecss;
 
-use svgparser;
-use svgparser::xmlparser::{
+use svgtypes;
+use svgtypes::xmlparser::{
     self,
     ErrorPos,
 };
@@ -82,8 +82,8 @@ pub enum Error {
     MissingAttribute(String, String),
 
     /// Error during attribute value parsing.
-    #[fail(display = "invalid attribute value cause {}", _0)]
-    InvalidAttributeValue(svgparser::StreamError),
+    #[fail(display = "{}", _0)]
+    SvgTypesError(svgtypes::Error),
 
     /// An XML stream error.
     #[fail(display = "{}", _0)]
@@ -100,9 +100,9 @@ impl From<xmlparser::Error> for Error {
     }
 }
 
-impl From<svgparser::StreamError> for Error {
-    fn from(value: svgparser::StreamError) -> Error {
-        Error::InvalidAttributeValue(value)
+impl From<svgtypes::Error> for Error {
+    fn from(value: svgtypes::Error) -> Error {
+        Error::SvgTypesError(value)
     }
 }
 
@@ -115,4 +115,4 @@ impl From<simplecss::Error> for Error {
 /// A specialized `Result` type where the error is hard-wired to [`Error`].
 ///
 /// [`Error`]: enum.Error.html
-pub type Result<T> = ::std::result::Result<T, Error>;
+pub(crate) type Result<T> = ::std::result::Result<T, Error>;

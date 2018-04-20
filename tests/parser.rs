@@ -18,8 +18,7 @@ use svgdom::{
     TagNameRef,
     NodeType,
     ParseOptions,
-    ToStringWithOptions,
-    ValueId,
+    WriteBuffer,
     WriteOptions,
 };
 
@@ -34,7 +33,7 @@ macro_rules! test_resave {
         #[test]
         fn $name() {
             let doc = Document::from_str($in_text).unwrap();
-            assert_eq_text!(doc.to_string_with_opt(&write_options()), $out_text);
+            assert_eq_text!(doc.with_write_opt(&write_options()).to_string(), $out_text);
         }
     )
 }
@@ -258,7 +257,7 @@ fn parse_iri_with_fallback_1() {
     let rect = child.children().nth(0).unwrap();
 
     assert_eq!(rect.attributes().get_value(AId::Fill).unwrap(),
-               &AttributeValue::PredefValue(ValueId::None));
+               &AttributeValue::None);
 }
 
 #[test]
@@ -451,7 +450,7 @@ fn skip_comments_1() {
 "<!--comment-->
 <svg/>", &opt).unwrap();
 
-    assert_eq_text!(doc.to_string_with_opt(&write_options()),
+    assert_eq_text!(doc.with_write_opt(&write_options()).to_string(),
 "<svg/>
 ");
 }
@@ -464,7 +463,7 @@ fn skip_declaration_1() {
 "<?xml version='1.0'?>
 <svg/>", &opt).unwrap();
 
-    assert_eq_text!(doc.to_string_with_opt(&write_options()),
+    assert_eq_text!(doc.with_write_opt(&write_options()).to_string(),
 "<svg/>
 ");
 }
@@ -479,7 +478,7 @@ fn skip_unknown_elements_1() {
     <rect/>
 </svg>", &opt).unwrap();
 
-    assert_eq_text!(doc.to_string_with_opt(&write_options()),
+    assert_eq_text!(doc.with_write_opt(&write_options()).to_string(),
 "<svg>
     <rect/>
 </svg>
@@ -500,7 +499,7 @@ fn skip_unknown_elements_2() {
     <rect/>
 </svg>", &opt).unwrap();
 
-    assert_eq_text!(doc.to_string_with_opt(&write_options()),
+    assert_eq_text!(doc.with_write_opt(&write_options()).to_string(),
 "<svg>
     <rect/>
 </svg>
@@ -521,7 +520,7 @@ fn skip_unknown_elements_3() {
     <rect/>
 </svg>", &opt).unwrap();
 
-    assert_eq_text!(doc.to_string_with_opt(&write_options()),
+    assert_eq_text!(doc.with_write_opt(&write_options()).to_string(),
 "<svg>
     <rect/>
 </svg>
@@ -539,7 +538,7 @@ fn skip_unknown_elements_4() {
     <rect/>
 </svg>", &opt).unwrap();
 
-    assert_eq_text!(doc.to_string_with_opt(&write_options()),
+    assert_eq_text!(doc.with_write_opt(&write_options()).to_string(),
 "<svg>
     <rect/>
 </svg>
@@ -554,7 +553,7 @@ fn skip_unknown_attributes_1() {
 "<svg fill='#ff0000' test='1' qwe='zzz' xmlns='http://www.w3.org/2000/svg' \
 xmlns:xlink='http://www.w3.org/1999/xlink'/>", &opt).unwrap();
 
-    assert_eq_text!(doc.to_string_with_opt(&write_options()),
+    assert_eq_text!(doc.with_write_opt(&write_options()).to_string(),
 "<svg fill='#ff0000' xmlns:xlink='http://www.w3.org/1999/xlink' \
 xmlns='http://www.w3.org/2000/svg'/>
 ");
@@ -565,7 +564,7 @@ fn parse_px_unit_on_1() {
     let mut opt = ParseOptions::default();
     opt.parse_px_unit = true;
     let doc = Document::from_str_with_opt("<svg x='10px'/>", &opt).unwrap();
-    assert_eq_text!(doc.to_string_with_opt(&write_options()), "<svg x='10px'/>\n");
+    assert_eq_text!(doc.with_write_opt(&write_options()).to_string(), "<svg x='10px'/>\n");
 }
 
 #[test]
@@ -573,7 +572,7 @@ fn parse_px_unit_off_1() {
     let mut opt = ParseOptions::default();
     opt.parse_px_unit = false;
     let doc = Document::from_str_with_opt("<svg x='10px'/>", &opt).unwrap();
-    assert_eq_text!(doc.to_string_with_opt(&write_options()), "<svg x='10'/>\n");
+    assert_eq_text!(doc.with_write_opt(&write_options()).to_string(), "<svg x='10'/>\n");
 }
 
 #[test]
@@ -581,7 +580,7 @@ fn parse_px_unit_off_2() {
     let mut opt = ParseOptions::default();
     opt.parse_px_unit = false;
     let doc = Document::from_str_with_opt("<svg stroke-dasharray='10px 20px'/>", &opt).unwrap();
-    assert_eq_text!(doc.to_string_with_opt(&write_options()),
+    assert_eq_text!(doc.with_write_opt(&write_options()).to_string(),
                     "<svg stroke-dasharray='10 20'/>\n");
 }
 
@@ -599,7 +598,7 @@ fn skip_unresolved_classes_1() {
     <g class='fil1 fil4 str1 fil5'/>
 </svg>", &opt).unwrap();
 
-    assert_eq_text!(doc.to_string_with_opt(&write_options()),
+    assert_eq_text!(doc.with_write_opt(&write_options()).to_string(),
 "<svg>
     <g class='fil3' fill='#0000ff'/>
     <g class='fil4 fil5' fill='#0000ff' stroke='#0000ff'/>

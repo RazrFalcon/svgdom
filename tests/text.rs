@@ -13,8 +13,8 @@ use svgdom::{
     Document,
     ElementId as EId,
     NodeType,
-    ToStringWithOptions,
     WriteOptions,
+    WriteBuffer,
 };
 
 macro_rules! test_resave {
@@ -26,7 +26,7 @@ macro_rules! test_resave {
             let mut opt = WriteOptions::default();
             opt.use_single_quote = true;
 
-            assert_eq_text!(doc.to_string_with_opt(&opt), $out_text);
+            assert_eq_text!(doc.with_write_opt(&opt).to_string(), $out_text);
         }
     )
 }

@@ -20,11 +20,11 @@ pub trait SvgId: Copy + PartialEq {
 }
 
 impl SvgId for AttributeId {
-    fn name(&self) -> &str { self.name() }
+    fn name(&self) -> &str { self.as_str() }
 }
 
 impl SvgId for ElementId {
-    fn name(&self) -> &str { self.name() }
+    fn name(&self) -> &str { self.as_str() }
 }
 
 /// Qualified name.

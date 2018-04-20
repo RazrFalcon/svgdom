@@ -16,24 +16,24 @@ mod css;
 mod options;
 mod text;
 
-use svgparser::{
-    style,
-    svg,
-    AttributeValue as ParserAttributeValue,
+use svgtypes::{
+    Paint,
     PaintFallback,
-    StreamError,
+    StreamExt,
+    StyleParser,
+    StyleToken,
 };
 
-use svgparser::xmlparser::{
+use svgtypes::xmlparser::{
     self,
-    FromSpan,
+    Reference,
     Stream,
     StrSpan,
 };
 
 use error::Result;
 use {
-    path,
+    AspectRatio,
     AttributeId,
     AttributeValue,
     Color,
@@ -41,18 +41,21 @@ use {
     ElementId,
     Error,
     FilterSvg,
+    FromSpan,
     Length,
+    LengthList,
     LengthUnit,
     Node,
     NodeType,
-    ParseFromSpan,
+    NumberList,
     ParseOptions,
+    Path,
     Points,
     Transform,
-    ValueId,
+    ViewBox,
 };
 
-type StreamResult<T> = ::std::result::Result<T, StreamError>;
+type StreamResult<T> = ::std::result::Result<T, Error>;
 
 pub struct NodeSpanData<'a> {
     pub node: Node,
@@ -112,7 +115,7 @@ pub fn parse_svg(text: &str, opt: &ParseOptions) -> Result<Document> {
     let mut doc = Document::new();
     let mut root = doc.root();
 
-    let mut tokens = svg::Tokenizer::from_str(text);
+    let mut tokens = xmlparser::Tokenizer::from(text);
 
     // Since we not only parsing, but also converting an SVG structure,
     // we can't do everything in one take.
@@ -187,7 +190,7 @@ pub fn parse_svg(text: &str, opt: &ParseOptions) -> Result<Document> {
 
 fn process_token<'a>(
     doc: &mut Document,
-    token: svg::Token<'a>,
+    token: xmlparser::Token<'a>,
     node: &mut Option<Node>,
     parent: &mut Node,
     post_data: &mut PostData<'a>,
@@ -202,87 +205,87 @@ fn process_token<'a>(
     }
 
     match token {
-        svg::Token::ElementStart(tag_name) => {
-            let curr_node = match tag_name.local {
-                svg::Name::Xml(name) => {
-                    doc.create_element((tag_name.prefix, name))
+        xmlparser::Token::ElementStart(prefix, local) => {
+            let curr_node = match ElementId::from_str(local.to_str()) {
+                Some(eid) => {
+                    doc.create_element((prefix.to_str(), eid))
                 }
-                svg::Name::Svg(eid) => {
-                    doc.create_element((tag_name.prefix, eid))
+                None => {
+                    doc.create_element((prefix.to_str(), local.to_str()))
                 }
             };
 
             *node = Some(curr_node.clone());
             parent.append(curr_node);
         }
-        svg::Token::Attribute(name, value) => {
+        xmlparser::Token::Attribute((prefix, local), value) => {
             let curr_node = node.as_mut().unwrap();
-            match name.local {
-                svg::Name::Xml(aname) => {
-                    if opt.parse_unknown_attributes {
-                        if curr_node.is_svg_element() {
-                            parse_non_svg_attribute(curr_node, name.prefix, aname, value, post_data);
-                        } else {
-                            curr_node.set_attribute(((name.prefix, aname), value.to_str()));
-                        }
+            match AttributeId::from_str(local.to_str()) {
+                Some(aid) => {
+                    if curr_node.is_svg_element() {
+                        parse_svg_attribute(curr_node, prefix.to_str(), aid, value, post_data, opt)?;
+                    } else {
+                        curr_node.set_attribute(((prefix.to_str(), aid.as_str()), value.to_str()));
                     }
                 }
-                svg::Name::Svg(aid) => {
-                    if curr_node.is_svg_element() {
-                        parse_svg_attribute(curr_node, name.prefix, aid, value, post_data, opt)?;
-                    } else {
-                        curr_node.set_attribute(((name.prefix, aid.name()), value.to_str()));
+                None => {
+                    if opt.parse_unknown_attributes {
+                        if curr_node.is_svg_element() {
+                            parse_non_svg_attribute(curr_node, prefix.to_str(), local.to_str(), value, post_data);
+                        } else {
+                            curr_node.set_attribute(((prefix.to_str(), local.to_str()), value.to_str()));
+                        }
                     }
                 }
             }
         }
-        svg::Token::ElementEnd(end) => {
+        xmlparser::Token::ElementEnd(end) => {
             // TODO: validate ending tag
             match end {
-                svg::ElementEnd::Empty => {}
-                svg::ElementEnd::Close(_) => {
+                xmlparser::ElementEnd::Empty => {}
+                xmlparser::ElementEnd::Close(_, _) => {
                     if *parent != doc.root() {
                         *parent = parent.parent().unwrap();
                     }
                 }
-                svg::ElementEnd::Open => {
+                xmlparser::ElementEnd::Open => {
                     if let Some(ref n) = *node {
                         *parent = n.clone();
                     }
                 }
             }
         }
-        svg::Token::Text(s) => {
+        xmlparser::Token::Text(s) => {
             if is_inside_style_elem(parent) {
                 post_data.css_list.push(s);
             } else {
                 create_node!(NodeType::Text, s.to_str());
             }
         }
-        svg::Token::Whitespaces(s) => {
+        xmlparser::Token::Whitespaces(s) => {
             // Whitespaces inside text elements are important.
             if let Some(id) = parent.tag_id() {
                 match id {
-                    ElementId::Text
+                      ElementId::Text
                     | ElementId::Tspan
-                    | ElementId::Tref => create_node!(NodeType::Text, s),
+                    | ElementId::Tref => create_node!(NodeType::Text, s.to_str()),
                     _ => {}
                 }
             }
         }
-        svg::Token::Comment(s) => {
+        xmlparser::Token::Comment(s) => {
             if opt.parse_comments {
-                create_node!(NodeType::Comment, s)
+                create_node!(NodeType::Comment, s.to_str())
             }
         }
-        svg::Token::Cdata(s) => {
+        xmlparser::Token::Cdata(s) => {
             if is_inside_style_elem(parent) {
                 post_data.css_list.push(s);
             } else {
                 create_node!(NodeType::Cdata, s.to_str());
             }
         }
-        svg::Token::Declaration(version, encoding, sa) => {
+        xmlparser::Token::Declaration(version, encoding, sa) => {
             // TODO: check that it UTF-8
 
             if opt.parse_declarations {
@@ -300,16 +303,28 @@ fn process_token<'a>(
                 create_node!(NodeType::Declaration, &s);
             }
         }
-        svg::Token::EntityDeclaration(name, value) => {
-            // check that ENTITY does not contain an element(s)
-            if value.to_str().trim().starts_with("<") {
-                let s = Stream::from_span(value);
-                return Err(Error::UnsupportedEntity(s.gen_error_pos()));
-            }
-
-            post_data.entities.insert(name, value);
+          xmlparser::Token::DtdStart(_, _)
+        | xmlparser::Token::EmptyDtd(_, _)
+        | xmlparser::Token::DtdEnd => {
+            // do nothing
         }
-        svg::Token::ProcessingInstruction(_, _) => {
+        xmlparser::Token::EntityDeclaration(name, value) => {
+            match value {
+                xmlparser::EntityDefinition::EntityValue(value) => {
+                    // check that ENTITY does not contain an element(s)
+                    if value.to_str().trim().starts_with("<") {
+                        let s = Stream::from(value);
+                        return Err(Error::UnsupportedEntity(s.gen_error_pos()));
+                    }
+
+                    post_data.entities.insert(name.to_str(), value);
+                }
+                _ => {
+                    // do nothing
+                }
+            }
+        }
+        xmlparser::Token::ProcessingInstruction(_, _) => {
             // do nothing
         }
     }
@@ -342,39 +357,18 @@ fn parse_svg_attribute<'a>(
             post_data.links.elems_with_id.insert(value.to_str(), node.clone());
         }
         AttributeId::Style => {
-            // TODO: use svgparser AttributeValue instead
-
             // we store 'class' attributes for later use
             post_data.style_attrs.push(NodeSpanData {
                 node: node.clone(),
                 span: value,
             })
         }
-        AttributeId::Transform
-        | AttributeId::GradientTransform
-        | AttributeId::PatternTransform => {
-            // TODO: use svgparser AttributeValue instead
-            let ts = Transform::from_span(value)?;
-            if !ts.is_default() {
-                node.set_attribute(((prefix, id), ts));
-            }
-        }
-        AttributeId::D => {
-            // TODO: use svgparser AttributeValue instead
-            let p = path::Path::from_span(value)?;
-            node.set_attribute(((prefix, AttributeId::D), p));
-        }
-        AttributeId::Points => {
-            // TODO: use svgparser AttributeValue instead
-            let p = Points::from_span(value)?;
-            node.set_attribute(((prefix, AttributeId::Points), p));
-        }
         AttributeId::Class => {
-            // TODO: to svgparser
+            // TODO: to svgtypes
 
             // we store 'class' attributes for later use
 
-            let mut s = Stream::from_span(value);
+            let mut s = Stream::from(value);
             while !s.at_end() {
                 s.skip_spaces();
 
@@ -401,118 +395,376 @@ pub fn parse_svg_attribute_value<'a>(
     node: &mut Node,
     prefix: &'a str,
     id: AttributeId,
-    span: StrSpan<'a>,
+    value: StrSpan<'a>,
     links: &mut Links<'a>,
-    entitis: &Entities<'a>,
+    entities: &Entities<'a>,
     opt: &ParseOptions,
 ) -> StreamResult<()> {
-    let tag_id = node.tag_id().unwrap();
+    let av = _parse_svg_attribute_value(node, prefix, id, value, links, entities, opt);
 
-    let av = match ParserAttributeValue::from_span(tag_id, prefix, id, span) {
-        Ok(av) => av,
-        Err(e) => {
-            return if opt.skip_invalid_attributes {
-                warn!("Attribute '{}' has an invalid value: '{}'.", id, span);
-                Ok(())
-            } else {
-                Err(e.into())
-            };
-        }
-    };
-
-    let val = match av {
-        ParserAttributeValue::String(v) => {
-            Some(AttributeValue::String(v.to_string()))
-        }
-        ParserAttributeValue::IRI(link) | ParserAttributeValue::FuncIRI(link) => {
-            // collect links for later processing
-            links.append(prefix, id, link, None, node);
-            None
-        }
-        ParserAttributeValue::FuncIRIWithFallback(link, fallback) => {
-            // collect links for later processing
-            links.append(prefix, id, link, Some(fallback), node);
-            None
-        }
-        ParserAttributeValue::Number(v) => {
-            Some(AttributeValue::Number(v))
-        }
-        ParserAttributeValue::NumberList(list) => {
-            let mut vec = Vec::new();
-            for number in list {
-                match number {
-                    Ok(n) => vec.push(n),
-                    Err(e) => return Err(e.into()),
+    match av {
+        Ok(av) => {
+            if let Some(mut av) = av {
+                if let AttributeValue::NumberList(ref list) = av {
+                    if list.is_empty() {
+                        return Ok(());
+                    }
                 }
-            }
 
-            if !vec.is_empty() {
-                Some(AttributeValue::NumberList(vec))
-            } else {
-                None
-            }
-        }
-        ParserAttributeValue::Length(v) => {
-            Some(AttributeValue::Length(Length::new(v.num, prepare_length_unit(v.unit, opt))))
-        }
-        ParserAttributeValue::LengthList(list) => {
-            let mut vec = Vec::new();
-            for number in list {
-                match number {
-                    Ok(n) => vec.push(Length::new(n.num, prepare_length_unit(n.unit, opt))),
-                    Err(e) => return Err(e.into()),
-                }
-            }
-
-            if !vec.is_empty() {
-                Some(AttributeValue::LengthList(vec))
-            } else {
-                None
-            }
-        }
-        ParserAttributeValue::Color(v) => {
-            Some(AttributeValue::Color(Color::new(v.red, v.green, v.blue)))
-        }
-        ParserAttributeValue::PredefValue(v) => {
-            Some(AttributeValue::PredefValue(v))
-        }
-        ParserAttributeValue::EntityRef(link) => {
-            match entitis.get(link) {
-                Some(link_value) => {
-                    parse_svg_attribute_value(node, prefix, id, *link_value, links, entitis, opt)?;
-                    None
-                }
-                None => {
-                    // keep original link
-                    let s = format!("&{};", link);
-
-                    if link.as_bytes()[0] != b'#' {
-                        // If link starts with # - than it's probably a Unicode code point.
-                        // Otherwise - unknown reference.
-                        warn!("Unresolved ENTITY reference: '{}'.", s);
+                if let AttributeValue::LengthList(ref mut list) = av {
+                    if list.is_empty() {
+                        return Ok(());
                     }
 
-                    Some(AttributeValue::String(s))
+                    for len in list.iter_mut() {
+                        // replace 'px' with 'none' when 'parse_px_unit' option is disabled
+                        if !opt.parse_px_unit && len.unit == LengthUnit::Px {
+                            len.unit = LengthUnit::None;
+                        }
+                    }
                 }
+
+                if let AttributeValue::Length(ref mut len) = av {
+                    // replace 'px' with 'none' when 'parse_px_unit' option is disabled
+                    if !opt.parse_px_unit && len.unit == LengthUnit::Px {
+                        len.unit = LengthUnit::None;
+                    }
+                }
+
+                node.set_attribute(((prefix, id), av));
             }
         }
-        ParserAttributeValue::ViewBox(v) => {
-            Some(AttributeValue::ViewBox(v))
+        Err(e) => {
+            if opt.skip_invalid_attributes {
+                warn!("Attribute '{}' has an invalid value: '{}'.", id, value.to_str());
+            } else {
+                return Err(e.into());
+            }
         }
-        ParserAttributeValue::AspectRatio(v) => {
-            Some(AttributeValue::AspectRatio(v))
-        }
-        ParserAttributeValue::Path(_) => unreachable!(),
-        ParserAttributeValue::Points(_) => unreachable!(),
-        ParserAttributeValue::Style(_) => unreachable!(),
-        ParserAttributeValue::Transform(_) => unreachable!(),
-    };
-
-    if let Some(v) = val {
-        node.set_attribute(((prefix, id), v));
     }
 
     Ok(())
+}
+
+#[inline]
+fn f64_bound(min: f64, val: f64, max: f64) -> f64 {
+    if val > max {
+        return max;
+    } else if val < min {
+        return min;
+    }
+
+    val
+}
+
+pub fn _parse_svg_attribute_value<'a>(
+    node: &mut Node,
+    prefix: &'a str,
+    aid: AttributeId,
+    value: StrSpan<'a>,
+    links: &mut Links<'a>,
+    entities: &Entities<'a>,
+    opt: &ParseOptions,
+) -> StreamResult<Option<AttributeValue>> {
+    use AttributeId as AId;
+
+    let eid = node.tag_id().unwrap();
+
+    // 'unicode' attribute can contain spaces
+    let value = if aid != AId::Unicode { value.trim() } else { value };
+
+    {
+        let mut stream = Stream::from(value);
+        if stream.is_curr_byte_eq(b'&') {
+            // TODO: attribute can contain many refs, not only one
+            // TODO: advance to the end of the stream
+            let r = stream.consume_reference();
+            if let Ok(Reference::EntityRef(link)) = r {
+                match entities.get(link.to_str()) {
+                    Some(link_value) => {
+                        parse_svg_attribute_value(node, prefix, aid, *link_value, links, entities, opt)?;
+                        return Ok(None);
+                    }
+                    None => {
+                        if link.as_bytes()[0] != b'#' {
+                            // If link starts with # - than it's probably a Unicode code point.
+                            // Otherwise - unknown reference.
+                            warn!("Unresolved ENTITY reference: '{}'.", value.to_str());
+                        }
+
+                        return Ok(Some(AttributeValue::String(value.to_str().to_string())));
+                    }
+                }
+            }
+        }
+    }
+
+    if aid == AId::Href && prefix == "xlink" {
+        let mut s = Stream::from(value);
+
+        match s.parse_iri() {
+            Ok(link) => {
+                // collect links for later processing
+                links.append(prefix, aid, link, None, node);
+                return Ok(None);
+            }
+            Err(_) => {
+                return Ok(Some(AttributeValue::String(value.to_str().to_string())));
+            }
+        }
+    }
+
+    if !prefix.is_empty() {
+        return Ok(Some(AttributeValue::String(value.to_str().to_string())));
+    }
+
+    let av = match aid {
+          AId::X  | AId::Y
+        | AId::Dx | AId::Dy => {
+            // some attributes can contain different data based on the element type
+            match eid {
+                  ElementId::AltGlyph
+                | ElementId::Text
+                | ElementId::Tref
+                | ElementId::Tspan => {
+                    AttributeValue::LengthList(LengthList::from_span(value)?)
+                }
+                _ => {
+                    AttributeValue::Length(Length::from_span(value)?)
+                }
+            }
+        }
+
+          AId::X1 | AId::Y1
+        | AId::X2 | AId::Y2
+        | AId::R
+        | AId::Rx | AId::Ry
+        | AId::Cx | AId::Cy
+        | AId::Fx | AId::Fy
+        | AId::Offset
+        | AId::Width | AId::Height => {
+              AttributeValue::Length(Length::from_span(value)?)
+        }
+
+          AId::StrokeDashoffset
+        | AId::StrokeMiterlimit
+        | AId::StrokeWidth => {
+              match value.to_str() {
+                  "inherit" => AttributeValue::Inherit,
+                  _ => Length::from_span(value)?.into(),
+              }
+        }
+
+          AId::Opacity
+        | AId::FillOpacity
+        | AId::FloodOpacity
+        | AId::StrokeOpacity
+        | AId::StopOpacity => {
+            match value.to_str() {
+                "inherit" => AttributeValue::Inherit,
+                _ => {
+                    let mut s = Stream::from(value);
+                    let mut n = s.parse_number()?;
+                    n = f64_bound(0.0, n, 1.0);
+                    AttributeValue::Number(n)
+                }
+            }
+        }
+
+        AId::StrokeDasharray => {
+            match value.to_str() {
+                "none" => AttributeValue::None,
+                "inherit" => AttributeValue::Inherit,
+                _ => AttributeValue::LengthList(LengthList::from_span(value)?),
+            }
+        }
+
+        AId::Fill => {
+            // 'fill' in animate-based elements it's another 'fill'
+            // https://www.w3.org/TR/SVG/animate.html#FillAttribute
+            match eid {
+                  ElementId::Set
+                | ElementId::Animate
+                | ElementId::AnimateColor
+                | ElementId::AnimateMotion
+                | ElementId::AnimateTransform
+                => AttributeValue::String(value.to_str().to_string()),
+                _ => {
+                    match Paint::from_span(value)? {
+                        Paint::None => AttributeValue::None,
+                        Paint::Inherit => AttributeValue::Inherit,
+                        Paint::CurrentColor => AttributeValue::CurrentColor,
+                        Paint::Color(color) => AttributeValue::Color(color),
+                        Paint::FuncIRI(link, fallback) => {
+                            // collect links for later processing
+                            links.append(prefix, aid, link, fallback, node);
+                            return Ok(None);
+                        }
+                    }
+                }
+            }
+        }
+
+        AId::Stroke => {
+            match Paint::from_span(value)? {
+                Paint::None => AttributeValue::None,
+                Paint::Inherit => AttributeValue::Inherit,
+                Paint::CurrentColor => AttributeValue::CurrentColor,
+                Paint::Color(color) => AttributeValue::Color(color),
+                Paint::FuncIRI(link, fallback) => {
+                    // collect links for later processing
+                    links.append(prefix, aid, link, fallback, node);
+                    return Ok(None);
+                }
+            }
+        }
+
+          AId::ClipPath
+        | AId::Filter
+        | AId::Marker
+        | AId::MarkerEnd
+        | AId::MarkerMid
+        | AId::MarkerStart
+        | AId::Mask => {
+            match value.to_str() {
+                "none" => AttributeValue::None,
+                "inherit" => AttributeValue::Inherit,
+                _ => {
+                    let mut s = Stream::from(value);
+                    let link = s.parse_func_iri()?;
+                    // collect links for later processing
+                    links.append(prefix, aid, link, None, node);
+                    return Ok(None);
+                }
+            }
+        }
+
+        AId::Color => {
+            match value.to_str() {
+                "inherit" => AttributeValue::Inherit,
+                _ => AttributeValue::Color(Color::from_span(value)?),
+            }
+        }
+
+          AId::LightingColor
+        | AId::FloodColor
+        | AId::StopColor => {
+              match value.to_str() {
+                  "inherit" => AttributeValue::Inherit,
+                  "currentColor" => AttributeValue::CurrentColor,
+                  _ => AttributeValue::Color(Color::from_span(value)?),
+              }
+        }
+
+          AId::StdDeviation
+        | AId::BaseFrequency => {
+            // TODO: this attributes can contain only one or two numbers
+            AttributeValue::NumberList(NumberList::from_span(value)?)
+        }
+
+        AId::Points => {
+            AttributeValue::Points(Points::from_span(value)?)
+        }
+
+        AId::D => {
+            AttributeValue::Path(Path::from_span(value)?)
+        }
+
+          AId::Transform
+        | AId::GradientTransform
+        | AId::PatternTransform => {
+            let ts = Transform::from_span(value)?;
+            if !ts.is_default() {
+                AttributeValue::Transform(Transform::from_span(value)?)
+            } else {
+                return Ok(None);
+            }
+        }
+
+        AId::FontSize => {
+            let mut s = Stream::from(value);
+            match s.parse_length() {
+                Ok(l) => AttributeValue::Length(l),
+                Err(_) => {
+                    if value.to_str() == "inherit" {
+                        AttributeValue::Inherit
+                    } else {
+                        AttributeValue::String(value.to_str().to_string())
+                    }
+                }
+            }
+        }
+
+        AId::FontSizeAdjust => {
+            match value.to_str() {
+                "none" => AttributeValue::None,
+                "inherit" => AttributeValue::Inherit,
+                _ => {
+                    let mut s = Stream::from(value);
+                    AttributeValue::Number(s.parse_number()?)
+                }
+            }
+        }
+
+          AId::Display
+        | AId::PointerEvents
+        | AId::TextDecoration => {
+            match value.to_str() {
+                "none" => AttributeValue::None,
+                "inherit" => AttributeValue::Inherit,
+                _ => AttributeValue::String(value.to_str().to_string()),
+            }
+        }
+
+          AId::BaselineShift
+        | AId::ClipRule
+        | AId::ColorInterpolation
+        | AId::ColorInterpolationFilters
+        | AId::ColorProfile
+        | AId::ColorRendering
+        | AId::Direction
+        | AId::DominantBaseline
+        | AId::EnableBackground
+        | AId::FillRule
+        | AId::FontFamily
+        | AId::FontStretch
+        | AId::FontStyle
+        | AId::FontVariant
+        | AId::FontWeight
+        | AId::GlyphOrientationVertical
+        | AId::ImageRendering
+        | AId::Kerning
+        | AId::LetterSpacing
+        | AId::Overflow
+        | AId::ShapeRendering
+        | AId::StrokeLinecap
+        | AId::StrokeLinejoin
+        | AId::TextAnchor
+        | AId::TextRendering
+        | AId::UnicodeBidi
+        | AId::Visibility
+        | AId::WordSpacing
+        | AId::WritingMode => {
+              match value.to_str() {
+                  "inherit" => AttributeValue::Inherit,
+                  _ => AttributeValue::String(value.to_str().to_string()),
+              }
+        }
+
+        AId::ViewBox => {
+            AttributeValue::ViewBox(ViewBox::from_span(value)?)
+        }
+
+        AId::PreserveAspectRatio => {
+            AttributeValue::AspectRatio(AspectRatio::from_span(value)?)
+        }
+
+        _ => {
+            AttributeValue::String(value.to_str().to_string())
+        }
+    };
+
+    Ok(Some(av))
 }
 
 fn parse_non_svg_attribute<'a>(
@@ -522,7 +774,7 @@ fn parse_non_svg_attribute<'a>(
     value: StrSpan<'a>,
     post_data: &PostData<'a>,
 ) {
-    let mut stream = Stream::from_span(value);
+    let mut stream = Stream::from(value);
     let new_value = if stream.is_curr_byte_eq(b'&') {
         if let Ok(xmlparser::Reference::EntityRef(link)) = stream.consume_reference() {
             match post_data.entities.get(link.to_str()) {
@@ -544,35 +796,30 @@ fn parse_non_svg_attribute<'a>(
     }
 }
 
-fn prepare_length_unit(unit: LengthUnit, opt: &ParseOptions) -> LengthUnit {
-    // replace 'px' with 'none' if 'parse_px_unit' option is disabled
-    if !opt.parse_px_unit && unit == LengthUnit::Px {
-        return LengthUnit::None;
-    }
-
-    unit
-}
-
 fn parse_style_attribute<'a>(
     node: &mut Node,
     span: StrSpan<'a>,
     links: &mut Links<'a>,
-    entitis: &Entities<'a>,
+    entities: &Entities<'a>,
     opt: &ParseOptions,
 ) -> Result<()> {
-    for token in style::Tokenizer::from_span(span) {
+    for token in StyleParser::from(span) {
         match token? {
-            style::Token::XmlAttribute(name, value) => {
-                if opt.parse_unknown_attributes {
-                    node.set_attribute((name, value));
+            StyleToken::Attribute(name, value) => {
+                match AttributeId::from_str(name.to_str()) {
+                    Some(aid) => {
+                        parse_svg_attribute_value(node, "", aid, value, links, entities, opt)?;
+                    }
+                    None => {
+                        if opt.parse_unknown_attributes {
+                            node.set_attribute((name.to_str(), value.to_str()));
+                        }
+                    }
                 }
             }
-            style::Token::SvgAttribute(id, value) => {
-                parse_svg_attribute_value(node, "", id, value, links, entitis, opt)?;
-            }
-            style::Token::EntityRef(name) => {
-                if let Some(value) = entitis.get(name) {
-                    parse_style_attribute(node, *value, links, entitis, opt)?;
+            StyleToken::EntityRef(name) => {
+                if let Some(value) = entities.get(name) {
+                    parse_style_attribute(node, *value, links, entities, opt)?;
                 }
             }
         }
@@ -617,8 +864,11 @@ fn resolve_fallback(d: &mut LinkData) -> Result<()> {
     match d.fallback {
         Some(fallback) => {
             match fallback {
-                PaintFallback::PredefValue(v) => {
-                    d.node.set_attribute(((d.prefix, d.attr_id), v));
+                PaintFallback::None => {
+                    d.node.set_attribute(((d.prefix, d.attr_id), AttributeValue::None));
+                }
+                PaintFallback::CurrentColor => {
+                    d.node.set_attribute(((d.prefix, d.attr_id), AttributeValue::CurrentColor));
                 }
                 PaintFallback::Color(c) => {
                     d.node.set_attribute(((d.prefix, d.attr_id), Color::new(c.red, c.green, c.blue)));
@@ -662,14 +912,14 @@ fn resolve_fallback(d: &mut LinkData) -> Result<()> {
                         warn!("Unresolved 'filter' IRI reference: {}. \
                                Marking the element as invisible.",
                               d.iri);
-                        d.node.set_attribute((AttributeId::Visibility, ValueId::Hidden));
+                        d.node.set_attribute((AttributeId::Visibility, "hidden"));
                     }
                 }
                 AttributeId::Fill => {
                     warn!("Could not resolve the 'fill' IRI reference: {}. \
                            Fallback to 'none'.",
                           d.iri);
-                    d.node.set_attribute((AttributeId::Fill, ValueId::None));
+                    d.node.set_attribute((AttributeId::Fill, AttributeValue::None));
                 }
                 _ => {
                     warn!("Could not resolve IRI reference: {}.", d.iri);

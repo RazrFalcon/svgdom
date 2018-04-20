@@ -8,7 +8,7 @@
 
 use simplecss;
 
-use svgparser::xmlparser::{
+use svgtypes::xmlparser::{
     Stream,
     StrSpan,
     ErrorPos,
@@ -50,7 +50,7 @@ pub fn resolve_css<'a>(
     }
 
     fn gen_err_pos(frame: StrSpan, pos: usize) -> ErrorPos {
-        let mut s = Stream::from_str(frame.full_str());
+        let mut s = Stream::from(frame.full_str());
         s.gen_error_pos_from(pos)
     }
 
@@ -66,7 +66,7 @@ pub fn resolve_css<'a>(
 
     for style in &styles {
         let mut tokenizer = {
-            let mut s = Stream::from_span(*style);
+            let mut s = Stream::from(*style);
 
             // check for a empty string
             s.skip_spaces();
@@ -154,7 +154,7 @@ pub fn resolve_css<'a>(
                         }
                     }
                     CssSelector::Type(name) => {
-                        if let Some(eid) = ElementId::from_name(name) {
+                        if let Some(eid) = ElementId::from_str(name) {
                             for (id, mut node) in doc.root().descendants().svg() {
                                 if id == eid {
                                     apply_css_attributes(&values, &mut node, &mut post_data.links,
@@ -227,12 +227,12 @@ fn apply_css_attributes<'a>(
     opt: &ParseOptions,
 ) -> Result<()> {
     for &(aname, avalue) in values {
-        match AttributeId::from_name(aname) {
+        match AttributeId::from_str(aname) {
             Some(aid) => {
                 let mut parse_attr = |aid: AttributeId| {
                     // TODO: to a proper stream
                     super::parse_svg_attribute_value(
-                        node, "", aid, StrSpan::from_str(avalue),
+                        node, "", aid, StrSpan::from(avalue),
                         links, entities, opt
                     )
                 };

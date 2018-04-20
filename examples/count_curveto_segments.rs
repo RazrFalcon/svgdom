@@ -4,8 +4,7 @@ use std::env;
 use std::io::Read;
 use std::fs::File;
 
-use svgdom::{ AttributeId, AttributeValue, Document, ElementId, FilterSvg };
-use svgdom::path::Command;
+use svgdom::{ AttributeId, AttributeValue, Document, ElementId, FilterSvg, PathCommand };
 
 fn main() {
     let args: Vec<_> = env::args().collect();
@@ -29,7 +28,7 @@ fn main() {
         if id == ElementId::Path {
             let attrs = node.attributes();
             if let Some(&AttributeValue::Path(ref path)) = attrs.get_value(AttributeId::D) {
-                count += path.iter().filter(|seg| seg.cmd() == Command::CurveTo).count();
+                count += path.iter().filter(|seg| seg.cmd() == PathCommand::CurveTo).count();
             }
         }
     }

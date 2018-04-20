@@ -19,10 +19,12 @@ use svgdom::{
     Length,
     LengthUnit,
     NodeType,
-    ToStringWithOptions,
     Transform,
     ViewBox,
     WriteOptions,
+    WriteBuffer,
+    NumberList,
+    LengthList,
 };
 
 macro_rules! test_resave {
@@ -34,7 +36,7 @@ macro_rules! test_resave {
             let mut opt = WriteOptions::default();
             opt.use_single_quote = true;
 
-            assert_eq_text!(doc.to_string_with_opt(&opt), $out_text);
+            assert_eq_text!(doc.with_write_opt(&opt).to_string(), $out_text);
         }
     )
 }
@@ -154,20 +156,20 @@ fn attributes_types_1() {
     svg.set_attribute((AId::Height, Length::new(1.5, LengthUnit::Percent)));
     svg.set_attribute((AId::Fill, Color::new(255, 255, 255)));
     svg.set_attribute((AId::Transform, Transform::new(2.0, 0.0, 0.0, 3.0, 20.0, 30.0)));
-    svg.set_attribute((AId::StdDeviation, vec![1.5, 2.5]));
+    svg.set_attribute((AId::StdDeviation, NumberList(vec![1.5, 2.5])));
 
-    svg.set_attribute((AId::StrokeDasharray, vec![
+    svg.set_attribute((AId::StrokeDasharray, LengthList(vec![
         Length::new(1.5, LengthUnit::Mm),
         Length::new(2.5, LengthUnit::Mm),
         Length::new(3.5, LengthUnit::Mm),
-    ]));
+    ])));
 
     // TODO: add path
 
     let mut opt = WriteOptions::default();
     opt.use_single_quote = true;
 
-    assert_eq_text!(doc.to_string_with_opt(&opt),
+    assert_eq_text!(doc.with_write_opt(&opt).to_string(),
         "<svg fill='#ffffff' height='1.5%' \
          stdDeviation='1.5 2.5' stroke-dasharray='1.5mm 2.5mm 3.5mm' \
          transform='matrix(2 0 0 3 20 30)' version='1.0' viewBox='10 20 30 40' \
@@ -288,7 +290,7 @@ fn indent_2() {
 
     let mut opt = WriteOptions::default();
     opt.indent = Indent::Spaces(2);
-    assert_eq_text!(doc.to_string_with_opt(&opt),
+    assert_eq_text!(doc.with_write_opt(&opt).to_string(),
 "<svg>
   <g>
     <rect/>
@@ -309,7 +311,7 @@ fn indent_3() {
 
     let mut opt = WriteOptions::default();
     opt.indent = Indent::Spaces(0);
-    assert_eq_text!(doc.to_string_with_opt(&opt),
+    assert_eq_text!(doc.with_write_opt(&opt).to_string(),
 "<svg>
 <g>
 <rect/>
@@ -330,7 +332,7 @@ fn indent_4() {
 
     let mut opt = WriteOptions::default();
     opt.indent = Indent::None;
-    assert_eq_text!(doc.to_string_with_opt(&opt),
+    assert_eq_text!(doc.with_write_opt(&opt).to_string(),
 "<svg><g><rect/></g></svg>");
 }
 
@@ -346,7 +348,7 @@ fn indent_5() {
 
     let mut opt = WriteOptions::default();
     opt.indent = Indent::Tabs;
-    assert_eq_text!(doc.to_string_with_opt(&opt),
+    assert_eq_text!(doc.with_write_opt(&opt).to_string(),
 "<svg>
 \t<g>
 \t\t<rect/>
@@ -368,7 +370,7 @@ fn attrs_indent_1() {
     let mut opt = WriteOptions::default();
     opt.attributes_indent = Indent::Spaces(3);
     opt.use_single_quote = true;
-    assert_eq_text!(doc.to_string_with_opt(&opt),
+    assert_eq_text!(doc.with_write_opt(&opt).to_string(),
 "<svg
    id='svg1'
    height='100'
@@ -392,7 +394,7 @@ fn single_quote_1() {
     let mut opt = WriteOptions::default();
     opt.indent = Indent::None;
     opt.use_single_quote = true;
-    assert_eq_text!(doc.to_string_with_opt(&opt), "<svg id='svg1'/>");
+    assert_eq_text!(doc.with_write_opt(&opt).to_string(), "<svg id='svg1'/>");
 }
 
 test_resave!(escape_1,
@@ -414,10 +416,10 @@ fn escape_3() {
     let mut opt = WriteOptions::default();
     opt.indent = Indent::None;
 
-    assert_eq_text!(doc.to_string_with_opt(&opt), "<svg font-family=\"'Noto Sans'\"/>");
+    assert_eq_text!(doc.with_write_opt(&opt).to_string(), "<svg font-family=\"'Noto Sans'\"/>");
 
     opt.use_single_quote = true;
-    assert_eq_text!(doc.to_string_with_opt(&opt), "<svg font-family='&apos;Noto Sans&apos;'/>");
+    assert_eq_text!(doc.with_write_opt(&opt).to_string(), "<svg font-family='&apos;Noto Sans&apos;'/>");
 }
 
 // Escape attribute values according to the current quote type.
@@ -428,10 +430,10 @@ fn escape_4() {
     let mut opt = WriteOptions::default();
     opt.indent = Indent::None;
 
-    assert_eq_text!(doc.to_string_with_opt(&opt), "<svg font-family=\"&quot;Noto Sans&quot;\"/>");
+    assert_eq_text!(doc.with_write_opt(&opt).to_string(), "<svg font-family=\"&quot;Noto Sans&quot;\"/>");
 
     opt.use_single_quote = true;
-    assert_eq_text!(doc.to_string_with_opt(&opt), "<svg font-family='\"Noto Sans\"'/>");
+    assert_eq_text!(doc.with_write_opt(&opt).to_string(), "<svg font-family='\"Noto Sans\"'/>");
 }
 
 #[test]
@@ -444,11 +446,11 @@ fn attrs_order_1() {
     opt.use_single_quote = true;
 
     opt.attributes_order = AttributesOrder::AsIs;
-    assert_eq_text!(doc.to_string_with_opt(&opt),
+    assert_eq_text!(doc.with_write_opt(&opt).to_string(),
         "<svg id='svg1' custom='qwe' width='100' height='100' fill='#ff0000' stroke='#0000ff'/>");
 
     opt.attributes_order = AttributesOrder::Alphabetical;
-    assert_eq_text!(doc.to_string_with_opt(&opt),
+    assert_eq_text!(doc.with_write_opt(&opt).to_string(),
         "<svg id='svg1' fill='#ff0000' height='100' stroke='#0000ff' width='100' custom='qwe'/>");
 }
 
@@ -466,7 +468,7 @@ fn attrs_order_2() {
     let mut opt = WriteOptions::default();
     opt.use_single_quote = true;
     opt.attributes_order = AttributesOrder::Specification;
-    assert_eq_text!(doc.to_string_with_opt(&opt),
+    assert_eq_text!(doc.with_write_opt(&opt).to_string(),
 "<svg>
     <linearGradient x1='1' y1='1' x2='1' y2='1' gradientUnits='userSpaceOnUse' \
         gradientTransform='matrix(2 0 0 2 0 0)' spreadMethod='pad'/>

@@ -9,25 +9,21 @@
 use std::fmt;
 
 use {
-    AttributeId,
-    Node,
-    ValueId,
-    WriteBuffer,
-    WriteOptions,
-    ToStringWithOptions,
-};
-use types::{
-    path,
-    Align,
     AspectRatio,
+    AttributeId,
     Color,
     Length,
     LengthList,
     LengthUnit,
+    Node,
     NumberList,
+    Path,
     Points,
     Transform,
+    ValueWriteBuffer,
     ViewBox,
+    WriteBuffer,
+    WriteOptions,
 };
 
 // TODO: custom debug
@@ -36,6 +32,9 @@ use types::{
 #[derive(Clone,PartialEq,Debug)]
 #[allow(missing_docs)]
 pub enum AttributeValue {
+    None,
+    Inherit,
+    CurrentColor,
     AspectRatio(AspectRatio),
     Color(Color),
     /// FuncIRI
@@ -46,12 +45,11 @@ pub enum AttributeValue {
     Link(Node),
     Number(f64),
     NumberList(NumberList),
-    Path(path::Path),
+    Path(Path),
     Points(Points),
-    PredefValue(ValueId),
-    String(String),
     Transform(Transform),
     ViewBox(ViewBox),
+    String(String),
 }
 
 macro_rules! impl_from {
@@ -70,9 +68,8 @@ impl_from!(Length, Length);
 impl_from!(LengthList, LengthList);
 impl_from!(f64, Number);
 impl_from!(NumberList, NumberList);
-impl_from!(path::Path, Path);
+impl_from!(Path, Path);
 impl_from!(Points, Points);
-impl_from!(ValueId, PredefValue);
 impl_from!(String, String);
 impl_from!(Transform, Transform);
 impl_from!(ViewBox, ViewBox);
@@ -120,7 +117,7 @@ impl AttributeValue {
             | AttributeId::ImageRendering
             | AttributeId::Kerning
             | AttributeId::ShapeRendering
-            | AttributeId::TextRendering => some!(ValueId::Auto),
+            | AttributeId::TextRendering => some!("auto"),
 
               AttributeId::ClipPath
             | AttributeId::Filter
@@ -132,7 +129,7 @@ impl AttributeValue {
             | AttributeId::Mask
             | AttributeId::Stroke
             | AttributeId::StrokeDasharray
-            | AttributeId::TextDecoration => some!(ValueId::None),
+            | AttributeId::TextDecoration => Some(AttributeValue::None),
 
               AttributeId::FontStretch
             | AttributeId::FontStyle
@@ -140,7 +137,7 @@ impl AttributeValue {
             | AttributeId::FontWeight
             | AttributeId::LetterSpacing
             | AttributeId::UnicodeBidi
-            | AttributeId::WordSpacing => some!(ValueId::Normal),
+            | AttributeId::WordSpacing => some!("normal"),
 
               AttributeId::Fill
             | AttributeId::FloodColor
@@ -153,25 +150,25 @@ impl AttributeValue {
             | AttributeId::StrokeOpacity => some!(1.0),
 
               AttributeId::ClipRule
-            | AttributeId::FillRule => some!(ValueId::Nonzero),
+            | AttributeId::FillRule => some!("nonzero"),
 
-            AttributeId::BaselineShift =>               some!(ValueId::Baseline),
-            AttributeId::ColorInterpolation =>          some!(ValueId::SRGB),
-            AttributeId::ColorInterpolationFilters =>   some!(ValueId::LinearRGB),
-            AttributeId::Direction =>                   some!(ValueId::Ltr),
-            AttributeId::Display =>                     some!(ValueId::Inline),
-            AttributeId::EnableBackground =>            some!(ValueId::Accumulate),
-            AttributeId::FontSize =>                    some!(ValueId::Medium),
+            AttributeId::BaselineShift =>               some!("baseline"),
+            AttributeId::ColorInterpolation =>          some!("sRGB"),
+            AttributeId::ColorInterpolationFilters =>   some!("linearRGB"),
+            AttributeId::Direction =>                   some!("ltr"),
+            AttributeId::Display =>                     some!("inline"),
+            AttributeId::EnableBackground =>            some!("accumulate"),
+            AttributeId::FontSize =>                    some!("medium"),
             AttributeId::GlyphOrientationHorizontal =>  some!("0deg"),
             AttributeId::LightingColor =>               some!(Color::new(255, 255, 255)),
             AttributeId::StrokeDashoffset =>            some!((0.0, LengthUnit::None)),
-            AttributeId::StrokeLinecap =>               some!(ValueId::Butt),
-            AttributeId::StrokeLinejoin =>              some!(ValueId::Miter),
+            AttributeId::StrokeLinecap =>               some!("butt"),
+            AttributeId::StrokeLinejoin =>              some!("miter"),
             AttributeId::StrokeMiterlimit =>            some!((4.0, LengthUnit::None)),
             AttributeId::StrokeWidth =>                 some!((1.0, LengthUnit::None)),
-            AttributeId::TextAnchor =>                  some!(ValueId::Start),
-            AttributeId::Visibility =>                  some!(ValueId::Visible),
-            AttributeId::WritingMode =>                 some!(ValueId::LrTb),
+            AttributeId::TextAnchor =>                  some!("start"),
+            AttributeId::Visibility =>                  some!("visible"),
+            AttributeId::WritingMode =>                 some!("lr-tb"),
             _ => None,
         }
     }
@@ -180,6 +177,15 @@ impl AttributeValue {
 impl WriteBuffer for AttributeValue {
     fn write_buf_opt(&self, opt: &WriteOptions, buf: &mut Vec<u8>) {
         match *self {
+            AttributeValue::None => {
+                buf.extend_from_slice(b"none");
+            }
+            AttributeValue::Inherit => {
+                buf.extend_from_slice(b"inherit");
+            }
+            AttributeValue::CurrentColor => {
+                buf.extend_from_slice(b"currentColor");
+            }
             AttributeValue::String(ref s) => {
                 for c in s.as_bytes() {
                     match *c {
@@ -190,25 +196,25 @@ impl WriteBuffer for AttributeValue {
                 }
             }
             AttributeValue::Number(ref n) => {
-                n.write_buf_opt(opt, buf);
+                n.write_buf_opt(&opt.values, buf);
             }
             AttributeValue::NumberList(ref list) => {
-                list.write_buf_opt(opt, buf);
+                list.write_buf_opt(&opt.values, buf);
             }
             AttributeValue::Length(ref l) => {
-                l.write_buf_opt(opt, buf);
+                l.write_buf_opt(&opt.values, buf);
             }
             AttributeValue::LengthList(ref list) => {
-                list.write_buf_opt(opt, buf);
+                list.write_buf_opt(&opt.values, buf);
             }
             AttributeValue::Transform(ref t) => {
-                t.write_buf_opt(opt, buf);
+                t.write_buf_opt(&opt.values, buf);
             }
             AttributeValue::Path(ref p) => {
-                p.write_buf_opt(opt, buf);
+                p.write_buf_opt(&opt.values, buf);
             }
             AttributeValue::Points(ref p) => {
-                p.write_buf_opt(opt, buf);
+                p.write_buf_opt(&opt.values, buf);
             }
             AttributeValue::Link(ref n) => {
                 buf.push(b'#');
@@ -220,46 +226,24 @@ impl WriteBuffer for AttributeValue {
                 buf.push(b')');
             }
             AttributeValue::Color(ref c) => {
-                c.write_buf_opt(opt, buf);
-            }
-            AttributeValue::PredefValue(ref v) => {
-                buf.extend_from_slice(v.name().as_bytes())
+                c.write_buf_opt(&opt.values, buf);
             }
             AttributeValue::ViewBox(vb) => {
-                vb.x.write_buf_opt(opt, buf);
-                buf.push(b' ');
-                vb.y.write_buf_opt(opt, buf);
-                buf.push(b' ');
-                vb.w.write_buf_opt(opt, buf);
-                buf.push(b' ');
-                vb.h.write_buf_opt(opt, buf);
+                vb.write_buf_opt(&opt.values, buf);
             }
             AttributeValue::AspectRatio(ratio) => {
-                if ratio.defer {
-                    buf.extend_from_slice(b"defer ");
-                }
-
-                let align = match ratio.align {
-                    Align::None     => "none",
-                    Align::XMinYMin => "xMinYMin",
-                    Align::XMidYMin => "xMidYMin",
-                    Align::XMaxYMin => "xMaxYMin",
-                    Align::XMinYMid => "xMinYMid",
-                    Align::XMidYMid => "xMidYMid",
-                    Align::XMaxYMid => "xMaxYMid",
-                    Align::XMinYMax => "xMinYMax",
-                    Align::XMidYMax => "xMidYMax",
-                    Align::XMaxYMax => "xMaxYMax",
-                };
-
-                buf.extend_from_slice(align.as_bytes());
-
-                if ratio.slice {
-                    buf.extend_from_slice(b" slice");
-                }
+                ratio.write_buf_opt(&opt.values, buf);
             }
         }
     }
 }
 
-impl_display!(AttributeValue);
+impl ::std::fmt::Display for AttributeValue {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        use std::str;
+
+        let mut out = Vec::with_capacity(32);
+        self.write_buf_opt(&WriteOptions::default(), &mut out);
+        write!(f, "{}", str::from_utf8(&out).unwrap())
+    }
+}

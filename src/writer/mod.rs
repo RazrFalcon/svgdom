@@ -6,6 +6,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use std::fmt;
+
 mod attrs_order;
 mod options;
 
@@ -25,9 +27,51 @@ use {
     QName,
     TagName,
     Traverse,
-    WriteBuffer,
 };
 
+/// A wrapper to use `fmt::Display` with `WriteOptions`.
+///
+/// Should be used via `WriteBuffer::with_write_opt`.
+pub struct DisplaySvg<'a, T: 'a + WriteBuffer> {
+    value: &'a T,
+    opt: &'a WriteOptions,
+}
+
+impl<'a, T: WriteBuffer> fmt::Debug for DisplaySvg<'a, T> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        // Use Display.
+        write!(f, "{}", self)
+    }
+}
+
+impl<'a, T: WriteBuffer> fmt::Display for DisplaySvg<'a, T> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        use std::str;
+
+        let mut out = Vec::with_capacity(32);
+        self.value.write_buf_opt(self.opt, &mut out);
+        write!(f, "{}", str::from_utf8(&out).unwrap())
+    }
+}
+
+
+/// A trait for writing data to the buffer.
+pub trait WriteBuffer {
+    /// Writes data to the `Vec<u8>` buffer using specified `WriteOptions`.
+    fn write_buf_opt(&self, opt: &WriteOptions, buf: &mut Vec<u8>);
+
+    /// Writes data to the `Vec<u8>` buffer using default `WriteOptions`.
+    fn write_buf(&self, buf: &mut Vec<u8>) {
+        self.write_buf_opt(&WriteOptions::default(), buf);
+    }
+
+    /// Returns an object that implements `fmt::Display` using provided write options.
+    fn with_write_opt<'a>(&'a self, opt: &'a WriteOptions) -> DisplaySvg<'a, Self>
+        where Self: Sized
+    {
+        DisplaySvg { value: self, opt }
+    }
+}
 
 /// An indent counter.
 struct Depth {
@@ -229,7 +273,7 @@ fn write_tag_name(tag_name: &TagName, out: &mut Vec<u8>) {
 
     match *tag_name {
         QName::Id(_, id) => {
-            out.extend_from_slice(id.name().as_bytes());
+            out.extend_from_slice(id.as_str().as_bytes());
         }
         QName::Name(_, ref name) => {
             out.extend_from_slice(name.as_bytes());

@@ -392,7 +392,7 @@ impl Node {
     ///     Document,
     ///     AttributeId as AId,
     ///     ElementId as EId,
-    ///     ValueId,
+    ///     AttributeValue,
     /// };
     ///
     /// // Create a simple document.
@@ -408,7 +408,7 @@ impl Node {
     ///
     /// // Set a `fill` attribute value to the `none`.
     /// // For now everything like in any other XML DOM library.
-    /// rect.set_attribute((AId::Fill, ValueId::None));
+    /// rect.set_attribute((AId::Fill, AttributeValue::None));
     ///
     /// // Now we want to fill our rect with a gradient.
     /// // To do this we need to set a link attribute:
