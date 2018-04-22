@@ -518,11 +518,12 @@ impl Node {
     /// Will panic on any error produced by the [`set_attribute_checked`] method.
     ///
     /// [`set_attribute_checked`]: #method.set_attribute_checked
-    pub fn set_attribute_if_none<'a, N, T>(&mut self, name: N, value: &T)
-        where AttributeQNameRef<'a>: From<N>, N: Copy, AttributeValue: From<T>, T: Clone
+    pub fn set_attribute_if_none<'a, T>(&mut self, v: T)
+        where T: Into<Attribute>
     {
-        if !self.has_attribute(name) {
-            self.set_attribute((name, value.clone()));
+        let attr: Attribute = v.into();
+        if !self.has_attribute(attr.name.as_ref()) {
+            self.set_attribute(attr);
         }
     }
 

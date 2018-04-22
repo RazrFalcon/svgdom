@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 ### Changed
 - All SVG types implementation move to the `svgtypes` crate.
+- `Node::set_attribute_if_none` accepts `Into<Attribute>` now.
 
 ### Removed
 - `ValueId` type. Now only `none`, `inherit` and `currentColor`
