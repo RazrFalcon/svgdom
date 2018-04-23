@@ -9,42 +9,58 @@
 /// Options that defines SVG parsing.
 pub struct ParseOptions {
     /// Add comment nodes to the DOM during parsing.
+    ///
+    /// Default: `true`
     pub parse_comments: bool,
 
     /// Add declaration nodes to the DOM during parsing.
+    ///
+    /// Default: `true`
     pub parse_declarations: bool,
 
     /// Add unknown elements to the DOM during parsing.
     ///
     /// All elements which is not defined in `ElementId` are unknown.
+    ///
+    /// Default: `true`
     pub parse_unknown_elements: bool,
 
     /// Add unknown attributes to elements during parsing.
     ///
     /// All attributes which is not defined in `AttributeId` are unknown.
+    ///
+    /// Default: `true`
     pub parse_unknown_attributes: bool,
 
     /// `px` unit in the `<length>` type is rudimentary, since it's the same as none.
     ///
     /// By default we parse it as is, but it can be disabled.
+    ///
+    /// Default: `true`
     pub parse_px_unit: bool,
 
     /// Skip unresolved references inside the `class` attribute.
     ///
     /// It's enabled by default, but if you disable it - all unresolved classes will be kept
     /// in the `class` attribute.
+    ///
+    /// Default: `true`
     pub skip_unresolved_classes: bool,
 
     /// Skip attributes with invalid values.
     ///
     /// By default, attribute with an invalid value will lead to a parsing error.
     /// This flag allows converting this error into a warning.
+    ///
+    /// Default: `false`
     pub skip_invalid_attributes: bool,
 
     /// Skip invalid/unsupported CSS.
     ///
     /// By default, CSS with an invalid/unsupported value will lead to a parsing error.
     /// This flag allows converting this error into a warning.
+    ///
+    /// Default: `false`
     pub skip_invalid_css: bool,
 
     /// Ignore fallback value in paint attributes.
@@ -53,6 +69,8 @@ pub struct ParseOptions {
     /// `fill="url(#lg1) #fff"` will be ignored.
     ///
     /// Otherwise `UnsupportedPaintFallback` error will occur during parsing.
+    ///
+    /// Default: `false`
     pub skip_paint_fallback: bool,
 
     /// Ignore elements crosslink.
@@ -60,6 +78,8 @@ pub struct ParseOptions {
     /// If this option is enabled then attributes that introduce crosslink will be skipped.
     ///
     /// Otherwise `ElementCrosslink` error will occur during parsing.
+    ///
+    /// Default: `false`
     pub skip_elements_crosslink: bool,
 }
 
