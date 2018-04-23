@@ -34,6 +34,7 @@ use svgtypes::xmlparser::{
 use error::Result;
 use {
     AspectRatio,
+    Attribute,
     AttributeId,
     AttributeValue,
     Color,
@@ -847,7 +848,21 @@ fn resolve_links(links: &mut Links, opt: &ParseOptions) -> Result<()> {
                             return Err(Error::UnsupportedPaintFallback(s));
                         }
                     }
-                    None => d.node.set_attribute_checked(((d.prefix, d.attr_id), node.clone()))?,
+                    None => {
+                        let res = d.node.set_attribute_checked(((d.prefix, d.attr_id), node.clone()));
+                        match res {
+                            Ok(_) => {}
+                            Err(Error::ElementCrosslink) => {
+                                if opt.skip_elements_crosslink {
+                                    let attr = Attribute::from(((d.prefix, d.attr_id), node.clone()));
+                                    warn!("Crosslink detected. Attribute {} ignored.", attr);
+                                } else {
+                                    return Err(Error::ElementCrosslink)
+                                }
+                            }
+                            Err(e) => return Err(e),
+                        }
+                    }
                 }
             }
             None => {

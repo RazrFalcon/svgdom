@@ -606,5 +606,23 @@ fn skip_unresolved_classes_1() {
 ");
 }
 
+#[test]
+fn skip_elements_crosslink_1() {
+    let mut opt = ParseOptions::default();
+    opt.skip_elements_crosslink = true;
+    let doc = Document::from_str_with_opt(
+"<svg>
+    <linearGradient id='lg1' xlink:href='#lg2'/>
+    <linearGradient id='lg2' xlink:href='#lg1'/>
+</svg>", &opt).unwrap();
+
+    assert_eq_text!(doc.with_write_opt(&write_options()).to_string(),
+"<svg>
+    <linearGradient id='lg1' xlink:href='#lg2'/>
+    <linearGradient id='lg2'/>
+</svg>
+");
+}
+
 // TODO: this
 // p { font-family: "Font 1", "Font 2", Georgia, Times, serif; }

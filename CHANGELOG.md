@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Added
+- `ParseOptions::skip_elements_crosslink`.
+
 ### Changed
 - All SVG types implementation move to the `svgtypes` crate.
 - `Node::set_attribute_if_none` accepts `Into<Attribute>` now.

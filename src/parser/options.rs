@@ -54,6 +54,13 @@ pub struct ParseOptions {
     ///
     /// Otherwise `UnsupportedPaintFallback` error will occur during parsing.
     pub skip_paint_fallback: bool,
+
+    /// Ignore elements crosslink.
+    ///
+    /// If this option is enabled then attributes that introduce crosslink will be skipped.
+    ///
+    /// Otherwise `ElementCrosslink` error will occur during parsing.
+    pub skip_elements_crosslink: bool,
 }
 
 impl Default for ParseOptions {
@@ -68,6 +75,7 @@ impl Default for ParseOptions {
             skip_invalid_attributes: false,
             skip_invalid_css: false,
             skip_paint_fallback: false,
+            skip_elements_crosslink: false,
         }
     }
 }
