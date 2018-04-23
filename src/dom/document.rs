@@ -356,12 +356,8 @@ impl Drop for Document {
     }
 }
 
-impl ::std::fmt::Display for Document {
+impl fmt::Display for Document {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        use std::str;
-
-        let mut out = Vec::with_capacity(32);
-        self.write_buf_opt(&WriteOptions::default(), &mut out);
-        write!(f, "{}", str::from_utf8(&out).unwrap())
+        write!(f, "{}", self.with_write_opt(&WriteOptions::default()))
     }
 }

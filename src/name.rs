@@ -8,9 +8,13 @@
 
 //! This module contains a `Name` wrapper which is used for element tag name and attribute name.
 
+use std::fmt;
+
 use {
     AttributeId,
     ElementId,
+    WriteBuffer,
+    WriteOptions,
 };
 
 /// A trait for SVG id's.
@@ -51,6 +55,34 @@ impl<T: SvgId> QName<T> {
             QName::Id(ref prefix2, id2) => id == id2 && prefix == prefix2,
             _ => false,
         }
+    }
+}
+
+impl<T: SvgId> WriteBuffer for QName<T> {
+    fn write_buf_opt(&self, _opt: &WriteOptions, buf: &mut Vec<u8>) {
+        match *self {
+            QName::Id(ref prefix, _) | QName::Name(ref prefix, _) => {
+                if !prefix.is_empty() {
+                    buf.extend_from_slice(prefix.as_bytes());
+                    buf.push(b':');
+                }
+            }
+        }
+
+        match *self {
+            QName::Id(_, id) => {
+                buf.extend_from_slice(id.name().as_bytes());
+            }
+            QName::Name(_, ref name) => {
+                buf.extend_from_slice(name.as_bytes());
+            }
+        }
+    }
+}
+
+impl<T: SvgId> fmt::Display for QName<T> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.with_write_opt(&WriteOptions::default()))
     }
 }
 

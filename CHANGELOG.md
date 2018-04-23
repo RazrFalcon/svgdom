@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 ### Added
 - `ParseOptions::skip_elements_crosslink`.
+- Implemented `WriteBuffer` and `Display` for `QName`.
 
 ### Changed
 - All SVG types implementation move to the `svgtypes` crate.

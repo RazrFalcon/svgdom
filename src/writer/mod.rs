@@ -25,7 +25,6 @@ use {
     NodeEdge,
     NodeType,
     QName,
-    TagName,
     Traverse,
 };
 
@@ -143,7 +142,7 @@ pub(crate) fn write_dom(doc: &Document, opt: &WriteOptions, out: &mut Vec<u8>) {
                 )
             }
             NodeEdge::End(node) => {
-                write_end_edge(&node, &mut depth, opt.indent, out)
+                write_end_edge(&node, &mut depth, opt, out)
             }
         }
     }
@@ -252,32 +251,11 @@ fn write_element_start(
 ) {
     out.push(b'<');
 
-    write_tag_name(&node.tag_name(), out);
+    node.tag_name().write_buf_opt(opt, out);
     write_attributes(node, depth, attrs_depth, opt, out);
 
     if node.has_children() {
         out.push(b'>');
-    }
-}
-
-/// Writes an element tag name.
-fn write_tag_name(tag_name: &TagName, out: &mut Vec<u8>) {
-    match *tag_name {
-        QName::Id(ref prefix, _) | QName::Name(ref prefix, _) => {
-            if !prefix.is_empty() {
-                out.extend_from_slice(prefix.as_bytes());
-                out.push(b':');
-            }
-        }
-    }
-
-    match *tag_name {
-        QName::Id(_, id) => {
-            out.extend_from_slice(id.as_str().as_bytes());
-        }
-        QName::Name(_, ref name) => {
-            out.extend_from_slice(name.as_bytes());
-        }
     }
 }
 
@@ -459,7 +437,7 @@ fn _write_text_elem(
         }
     }
 
-    write_element_end(&root, out);
+    write_element_end(&root, opt, out);
 }
 
 fn write_escaped_text(text: &str, out: &mut Vec<u8>) {
@@ -474,10 +452,10 @@ fn write_escaped_text(text: &str, out: &mut Vec<u8>) {
 }
 
 /// Writes an element closing tag.
-fn write_element_end(node: &Node, out: &mut Vec<u8>) {
+fn write_element_end(node: &Node, opt: &WriteOptions, out: &mut Vec<u8>) {
     if node.has_children() {
         out.extend_from_slice(b"</");
-        write_tag_name(&node.tag_name(), out);
+        node.tag_name().write_buf_opt(opt, out);
         out.push(b'>');
     } else {
         out.extend_from_slice(b"/>");
@@ -485,7 +463,12 @@ fn write_element_end(node: &Node, out: &mut Vec<u8>) {
 }
 
 /// Writes node's end edge.
-fn write_end_edge(node: &Node, depth: &mut Depth, indent: Indent, out: &mut Vec<u8>) {
+fn write_end_edge(
+    node: &Node,
+    depth: &mut Depth,
+    opt: &WriteOptions,
+    out: &mut Vec<u8>,
+) {
     if let NodeType::Element = node.node_type() {
         if node.has_children() {
             if depth.value > 0 {
@@ -493,8 +476,8 @@ fn write_end_edge(node: &Node, depth: &mut Depth, indent: Indent, out: &mut Vec<
             }
             depth.write_indent(out);
         }
-        write_element_end(node, out);
-        write_newline(indent, out);
+        write_element_end(node, opt, out);
+        write_newline(opt.indent, out);
     }
 }
 

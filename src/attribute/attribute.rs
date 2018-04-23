@@ -173,12 +173,8 @@ fn write_escaped(unicode: &str, out: &mut Vec<u8>) {
     }
 }
 
-impl ::std::fmt::Display for Attribute {
+impl fmt::Display for Attribute {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        use std::str;
-
-        let mut out = Vec::with_capacity(32);
-        self.write_buf_opt(&WriteOptions::default(), &mut out);
-        write!(f, "{}", str::from_utf8(&out).unwrap())
+        write!(f, "{}", self.with_write_opt(&WriteOptions::default()))
     }
 }
