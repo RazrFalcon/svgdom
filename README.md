@@ -157,7 +157,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-svgdom = "0.11"
+svgdom = "0.12"
 ```
 
 See [documentation](https://docs.rs/svgdom/) and [examples](examples/) for details.
@@ -170,12 +170,12 @@ And no comparisons with other SVG parsers, since there are no such.
 Note that most of the time is spent during string to number and number to string conversion.
 
 ```
-test parse_large  ... bench:  13,410,092 ns/iter (+/- 181,693)
-test parse_medium ... bench:   2,868,389 ns/iter (+/- 16,071)
-test parse_small  ... bench:      61,976 ns/iter (+/- 235)
-test write_large  ... bench:  12,606,581 ns/iter (+/- 71,450)
-test write_medium ... bench:   1,288,102 ns/iter (+/- 25,051)
-test write_small  ... bench:      24,420 ns/iter (+/- 87)
+test parse_large  ... bench:  16,442,530 ns/iter (+/- 176,578)
+test parse_medium ... bench:   2,902,554 ns/iter (+/- 4,858)
+test parse_small  ... bench:      56,403 ns/iter (+/- 118)
+test write_large  ... bench:  12,744,461 ns/iter (+/- 12,971)
+test write_medium ... bench:   1,268,187 ns/iter (+/- 2,073)
+test write_small  ... bench:      25,056 ns/iter (+/- 67)
 ```
 
 Tested on i5-3570k 3.4GHz.
