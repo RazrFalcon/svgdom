@@ -29,7 +29,7 @@ use {
 pub trait FilterSvgAttrs: Iterator {
     /// Filters SVG attributes.
     fn svg<'a>(self) -> FilterMap<Self, fn(&Attribute) -> Option<(AttributeId, &Attribute)>>
-        where Self: Iterator<Item = &'a Attribute> + Sized,
+        where Self: Iterator<Item = &'a Attribute> + Sized
     {
         fn is_svg(attr: &Attribute) -> Option<(AttributeId, &Attribute)> {
             if let QName::Id(_, id) = attr.name {
@@ -45,6 +45,26 @@ pub trait FilterSvgAttrs: Iterator {
 
 impl<'a, I: Iterator<Item = &'a Attribute>> FilterSvgAttrs for I {}
 
+
+/// An iterator over SVG attributes.
+pub trait FilterSvgAttrsMut: Iterator {
+    /// Filters SVG attributes.
+    fn svg<'a>(self) -> FilterMap<Self, fn(&mut Attribute) -> Option<(AttributeId, &mut Attribute)>>
+        where Self: Iterator<Item = &'a mut Attribute> + Sized
+    {
+        fn is_svg(attr: &mut Attribute) -> Option<(AttributeId, &mut Attribute)> {
+            if let QName::Id(_, id) = attr.name {
+                return Some((id, attr));
+            }
+
+            None
+        }
+
+        self.filter_map(is_svg)
+    }
+}
+
+impl<'a, I: Iterator<Item = &'a mut Attribute>> FilterSvgAttrsMut for I {}
 
 /// An attributes list.
 pub struct Attributes(Vec<Attribute>);
