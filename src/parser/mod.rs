@@ -320,7 +320,7 @@ fn process_token<'a>(
                     write!(&mut s, " standalone=\"{}\"", sa).unwrap();
                 }
 
-                create_node!(NodeType::Declaration, &s);
+                create_node!(NodeType::Declaration, s);
             }
         }
           xmlparser::Token::DtdStart(_, _)

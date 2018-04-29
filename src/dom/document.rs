@@ -71,7 +71,6 @@ impl Document {
     ///
     /// [`ParseOptions`]: struct.ParseOptions.html
     pub fn from_str(text: &str) -> Result<Document> {
-        // TODO: to FromStr trait
         Document::from_str_with_opt(text, &ParseOptions::default())
     }
 
@@ -128,9 +127,7 @@ impl Document {
     ///
     /// [`Node`]: type.Node.html
     /// [`NodeType`]: enum.NodeType.html
-    pub fn create_node(&mut self, node_type: NodeType, text: &str) -> Node {
-        // TODO: use Into<String> trait
-
+    pub fn create_node<S: Into<String>>(&mut self, node_type: NodeType, text: S) -> Node {
         assert!(node_type != NodeType::Element && node_type != NodeType::Root);
 
         let mut node = Node::new(NodeData {
@@ -140,7 +137,7 @@ impl Document {
             id: String::new(),
             attributes: Attributes::new(),
             linked_nodes: Vec::new(),
-            text: text.to_string(),
+            text: text.into(),
         });
 
         let key = self.storage.insert(node.clone());
@@ -315,7 +312,7 @@ impl Document {
                 elem
             }
             _ => {
-                self.create_node(node.node_type(), &*node.text())
+                self.create_node(node.node_type(), node.text().clone())
             }
         }
     }

@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
   methods to the `Attribute` struct.
 - Implement all `is_*` methods form the `Attribute` struct to `AttributeValue`.
 
+### Changed
+- `Document::create_node` accepts `Into<String>` and not `&str` now.
+
 ### Removed
 - `Attribute::visible` field.
 - `Node::has_visible_attribute`.
