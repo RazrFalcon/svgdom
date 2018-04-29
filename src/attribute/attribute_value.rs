@@ -99,7 +99,49 @@ impl From<(f64, LengthUnit)> for AttributeValue {
     }
 }
 
+// TODO: fix docs
+macro_rules! impl_is_type {
+    ($name:ident, $t:ident) => (
+        #[allow(missing_docs)]
+        pub fn $name(&self) -> bool {
+            match *self {
+                AttributeValue::$t(_) => true,
+                _ => false,
+            }
+        }
+    )
+}
+
+macro_rules! impl_is_type_without_value {
+    ($name:ident, $t:ident) => (
+        #[allow(missing_docs)]
+        pub fn $name(&self) -> bool {
+            match *self {
+                AttributeValue::$t => true,
+                _ => false,
+            }
+        }
+    )
+}
+
 impl AttributeValue {
+    impl_is_type_without_value!(is_none, None);
+    impl_is_type_without_value!(is_inherit, Inherit);
+    impl_is_type_without_value!(is_current_color, CurrentColor);
+    impl_is_type!(is_aspect_ratio, AspectRatio);
+    impl_is_type!(is_color, Color);
+    impl_is_type!(is_length, Length);
+    impl_is_type!(is_length_list, LengthList);
+    impl_is_type!(is_link, Link);
+    impl_is_type!(is_func_link, FuncLink);
+    impl_is_type!(is_number, Number);
+    impl_is_type!(is_number_list, NumberList);
+    impl_is_type!(is_path, Path);
+    impl_is_type!(is_points, Points);
+    impl_is_type!(is_string, String);
+    impl_is_type!(is_transform, Transform);
+    impl_is_type!(is_viewbox, ViewBox);
+
     /// Constructs a new attribute value with a default value, if it's known.
     pub fn default_value(id: AttributeId) -> Option<AttributeValue> {
         macro_rules! some {

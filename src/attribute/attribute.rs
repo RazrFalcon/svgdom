@@ -34,25 +34,10 @@ pub struct Attribute {
 
 // TODO: fix docs
 macro_rules! impl_is_type {
-    ($name:ident, $t:ident) => (
+    ($name:ident) => (
         #[allow(missing_docs)]
         pub fn $name(&self) -> bool {
-            match self.value {
-                AttributeValue::$t(_) => true,
-                _ => false,
-            }
-        }
-    )
-}
-
-macro_rules! impl_is_type_without_value {
-    ($name:ident, $t:ident) => (
-        #[allow(missing_docs)]
-        pub fn $name(&self) -> bool {
-            match self.value {
-                AttributeValue::$t => true,
-                _ => false,
-            }
+            self.value.$name()
         }
     )
 }
@@ -109,22 +94,22 @@ impl Attribute {
         }
     }
 
-    impl_is_type_without_value!(is_none, None);
-    impl_is_type_without_value!(is_inherit, Inherit);
-    impl_is_type_without_value!(is_current_color, CurrentColor);
-    impl_is_type!(is_aspect_ratio, AspectRatio);
-    impl_is_type!(is_color, Color);
-    impl_is_type!(is_length, Length);
-    impl_is_type!(is_length_list, LengthList);
-    impl_is_type!(is_link, Link);
-    impl_is_type!(is_func_link, FuncLink);
-    impl_is_type!(is_number, Number);
-    impl_is_type!(is_number_list, NumberList);
-    impl_is_type!(is_path, Path);
-    impl_is_type!(is_points, Points);
-    impl_is_type!(is_string, String);
-    impl_is_type!(is_transform, Transform);
-    impl_is_type!(is_viewbox, ViewBox);
+    impl_is_type!(is_none);
+    impl_is_type!(is_inherit);
+    impl_is_type!(is_current_color);
+    impl_is_type!(is_aspect_ratio);
+    impl_is_type!(is_color);
+    impl_is_type!(is_length);
+    impl_is_type!(is_length_list);
+    impl_is_type!(is_link);
+    impl_is_type!(is_func_link);
+    impl_is_type!(is_number);
+    impl_is_type!(is_number_list);
+    impl_is_type!(is_path);
+    impl_is_type!(is_points);
+    impl_is_type!(is_string);
+    impl_is_type!(is_transform);
+    impl_is_type!(is_viewbox);
 }
 
 impl WriteBuffer for Attribute {
