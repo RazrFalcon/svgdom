@@ -61,6 +61,18 @@ pub enum Error {
     #[fail(display = "unsupported ENTITY data at {}", _0)]
     UnsupportedEntity(ErrorPos),
 
+    /// Unexpected close tag.
+    ///
+    /// # Examples
+    ///
+    /// ```text
+    /// <svg>
+    ///     </rect>
+    /// </svg>
+    /// ```
+    #[fail(display = "opening and ending tag mismatch '{}' and '{}'", _0, _1)]
+    UnexpectedCloseTag(String, String),
+
     /// We don't support a \<paint\> type with a fallback value and a valid FuncIRI.
     ///
     /// # Examples

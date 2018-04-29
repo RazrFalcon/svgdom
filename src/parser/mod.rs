@@ -46,6 +46,8 @@ use {
     Length,
     LengthList,
     LengthUnit,
+    TagName,
+    TagNameRef,
     Node,
     NodeType,
     NumberList,
@@ -241,10 +243,27 @@ fn process_token<'a>(
             }
         }
         xmlparser::Token::ElementEnd(end) => {
-            // TODO: validate ending tag
             match end {
                 xmlparser::ElementEnd::Empty => {}
-                xmlparser::ElementEnd::Close(_, _) => {
+                xmlparser::ElementEnd::Close(prefix, local) => {
+                    let prefix = prefix.to_str();
+                    let local = local.to_str();
+
+                    if let Some(ref n) = *node {
+                        let is_ok = match ElementId::from_str(local) {
+                            Some(id) => parent.is_tag_name((prefix, id)),
+                            None => parent.is_tag_name((prefix, local)),
+                        };
+
+                        if !is_ok {
+                            let name1 = TagName::from(TagNameRef::from((prefix, local)));
+                            return Err(Error::UnexpectedCloseTag(n.tag_name().to_string(),
+                                                                 name1.to_string()));
+                        }
+                    } else {
+                        unreachable!();
+                    }
+
                     if *parent != doc.root() {
                         *parent = parent.parent().unwrap();
                     }

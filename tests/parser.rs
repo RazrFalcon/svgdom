@@ -624,5 +624,42 @@ fn skip_elements_crosslink_1() {
 ");
 }
 
+#[test]
+fn unbalanced_tree_1() {
+    let doc = Document::from_str(
+"<svg>
+    </rect>
+</svg>");
+    assert_eq!(doc.err().unwrap().to_string(),
+               "opening and ending tag mismatch 'svg' and 'rect'");
+}
+
+#[test]
+fn unbalanced_tree_2() {
+    let doc = Document::from_str(
+"<svg:svg>
+    </svg:rect>
+</svg>");
+    assert_eq!(doc.err().unwrap().to_string(),
+               "opening and ending tag mismatch 'svg:svg' and 'svg:rect'");
+}
+
+#[test]
+fn unbalanced_tree_3() {
+    let doc = Document::from_str(
+"<svg>
+    <rect>
+</svg>");
+    assert_eq!(doc.err().unwrap().to_string(),
+               "opening and ending tag mismatch 'rect' and 'svg'");
+}
+
+#[test]
+fn unbalanced_tree_4() {
+    let doc = Document::from_str("</svg>");
+    assert_eq!(doc.err().unwrap().to_string(),
+               "unexpected token 'Element Close' at 1:1");
+}
+
 // TODO: this
 // p { font-family: "Font 1", "Font 2", Georgia, Times, serif; }
