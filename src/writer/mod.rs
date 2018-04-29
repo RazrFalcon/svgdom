@@ -371,10 +371,6 @@ fn write_attribute(
     opt: &WriteOptions,
     out: &mut Vec<u8>
 ) {
-    if !opt.write_hidden_attributes && !attr.visible {
-        return;
-    }
-
     if opt.attributes_indent == Indent::None {
         out.push(b' ');
     } else {

@@ -121,15 +121,6 @@ pub struct WriteOptions {
     /// Default: `AttributesOrder::Alphabetical`
     pub attributes_order: AttributesOrder,
 
-    /// Write hidden attributes.
-    ///
-    /// `svgdom` support invisible attributes, which can be dumped to output using this option.
-    ///
-    /// See [Attribute](struct.Attribute.html) documentation.
-    ///
-    /// Default: disabled
-    pub write_hidden_attributes: bool,
-
     /// `svgtypes` options.
     pub values: ValueWriteOptions,
 }
@@ -139,7 +130,6 @@ impl Default for WriteOptions {
         WriteOptions {
             indent: Indent::Spaces(4),
             attributes_indent: Indent::None,
-            write_hidden_attributes: false,
             use_single_quote: false,
             attributes_order: AttributesOrder::Alphabetical,
             values: ValueWriteOptions {

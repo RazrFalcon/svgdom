@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Check for a proper element opening and closing tags.
 
+### Removed
+- `Attribute::visible` field.
+- `Node::has_visible_attribute`.
+- `WriteOptions::write_hidden_attributes`.
+
 ## [0.12.0] - 2018-04-24
 ### Added
 - `ParseOptions::skip_elements_crosslink`.

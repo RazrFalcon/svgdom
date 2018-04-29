@@ -285,15 +285,6 @@ impl Node {
         self.borrow().attributes.contains(name)
     }
 
-    /// Returns `true` if the node has an attribute with such `id` and this attribute is visible.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the node is currently mutably borrowed.
-    pub fn has_visible_attribute(&self, id: AttributeId) -> bool {
-        if let Some(attr) = self.attributes().get(id) { attr.visible } else { false }
-    }
-
     // TODO: remove
     /// Returns `true` if the node has any of provided attributes.
     ///

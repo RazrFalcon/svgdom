@@ -12,7 +12,6 @@ use svgtypes::xmlparser::{
 };
 
 use {
-    Attribute,
     AttributeId,
     AttributeValue,
     Document,
@@ -42,36 +41,39 @@ impl StrTrim for String {
 // - tabs and newlines removing/replacing
 // - spaces trimming
 pub fn prepare_text(doc: &mut Document) {
-    _prepare_text(&doc.root(), XmlSpace::Default);
+    // Remember nodes that has 'xml:space' changed.
+    let mut nodes = Vec::new();
 
-    // Remove invisible 'xml:space' attributes created during text processing.
-    for mut node in doc.root().descendants().filter(|n| n.node_type() == NodeType::Element) {
-        node.attributes_mut().retain(|attr| attr.visible);
+    _prepare_text(&doc.root(), &mut nodes, XmlSpace::Default);
+
+    // Remove temporary 'xml:space' attributes created during the text processing.
+    for mut node in nodes {
+        node.remove_attribute(("xml", AttributeId::Space));
     }
 
     let root = doc.root().clone();
     doc.drain(root, |n| n.node_type() == NodeType::Text && n.text().is_empty());
 }
 
-fn _prepare_text(parent: &Node, parent_xmlspace: XmlSpace) {
+fn _prepare_text(parent: &Node, nodes: &mut Vec<Node>, parent_xmlspace: XmlSpace) {
     let mut xmlspace = parent_xmlspace;
 
     for mut node in parent.children().filter(|n| n.node_type() == NodeType::Element) {
-        xmlspace = get_xmlspace(&mut node, xmlspace);
+        xmlspace = get_xmlspace(&mut node, nodes, xmlspace);
 
         if let Some(child) = node.first_child() {
             if child.node_type() == NodeType::Text {
-                prepare_text_children(&node, xmlspace);
+                prepare_text_children(&node, nodes, xmlspace);
 
                 continue;
             }
         }
 
-        _prepare_text(&node, xmlspace);
+        _prepare_text(&node, nodes, xmlspace);
     }
 }
 
-fn get_xmlspace(node: &mut Node, default: XmlSpace) -> XmlSpace {
+fn get_xmlspace(node: &mut Node, nodes: &mut Vec<Node>, default: XmlSpace) -> XmlSpace {
     {
         let attrs = node.attributes();
         let v = attrs.get_value(("xml", AttributeId::Space));
@@ -85,28 +87,27 @@ fn get_xmlspace(node: &mut Node, default: XmlSpace) -> XmlSpace {
     }
 
     // 'xml:space' is not set - set it manually.
-    set_xmlspace(node, default);
+    set_xmlspace(node, nodes, default);
 
     default
 }
 
-fn set_xmlspace(node: &mut Node, xmlspace: XmlSpace) {
+fn set_xmlspace(node: &mut Node, nodes: &mut Vec<Node>, xmlspace: XmlSpace) {
     let xmlspace_str = match xmlspace {
         XmlSpace::Default => "default",
         XmlSpace::Preserve => "preserve",
     };
 
-    let mut attr = Attribute::new(("xml", AttributeId::Space), xmlspace_str);
-    attr.visible = false;
+    node.set_attribute((("xml", AttributeId::Space), xmlspace_str));
 
-    node.set_attribute(attr);
+    nodes.push(node.clone());
 }
 
-fn prepare_text_children(parent: &Node, xmlspace: XmlSpace) {
+fn prepare_text_children(parent: &Node, marked_nodes: &mut Vec<Node>, xmlspace: XmlSpace) {
     // Trim all descendant text nodes.
     for mut child in parent.descendants() {
         if child.node_type() == NodeType::Text {
-            let child_xmlspace = get_xmlspace(&mut child.parent().unwrap(), xmlspace);
+            let child_xmlspace = get_xmlspace(&mut child.parent().unwrap(), marked_nodes, xmlspace);
             let new_text = {
                 let text = child.text();
                 TextUnescape::unescape(text.as_ref(), child_xmlspace)
@@ -182,8 +183,8 @@ fn prepare_text_children(parent: &Node, xmlspace: XmlSpace) {
 
             // Parent of the text node is always an element node and always exist,
             // so unwrap is safe.
-            let xmlspace1 = get_xmlspace(&mut node1.parent().unwrap(), xmlspace);
-            let xmlspace2 = get_xmlspace(&mut node2.parent().unwrap(), xmlspace);
+            let xmlspace1 = get_xmlspace(&mut node1.parent().unwrap(), marked_nodes, xmlspace);
+            let xmlspace2 = get_xmlspace(&mut node2.parent().unwrap(), marked_nodes, xmlspace);
 
             // >text<..>text<
             //  1  2    3  4
