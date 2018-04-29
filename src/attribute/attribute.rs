@@ -45,6 +45,18 @@ macro_rules! impl_is_type {
     )
 }
 
+macro_rules! impl_is_type_without_value {
+    ($name:ident, $t:ident) => (
+        #[allow(missing_docs)]
+        pub fn $name(&self) -> bool {
+            match self.value {
+                AttributeValue::$t => true,
+                _ => false,
+            }
+        }
+    )
+}
+
 impl Attribute {
     /// Constructs a new attribute.
     pub fn new<'a, N, T>(name: N, value: T) -> Attribute
@@ -97,6 +109,10 @@ impl Attribute {
         }
     }
 
+    impl_is_type_without_value!(is_none, None);
+    impl_is_type_without_value!(is_inherit, Inherit);
+    impl_is_type_without_value!(is_current_color, CurrentColor);
+    impl_is_type!(is_aspect_ratio, AspectRatio);
     impl_is_type!(is_color, Color);
     impl_is_type!(is_length, Length);
     impl_is_type!(is_length_list, LengthList);

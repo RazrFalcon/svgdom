@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Check for a proper element opening and closing tags.
 - `is_root`, `is_element`, `is_declaration`, `is_comment`, `is_cdata` and `is_text`
   methods to the `Node` struct.
+- `is_none`, `is_inherit`, `is_current_color` and `is_aspect_ratio`
+  methods to the `Attribute` struct.
 
 ### Removed
 - `Attribute::visible` field.
