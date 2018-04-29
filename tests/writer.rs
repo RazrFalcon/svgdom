@@ -176,19 +176,12 @@ fn attributes_types_1() {
          width='1.5'/>\n");
 }
 
-#[test]
-fn declaration_1() {
-    let mut doc = Document::new();
+test_resave!(declaration_1,
+"<?xml version='1.0' encoding='UTF-8' standalone='yes'?><svg/>",
+"<?xml version='1.0' encoding='UTF-8' standalone='yes'?>
+<svg/>
+");
 
-    let dec = doc.create_node(NodeType::Declaration,
-        "version=\"1.0\" encoding=\"UTF-8\"");
-    let svg = doc.create_element(EId::Svg);
-
-    doc.root().append(dec);
-    doc.root().append(svg);
-
-    assert_eq_text!(doc.to_string(), "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<svg/>\n");
-}
 
 #[test]
 fn comment_1() {

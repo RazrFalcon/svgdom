@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 - `Document::create_node` accepts `Into<String>` and not `&str` now.
+- `Declaration` node type accepts attributes now.
 
 ### Removed
 - `Attribute::visible` field.

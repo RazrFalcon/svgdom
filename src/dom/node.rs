@@ -486,7 +486,8 @@ impl Node {
 
     fn set_attribute_checked_impl(&mut self, attr: Attribute) -> Result<()> {
         // TODO: to error in _checked mode
-        debug_assert_eq!(self.node_type(), NodeType::Element);
+        debug_assert!(   self.node_type() == NodeType::Element
+                      || self.node_type() == NodeType::Declaration);
 
         match attr.value {
               AttributeValue::Link(ref iri)
@@ -614,7 +615,13 @@ impl Node {
         Ref::map(self.borrow(), |d| &d.linked_nodes)
     }
 
-    // TODO: doc
+    /// Returns an iterator over mutable linked nodes.
+    ///
+    /// See [Node::set_attribute()](#method.set_attribute) for details.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the node is currently mutably borrowed.
     pub fn linked_nodes_mut(&mut self) -> RefMut<Vec<Node>> {
         RefMut::map(self.borrow_mut(), |d| &mut d.linked_nodes)
     }

@@ -73,13 +73,19 @@ fn parse_single_node_1() {
 
 #[test]
 fn parse_declaration_1() {
-    let doc = Document::from_str("<?xml version='1.0' encoding='UTF-8' standalone='no'?><svg/>").unwrap();
+    let doc = Document::from_str(
+"<?xml version='1.0' encoding='UTF-8' standalone='yes'?>
+<svg/>"
+    ).unwrap();
 
-    let child = doc.root().first_child().unwrap();
-    assert_eq!(child.node_type(), NodeType::Declaration);
-    // we store declaration only with double quotes
-    assert_eq!(*child.text(), "version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"");
-    assert_eq!(doc.root().children().count(), 2);
+    let decl = doc.root().first_child().unwrap();
+    assert!(decl.is_declaration());
+
+    let attrs = decl.attributes();
+    assert_eq!(attrs.len(), 3);
+    assert_eq!(attrs.get_value(AId::Version), Some(&AttributeValue::String("1.0".to_string())));
+    assert_eq!(attrs.get_value("encoding"), Some(&AttributeValue::String("UTF-8".to_string())));
+    assert_eq!(attrs.get_value("standalone"), Some(&AttributeValue::String("yes".to_string())));
 }
 
 #[test]

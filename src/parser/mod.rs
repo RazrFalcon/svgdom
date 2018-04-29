@@ -6,7 +6,6 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::fmt::Write;
 use std::str;
 use std::collections::HashMap;
 
@@ -200,11 +199,12 @@ fn process_token<'a>(
     opt: &ParseOptions,
 ) -> Result<()> {
     macro_rules! create_node {
-        ($nodetype:expr, $buf:expr) => ({
+        ($nodetype:expr, $buf:expr) => {{
             let e = doc.create_node($nodetype, $buf);
             *node = Some(e.clone());
-            parent.append(e);
-        })
+            parent.append(e.clone());
+            e
+        }}
     }
 
     match token {
@@ -288,14 +288,14 @@ fn process_token<'a>(
                 match id {
                       ElementId::Text
                     | ElementId::Tspan
-                    | ElementId::Tref => create_node!(NodeType::Text, s.to_str()),
+                    | ElementId::Tref => { create_node!(NodeType::Text, s.to_str()); }
                     _ => {}
                 }
             }
         }
         xmlparser::Token::Comment(s) => {
             if opt.parse_comments {
-                create_node!(NodeType::Comment, s.to_str())
+                create_node!(NodeType::Comment, s.to_str());
             }
         }
         xmlparser::Token::Cdata(s) => {
@@ -306,21 +306,17 @@ fn process_token<'a>(
             }
         }
         xmlparser::Token::Declaration(version, encoding, sa) => {
-            // TODO: check that it UTF-8
-
             if opt.parse_declarations {
-                // TODO: crate a proper way to store this values
-                let mut s = format!("version=\"{}\"", version);
+                let mut n = create_node!(NodeType::Declaration, String::new());
+                n.set_attribute((AttributeId::Version, version.to_str()));
 
                 if let Some(encoding) = encoding {
-                    write!(&mut s, " encoding=\"{}\"", encoding).unwrap();
+                    n.set_attribute(("encoding", encoding.to_str()));
                 }
 
                 if let Some(sa) = sa {
-                    write!(&mut s, " standalone=\"{}\"", sa).unwrap();
+                    n.set_attribute(("standalone", sa.to_str()));
                 }
-
-                create_node!(NodeType::Declaration, s);
             }
         }
           xmlparser::Token::DtdStart(_, _)
