@@ -20,6 +20,7 @@ use {
     AttributeType,
     Document,
     ElementId,
+    FilterSvgAttrs,
     Node,
     NodeData,
     NodeEdge,
@@ -288,7 +289,8 @@ fn write_attributes(
         }
         AttributesOrder::Alphabetical => {
             // sort attributes
-            let mut ids: Vec<_> = attrs.iter_svg().map(|(aid, attr)| (aid, attr.name.as_ref())).collect();
+            let mut ids: Vec<_> = attrs.iter().svg().map(|(aid, attr)| (aid, attr.name.as_ref()))
+                                       .collect();
             ids.sort_by_key(|&(x, _)| x as usize);
 
             for &(_, name) in &ids {
@@ -305,7 +307,8 @@ fn write_attributes(
         }
         AttributesOrder::Specification => {
             // sort attributes
-            let mut ids: Vec<_> = attrs.iter_svg().map(|(aid, attr)| (aid, attr.name.as_ref())).collect();
+            let mut ids: Vec<_> = attrs.iter().svg().map(|(aid, attr)| (aid, attr.name.as_ref()))
+                                       .collect();
             ids.sort_by_key(|&(x, _)| x as usize);
 
             let mut ids2 = Vec::with_capacity(ids.len());

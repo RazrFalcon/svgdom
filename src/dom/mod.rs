@@ -46,7 +46,7 @@ pub trait FilterSvg: Iterator {
     }
 }
 
-impl<I: Iterator> FilterSvg for I {}
+impl<'a, I: Iterator<Item = Node>> FilterSvg for I {}
 
 /// List of supported node types.
 #[derive(Clone,Copy,PartialEq,Debug)]

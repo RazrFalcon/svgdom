@@ -23,6 +23,7 @@ use {
     AttributeValue,
     ElementId,
     FilterSvg,
+    FilterSvgAttrs,
     Node,
     NodeType,
     QName,
@@ -222,7 +223,7 @@ impl Document {
     fn _remove(&mut self, mut node: Node, ids: &mut Vec<AttributeQName>) {
         ids.clear();
 
-        for (_, attr) in node.attributes().iter_svg() {
+        for (_, attr) in node.attributes().iter().svg() {
             match attr.value {
                 AttributeValue::Link(_) | AttributeValue::FuncLink(_) => {
                     ids.push(attr.name.clone())
@@ -240,7 +241,7 @@ impl Document {
         for mut linked in linked_nodes {
             ids.clear();
 
-            for (_, attr) in linked.attributes().iter_svg() {
+            for (_, attr) in linked.attributes().iter().svg() {
                 match attr.value {
                       AttributeValue::Link(ref link)
                     | AttributeValue::FuncLink(ref link) => {

@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - `Attribute::visible` field.
 - `Node::has_visible_attribute`.
 - `WriteOptions::write_hidden_attributes`.
+- `Attributes::iter_svg`. Use `iter().svg()` instead.
+- `Attributes::iter_svg_mut`. Use `iter_mut().svg()` instead.
 
 ## [0.12.0] - 2018-04-24
 ### Added

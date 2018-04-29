@@ -9,10 +9,7 @@
 use std::fmt;
 use std::str;
 use std::mem;
-use std::iter::{
-    Filter,
-    Map,
-};
+use std::iter::FilterMap;
 use std::slice::{
     Iter,
     IterMut,
@@ -23,16 +20,31 @@ use {
     AttributeId,
     AttributeQNameRef,
     AttributeValue,
+    QName,
     WriteBuffer,
 };
 
-// TODO: bench with HashTable
-// TODO: iter_svg() -> iter().svg() like in dom iterators
 
-/// Filter iterator over SVG attributes.
-pub type SvgAttrFilter<'a> = Filter<Iter<'a, Attribute>, fn(&&Attribute) -> bool>;
-/// Mutable filter iterator over SVG attributes.
-pub type SvgAttrFilterMut<'a> = Filter<IterMut<'a, Attribute>, fn(&&mut Attribute) -> bool>;
+/// An iterator over SVG attributes.
+pub trait FilterSvgAttrs: Iterator {
+    /// Filters SVG attributes.
+    fn svg<'a>(self) -> FilterMap<Self, fn(&Attribute) -> Option<(AttributeId, &Attribute)>>
+        where Self: Iterator<Item = &'a Attribute> + Sized,
+    {
+        fn is_svg(attr: &Attribute) -> Option<(AttributeId, &Attribute)> {
+            if let QName::Id(_, id) = attr.name {
+                return Some((id, attr));
+            }
+
+            None
+        }
+
+        self.filter_map(is_svg)
+    }
+}
+
+impl<'a, I: Iterator<Item = &'a Attribute>> FilterSvgAttrs for I {}
+
 
 /// An attributes list.
 pub struct Attributes(Vec<Attribute>);
@@ -237,42 +249,6 @@ impl Attributes {
         self.0.iter_mut()
     }
 
-    /// Returns an iterator over SVG attributes.
-    ///
-    /// Shorthand for: `iter().filter(|a| a.is_svg()).map(|a| (a.id().unwrap(), a))`
-    #[inline]
-    pub fn iter_svg<'a>(&'a self)
-        -> Map<SvgAttrFilter, fn(&'a Attribute) -> (AttributeId, &'a Attribute)>
-    {
-        fn map_svg(a: &Attribute) -> (AttributeId, &Attribute) { (a.id().unwrap(), a) }
-        self.filter_svg().map(map_svg)
-    }
-
-    /// Returns a mutable iterator over SVG attributes.
-    ///
-    /// Shorthand for: `iter_mut().filter(|a| a.is_svg()).map(|a| (a.id().unwrap(), a))`
-    #[inline]
-    pub fn iter_svg_mut<'a>(&'a mut self)
-        -> Map<SvgAttrFilterMut, fn(&'a mut Attribute) -> (AttributeId, &'a mut Attribute)>
-    {
-        fn map_svg(a: &mut Attribute) -> (AttributeId, &mut Attribute)
-        { (a.id().unwrap(), a) }
-
-        self.filter_svg_mut().map(map_svg)
-    }
-
-    #[inline]
-    fn filter_svg(&self) -> SvgAttrFilter {
-        fn is_svg(a: &&Attribute) -> bool { a.is_svg() }
-        self.iter().filter(is_svg)
-    }
-
-    #[inline]
-    fn filter_svg_mut(&mut self) -> SvgAttrFilterMut {
-        fn is_svg(a: &&mut Attribute) -> bool { a.is_svg() }
-        self.iter_mut().filter(is_svg)
-    }
-
     /// Retains only elements specified by the predicate.
     ///
     /// # Panics
@@ -306,6 +282,15 @@ impl Attributes {
     /// Clears the attributes list, removing all values.
     pub(crate) fn clear(&mut self) {
         self.0.clear();
+    }
+}
+
+impl IntoIterator for Attributes {
+    type Item = Attribute;
+    type IntoIter = ::std::vec::IntoIter<Self::Item>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.into_iter()
     }
 }
 
