@@ -149,7 +149,7 @@ pub(crate) fn write_dom(doc: &Document, opt: &WriteOptions, out: &mut Vec<u8>) {
 }
 
 fn is_text_node(node: &Node) -> bool {
-       node.node_type() == NodeType::Text
+       node.is_text()
     || node.is_tag_name(ElementId::Tspan)
     || node.is_tag_name(ElementId::Tref)
 }
@@ -179,7 +179,7 @@ fn write_start_edge(
             if node.has_children() {
                 let mut has_text = false;
                 if let Some(c) = node.first_child() {
-                    if c.node_type() == NodeType::Text {
+                    if c.is_text() {
                         has_text = true;
                     }
                 }
@@ -393,7 +393,7 @@ fn write_text_elem(
 ) {
     for edge in iter {
         if let NodeEdge::End(node) = edge {
-            if let NodeType::Element = node.node_type() {
+            if node.is_element() {
                 if node == *root {
                     break;
                 }
@@ -465,7 +465,7 @@ fn write_end_edge(
     opt: &WriteOptions,
     out: &mut Vec<u8>,
 ) {
-    if let NodeType::Element = node.node_type() {
+    if node.is_element() {
         if node.has_children() {
             if depth.value > 0 {
                 depth.value -= 1;

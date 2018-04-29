@@ -166,7 +166,7 @@ pub fn parse_svg(text: &str, opt: &ParseOptions) -> Result<Document> {
 
     if !opt.parse_unknown_elements {
         doc.drain(root.clone(), |n|
-            n.node_type() == NodeType::Element && n.tag_id().is_none()
+            n.is_element() && n.tag_id().is_none()
         );
     }
 
@@ -351,7 +351,7 @@ fn process_token<'a>(
 
     // check for 'svg' element only when we parsing root nodes,
     // which is faster
-    if parent.node_type() == NodeType::Root {
+    if parent.is_root() {
         // check that the first element of the doc is 'svg'
         if let Some((id, _)) = doc.root().children().svg().nth(0) {
             if id != ElementId::Svg {

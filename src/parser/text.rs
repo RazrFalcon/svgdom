@@ -16,7 +16,6 @@ use {
     AttributeValue,
     Document,
     Node,
-    NodeType,
 };
 
 trait StrTrim {
@@ -52,17 +51,17 @@ pub fn prepare_text(doc: &mut Document) {
     }
 
     let root = doc.root().clone();
-    doc.drain(root, |n| n.node_type() == NodeType::Text && n.text().is_empty());
+    doc.drain(root, |n| n.is_text() && n.text().is_empty());
 }
 
 fn _prepare_text(parent: &Node, nodes: &mut Vec<Node>, parent_xmlspace: XmlSpace) {
     let mut xmlspace = parent_xmlspace;
 
-    for mut node in parent.children().filter(|n| n.node_type() == NodeType::Element) {
+    for mut node in parent.children().filter(|n| n.is_element()) {
         xmlspace = get_xmlspace(&mut node, nodes, xmlspace);
 
         if let Some(child) = node.first_child() {
-            if child.node_type() == NodeType::Text {
+            if child.is_text() {
                 prepare_text_children(&node, nodes, xmlspace);
 
                 continue;
@@ -106,7 +105,7 @@ fn set_xmlspace(node: &mut Node, nodes: &mut Vec<Node>, xmlspace: XmlSpace) {
 fn prepare_text_children(parent: &Node, marked_nodes: &mut Vec<Node>, xmlspace: XmlSpace) {
     // Trim all descendant text nodes.
     for mut child in parent.descendants() {
-        if child.node_type() == NodeType::Text {
+        if child.is_text() {
             let child_xmlspace = get_xmlspace(&mut child.parent().unwrap(), marked_nodes, xmlspace);
             let new_text = {
                 let text = child.text();
@@ -118,7 +117,7 @@ fn prepare_text_children(parent: &Node, marked_nodes: &mut Vec<Node>, xmlspace: 
 
     // Collect all descendant text nodes.
     let mut nodes: Vec<Node> = parent.descendants()
-                                     .filter(|n| n.node_type() == NodeType::Text)
+                                     .filter(|n| n.is_text())
                                      .collect();
 
     // 'trim_text' already collapsed all spaces into a single one,

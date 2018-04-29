@@ -100,7 +100,7 @@ impl Node {
     /// ```
     pub fn has_parent(&self) -> bool {
         match self.parent() {
-            Some(node) => node.node_type() != NodeType::Root,
+            Some(node) => !node.is_root(),
             None => false,
         }
     }
@@ -114,6 +114,60 @@ impl Node {
     /// Panics if the node is currently mutably borrowed.
     pub fn node_type(&self) -> NodeType {
         self.borrow().node_type
+    }
+
+    /// Returns `true` if current node is a Root node.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the node is currently mutably borrowed.
+    pub fn is_root(&self) -> bool {
+        self.node_type() == NodeType::Root
+    }
+
+    /// Returns `true` if current node is an Element node.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the node is currently mutably borrowed.
+    pub fn is_element(&self) -> bool {
+        self.node_type() == NodeType::Element
+    }
+
+    /// Returns `true` if current node is a Declaration node.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the node is currently mutably borrowed.
+    pub fn is_declaration(&self) -> bool {
+        self.node_type() == NodeType::Declaration
+    }
+
+    /// Returns `true` if current node is a Comment node.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the node is currently mutably borrowed.
+    pub fn is_comment(&self) -> bool {
+        self.node_type() == NodeType::Comment
+    }
+
+    /// Returns `true` if current node is a CData node.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the node is currently mutably borrowed.
+    pub fn is_cdata(&self) -> bool {
+        self.node_type() == NodeType::Cdata
+    }
+
+    /// Returns `true` if current node is a Text node.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the node is currently mutably borrowed.
+    pub fn is_text(&self) -> bool {
+        self.node_type() == NodeType::Text
     }
 
     /// Returns a text data of the node.
@@ -186,7 +240,7 @@ impl Node {
     ///
     /// Panics if the node is currently mutably borrowed.
     pub fn is_svg_element(&self) -> bool {
-        if self.node_type() != NodeType::Element {
+        if !self.is_element() {
             return false;
         }
 
