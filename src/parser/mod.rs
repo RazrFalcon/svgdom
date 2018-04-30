@@ -518,7 +518,7 @@ pub fn _parse_svg_attribute_value<'a>(
     if aid == AId::Href && prefix == "xlink" {
         let mut s = Stream::from(value);
 
-        match s.parse_iri() {
+        match s.parse_iri_unchecked() {
             Ok(link) => {
                 // collect links for later processing
                 links.append(prefix, aid, link, None, node);
@@ -647,7 +647,7 @@ pub fn _parse_svg_attribute_value<'a>(
                 "inherit" => AttributeValue::Inherit,
                 _ => {
                     let mut s = Stream::from(value);
-                    let link = s.parse_func_iri()?;
+                    let link = s.parse_func_iri_unchecked()?;
                     // collect links for later processing
                     links.append(prefix, aid, link, None, node);
                     return Ok(None);
