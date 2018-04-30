@@ -311,11 +311,11 @@ fn process_token<'a>(
                 n.set_attribute((AttributeId::Version, version.to_str()));
 
                 if let Some(encoding) = encoding {
-                    n.set_attribute(("encoding", encoding.to_str()));
+                    n.set_attribute((AttributeId::Encoding, encoding.to_str()));
                 }
 
                 if let Some(sa) = sa {
-                    n.set_attribute(("standalone", sa.to_str()));
+                    n.set_attribute((AttributeId::Standalone, sa.to_str()));
                 }
             }
         }

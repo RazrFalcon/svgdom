@@ -84,8 +84,8 @@ fn parse_declaration_1() {
     let attrs = decl.attributes();
     assert_eq!(attrs.len(), 3);
     assert_eq!(attrs.get_value(AId::Version), Some(&AttributeValue::String("1.0".to_string())));
-    assert_eq!(attrs.get_value("encoding"), Some(&AttributeValue::String("UTF-8".to_string())));
-    assert_eq!(attrs.get_value("standalone"), Some(&AttributeValue::String("yes".to_string())));
+    assert_eq!(attrs.get_value(AId::Encoding), Some(&AttributeValue::String("UTF-8".to_string())));
+    assert_eq!(attrs.get_value(AId::Standalone), Some(&AttributeValue::String("yes".to_string())));
 }
 
 #[test]

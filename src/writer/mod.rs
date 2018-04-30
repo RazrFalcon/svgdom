@@ -212,11 +212,11 @@ fn write_start_edge(
                 write_attribute(&attr, depth, attrs_depth, opt, out);
             }
 
-            if let Some(attr) = attrs.get("encoding") {
+            if let Some(attr) = attrs.get(AttributeId::Encoding) {
                 write_attribute(&attr, depth, attrs_depth, opt, out);
             }
 
-            if let Some(attr) = attrs.get("standalone") {
+            if let Some(attr) = attrs.get(AttributeId::Standalone) {
                 write_attribute(&attr, depth, attrs_depth, opt, out);
             }
 
