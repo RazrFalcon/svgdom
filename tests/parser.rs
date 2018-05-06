@@ -252,6 +252,17 @@ fn parse_iri_2() {
     assert_eq!(rect.attributes().get_value(AId::Fill).unwrap(), &AttributeValue::FuncLink(rg));
 }
 
+test_resave!(parse_iri_3,
+"<svg>
+    <radialGradient id='0-5'/>
+    <rect fill='url(#0-5)'/>
+</svg>",
+"<svg>
+    <radialGradient id='0-5'/>
+    <rect fill='url(#0-5)'/>
+</svg>
+");
+
 #[test]
 fn parse_iri_with_fallback_1() {
     let doc = Document::from_str(
