@@ -275,7 +275,7 @@ impl WriteBuffer for AttributeValue {
                 buf.extend_from_slice(n.id().as_bytes());
                 buf.push(b')');
 
-                if let Some(fallback) = fallback {
+                if let Some(fallback) = *fallback {
                     buf.push(b' ');
                     match fallback {
                         PaintFallback::None => buf.extend_from_slice(b"none"),
