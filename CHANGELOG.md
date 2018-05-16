@@ -12,8 +12,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - `is_none`, `is_inherit`, `is_current_color` and `is_aspect_ratio`
   methods to the `Attribute` struct.
 - Implement all `is_*` methods form the `Attribute` struct to `AttributeValue`.
+- `AttributeValue::Paint`.
 
 ### Changed
+- FuncIRI for `fill` and `stroke` attributes will be parsed as
+  `AttributeValue::Paint` and not as `AttributeValue::FuncLink` now.
 - `Document::create_node` accepts `Into<String>` and not `&str` now.
 - `Declaration` node type accepts attributes now. So it will be parsed as node
   with attributes and not as node with text.

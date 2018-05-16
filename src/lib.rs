@@ -101,6 +101,7 @@ pub use svgtypes::{
     LengthUnit,
     ListSeparator,
     NumberList,
+    PaintFallback,
     Path,
     PathBuilder,
     PathCommand,

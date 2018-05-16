@@ -73,6 +73,7 @@ pub struct ParseOptions {
     /// Default: `false`
     pub skip_paint_fallback: bool,
 
+    // TODO: always skip
     /// Ignore elements crosslink.
     ///
     /// If this option is enabled then attributes that introduce crosslink will be skipped.

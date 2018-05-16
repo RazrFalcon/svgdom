@@ -19,6 +19,7 @@ use {
     ElementId,
     Error,
     NodeType,
+    PaintFallback,
     QName,
     QNameRef,
     TagName,
@@ -45,9 +46,19 @@ impl<'a, N> From<(N, Node)> for Attribute
 
         if n.has_id("xlink", AttributeId::Href) {
             Attribute::new(v.0, AttributeValue::Link(v.1))
+        } else if n.has_id("", AttributeId::Fill) || n.has_id("", AttributeId::Stroke) {
+            Attribute::new(v.0, AttributeValue::Paint(v.1, None))
         } else {
             Attribute::new(v.0, AttributeValue::FuncLink(v.1))
         }
+    }
+}
+
+impl<'a, N> From<(N, (Node, Option<PaintFallback>))> for Attribute
+    where AttributeQNameRef<'a>: From<N>, N: Clone
+{
+    fn from(v: (N, (Node, Option<PaintFallback>))) -> Self {
+        Attribute::new(v.0, AttributeValue::Paint((v.1).0, (v.1).1))
     }
 }
 
@@ -492,7 +503,11 @@ impl Node {
         match attr.value {
               AttributeValue::Link(ref iri)
             | AttributeValue::FuncLink(ref iri) => {
-                self.set_link_attribute(attr.name, iri.clone())?;
+                self.set_link_attribute(attr.name, iri.clone(), None)?;
+                return Ok(());
+            }
+            AttributeValue::Paint(ref iri, fallback) => {
+                self.set_link_attribute(attr.name, iri.clone(), fallback)?;
                 return Ok(());
             }
             _ => {}
@@ -513,7 +528,12 @@ impl Node {
         attrs.insert(attr);
     }
 
-    fn set_link_attribute(&mut self, name: AttributeQName, mut node: Node) -> Result<()> {
+    fn set_link_attribute(
+        &mut self,
+        name: AttributeQName,
+        mut node: Node,
+        fallback: Option<PaintFallback>,
+    ) -> Result<()> {
         if node.id().is_empty() {
             return Err(Error::ElementMustHaveAnId);
         }
@@ -534,6 +554,8 @@ impl Node {
         {
             let a = if name.has_id("xlink", AttributeId::Href) {
                 Attribute::new(name.as_ref(), AttributeValue::Link(node.clone()))
+            } else if name.has_id("", AttributeId::Fill) || name.has_id("", AttributeId::Stroke) {
+                Attribute::new(name.as_ref(), AttributeValue::Paint(node.clone(), fallback))
             } else {
                 Attribute::new(name.as_ref(), AttributeValue::FuncLink(node.clone()))
             };
@@ -590,7 +612,9 @@ impl Node {
         // we must unlink referenced attributes
         if let Some(value) = self.attributes().get_value(name) {
             match *value {
-                AttributeValue::Link(ref node) | AttributeValue::FuncLink(ref node) => {
+                  AttributeValue::Link(ref node)
+                | AttributeValue::FuncLink(ref node)
+                | AttributeValue::Paint(ref node, _) => {
                     let mut node = node.clone();
 
                     // this code can't panic, because we know that such node exist

@@ -12,7 +12,6 @@ extern crate svgdom;
 use svgdom::{
     AttributeId as AId,
     AttributeValue,
-    Color,
     Document,
     ElementId as EId,
     TagNameRef,
@@ -219,7 +218,7 @@ test_resave!(parse_style_8,
 ");
 
 #[test]
-fn parse_iri_1() {
+fn parse_paint_1() {
     let doc = Document::from_str(
 "<svg>
     <radialGradient id='rg1'/>
@@ -231,11 +230,11 @@ fn parse_iri_1() {
     let rect = child.children().nth(1).unwrap();
 
     assert_eq!(rg.is_used(), true);
-    assert_eq!(rect.attributes().get_value(AId::Fill).unwrap(), &AttributeValue::FuncLink(rg));
+    assert_eq!(rect.attributes().get_value(AId::Fill).unwrap(), &AttributeValue::Paint(rg, None));
 }
 
 #[test]
-fn parse_iri_2() {
+fn parse_paint_2() {
     // reversed order
 
     let doc = Document::from_str(
@@ -249,10 +248,10 @@ fn parse_iri_2() {
     let rg = child.children().nth(1).unwrap();
 
     assert_eq!(rg.is_used(), true);
-    assert_eq!(rect.attributes().get_value(AId::Fill).unwrap(), &AttributeValue::FuncLink(rg));
+    assert_eq!(rect.attributes().get_value(AId::Fill).unwrap(), &AttributeValue::Paint(rg, None));
 }
 
-test_resave!(parse_iri_3,
+test_resave!(parse_paint_3,
 "<svg>
     <radialGradient id='0-5'/>
     <rect fill='url(#0-5)'/>
@@ -263,83 +262,105 @@ test_resave!(parse_iri_3,
 </svg>
 ");
 
-#[test]
-fn parse_iri_with_fallback_1() {
-    let doc = Document::from_str(
+test_resave!(parse_paint_4,
 "<svg>
     <rect fill='url(#lg1) none'/>
-</svg>").unwrap();
+</svg>",
+"<svg>
+    <rect fill='none'/>
+</svg>
+");
 
-    let child = doc.root().first_child().unwrap();
-    let rect = child.children().nth(0).unwrap();
-
-    assert_eq!(rect.attributes().get_value(AId::Fill).unwrap(),
-               &AttributeValue::None);
-}
-
-#[test]
-fn parse_iri_with_fallback_2() {
-    let doc = Document::from_str(
+test_resave!(parse_paint_5,
 "<svg>
     <rect fill='url(#lg1) red'/>
+</svg>",
+"<svg>
+    <rect fill='#ff0000'/>
+</svg>
+");
+
+test_resave!(parse_paint_6,
+"<svg>
+    <rect fill='url(#lg1) currentColor'/>
+</svg>",
+"<svg>
+    <rect fill='currentColor'/>
+</svg>
+");
+
+test_resave!(parse_paint_7,
+"<svg>
+    <linearGradient id='lg1'/>
+    <rect fill='url(#lg1) none'/>
+</svg>",
+"<svg>
+    <linearGradient id='lg1'/>
+    <rect fill='url(#lg1) none'/>
+</svg>
+");
+
+#[test]
+fn parse_iri_1() {
+    let doc = Document::from_str(
+"<svg>
+    <rect id='r1'/>
+    <use xlink:href='#r1'/>
 </svg>").unwrap();
 
-    let child = doc.root().first_child().unwrap();
-    let rect = child.children().nth(0).unwrap();
+    let svg_node = doc.root().first_child().unwrap();
+    let rect_node = svg_node.children().nth(0).unwrap();
+    let use_node = svg_node.children().nth(1).unwrap();
 
-    assert_eq!(rect.attributes().get_value(AId::Fill).unwrap(),
-               &AttributeValue::Color(Color::new(255, 0, 0)));
+    assert_eq!(rect_node.is_used(), true);
+    assert_eq!(use_node.attributes().get_value(("xlink", AId::Href)).unwrap(),
+               &AttributeValue::Link(rect_node));
 }
 
 #[test]
-fn parse_iri_with_fallback_3() {
-    // unsupported case
-
+fn parse_iri_2() {
     let doc = Document::from_str(
 "<svg>
-    <radialGradient id='rg1'/>
-    <rect fill='url(#rg1) none'/>
-</svg>");
+    <use xlink:href='#r1'/>
+</svg>").unwrap();
 
-    assert_eq!(doc.err().unwrap().to_string(),
-               "valid FuncIRI(#rg1) with fallback value is not supported");
+    let svg_node = doc.root().first_child().unwrap();
+    let use_node = svg_node.children().nth(0).unwrap();
+
+    assert_eq!(use_node.attributes().get_value(("xlink", AId::Href)).unwrap(),
+               &AttributeValue::String("#r1".to_string()));
 }
 
 #[test]
-fn parse_iri_with_fallback_4() {
-    // unsupported case
-
+fn parse_func_iri_1() {
     let doc = Document::from_str(
 "<svg>
-    <rect fill='url(#rg1) none'/>
-    <radialGradient id='rg1'/>
-</svg>");
+    <filter id='f'/>
+    <rect filter='url(#f)'/>
+</svg>").unwrap();
 
-    assert_eq!(doc.err().unwrap().to_string(),
-               "valid FuncIRI(#rg1) with fallback value is not supported");
+    let svg_node = doc.root().first_child().unwrap();
+    let filter_node = svg_node.children().nth(0).unwrap();
+    let rect_node = svg_node.children().nth(1).unwrap();
+
+    assert_eq!(filter_node.is_used(), true);
+    assert_eq!(rect_node.attributes().get_value(AId::Filter).unwrap(),
+               &AttributeValue::FuncLink(filter_node));
 }
 
-test_resave!(parse_filter_iri_1,
+#[test]
+fn parse_func_iri_2() {
+    let doc = Document::from_str(
 "<svg>
-    <rect filter='url(#rg1)'/>
-</svg>",
-"<svg>
-    <rect visibility='hidden'/>
-</svg>
-");
+    <rect filter='url(#f)'/>
+</svg>").unwrap();
 
-test_resave!(parse_filter_iri_2,
-"<svg>
-    <mask>
-        <rect filter='url(#rg1)'/>
-    </mask>
-</svg>",
-"<svg>
-    <mask>
-        <rect/>
-    </mask>
-</svg>
-");
+    let svg_node = doc.root().first_child().unwrap();
+    let rect_node = svg_node.children().nth(0).unwrap();
+
+    assert_eq!(rect_node.attributes().get_value(AId::Filter).unwrap(),
+               &AttributeValue::String("url(#f)".to_string()));
+}
 
 test_resave!(parse_entity_1,
 "<!DOCTYPE svg [

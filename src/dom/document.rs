@@ -222,7 +222,9 @@ impl Document {
 
         for (_, attr) in node.attributes().iter().svg() {
             match attr.value {
-                AttributeValue::Link(_) | AttributeValue::FuncLink(_) => {
+                  AttributeValue::Link(_)
+                | AttributeValue::FuncLink(_)
+                | AttributeValue::Paint(_, _) => {
                     ids.push(attr.name.clone())
                 }
                 _ => {}
@@ -241,7 +243,8 @@ impl Document {
             for (_, attr) in linked.attributes().iter().svg() {
                 match attr.value {
                       AttributeValue::Link(ref link)
-                    | AttributeValue::FuncLink(ref link) => {
+                    | AttributeValue::FuncLink(ref link)
+                    | AttributeValue::Paint(ref link, _) => {
                         if *link == node {
                             ids.push(attr.name.clone())
                         }

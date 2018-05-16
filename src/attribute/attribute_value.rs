@@ -17,6 +17,7 @@ use {
     LengthUnit,
     Node,
     NumberList,
+    PaintFallback,
     Path,
     Points,
     Transform,
@@ -39,6 +40,7 @@ pub enum AttributeValue {
     Color(Color),
     /// FuncIRI
     FuncLink(Node),
+    Paint(Node, Option<PaintFallback>),
     Length(Length),
     LengthList(LengthList),
     /// IRI
@@ -105,7 +107,7 @@ macro_rules! impl_is_type {
         #[allow(missing_docs)]
         pub fn $name(&self) -> bool {
             match *self {
-                AttributeValue::$t(_) => true,
+                AttributeValue::$t(..) => true,
                 _ => false,
             }
         }
@@ -134,6 +136,7 @@ impl AttributeValue {
     impl_is_type!(is_length_list, LengthList);
     impl_is_type!(is_link, Link);
     impl_is_type!(is_func_link, FuncLink);
+    impl_is_type!(is_paint, Paint);
     impl_is_type!(is_number, Number);
     impl_is_type!(is_number_list, NumberList);
     impl_is_type!(is_path, Path);
@@ -266,6 +269,20 @@ impl WriteBuffer for AttributeValue {
                 buf.extend_from_slice(b"url(#");
                 buf.extend_from_slice(n.id().as_bytes());
                 buf.push(b')');
+            }
+            AttributeValue::Paint(ref n, ref fallback) => {
+                buf.extend_from_slice(b"url(#");
+                buf.extend_from_slice(n.id().as_bytes());
+                buf.push(b')');
+
+                if let Some(fallback) = fallback {
+                    buf.push(b' ');
+                    match fallback {
+                        PaintFallback::None => buf.extend_from_slice(b"none"),
+                        PaintFallback::CurrentColor => buf.extend_from_slice(b"currentColor"),
+                        PaintFallback::Color(ref c) => c.write_buf_opt(&opt.values, buf),
+                    }
+                }
             }
             AttributeValue::Color(ref c) => {
                 c.write_buf_opt(&opt.values, buf);

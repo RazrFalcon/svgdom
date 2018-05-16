@@ -103,6 +103,7 @@ impl Attribute {
     impl_is_type!(is_length_list);
     impl_is_type!(is_link);
     impl_is_type!(is_func_link);
+    impl_is_type!(is_paint);
     impl_is_type!(is_number);
     impl_is_type!(is_number_list);
     impl_is_type!(is_path);

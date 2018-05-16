@@ -846,114 +846,48 @@ fn parse_style_attribute<'a>(
 
 fn resolve_links(links: &mut Links, opt: &ParseOptions) -> Result<()> {
     for mut d in &mut links.list {
+        let name = (d.prefix, d.attr_id);
         match links.elems_with_id.get(d.iri) {
             Some(node) => {
-                // The SVG uses a fallback paint value not only when the FuncIRI is invalid,
-                // but also when a referenced element is invalid.
-                // And we don't know is it invalid or not.
-                // It will take tonnes of code to validate all supported referenced elements,
-                // so we just show an error.
-                match d.fallback {
-                    Some(_) => {
-                        if opt.skip_paint_fallback {
-                            warn!("Paint fallback is not supported.");
-                            d.node.set_attribute_checked(((d.prefix, d.attr_id), node.clone()))?;
-                        } else {
-                            let s = d.iri.to_string();
-                            return Err(Error::UnsupportedPaintFallback(s));
-                        }
-                    }
-                    None => {
-                        let res = d.node.set_attribute_checked(((d.prefix, d.attr_id), node.clone()));
-                        match res {
-                            Ok(_) => {}
-                            Err(Error::ElementCrosslink) => {
-                                if opt.skip_elements_crosslink {
-                                    let attr = Attribute::from(((d.prefix, d.attr_id), node.clone()));
-                                    warn!("Crosslink detected. Attribute {} ignored.", attr);
-                                } else {
-                                    return Err(Error::ElementCrosslink)
-                                }
+                if d.attr_id == AttributeId::Fill || d.attr_id == AttributeId::Stroke {
+                    d.node.set_attribute_checked((name, (node.clone(), d.fallback)))?;
+                } else {
+                    let res = d.node.set_attribute_checked((name, node.clone()));
+                    match res {
+                        Ok(_) => {}
+                        Err(Error::ElementCrosslink) => {
+                            if opt.skip_elements_crosslink {
+                                let attr = Attribute::from((name, node.clone()));
+                                warn!("Crosslink detected. Attribute {} ignored.", attr);
+                            } else {
+                                return Err(Error::ElementCrosslink)
                             }
-                            Err(e) => return Err(e),
                         }
+                        Err(e) => return Err(e),
                     }
                 }
             }
             None => {
-                resolve_fallback(&mut d)?;
-            }
-        }
-    }
-
-    Ok(())
-}
-
-fn resolve_fallback(d: &mut LinkData) -> Result<()> {
-    // check that <paint> contains a fallback value before showing a warning
-    match d.fallback {
-        Some(fallback) => {
-            match fallback {
-                PaintFallback::None => {
-                    d.node.set_attribute(((d.prefix, d.attr_id), AttributeValue::None));
-                }
-                PaintFallback::CurrentColor => {
-                    d.node.set_attribute(((d.prefix, d.attr_id), AttributeValue::CurrentColor));
-                }
-                PaintFallback::Color(c) => {
-                    d.node.set_attribute(((d.prefix, d.attr_id), Color::new(c.red, c.green, c.blue)));
-                }
-            }
-        }
-        None => {
-            match d.attr_id {
-                AttributeId::Filter => {
-                    // If an element has a 'filter' attribute with a broken FuncIRI,
-                    // then it shouldn't be rendered. But we can't express such behavior
-                    // in the svgdom now.
-                    // It's not the best solution, but it works.
-
-                    if d.node.is_tag_name(ElementId::Use) {
-                        // TODO: find a solution
-                        // For some reasons if we remove attribute with a broken filter
-                        // from 'use' elements - image will become broken.
-                        // Have no idea why this is happening.
-                        //
-                        // You can test this issue on:
-                        // breeze-icons/icons/actions/22/color-management.svg
-                        let s = d.iri.to_string();
-                        return Err(Error::BrokenFuncIri(s));
+                let av = match d.fallback {
+                    Some(PaintFallback::None) => AttributeValue::None,
+                    Some(PaintFallback::CurrentColor) => AttributeValue::CurrentColor,
+                    Some(PaintFallback::Color(c)) => AttributeValue::Color(c),
+                    None => {
+                        if d.attr_id == AttributeId::Fill {
+                            warn!("Could not resolve the 'fill' IRI reference: {}. \
+                                   Fallback to 'none'.", d.iri);
+                            AttributeValue::None
+                        } else if d.attr_id == AttributeId::Href {
+                            warn!("Could not resolve IRI reference: {}.", d.iri);
+                            AttributeValue::String(format!("#{}", d.iri))
+                        } else {
+                            warn!("Could not resolve FuncIRI reference: {}.", d.iri);
+                            AttributeValue::String(format!("url(#{})", d.iri))
+                        }
                     }
+                };
 
-                    let flag = d.node.ancestors().any(|n| {
-                        n.is_tag_name(ElementId::Mask)
-                            || n.is_tag_name(ElementId::ClipPath)
-                            || n.is_tag_name(ElementId::Marker)
-                    });
-
-                    if flag {
-                        // If our element is inside one of this elements - then do nothing.
-                        // I can't find explanation of this in the SVG spec, but it works.
-                        // Probably because this elements only care about a shape,
-                        // not a style.
-                        warn!("Could not resolve IRI reference: {}.", d.iri);
-                    } else {
-                        // Imitate invisible element.
-                        warn!("Unresolved 'filter' IRI reference: {}. \
-                               Marking the element as invisible.",
-                              d.iri);
-                        d.node.set_attribute((AttributeId::Visibility, "hidden"));
-                    }
-                }
-                AttributeId::Fill => {
-                    warn!("Could not resolve the 'fill' IRI reference: {}. \
-                           Fallback to 'none'.",
-                          d.iri);
-                    d.node.set_attribute((AttributeId::Fill, AttributeValue::None));
-                }
-                _ => {
-                    warn!("Could not resolve IRI reference: {}.", d.iri);
-                }
+                d.node.set_attribute((name, av));
             }
         }
     }

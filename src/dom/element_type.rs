@@ -92,6 +92,8 @@ pub trait ElementType {
     ///
     /// List: `linearGradient`, `radialGradient`.
     fn is_gradient(&self) -> bool;
+
+    // TODO: add is_paint_source: `linearGradient`, `radialGradient` and `pattern`
 }
 
 macro_rules! is_func {
