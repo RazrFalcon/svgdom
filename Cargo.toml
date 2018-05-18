@@ -18,10 +18,7 @@ failure = "0.1.1"
 log = "0.4"
 simplecss = "0.1.0"
 slab = "0.4.0"
-svgtypes = { git = "https://github.com/RazrFalcon/svgtypes", rev = "aa68aaa" }
-
-[replace]
-"xmlparser:0.4.0" = { git = "https://github.com/RazrFalcon/xmlparser", rev = "9f2c0cd" }
+svgtypes = { git = "https://github.com/RazrFalcon/svgtypes", rev = "525a5fa" }
 
 [dev-dependencies]
 time = "0.1"
