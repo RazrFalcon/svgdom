@@ -845,7 +845,7 @@ fn parse_style_attribute<'a>(
 }
 
 fn resolve_links(links: &mut Links, opt: &ParseOptions) -> Result<()> {
-    for mut d in &mut links.list {
+    for d in &mut links.list {
         let name = (d.prefix, d.attr_id);
         match links.elems_with_id.get(d.iri) {
             Some(node) => {

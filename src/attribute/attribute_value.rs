@@ -57,7 +57,7 @@ pub enum AttributeValue {
 macro_rules! impl_from {
     ($vt:ty, $vtn:ident) => (
         impl From<$vt> for AttributeValue {
-            fn from(value: $vt) -> AttributeValue {
+            fn from(value: $vt) -> Self {
                 AttributeValue::$vtn(value)
             }
         }
@@ -78,26 +78,36 @@ impl_from!(ViewBox, ViewBox);
 
 // TODO: bad, hidden allocation
 impl<'a> From<&'a str> for AttributeValue {
-    fn from(value: &str) -> AttributeValue {
+    fn from(value: &str) -> Self {
         AttributeValue::String(value.to_owned())
     }
 }
 
 impl From<i32> for AttributeValue {
-    fn from(value: i32) -> AttributeValue {
+    fn from(value: i32) -> Self {
         AttributeValue::Number(f64::from(value))
     }
 }
 
 impl From<(i32, LengthUnit)> for AttributeValue {
-    fn from(value: (i32, LengthUnit)) -> AttributeValue {
+    fn from(value: (i32, LengthUnit)) -> Self {
         AttributeValue::Length(Length::new(f64::from(value.0), value.1))
     }
 }
 
 impl From<(f64, LengthUnit)> for AttributeValue {
-    fn from(value: (f64, LengthUnit)) -> AttributeValue {
+    fn from(value: (f64, LengthUnit)) -> Self {
         AttributeValue::Length(Length::new(value.0, value.1))
+    }
+}
+
+impl From<PaintFallback> for AttributeValue {
+    fn from(value: PaintFallback) -> Self {
+        match value {
+            PaintFallback::None => AttributeValue::None,
+            PaintFallback::CurrentColor => AttributeValue::CurrentColor,
+            PaintFallback::Color(c) => AttributeValue::Color(c),
+        }
     }
 }
 

@@ -349,7 +349,7 @@ impl WriteBuffer for Document {
 
 impl Drop for Document {
     fn drop(&mut self) {
-        for (_, mut node) in self.storage.iter_mut() {
+        for (_, node) in self.storage.iter_mut() {
             node.attributes_mut().clear();
             node.linked_nodes_mut().clear();
             node.detach();
