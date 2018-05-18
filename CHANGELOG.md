@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
   methods to the `Attribute` struct.
 - Implement all `is_*` methods form the `Attribute` struct to `AttributeValue`.
 - `AttributeValue::Paint`.
+- `ElementType::is_paint_server`.
 
 ### Changed
 - FuncIRI for `fill` and `stroke` attributes will be parsed as

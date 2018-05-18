@@ -93,7 +93,12 @@ pub trait ElementType {
     /// List: `linearGradient`, `radialGradient`.
     fn is_gradient(&self) -> bool;
 
-    // TODO: add is_paint_source: `linearGradient`, `radialGradient` and `pattern`
+    /// Returns true if the current node is a [paint server].
+    ///
+    /// List: `linearGradient`, `radialGradient` and `pattern`.
+    ///
+    /// [paint server]: <https://www.w3.org/TR/SVG11/pservers.html#Introduction>
+    fn is_paint_server(&self) -> bool;
 }
 
 macro_rules! is_func {
@@ -182,4 +187,9 @@ impl ElementType for Node {
     is_func!(is_gradient,
           ElementId::LinearGradient
         | ElementId::RadialGradient);
+
+    is_func!(is_paint_server,
+          ElementId::LinearGradient
+        | ElementId::RadialGradient
+        | ElementId::Pattern);
 }
