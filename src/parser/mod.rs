@@ -39,6 +39,7 @@ use {
     Color,
     Document,
     ElementId,
+    ElementType,
     Error,
     FilterSvg,
     FromSpan,
@@ -169,6 +170,8 @@ pub fn parse_svg(text: &str, opt: &ParseOptions) -> Result<Document> {
         );
     }
 
+    resolve_entity_references(&mut doc, &mut post_data, opt)?;
+
     if let Err(e) = css::resolve_css(&doc, &mut post_data, opt) {
         if opt.skip_invalid_css {
             warn!("{}.", e);
@@ -256,12 +259,16 @@ fn process_token<'a>(
                         };
 
                         if !is_ok {
+                            // TODO: simplify
                             let name1 = TagName::from(TagNameRef::from((prefix, local)));
                             return Err(Error::UnexpectedCloseTag(n.tag_name().to_string(),
                                                                  name1.to_string()));
                         }
                     } else {
-                        unreachable!();
+                        // TODO: simplify
+                        let name1 = TagName::from(TagNameRef::from((prefix, local)));
+                        return Err(Error::UnexpectedCloseTag(parent.tag_name().to_string(),
+                                                             name1.to_string()));
                     }
 
                     if *parent != doc.root() {
@@ -327,12 +334,6 @@ fn process_token<'a>(
         xmlparser::Token::EntityDeclaration(name, value) => {
             match value {
                 xmlparser::EntityDefinition::EntityValue(value) => {
-                    // check that ENTITY does not contain an element(s)
-                    if value.to_str().trim().starts_with("<") {
-                        let s = Stream::from(value);
-                        return Err(Error::UnsupportedEntity(s.gen_error_pos()));
-                    }
-
                     post_data.entities.insert(name.to_str(), value);
                 }
                 _ => {
@@ -909,4 +910,65 @@ fn is_inside_style_elem(node: &Node) -> bool {
     }
 
     false
+}
+
+fn resolve_entity_references<'a>(
+    doc: &mut Document,
+    post_data: &mut PostData<'a>,
+    opt: &ParseOptions,
+) -> Result<()> {
+    let mut entities = Vec::new();
+
+    for text_node in doc.root().descendants() {
+        if !text_node.is_text() {
+            continue;
+        }
+
+        let text_parent = text_node.parent().unwrap();
+        if !text_parent.is_container() {
+            continue;
+        }
+
+        let text = text_node.text();
+        let mut s = Stream::from(text.as_str());
+        while !s.at_end() {
+            s.skip_spaces();
+            if s.get_curr_byte() != Some(b'&') {
+                break;
+            }
+
+            let ref_name = match s.consume_reference() {
+                Ok(Reference::EntityRef(ref name)) => name.to_str(),
+                _ => break,
+            };
+
+            if let Some(entity) = post_data.entities.get(ref_name).cloned() {
+                entities.push((text_node.clone(), entity));
+            }
+
+            s.skip_spaces();
+            s.skip_bytes(|_, c| c != b'&');
+            s.skip_spaces();
+        }
+    }
+
+    for &(ref text_node, ref entity) in &entities {
+        let mut parent = text_node.parent().unwrap();
+        let mut node: Option<Node> = None;
+        let mut tokens = xmlparser::Tokenizer::from(*entity);
+        tokens.set_fragment_mode();
+        while let Some(token) = tokens.next() {
+            process_token(doc, token?,
+                          &mut node, &mut parent,
+                          post_data, opt)?
+        }
+    }
+
+    for (text_node, _) in entities {
+        if !text_node.is_detached() {
+            doc.remove_node(text_node.clone());
+        }
+    }
+
+    Ok(())
 }

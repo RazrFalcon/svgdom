@@ -20,6 +20,9 @@ simplecss = "0.1.0"
 slab = "0.4.0"
 svgtypes = { git = "https://github.com/RazrFalcon/svgtypes", rev = "aa68aaa" }
 
+[replace]
+"xmlparser:0.4.0" = { git = "https://github.com/RazrFalcon/xmlparser", rev = "9f2c0cd" }
+
 [dev-dependencies]
 time = "0.1"
 bencher = "0.1"

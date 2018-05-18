@@ -181,6 +181,15 @@ impl Node {
         self.node_type() == NodeType::Text
     }
 
+    /// Checks that node belongs to any `Document`.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the node is currently mutably borrowed.
+    pub fn is_detached(&self) -> bool {
+        self.borrow().storage_key.is_none()
+    }
+
     /// Returns a text data of the node.
     ///
     /// Nodes with `Element` type can't contain text data.

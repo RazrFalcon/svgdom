@@ -397,28 +397,6 @@ test_resave!(parse_entity_4,
 "<svg fill='#ff0000'/>
 ");
 
-#[test]
-fn parse_entity_5() {
-    let doc = Document::from_str(
-"<!DOCTYPE svg [
-    <!ENTITY Viewport1 \"<rect/>\">
-]>
-<svg fill='&st1;'/>");
-    assert_eq!(doc.err().unwrap().to_string(),
-               "unsupported ENTITY data at 2:25");
-}
-
-#[test]
-fn parse_entity_6() {
-    let doc = Document::from_str(
-"<!DOCTYPE svg [
-    <!ENTITY Viewport1 \" \t\n<rect/>\">
-]>
-<svg fill='&st1;'/>");
-    assert_eq!(doc.err().unwrap().to_string(),
-               "unsupported ENTITY data at 2:25");
-}
-
 test_resave!(skip_unknown_refs_1,
 "<svg unicode='&#x3b2;'/>",
 "<svg unicode='&#x3b2;'/>
@@ -661,6 +639,146 @@ fn skip_elements_crosslink_1() {
 </svg>
 ");
 }
+
+test_resave!(elements_from_entity_1,
+"<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1 Basic//EN\" \"http://www.w3.org/\" [
+    <!ENTITY Rect1 \"<rect width='10' height='20' fill='none'/>\">
+]>
+<svg>&Rect1;</svg>",
+"<svg>
+    <rect fill='none' height='20' width='10'/>
+</svg>
+");
+
+test_resave!(elements_from_entity_2,
+"<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1 Basic//EN\" \"http://www.w3.org/\" [
+    <!ENTITY Rect1 \"<rect width='10' height='20' fill='none'/>\">
+]>
+<svg>&Rect1;&Rect1;&Rect1;</svg>",
+"<svg>
+    <rect fill='none' height='20' width='10'/>
+    <rect fill='none' height='20' width='10'/>
+    <rect fill='none' height='20' width='10'/>
+</svg>
+");
+
+test_resave!(elements_from_entity_3,
+"<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1 Basic//EN\" \"http://www.w3.org/\" [
+    <!ENTITY Rect1 \"<rect width='10' height='20' fill='none'/>\">
+]>
+<svg>&Rect1; some text &Rect1;</svg>",
+"<svg>
+    <rect fill='none' height='20' width='10'/>
+    <rect fill='none' height='20' width='10'/>
+</svg>
+");
+
+// Keep unresolved references.
+// TODO: wrong, do not convert '&' to '&amp;'
+test_resave!(elements_from_entity_4,
+"<svg>&Rect1;</svg>",
+"<svg>&amp;Rect1;</svg>
+");
+
+// Resolve references only inside the container-based elements.
+test_resave!(elements_from_entity_5,
+"<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1 Basic//EN\" \"http://www.w3.org/\" [
+    <!ENTITY Rect1 \"<rect width='10' height='20' fill='none'/>\">
+]>
+<svg>
+    <text>&Rect1;</text>
+</svg>",
+"<svg>
+    <text>&amp;Rect1;</text>
+</svg>
+");
+
+test_resave!(elements_from_entity_6,
+"<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1 Basic//EN\" \"http://www.w3.org/\" [
+<!ENTITY Rect1 \"
+    <g>
+        <rect width='10' height='20' fill='none'/>
+    </g>
+\">
+]>
+<svg>
+    &Rect1;
+</svg>",
+"<svg>
+    <g>
+        <rect fill='none' height='20' width='10'/>
+    </g>
+</svg>
+");
+
+test_resave!(elements_from_entity_7,
+"<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1 Basic//EN\" \"http://www.w3.org/\" [
+    <!ENTITY Rect1 \"<rect>\">
+]>
+<svg>&Rect1;</svg>",
+"<svg>
+    <rect/>
+</svg>
+");
+
+#[test]
+fn elements_from_entity_8() {
+    let mut opt = ParseOptions::default();
+    opt.skip_elements_crosslink = true;
+    let doc = Document::from_str_with_opt(
+"<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1 Basic//EN\" \"http://www.w3.org/\" [
+    <!ENTITY Rect1 \"</rect>\">
+]>
+<svg>&Rect1;</svg>", &opt);
+
+    assert_eq!(doc.err().unwrap().to_string(),
+               "opening and ending tag mismatch 'svg' and 'rect'");
+}
+
+test_resave!(elements_from_entity_9,
+"<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1 Basic//EN\" \"http://www.w3.org/\" [
+    <!ENTITY Rect1 \"<rect/><rect/>\">
+]>
+<svg>&Rect1;</svg>",
+"<svg>
+    <rect/>
+    <rect/>
+</svg>
+");
+
+test_resave!(elements_from_entity_10,
+"<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1 Basic//EN\" \"http://www.w3.org/\" [
+    <!ENTITY Rect1 \"<rect width='10' height='20' fill='none'/>\">
+]>
+<svg>
+    <g>&Rect1;</g>
+    <g>&Rect1;</g>
+</svg>",
+"<svg>
+    <g>
+        <rect fill='none' height='20' width='10'/>
+    </g>
+    <g>
+        <rect fill='none' height='20' width='10'/>
+    </g>
+</svg>
+");
+
+test_resave!(elements_from_entity_11,
+"<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1 Basic//EN\" \"http://www.w3.org/\" [
+<!ENTITY Rect1 \"
+    <rect id='rect1' width='10' height='20' fill='none'/>
+    <use xlink:href='#rect1'/>
+\">
+]>
+<svg>
+    &Rect1;
+</svg>",
+"<svg>
+    <rect id='rect1' fill='none' height='20' width='10'/>
+    <use xlink:href='#rect1'/>
+</svg>
+");
 
 #[test]
 fn unbalanced_tree_1() {

@@ -11,33 +11,33 @@ pub struct ParseOptions {
     /// Add comment nodes to the DOM during parsing.
     ///
     /// Default: `true`
-    pub parse_comments: bool,
+    pub parse_comments: bool, // TODO: remove
 
     /// Add declaration nodes to the DOM during parsing.
     ///
     /// Default: `true`
-    pub parse_declarations: bool,
+    pub parse_declarations: bool, // TODO: remove
 
     /// Add unknown elements to the DOM during parsing.
     ///
     /// All elements which is not defined in `ElementId` are unknown.
     ///
     /// Default: `true`
-    pub parse_unknown_elements: bool,
+    pub parse_unknown_elements: bool, // TODO: remove
 
     /// Add unknown attributes to elements during parsing.
     ///
     /// All attributes which is not defined in `AttributeId` are unknown.
     ///
     /// Default: `true`
-    pub parse_unknown_attributes: bool,
+    pub parse_unknown_attributes: bool, // TODO: remove
 
     /// `px` unit in the `<length>` type is rudimentary, since it's the same as none.
     ///
     /// By default we parse it as is, but it can be disabled.
     ///
     /// Default: `true`
-    pub parse_px_unit: bool,
+    pub parse_px_unit: bool, // TODO: remove
 
     /// Skip unresolved references inside the `class` attribute.
     ///
@@ -73,7 +73,6 @@ pub struct ParseOptions {
     /// Default: `false`
     pub skip_paint_fallback: bool,
 
-    // TODO: always skip
     /// Ignore elements crosslink.
     ///
     /// If this option is enabled then attributes that introduce crosslink will be skipped.
@@ -81,7 +80,7 @@ pub struct ParseOptions {
     /// Otherwise `ElementCrosslink` error will occur during parsing.
     ///
     /// Default: `false`
-    pub skip_elements_crosslink: bool,
+    pub skip_elements_crosslink: bool, // TODO: remove
 }
 
 impl Default for ParseOptions {

@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - `AttributeValue::Paint`.
 - `ElementType::is_paint_server`.
 - `is_link_container` to `Attribute` and `AttributeValue`.
+- `Node::is_detached`.
+- Elements from ENTITY resolving.
 
 ### Changed
 - FuncIRI for `fill` and `stroke` attributes will be parsed as
