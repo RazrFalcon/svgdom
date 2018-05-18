@@ -157,7 +157,7 @@ impl Attributes {
     /// [`Node::set_attribute()`]: type.Node.html#method.set_attribute
     pub fn insert(&mut self, attr: Attribute) {
         if cfg!(debug_assertions) {
-            if attr.is_link() || attr.is_func_link() || attr.is_paint() {
+            if attr.is_link_container() {
                 panic!("attribute with Link/FuncLink/Paint value must be set only via Node::set_attribute");
             }
         }
@@ -213,7 +213,7 @@ impl Attributes {
             let name = AttributeQNameRef::from(name);
             let attr = self.0.iter().find(|x| x.name.as_ref() == name);
             if let Some(attr) = attr {
-                if attr.is_link() || attr.is_func_link() || attr.is_paint() {
+                if attr.is_link_container() {
                     panic!("attribute with Link/FuncLink/Paint value must be removed \
                             only via Node::remove_attribute");
                 }
@@ -288,7 +288,7 @@ impl Attributes {
         if cfg!(debug_assertions) {
             for attr in &self.0 {
                 if !f(attr) {
-                    if attr.is_link() || attr.is_func_link() || attr.is_paint() {
+                    if attr.is_link_container() {
                         panic!("attribute with Link/FuncLink/Paint value must be removed \
                                 only via Node::remove_attribute");
                     }

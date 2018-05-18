@@ -145,6 +145,18 @@ impl AttributeValue {
     impl_is_type!(is_transform, Transform);
     impl_is_type!(is_viewbox, ViewBox);
 
+    /// Checks that the current attribute value contains a `Node`.
+    ///
+    /// E.g. `Link`, `FuncLink` and `Paint`.
+    pub fn is_link_container(&self) -> bool {
+        match *self {
+              AttributeValue::Link(_)
+            | AttributeValue::FuncLink(_)
+            | AttributeValue::Paint(_, _) => true,
+            _ => false,
+        }
+    }
+
     /// Constructs a new attribute value with a default value, if it's known.
     pub fn default_value(id: AttributeId) -> Option<AttributeValue> {
         macro_rules! some {

@@ -9,11 +9,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Check for a proper element opening and closing tags.
 - `is_root`, `is_element`, `is_declaration`, `is_comment`, `is_cdata` and `is_text`
   methods to the `Node` struct.
-- `is_none`, `is_inherit`, `is_current_color` and `is_aspect_ratio`
+- `is_none`, `is_inherit`, `is_current_color`, `is_paint` and `is_aspect_ratio`
   methods to the `Attribute` struct.
 - Implement all `is_*` methods form the `Attribute` struct to `AttributeValue`.
 - `AttributeValue::Paint`.
 - `ElementType::is_paint_server`.
+- `is_link_container` to `Attribute` and `AttributeValue`.
 
 ### Changed
 - FuncIRI for `fill` and `stroke` attributes will be parsed as

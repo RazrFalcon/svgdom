@@ -111,6 +111,7 @@ impl Attribute {
     impl_is_type!(is_string);
     impl_is_type!(is_transform);
     impl_is_type!(is_viewbox);
+    impl_is_type!(is_link_container);
 }
 
 impl WriteBuffer for Attribute {

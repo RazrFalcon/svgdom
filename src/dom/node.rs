@@ -519,7 +519,7 @@ impl Node {
     }
 
     fn set_simple_attribute(&mut self, attr: Attribute) {
-        debug_assert!(!attr.is_link() && !attr.is_func_link());
+        debug_assert!(!attr.is_link_container());
 
         // we must remove existing attribute to prevent dangling links
         self.remove_attribute(attr.name.as_ref());
