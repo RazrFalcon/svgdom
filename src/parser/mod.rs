@@ -674,8 +674,9 @@ pub fn _parse_svg_attribute_value<'a>(
         }
 
           AId::StdDeviation
-        | AId::BaseFrequency => {
-            // TODO: this attributes can contain only one or two numbers
+        | AId::BaseFrequency
+        | AId::Rotate => {
+            // TODO: 'stdDeviation' can contain only one or two numbers
             AttributeValue::NumberList(NumberList::from_span(value)?)
         }
 

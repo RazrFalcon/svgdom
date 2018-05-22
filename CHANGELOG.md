@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - `Declaration` node type accepts attributes now. So it will be parsed as node
   with attributes and not as node with text.
 - Not well-defined `id` attributes are allowed now.
+- Parse `rotate` attribute as `NumberList`.
 
 ### Removed
 - `Attribute::visible` field.
