@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
   with attributes and not as node with text.
 - Not well-defined `id` attributes are allowed now.
 - Parse `rotate` attribute as `NumberList`.
+- New text preprocessing algorithm.
 
 ### Removed
 - `Attribute::visible` field.
@@ -33,6 +34,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - `WriteOptions::write_hidden_attributes`.
 - `Attributes::iter_svg`. Use `iter().svg()` instead.
 - `Attributes::iter_svg_mut`. Use `iter_mut().svg()` instead.
+
+### Fixed
+- Mixed `xml:space` processing.
 
 ## [0.12.0] - 2018-04-24
 ### Added

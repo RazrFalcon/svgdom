@@ -34,7 +34,7 @@ macro_rules! test_resave {
 #[test]
 fn text_content_1() {
     let doc = Document::from_str(
-        "<svg>
+"<svg>
     <text>
         A <tspan>
             <tspan>
@@ -53,7 +53,7 @@ fn text_content_1() {
 #[test]
 fn text_content_2() {
     let doc = Document::from_str(
-        "<svg>
+"<svg>
     <text>
         <tspan>Text1</tspan>
         <tspan>Text2</tspan>
@@ -69,7 +69,7 @@ fn text_content_2() {
 #[test]
 fn text_content_3() {
     let doc = Document::from_str(
-        "<svg>
+"<svg>
     <text>
       Not
 
@@ -107,18 +107,17 @@ fn text_content_3() {
 #[test]
 fn text_content_4() {
     let doc = Document::from_str(
-        "<svg>
+"<svg>
     <text>
-        <tspan xml:space='preserve'>
-            Text
-        </tspan>
+        Text
+        <tspan xml:space='preserve'>  Text  </tspan>
         Text
     </text>
 </svg>
 ").unwrap();
 
     let text: String = doc.root().descendants().map(|n| n.text().to_owned()).collect();
-    assert_eq!(text, "             Text         Text");
+    assert_eq!(text, "Text   Text  Text");
 }
 
 // Manually created text.
@@ -250,7 +249,7 @@ test_resave!(text_tspan_1,
 </svg>
 ",
 "<svg>
-    <text>Some <tspan>complex </tspan>text</text>
+    <text>Some <tspan>complex</tspan> text</text>
 </svg>
 ");
 
@@ -309,7 +308,7 @@ test_resave!(text_tspan_6,
 </svg>
 ",
 "<svg>
-    <text>Some <tspan>not <tspan>very </tspan>long </tspan>text</text>
+    <text>Some <tspan>not <tspan>very</tspan> long</tspan> text</text>
 </svg>
 ");
 
@@ -322,7 +321,7 @@ test_resave!(text_tspan_7,
 ",
 "<svg>
     <text><tspan><tspan/></tspan></text>
-    <text><tspan><tspan></tspan></tspan></text>
+    <text><tspan><tspan/></tspan></text>
 </svg>
 ");
 
@@ -348,7 +347,7 @@ test_resave!(text_tspan_9,
     </text>
 </svg>",
 "<svg>
-    <text>text <tspan><tspan>text </tspan>text</tspan></text>
+    <text>text <tspan><tspan>text</tspan> text</tspan></text>
 </svg>
 ");
 
@@ -383,8 +382,8 @@ test_resave!(text_tspan_10,
     </text>
 </svg>",
 "<svg>
-    <text>Not <tspan>all characters <tspan>in <tspan>the </tspan></tspan><tspan>text </tspan>\
-        have a </tspan><tspan>specified </tspan>rotation</text>
+    <text>Not <tspan>all characters <tspan>in <tspan>the</tspan></tspan> <tspan>text</tspan> \
+        have a</tspan> <tspan>specified</tspan> rotation</text>
 </svg>
 ");
 
@@ -414,44 +413,38 @@ test_resave!(text_space_preserve_2,
 
 // Test mixed xml:space.
 test_resave!(text_space_preserve_3,
-"<svg xml:space='preserve'>
-    <text>
-    Text
-    <tspan xml:space='default'>
-    Text
-    </tspan>
-    Text
-    </text>
+"<svg>
+    <text xml:space='preserve'>  Text  <tspan xml:space='default'>  Text  </tspan>  Text  </text>
 </svg>
 ",
-"<svg xml:space='preserve'>
-    <text>     Text     <tspan xml:space='default'>Text </tspan>     Text     </text>
+"<svg>
+    <text xml:space='preserve'>  Text  <tspan xml:space='default'>Text </tspan>  Text  </text>
 </svg>
 ");
 
 test_resave!(text_space_preserve_4,
 "<svg>
-    <g>
-        <text> Text <tspan xml:space='preserve'> Text </tspan> Text </text>
-    </g>
+    <text>
+        Text
+        <tspan xml:space='preserve'>  Text  </tspan>
+        Text
+    </text>
 </svg>
 ",
 "<svg>
-    <g>
-        <text>Text <tspan xml:space='preserve'> Text </tspan>Text</text>
-    </g>
+    <text>Text <tspan xml:space='preserve'>  Text  </tspan>Text</text>
 </svg>
 ");
 
 test_resave!(text_space_preserve_5,
 "<svg>
     <text>
-        Text<tspan xml:space='preserve'> Text </tspan>Text
+        Text<tspan xml:space='preserve'>  Text  </tspan>Text
     </text>
 </svg>
 ",
 "<svg>
-    <text>Text<tspan xml:space='preserve'> Text </tspan>Text</text>
+    <text>Text<tspan xml:space='preserve'>  Text  </tspan>Text</text>
 </svg>
 ");
 
@@ -462,5 +455,18 @@ test_resave!(text_space_preserve_6,
 ",
 "<svg>
     <text xml:space='preserve'><tspan>Text</tspan></text>
+</svg>
+");
+
+// Test xml:space propagation
+test_resave!(text_space_preserve_7,
+"<svg>
+    <text id='text1' xml:space='preserve'>  Text  </text>
+    <text id='text2'>  Text  </text>
+</svg>
+",
+"<svg>
+    <text id='text1' xml:space='preserve'>  Text  </text>
+    <text id='text2'>Text</text>
 </svg>
 ");

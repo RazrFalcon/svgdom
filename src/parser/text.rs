@@ -55,15 +55,12 @@ pub fn prepare_text(doc: &mut Document) {
 }
 
 fn _prepare_text(parent: &Node, nodes: &mut Vec<Node>, parent_xmlspace: XmlSpace) {
-    let mut xmlspace = parent_xmlspace;
-
     for mut node in parent.children().filter(|n| n.is_element()) {
-        xmlspace = get_xmlspace(&mut node, nodes, xmlspace);
+        let xmlspace = get_xmlspace(&mut node, nodes, parent_xmlspace);
 
         if let Some(child) = node.first_child() {
             if child.is_text() {
                 prepare_text_children(&node, nodes, xmlspace);
-
                 continue;
             }
         }
@@ -77,11 +74,7 @@ fn get_xmlspace(node: &mut Node, nodes: &mut Vec<Node>, default: XmlSpace) -> Xm
         let attrs = node.attributes();
         let v = attrs.get_value(("xml", AttributeId::Space));
         if let Some(&AttributeValue::String(ref s)) = v {
-            if s == "preserve" {
-                return XmlSpace::Preserve;
-            } else {
-                return XmlSpace::Default;
-            }
+            return if s == "preserve" { XmlSpace::Preserve } else { XmlSpace::Default };
         }
     }
 
@@ -115,10 +108,8 @@ fn prepare_text_children(parent: &Node, marked_nodes: &mut Vec<Node>, xmlspace: 
         }
     }
 
-    // Collect all descendant text nodes.
-    let mut nodes: Vec<Node> = parent.descendants()
-                                     .filter(|n| n.is_text())
-                                     .collect();
+    let mut nodes = Vec::new();
+    collect_text(parent, 0, &mut nodes);
 
     // 'trim_text' already collapsed all spaces into a single one,
     // so we have to check only for one leading or trailing space.
@@ -126,7 +117,7 @@ fn prepare_text_children(parent: &Node, marked_nodes: &mut Vec<Node>, xmlspace: 
     if nodes.len() == 1 {
         // Process element with a single text node child.
 
-        let node = &mut nodes[0];
+        let mut node = nodes[0].0.clone();
 
         if xmlspace == XmlSpace::Default {
             let mut text = node.text_mut();
@@ -136,7 +127,6 @@ fn prepare_text_children(parent: &Node, marked_nodes: &mut Vec<Node>, xmlspace: 
                 1 => {
                     // If string has only one character and it's a space - clear this string.
                     if text.as_bytes()[0] == b' ' {
-                        // TODO: remove node
                         text.clear();
                     }
                 }
@@ -171,8 +161,8 @@ fn prepare_text_children(parent: &Node, marked_nodes: &mut Vec<Node>, xmlspace: 
         let mut last_non_empty: Option<Node> = None;
         while i < len {
             // Process pairs.
-            let mut node1 = nodes[i].clone();
-            let mut node2 = nodes[i + 1].clone();
+            let (mut node1, depth1) = nodes[i].clone();
+            let (mut node2, depth2) = nodes[i + 1].clone();
 
             if node1.text().is_empty() {
                 if let Some(ref n) = last_non_empty {
@@ -202,14 +192,26 @@ fn prepare_text_children(parent: &Node, marked_nodes: &mut Vec<Node>, xmlspace: 
                 (c1, c2, c3, c4)
             };
 
+            // NOTE: xml:space processing is mostly an undefined behavior,
+            // because everyone do this differently.
+            // We mimic Chrome behavior.
+
             // Remove space from the second text node if both nodes has bound spaces.
             // From: '<text>Text <tspan> text</tspan></text>'
             // To:   '<text>Text <tspan>text</tspan></text>'
             //
             // See text-tspan-02-b.svg for details.
-            if xmlspace2 == XmlSpace::Default {
-                if c2 == Some(b' ') && c2 == c3 {
-                    node2.text_mut().remove_first();
+            if c2 == Some(b' ') && c2 == c3 {
+                if depth1 < depth2 {
+                    if xmlspace2 == XmlSpace::Default {
+                        node2.text_mut().remove_first();
+                    }
+                } else {
+                    if xmlspace1 == XmlSpace::Default && xmlspace2 == XmlSpace::Default {
+                        node1.text_mut().remove_last();
+                    } else if xmlspace1 == XmlSpace::Preserve && xmlspace2 == XmlSpace::Default {
+                        node2.text_mut().remove_first();
+                    }
                 }
             }
 
@@ -219,6 +221,7 @@ fn prepare_text_children(parent: &Node, marked_nodes: &mut Vec<Node>, xmlspace: 
             if     is_first
                 && c1 == Some(b' ')
                 && xmlspace1 == XmlSpace::Default
+                && !node1.text().is_empty()
             {
                 // Remove leading space of the first text node.
                 node1.text_mut().remove_first();
@@ -236,6 +239,7 @@ fn prepare_text_children(parent: &Node, marked_nodes: &mut Vec<Node>, xmlspace: 
                 && c2 == Some(b' ')
                 && !node1.text().is_empty()
                 && node2.text().is_empty()
+                && node1.text().ends_with(' ')
             {
                 node1.text_mut().remove_last();
             }
@@ -245,6 +249,16 @@ fn prepare_text_children(parent: &Node, marked_nodes: &mut Vec<Node>, xmlspace: 
             }
 
             i += 1;
+        }
+    }
+}
+
+fn collect_text(parent: &Node, depth: usize, nodes: &mut Vec<(Node, usize)>) {
+    for child in parent.children() {
+        if child.is_text() {
+            nodes.push((child.clone(), depth));
+        } else if child.is_element() {
+            collect_text(&child, depth + 1, nodes);
         }
     }
 }
