@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+
+## [0.13.0] - 2018-05-23
 ### Added
 - Check for a proper element opening and closing tags.
 - `is_root`, `is_element`, `is_declaration`, `is_comment`, `is_cdata` and `is_text`
@@ -434,7 +436,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/RazrFalcon/svgdom/compare/v0.12.0...HEAD
+[Unreleased]: https://github.com/RazrFalcon/svgdom/compare/v0.13.0...HEAD
+[0.13.0]: https://github.com/RazrFalcon/svgdom/compare/v0.12.0...v0.13.0
 [0.12.0]: https://github.com/RazrFalcon/svgdom/compare/v0.11.1...v0.12.0
 [0.11.1]: https://github.com/RazrFalcon/svgdom/compare/v0.11.0...v0.11.1
 [0.11.0]: https://github.com/RazrFalcon/svgdom/compare/v0.10.5...v0.11.0
