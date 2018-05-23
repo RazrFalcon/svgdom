@@ -37,6 +37,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
 - Mixed `xml:space` processing.
+- Empty `tspan` saving.
 
 ## [0.12.0] - 2018-04-24
 ### Added

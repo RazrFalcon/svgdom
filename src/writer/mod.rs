@@ -445,12 +445,6 @@ fn _write_text_elem(
                 _write_text_elem(&child, depth, attrs_depth, opt, out);
             }
             NodeType::Text => {
-                if child.text().trim().is_empty() {
-                    if root.children().count() == 1 {
-                        continue;
-                    }
-                }
-
                 write_escaped_text(child.text().as_ref(), out);
             }
             _ => {
