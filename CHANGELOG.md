@@ -5,6 +5,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Removed
+- `failure` dependency.
+- Unused error types.
+- `ParseOptions::skip_paint_fallback` because unused.
 
 ## [0.13.0] - 2018-05-23
 ### Added

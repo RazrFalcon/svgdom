@@ -14,11 +14,11 @@ readme = "README.md"
 travis-ci = { repository = "RazrFalcon/svgdom" }
 
 [dependencies]
-failure = "0.1.1"
 log = "0.4"
 simplecss = "0.1.0"
 slab = "0.4.0"
-svgtypes = "0.1.1"
+#svgtypes = "0.1.1"
+svgtypes = { git = "https://github.com/RazrFalcon/svgtypes", rev = "f471398" }
 
 [dev-dependencies]
 time = "0.1"

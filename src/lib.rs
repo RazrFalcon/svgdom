@@ -50,7 +50,6 @@ At last, the `id` attribute is stored as a separate value and not as part of the
 #![warn(missing_docs)]
 
 #[macro_use] extern crate log;
-#[macro_use] extern crate failure;
 extern crate simplecss;
 extern crate slab;
 extern crate svgtypes;

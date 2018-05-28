@@ -63,16 +63,6 @@ pub struct ParseOptions {
     /// Default: `false`
     pub skip_invalid_css: bool,
 
-    /// Ignore fallback value in paint attributes.
-    ///
-    /// If this option is enabled then the color part in attributes like this
-    /// `fill="url(#lg1) #fff"` will be ignored.
-    ///
-    /// Otherwise `UnsupportedPaintFallback` error will occur during parsing.
-    ///
-    /// Default: `false`
-    pub skip_paint_fallback: bool,
-
     /// Ignore elements crosslink.
     ///
     /// If this option is enabled then attributes that introduce crosslink will be skipped.
@@ -94,7 +84,6 @@ impl Default for ParseOptions {
             skip_unresolved_classes: true,
             skip_invalid_attributes: false,
             skip_invalid_css: false,
-            skip_paint_fallback: false,
             skip_elements_crosslink: false,
         }
     }
