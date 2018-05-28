@@ -81,7 +81,7 @@ mod writer;
 
 pub use attribute::*;
 pub use dom::*;
-pub use error::Error;
+pub use error::*;
 pub use name::*;
 pub use writer::*;
 pub use parser::ParseOptions;

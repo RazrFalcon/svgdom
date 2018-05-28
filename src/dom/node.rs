@@ -8,7 +8,6 @@
 
 use std::cell::{Ref, RefMut};
 
-use error::Result;
 use {
     Attribute,
     AttributeId,
@@ -306,10 +305,6 @@ impl Node {
     ///
     /// Only element nodes can contain tag name.
     ///
-    /// # Errors
-    ///
-    /// The string tag name must be non-empty.
-    ///
     /// # Panics
     ///
     /// - Panics if the node is currently borrowed.
@@ -498,14 +493,13 @@ impl Node {
     ///
     /// [`ElementMustHaveAnId`]: enum.Error.html
     /// [`ElementCrosslink`]: enum.Error.html
-    pub fn set_attribute_checked<T>(&mut self, v: T) -> Result<()>
+    pub fn set_attribute_checked<T>(&mut self, v: T) -> Result<(), Error>
         where T: Into<Attribute>
     {
         self.set_attribute_checked_impl(v.into())
     }
 
-    fn set_attribute_checked_impl(&mut self, attr: Attribute) -> Result<()> {
-        // TODO: to error in _checked mode
+    fn set_attribute_checked_impl(&mut self, attr: Attribute) -> Result<(), Error> {
         debug_assert!(   self.node_type() == NodeType::Element
                       || self.node_type() == NodeType::Declaration);
 
@@ -542,7 +536,7 @@ impl Node {
         name: AttributeQName,
         mut node: Node,
         fallback: Option<PaintFallback>,
-    ) -> Result<()> {
+    ) -> Result<(), Error> {
         if node.id().is_empty() {
             return Err(Error::ElementMustHaveAnId);
         }

@@ -17,8 +17,6 @@ use svgtypes::xmlparser::{
     ErrorPos,
 };
 
-// TODO: split to Dom errors and Parser errors
-
 /// SVG DOM errors.
 #[derive(Debug)]
 pub enum Error {
@@ -41,7 +39,31 @@ pub enum Error {
     /// <linearGradient id="lg1" xlink:href="#lg1"/>
     /// ```
     ElementCrosslink,
+}
 
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            Error::ElementMustHaveAnId => {
+                write!(f, "the element must have an id")
+            }
+            Error::ElementCrosslink => {
+                write!(f, "element crosslink")
+            }
+        }
+    }
+}
+
+impl error::Error for Error {
+    fn description(&self) -> &str {
+        "an SVG error"
+    }
+}
+
+
+/// SVG parsing errors.
+#[derive(Debug)]
+pub enum ParserError {
     /// Parsed document must have an `svg` element.
     NoSvgElement,
 
@@ -65,6 +87,9 @@ pub enum Error {
     /// ```
     UnexpectedCloseTag(String, String),
 
+    /// A DOM API error.
+    DomError(Error),
+
     /// Error during attribute value parsing.
     SvgTypesError(svgtypes::Error),
 
@@ -75,68 +100,66 @@ pub enum Error {
     CssError(simplecss::Error),
 }
 
-impl fmt::Display for Error {
+impl fmt::Display for ParserError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            Error::ElementMustHaveAnId => {
-                write!(f, "the element must have an id")
-            }
-            Error::ElementCrosslink => {
-                write!(f, "element crosslink")
-            }
-            Error::NoSvgElement => {
+            ParserError::NoSvgElement => {
                 write!(f, "the document does not have an SVG element")
             }
-            Error::EmptyDocument => {
+            ParserError::EmptyDocument => {
                 write!(f, "the document does not have any nodes")
             }
-            Error::UnsupportedCSS(pos) => {
+            ParserError::UnsupportedCSS(pos) => {
                 write!(f, "unsupported CSS at {}", pos)
             }
-            Error::InvalidCSS(pos) => {
+            ParserError::InvalidCSS(pos) => {
                 write!(f, "invalid CSS at {}", pos)
             }
-            Error::UnexpectedCloseTag(ref first, ref second) => {
+            ParserError::UnexpectedCloseTag(ref first, ref second) => {
                 write!(f, "opening and ending tag mismatch '{}' and '{}'", first, second)
             }
-            Error::SvgTypesError(ref e) => {
+            ParserError::DomError(ref e) => {
                 write!(f, "{}", e)
             }
-            Error::XmlError(ref e) => {
+            ParserError::SvgTypesError(ref e) => {
                 write!(f, "{}", e)
             }
-            Error::CssError(ref e) => {
+            ParserError::XmlError(ref e) => {
+                write!(f, "{}", e)
+            }
+            ParserError::CssError(ref e) => {
                 write!(f, "{:?}", e) // TODO: impl Display for simplecss's Error
             }
         }
     }
 }
 
-impl error::Error for Error {
+impl error::Error for ParserError {
     fn description(&self) -> &str {
         "an SVG parsing error"
     }
 }
 
-impl From<xmlparser::Error> for Error {
-    fn from(value: xmlparser::Error) -> Error {
-        Error::XmlError(value)
+impl From<Error> for ParserError {
+    fn from(value: Error) -> Self {
+        ParserError::DomError(value)
     }
 }
 
-impl From<svgtypes::Error> for Error {
-    fn from(value: svgtypes::Error) -> Error {
-        Error::SvgTypesError(value)
+impl From<xmlparser::Error> for ParserError {
+    fn from(value: xmlparser::Error) -> Self {
+        ParserError::XmlError(value)
     }
 }
 
-impl From<simplecss::Error> for Error {
-    fn from(value: simplecss::Error) -> Error {
-        Error::CssError(value)
+impl From<svgtypes::Error> for ParserError {
+    fn from(value: svgtypes::Error) -> Self {
+        ParserError::SvgTypesError(value)
     }
 }
 
-/// A specialized `Result` type where the error is hard-wired to [`Error`].
-///
-/// [`Error`]: enum.Error.html
-pub(crate) type Result<T> = ::std::result::Result<T, Error>;
+impl From<simplecss::Error> for ParserError {
+    fn from(value: simplecss::Error) -> Self {
+        ParserError::CssError(value)
+    }
+}

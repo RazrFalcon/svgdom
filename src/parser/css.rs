@@ -14,16 +14,15 @@ use svgtypes::xmlparser::{
     ErrorPos,
 };
 
-use error::Result;
 use {
     AttributeId,
     AttributeValue,
     Document,
     ElementId,
-    Error,
     FilterSvg,
     Node,
     ParseOptions,
+    ParserError,
 };
 
 use super::{
@@ -38,7 +37,7 @@ pub fn resolve_css<'a>(
     doc: &Document,
     post_data: &mut PostData<'a>,
     opt: &ParseOptions,
-) -> Result<()> {
+) -> Result<(), ParserError> {
     use simplecss::Token as CssToken;
 
     #[derive(Clone,Copy,Debug)]
@@ -119,10 +118,10 @@ pub fn resolve_css<'a>(
                     | CssToken::PseudoClass(_)
                     | CssToken::LangPseudoClass(_)
                     | CssToken::Combinator(_) => {
-                        return Err(Error::UnsupportedCSS(gen_err_pos(*style, last_pos)));
+                        return Err(ParserError::UnsupportedCSS(gen_err_pos(*style, last_pos)));
                     }
                     _ => {
-                        return Err(Error::InvalidCSS(gen_err_pos(*style, last_pos)));
+                        return Err(ParserError::InvalidCSS(gen_err_pos(*style, last_pos)));
                     }
                 };
 
@@ -139,7 +138,7 @@ pub fn resolve_css<'a>(
                     CssToken::BlockEnd => break,
                     CssToken::EndOfStream => break 'root,
                     _ => {
-                        return Err(Error::InvalidCSS(gen_err_pos(*style, last_pos)));
+                        return Err(ParserError::InvalidCSS(gen_err_pos(*style, last_pos)));
                     }
                 }
             }
@@ -225,7 +224,7 @@ fn apply_css_attributes<'a>(
     links: &mut Links<'a>,
     entities: &Entities<'a>,
     opt: &ParseOptions,
-) -> Result<()> {
+) -> Result<(), ParserError> {
     for &(aname, avalue) in values {
         match AttributeId::from_str(aname) {
             Some(aid) => {

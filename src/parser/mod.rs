@@ -30,7 +30,6 @@ use svgtypes::xmlparser::{
     StrSpan,
 };
 
-use error::Result;
 use {
     AspectRatio,
     Attribute,
@@ -46,19 +45,20 @@ use {
     Length,
     LengthList,
     LengthUnit,
-    TagName,
-    TagNameRef,
     Node,
     NodeType,
     NumberList,
     ParseOptions,
+    ParserError,
     Path,
     Points,
+    TagName,
+    TagNameRef,
     Transform,
     ViewBox,
 };
 
-type StreamResult<T> = ::std::result::Result<T, Error>;
+type Result<T> = ::std::result::Result<T, ParserError>;
 
 pub struct NodeSpanData<'a> {
     pub node: Node,
@@ -147,18 +147,18 @@ pub fn parse_svg(text: &str, opt: &ParseOptions) -> Result<Document> {
 
     // document must contain any children
     if !root.has_children() {
-        return Err(Error::EmptyDocument);
+        return Err(ParserError::EmptyDocument);
     }
 
     // first element must be an 'svg'
     match root.children().svg().nth(0) {
         Some((id, _)) => {
             if id != ElementId::Svg {
-                return Err(Error::NoSvgElement);
+                return Err(ParserError::NoSvgElement);
             }
         }
         None => {
-            return Err(Error::NoSvgElement);
+            return Err(ParserError::NoSvgElement);
         }
     }
 
@@ -261,14 +261,14 @@ fn process_token<'a>(
                         if !is_ok {
                             // TODO: simplify
                             let name1 = TagName::from(TagNameRef::from((prefix, local)));
-                            return Err(Error::UnexpectedCloseTag(n.tag_name().to_string(),
-                                                                 name1.to_string()));
+                            return Err(ParserError::UnexpectedCloseTag(n.tag_name().to_string(),
+                                                                       name1.to_string()));
                         }
                     } else {
                         // TODO: simplify
                         let name1 = TagName::from(TagNameRef::from((prefix, local)));
-                        return Err(Error::UnexpectedCloseTag(parent.tag_name().to_string(),
-                                                             name1.to_string()));
+                        return Err(ParserError::UnexpectedCloseTag(parent.tag_name().to_string(),
+                                                                   name1.to_string()));
                     }
 
                     if *parent != doc.root() {
@@ -352,7 +352,7 @@ fn process_token<'a>(
         // check that the first element of the doc is 'svg'
         if let Some((id, _)) = doc.root().children().svg().nth(0) {
             if id != ElementId::Svg {
-                return Err(Error::NoSvgElement);
+                return Err(ParserError::NoSvgElement);
             }
         }
     }
@@ -367,7 +367,7 @@ fn parse_svg_attribute<'a>(
     value: StrSpan<'a>,
     post_data: &mut PostData<'a>,
     opt: &ParseOptions,
-) -> StreamResult<()> {
+) -> Result<()> {
     match id {
         AttributeId::Id => {
             node.set_id(value.to_str());
@@ -416,7 +416,7 @@ pub fn parse_svg_attribute_value<'a>(
     links: &mut Links<'a>,
     entities: &Entities<'a>,
     opt: &ParseOptions,
-) -> StreamResult<()> {
+) -> Result<()> {
     let av = _parse_svg_attribute_value(node, prefix, id, value, links, entities, opt);
 
     match av {
@@ -482,7 +482,7 @@ pub fn _parse_svg_attribute_value<'a>(
     links: &mut Links<'a>,
     entities: &Entities<'a>,
     opt: &ParseOptions,
-) -> StreamResult<Option<AttributeValue>> {
+) -> Result<Option<AttributeValue>> {
     use AttributeId as AId;
 
     let eid = node.tag_id().unwrap();
@@ -862,10 +862,10 @@ fn resolve_links(links: &mut Links, opt: &ParseOptions) -> Result<()> {
                                 let attr = Attribute::from((name, node.clone()));
                                 warn!("Crosslink detected. Attribute {} ignored.", attr);
                             } else {
-                                return Err(Error::ElementCrosslink)
+                                return Err(Error::ElementCrosslink.into())
                             }
                         }
-                        Err(e) => return Err(e),
+                        Err(e) => return Err(e.into()),
                     }
                 }
             }

@@ -15,7 +15,6 @@ use {
     ParseOptions,
 };
 
-use error::Result;
 use writer;
 use {
     AttributeQName,
@@ -26,6 +25,7 @@ use {
     FilterSvgAttrs,
     Node,
     NodeType,
+    ParserError,
     QName,
     QNameRef,
     TagNameRef,
@@ -70,14 +70,14 @@ impl Document {
     /// Constructs a new `Document` from the text using a default [`ParseOptions`].
     ///
     /// [`ParseOptions`]: struct.ParseOptions.html
-    pub fn from_str(text: &str) -> Result<Document> {
+    pub fn from_str(text: &str) -> Result<Document, ParserError> {
         Document::from_str_with_opt(text, &ParseOptions::default())
     }
 
     /// Constructs a new `Document` from the text using a supplied [`ParseOptions`].
     ///
     /// [`ParseOptions`]: struct.ParseOptions.html
-    pub fn from_str_with_opt(text: &str, opt: &ParseOptions) -> Result<Document> {
+    pub fn from_str_with_opt(text: &str, opt: &ParseOptions) -> Result<Document, ParserError> {
         parse_svg(text, opt)
     }
 
