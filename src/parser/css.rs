@@ -253,9 +253,7 @@ fn apply_css_attributes<'a>(
                 }
             }
             None => {
-                if opt.parse_unknown_attributes {
-                    node.set_attribute((aname, avalue));
-                }
+                node.set_attribute((aname, avalue));
             }
         }
     }

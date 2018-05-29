@@ -265,14 +265,17 @@ impl Document {
         }
 
         node.detach();
-        self.storage.remove(node.borrow_mut().storage_key.take().unwrap());
+        let key = node.borrow_mut().storage_key.take();
+        assert!(key.is_some(), "node was already removed");
+        self.storage.remove(key.unwrap());
     }
 
+    // TODO: maybe rename to retain to match Attributes::retain
     /// Removes only the children nodes specified by the predicate.
     ///
     /// Uses [remove()](#method.remove), not [detach()](#method.detach) internally.
     ///
-    /// Current node ignored.
+    /// The `root` node will be ignored.
     pub fn drain<P>(&mut self, root: Node, f: P) -> usize
         where P: Fn(&Node) -> bool
     {

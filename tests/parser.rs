@@ -459,148 +459,6 @@ test_resave!(parse_viewbox_1,
 ");
 
 #[test]
-fn skip_comments_1() {
-    let mut opt = ParseOptions::default();
-    opt.parse_comments = false;
-    let doc = Document::from_str_with_opt(
-"<!--comment-->
-<svg/>", &opt).unwrap();
-
-    assert_eq_text!(doc.with_write_opt(&write_options()).to_string(),
-"<svg/>
-");
-}
-
-#[test]
-fn skip_declaration_1() {
-    let mut opt = ParseOptions::default();
-    opt.parse_declarations = false;
-    let doc = Document::from_str_with_opt(
-"<?xml version='1.0'?>
-<svg/>", &opt).unwrap();
-
-    assert_eq_text!(doc.with_write_opt(&write_options()).to_string(),
-"<svg/>
-");
-}
-
-#[test]
-fn skip_unknown_elements_1() {
-    let mut opt = ParseOptions::default();
-    opt.parse_unknown_elements = false;
-    let doc = Document::from_str_with_opt(
-"<svg>
-    <qwe id='q'/>
-    <rect/>
-</svg>", &opt).unwrap();
-
-    assert_eq_text!(doc.with_write_opt(&write_options()).to_string(),
-"<svg>
-    <rect/>
-</svg>
-");
-}
-
-#[test]
-fn skip_unknown_elements_2() {
-    let mut opt = ParseOptions::default();
-    opt.parse_unknown_elements = false;
-    let doc = Document::from_str_with_opt(
-"<svg>
-    <qwe>
-        <qwe>
-            <rect/>
-        </qwe>
-    </qwe>
-    <rect/>
-</svg>", &opt).unwrap();
-
-    assert_eq_text!(doc.with_write_opt(&write_options()).to_string(),
-"<svg>
-    <rect/>
-</svg>
-");
-}
-
-#[test]
-fn skip_unknown_elements_3() {
-    let mut opt = ParseOptions::default();
-    opt.parse_unknown_elements = false;
-    let doc = Document::from_str_with_opt(
-"<svg>
-    <qwe>
-        <rect/>
-        <rect/>
-        <rect/>
-    </qwe>
-    <rect/>
-</svg>", &opt).unwrap();
-
-    assert_eq_text!(doc.with_write_opt(&write_options()).to_string(),
-"<svg>
-    <rect/>
-</svg>
-");
-}
-
-#[test]
-fn skip_unknown_elements_4() {
-    let mut opt = ParseOptions::default();
-    opt.parse_unknown_elements = false;
-    let doc = Document::from_str_with_opt(
-"<svg>
-    <qwe>
-    </qwe>
-    <rect/>
-</svg>", &opt).unwrap();
-
-    assert_eq_text!(doc.with_write_opt(&write_options()).to_string(),
-"<svg>
-    <rect/>
-</svg>
-");
-}
-
-#[test]
-fn skip_unknown_attributes_1() {
-    let mut opt = ParseOptions::default();
-    opt.parse_unknown_attributes = false;
-    let doc = Document::from_str_with_opt(
-"<svg fill='#ff0000' test='1' qwe='zzz' xmlns='http://www.w3.org/2000/svg' \
-xmlns:xlink='http://www.w3.org/1999/xlink'/>", &opt).unwrap();
-
-    assert_eq_text!(doc.with_write_opt(&write_options()).to_string(),
-"<svg fill='#ff0000' xmlns:xlink='http://www.w3.org/1999/xlink' \
-xmlns='http://www.w3.org/2000/svg'/>
-");
-}
-
-#[test]
-fn parse_px_unit_on_1() {
-    let mut opt = ParseOptions::default();
-    opt.parse_px_unit = true;
-    let doc = Document::from_str_with_opt("<svg x='10px'/>", &opt).unwrap();
-    assert_eq_text!(doc.with_write_opt(&write_options()).to_string(), "<svg x='10px'/>\n");
-}
-
-#[test]
-fn parse_px_unit_off_1() {
-    let mut opt = ParseOptions::default();
-    opt.parse_px_unit = false;
-    let doc = Document::from_str_with_opt("<svg x='10px'/>", &opt).unwrap();
-    assert_eq_text!(doc.with_write_opt(&write_options()).to_string(), "<svg x='10'/>\n");
-}
-
-#[test]
-fn parse_px_unit_off_2() {
-    let mut opt = ParseOptions::default();
-    opt.parse_px_unit = false;
-    let doc = Document::from_str_with_opt("<svg stroke-dasharray='10px 20px'/>", &opt).unwrap();
-    assert_eq_text!(doc.with_write_opt(&write_options()).to_string(),
-                    "<svg stroke-dasharray='10 20'/>\n");
-}
-
-#[test]
 fn skip_unresolved_classes_1() {
     let mut opt = ParseOptions::default();
     opt.skip_unresolved_classes = false;
@@ -618,24 +476,6 @@ fn skip_unresolved_classes_1() {
 "<svg>
     <g class='fil3' fill='#0000ff'/>
     <g class='fil4 fil5' fill='#0000ff' stroke='#0000ff'/>
-</svg>
-");
-}
-
-#[test]
-fn skip_elements_crosslink_1() {
-    let mut opt = ParseOptions::default();
-    opt.skip_elements_crosslink = true;
-    let doc = Document::from_str_with_opt(
-"<svg>
-    <linearGradient id='lg1' xlink:href='#lg2'/>
-    <linearGradient id='lg2' xlink:href='#lg1'/>
-</svg>", &opt).unwrap();
-
-    assert_eq_text!(doc.with_write_opt(&write_options()).to_string(),
-"<svg>
-    <linearGradient id='lg1' xlink:href='#lg2'/>
-    <linearGradient id='lg2'/>
 </svg>
 ");
 }
@@ -723,13 +563,11 @@ test_resave!(elements_from_entity_7,
 
 #[test]
 fn elements_from_entity_8() {
-    let mut opt = ParseOptions::default();
-    opt.skip_elements_crosslink = true;
-    let doc = Document::from_str_with_opt(
+    let doc = Document::from_str(
 "<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1 Basic//EN\" \"http://www.w3.org/\" [
     <!ENTITY Rect1 \"</rect>\">
 ]>
-<svg>&Rect1;</svg>", &opt);
+<svg>&Rect1;</svg>");
 
     assert_eq!(doc.err().unwrap().to_string(),
                "opening and ending tag mismatch 'svg' and 'rect'");

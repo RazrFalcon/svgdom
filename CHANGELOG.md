@@ -11,7 +11,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Removed
 - `failure` dependency.
 - Unused error types.
-- `ParseOptions::skip_paint_fallback` because unused.
+- `parse_comments`, `parse_declarations`, `parse_unknown_elements`, `parse_unknown_attributes`,
+  `parse_px_unit`, `skip_elements_crosslink`, `skip_paint_fallback` from `ParseOptions`.
 
 ## [0.13.0] - 2018-05-23
 ### Added

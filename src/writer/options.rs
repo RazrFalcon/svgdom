@@ -44,7 +44,6 @@ pub enum AttributesOrder {
 
 /// Options that defines SVG writing.
 pub struct WriteOptions {
-    // TODO: use the same quote for declaration and PI
     /// Use single quote marks instead of double quote.
     ///
     /// # Examples

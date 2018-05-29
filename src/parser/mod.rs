@@ -44,7 +44,6 @@ use {
     FromSpan,
     Length,
     LengthList,
-    LengthUnit,
     Node,
     NodeType,
     NumberList,
@@ -164,12 +163,6 @@ pub fn parse_svg(text: &str, opt: &ParseOptions) -> Result<Document> {
 
     doc.drain(root.clone(), |n| n.is_tag_name(ElementId::Style));
 
-    if !opt.parse_unknown_elements {
-        doc.drain(root.clone(), |n|
-            n.is_element() && n.tag_id().is_none()
-        );
-    }
-
     resolve_entity_references(&mut doc, &mut post_data, opt)?;
 
     if let Err(e) = css::resolve_css(&doc, &mut post_data, opt) {
@@ -186,7 +179,7 @@ pub fn parse_svg(text: &str, opt: &ParseOptions) -> Result<Document> {
                               &post_data.entities, opt)?;
     }
 
-    resolve_links(&mut post_data.links, opt)?;
+    resolve_links(&mut post_data.links);
 
     text::prepare_text(&mut doc);
 
@@ -235,12 +228,10 @@ fn process_token<'a>(
                     }
                 }
                 None => {
-                    if opt.parse_unknown_attributes {
-                        if curr_node.is_svg_element() {
-                            parse_non_svg_attribute(curr_node, prefix.to_str(), local.to_str(), value, post_data);
-                        } else {
-                            curr_node.set_attribute(((prefix.to_str(), local.to_str()), value.to_str()));
-                        }
+                    if curr_node.is_svg_element() {
+                        parse_non_svg_attribute(curr_node, prefix.to_str(), local.to_str(), value, post_data);
+                    } else {
+                        curr_node.set_attribute(((prefix.to_str(), local.to_str()), value.to_str()));
                     }
                 }
             }
@@ -301,9 +292,7 @@ fn process_token<'a>(
             }
         }
         xmlparser::Token::Comment(s) => {
-            if opt.parse_comments {
-                create_node!(NodeType::Comment, s.to_str());
-            }
+            create_node!(NodeType::Comment, s.to_str());
         }
         xmlparser::Token::Cdata(s) => {
             if is_inside_style_elem(parent) {
@@ -313,17 +302,15 @@ fn process_token<'a>(
             }
         }
         xmlparser::Token::Declaration(version, encoding, sa) => {
-            if opt.parse_declarations {
-                let mut n = create_node!(NodeType::Declaration, String::new());
-                n.set_attribute((AttributeId::Version, version.to_str()));
+            let mut n = create_node!(NodeType::Declaration, String::new());
+            n.set_attribute((AttributeId::Version, version.to_str()));
 
-                if let Some(encoding) = encoding {
-                    n.set_attribute((AttributeId::Encoding, encoding.to_str()));
-                }
+            if let Some(encoding) = encoding {
+                n.set_attribute((AttributeId::Encoding, encoding.to_str()));
+            }
 
-                if let Some(sa) = sa {
-                    n.set_attribute((AttributeId::Standalone, sa.to_str()));
-                }
+            if let Some(sa) = sa {
+                n.set_attribute((AttributeId::Standalone, sa.to_str()));
             }
         }
           xmlparser::Token::DtdStart(_, _)
@@ -431,20 +418,6 @@ pub fn parse_svg_attribute_value<'a>(
                 if let AttributeValue::LengthList(ref mut list) = av {
                     if list.is_empty() {
                         return Ok(());
-                    }
-
-                    for len in list.iter_mut() {
-                        // replace 'px' with 'none' when 'parse_px_unit' option is disabled
-                        if !opt.parse_px_unit && len.unit == LengthUnit::Px {
-                            len.unit = LengthUnit::None;
-                        }
-                    }
-                }
-
-                if let AttributeValue::Length(ref mut len) = av {
-                    // replace 'px' with 'none' when 'parse_px_unit' option is disabled
-                    if !opt.parse_px_unit && len.unit == LengthUnit::Px {
-                        len.unit = LengthUnit::None;
                     }
                 }
 
@@ -829,9 +802,7 @@ fn parse_style_attribute<'a>(
                         parse_svg_attribute_value(node, "", aid, value, links, entities, opt)?;
                     }
                     None => {
-                        if opt.parse_unknown_attributes {
-                            node.set_attribute((name.to_str(), value.to_str()));
-                        }
+                        node.set_attribute((name.to_str(), value.to_str()));
                     }
                 }
             }
@@ -846,26 +817,27 @@ fn parse_style_attribute<'a>(
     Ok(())
 }
 
-fn resolve_links(links: &mut Links, opt: &ParseOptions) -> Result<()> {
+fn resolve_links(links: &mut Links) {
     for d in &mut links.list {
         let name = (d.prefix, d.attr_id);
         match links.elems_with_id.get(d.iri) {
             Some(node) => {
-                if d.attr_id == AttributeId::Fill || d.attr_id == AttributeId::Stroke {
-                    d.node.set_attribute_checked((name, (node.clone(), d.fallback)))?;
+                let res = if d.attr_id == AttributeId::Fill || d.attr_id == AttributeId::Stroke {
+                    d.node.set_attribute_checked((name, (node.clone(), d.fallback)))
                 } else {
-                    let res = d.node.set_attribute_checked((name, node.clone()));
-                    match res {
-                        Ok(_) => {}
-                        Err(Error::ElementCrosslink) => {
-                            if opt.skip_elements_crosslink {
-                                let attr = Attribute::from((name, node.clone()));
-                                warn!("Crosslink detected. Attribute {} ignored.", attr);
-                            } else {
-                                return Err(Error::ElementCrosslink.into())
-                            }
-                        }
-                        Err(e) => return Err(e.into()),
+                    d.node.set_attribute_checked((name, node.clone()))
+                };
+
+                match res {
+                    Ok(_) => {}
+                    Err(Error::ElementMustHaveAnId) => {
+                        let attr = Attribute::from((name, node.clone()));
+                        warn!("Element without an ID cannot be linked. \
+                                   Attribute {} ignored.", attr);
+                    }
+                    Err(Error::ElementCrosslink) => {
+                        let attr = Attribute::from((name, node.clone()));
+                        warn!("Crosslink detected. Attribute {} ignored.", attr);
                     }
                 }
             }
@@ -893,8 +865,6 @@ fn resolve_links(links: &mut Links, opt: &ParseOptions) -> Result<()> {
             }
         }
     }
-
-    Ok(())
 }
 
 fn is_inside_style_elem(node: &Node) -> bool {
