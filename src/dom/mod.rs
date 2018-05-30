@@ -83,12 +83,68 @@ pub struct NodeData {
 impl fmt::Debug for NodeData {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self.node_type {
-            NodeType::Root => write!(f, "RootNode"),
-            NodeType::Element => write!(f, "ElementNode({:?} id={:?})", self.tag_name, self.id),
-            NodeType::Declaration => write!(f, "DeclarationNode({:?})", self.text),
-            NodeType::Comment => write!(f, "CommentNode({:?})", self.text),
-            NodeType::Cdata => write!(f, "CdataNode({:?})", self.text),
-            NodeType::Text => write!(f, "TextNode({:?})", self.text),
+            NodeType::Root => write!(f, "Root()"),
+            NodeType::Element => {
+                write!(f, "Element({}", self.tag_name)?;
+                write_element_content(self, f, true, true)?;
+                write!(f, ")")
+            }
+            NodeType::Declaration => {
+                write!(f, "Declaration(")?;
+                write_element_content(self, f, false, false)?;
+                write!(f, ")")
+            }
+            NodeType::Comment => write!(f, "Comment({})", self.text),
+            NodeType::Cdata => write!(f, "CDATA({})", self.text),
+            NodeType::Text => write!(f, "Text({})", self.text),
         }
     }
+}
+
+impl fmt::Display for NodeData {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self.node_type {
+            NodeType::Root => write!(f, ""),
+            NodeType::Element => {
+                write!(f, "<{}", self.tag_name)?;
+                write_element_content(self, f, true, false)?;
+                write!(f, ">")
+            }
+            NodeType::Declaration => {
+                write!(f, "<?xml")?;
+                write_element_content(self, f, true, false)?;
+                write!(f, "?>")
+            }
+            NodeType::Comment => write!(f, "<!--{}-->", self.text),
+            NodeType::Cdata => write!(f, "<![CDATA[{}]]>", self.text),
+            NodeType::Text => write!(f, "{}", self.text),
+        }
+    }
+}
+
+fn write_element_content(
+    node: &NodeData,
+    f: &mut fmt::Formatter,
+    space_before_attrs: bool,
+    print_linked: bool,
+) -> fmt::Result {
+    if !node.id.is_empty() {
+        write!(f, " id=\"{}\"", node.id)?;
+    }
+
+    if !node.attributes.is_empty() {
+        if space_before_attrs {
+            write!(f, " ")?;
+        }
+        write!(f, "{}", node.attributes)?;
+    }
+
+    if print_linked && !node.linked_nodes.is_empty() {
+        write!(f, "; linked-nodes:")?;
+        for node in &node.linked_nodes {
+            write!(f, " \"{}\"", *node.id())?;
+        }
+    }
+
+    Ok(())
 }

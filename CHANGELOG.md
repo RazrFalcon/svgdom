@@ -5,14 +5,19 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Added
+- Implemented `Display` for `Attributes` and `Node`.
+
 ### Changed
 - Split `Error` into `Error` and `ParserError`.
+- New `Debug` implementation for `Attributes` and `Node`.
 
 ### Removed
 - `failure` dependency.
 - Unused error types.
 - `parse_comments`, `parse_declarations`, `parse_unknown_elements`, `parse_unknown_attributes`,
   `parse_px_unit`, `skip_elements_crosslink`, `skip_paint_fallback` from `ParseOptions`.
+- `assert_eq_text` macro.
 
 ## [0.13.0] - 2018-05-23
 ### Added

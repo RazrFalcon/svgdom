@@ -55,6 +55,12 @@ impl<T: fmt::Debug> fmt::Debug for Node<T> {
     }
 }
 
+impl<T: fmt::Display> fmt::Display for Node<T> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        fmt::Display::fmt(&*self.borrow(), f)
+    }
+}
+
 
 macro_rules! try_opt {
     ($expr: expr) => {

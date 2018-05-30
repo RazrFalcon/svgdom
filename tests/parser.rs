@@ -6,7 +6,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#[macro_use]
+#[macro_use] extern crate pretty_assertions;
+
 extern crate svgdom;
 
 use svgdom::{
@@ -32,7 +33,7 @@ macro_rules! test_resave {
         #[test]
         fn $name() {
             let doc = Document::from_str($in_text).unwrap();
-            assert_eq_text!(doc.with_write_opt(&write_options()).to_string(), $out_text);
+            assert_eq!(doc.with_write_opt(&write_options()).to_string(), $out_text);
         }
     )
 }
@@ -472,7 +473,7 @@ fn skip_unresolved_classes_1() {
     <g class='fil1 fil4 str1 fil5'/>
 </svg>", &opt).unwrap();
 
-    assert_eq_text!(doc.with_write_opt(&write_options()).to_string(),
+    assert_eq!(doc.with_write_opt(&write_options()).to_string(),
 "<svg>
     <g class='fil3' fill='#0000ff'/>
     <g class='fil4 fil5' fill='#0000ff' stroke='#0000ff'/>

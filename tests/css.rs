@@ -6,7 +6,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#[macro_use]
+#[macro_use] extern crate pretty_assertions;
+
 extern crate svgdom;
 
 use svgdom::{
@@ -26,7 +27,7 @@ macro_rules! test_resave {
         #[test]
         fn $name() {
             let doc = Document::from_str($in_text).unwrap();
-            assert_eq_text!(doc.with_write_opt(&write_options()).to_string(), $out_text);
+            assert_eq!(doc.with_write_opt(&write_options()).to_string(), $out_text);
         }
     )
 }

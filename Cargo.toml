@@ -23,6 +23,7 @@ svgtypes = { git = "https://github.com/RazrFalcon/svgtypes", rev = "f471398" }
 [dev-dependencies]
 time = "0.1"
 bencher = "0.1"
+pretty_assertions = "0.5.1"
 
 [[bench]]
 name = "parser"

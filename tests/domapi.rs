@@ -6,7 +6,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#[macro_use]
+#[macro_use] extern crate pretty_assertions;
+
 extern crate svgdom;
 
 use svgdom::{
@@ -227,7 +228,7 @@ fn drain_1() {
     let root = doc.root().clone();
     assert_eq!(doc.drain(root, |n| n.is_tag_name(EId::Rect)), 1);
 
-    assert_eq_text!(doc.to_string(), "<svg/>\n");
+    assert_eq!(doc.to_string(), "<svg/>\n");
 }
 
 #[test]
@@ -244,7 +245,7 @@ fn drain_2() {
     let root = doc.root().clone();
     assert_eq!(doc.drain(root, |n| n.is_tag_name(EId::Path)), 1);
 
-    assert_eq_text!(doc.to_string(),
+    assert_eq!(doc.to_string(),
 "<svg>
     <rect/>
     <g/>
@@ -267,7 +268,7 @@ fn drain_3() {
     let root = doc.root().clone();
     assert_eq!(doc.drain(root, |n| n.is_tag_name(EId::G)), 1);
 
-    assert_eq_text!(doc.to_string(),
+    assert_eq!(doc.to_string(),
 "<svg>
     <rect/>
     <rect/>
@@ -289,7 +290,7 @@ fn drain_4() {
     let root = doc.root().clone();
     assert_eq!(doc.drain(root, |n| n.is_tag_name(EId::Rect)), 3);
 
-    assert_eq_text!(doc.to_string(),
+    assert_eq!(doc.to_string(),
 "<svg>
     <g/>
 </svg>
@@ -313,7 +314,7 @@ fn deep_copy_1() {
 
     let mut opt = WriteOptions::default();
     opt.use_single_quote = true;
-    assert_eq_text!(doc.with_write_opt(&opt).to_string(),
+    assert_eq!(doc.with_write_opt(&opt).to_string(),
 "<svg>
     <g id='g1'>
         <rect id='rect1'/>
@@ -344,7 +345,7 @@ fn deep_copy_2() {
 
     let mut opt = WriteOptions::default();
     opt.use_single_quote = true;
-    assert_eq_text!(doc.with_write_opt(&opt).to_string(),
+    assert_eq!(doc.with_write_opt(&opt).to_string(),
 "<svg>
     <g id='g1'>
         <rect id='rect1'/>
@@ -380,7 +381,7 @@ fn deep_copy_3() {
 
     let mut opt = WriteOptions::default();
     opt.use_single_quote = true;
-    assert_eq_text!(doc.with_write_opt(&opt).to_string(),
+    assert_eq!(doc.with_write_opt(&opt).to_string(),
 "<svg>
     <linearGradient id='lg1'/>
     <g id='g1' stroke-width='5'>

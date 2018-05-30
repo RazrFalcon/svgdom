@@ -316,23 +316,23 @@ impl IntoIterator for Attributes {
 
 impl fmt::Debug for Attributes {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        return write!(f, "Attributes({})", self);
+    }
+}
+
+impl fmt::Display for Attributes {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         if self.is_empty() {
-            return write!(f, "Attributes()");
+            return Ok(());
         }
 
         let mut out = Vec::with_capacity(256);
 
-        out.extend_from_slice(b"Attributes(");
-
         for attr in self.iter() {
             attr.write_buf(&mut out);
-            out.push(b',');
             out.push(b' ');
         }
-
         out.pop();
-        out.pop();
-        out.push(b')');
 
         write!(f, "{}", str::from_utf8(&out).unwrap())
     }

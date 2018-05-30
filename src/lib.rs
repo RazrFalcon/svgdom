@@ -55,22 +55,6 @@ extern crate slab;
 extern crate svgtypes;
 
 
-// TODO: #[cfg(test)]
-#[macro_export]
-macro_rules! assert_eq_text {
-    ($left:expr, $right:expr) => ({
-        match (&$left, &$right) {
-            (left_val, right_val) => {
-                if !(*left_val == *right_val) {
-                    panic!("assertion failed: `(left == right)` \
-                           \nleft:  `{}`\nright: `{}`",
-                           left_val, right_val)
-                }
-            }
-        }
-    })
-}
-
 mod attribute;
 mod dom;
 mod error;

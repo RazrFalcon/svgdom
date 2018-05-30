@@ -6,7 +6,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#[macro_use]
+#[macro_use] extern crate pretty_assertions;
+
 extern crate svgdom;
 
 use svgdom::{
@@ -26,7 +27,7 @@ macro_rules! test_resave {
             let mut opt = WriteOptions::default();
             opt.use_single_quote = true;
 
-            assert_eq_text!(doc.with_write_opt(&opt).to_string(), $out_text);
+            assert_eq!(doc.with_write_opt(&opt).to_string(), $out_text);
         }
     )
 }
@@ -131,7 +132,7 @@ fn text_1() {
     doc.root().append(svg.clone());
     svg.append(text.clone());
 
-    assert_eq_text!(doc.to_string(),
+    assert_eq!(doc.to_string(),
 "<svg>text</svg>
 ");
 }
