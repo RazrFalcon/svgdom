@@ -354,23 +354,6 @@ impl Node {
         self.borrow().attributes.contains(name)
     }
 
-    // TODO: remove
-    /// Returns `true` if the node has any of provided attributes.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the node is currently mutably borrowed.
-    pub fn has_attributes(&self, ids: &[AttributeId]) -> bool {
-        let attrs = self.attributes();
-        for id in ids {
-            if attrs.contains(*id) {
-                return true;
-            }
-        }
-
-        false
-    }
-
     /// Inserts a new attribute into attributes list.
     ///
     /// Unwrapped version of the [`set_attribute_checked`] method.
@@ -564,7 +547,7 @@ impl Node {
             };
 
             let mut attributes = self.attributes_mut();
-            attributes.insert_impl(a);
+            attributes.insert(a);
         }
 
         node.borrow_mut().linked_nodes.push(self.clone());
@@ -628,7 +611,7 @@ impl Node {
             }
         }
 
-        self.attributes_mut().remove_impl(name);
+        self.attributes_mut().remove(name);
     }
 
     /// Returns an iterator over linked nodes.

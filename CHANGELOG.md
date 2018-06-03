@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 - Split `Error` into `Error` and `ParserError`.
 - New `Debug` implementation for `Attributes` and `Node`.
+- `Attributes::new`, `Attributes::insert` and `Attributes::remove` are private now.
 
 ### Removed
 - `failure` dependency.
@@ -18,6 +19,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - `parse_comments`, `parse_declarations`, `parse_unknown_elements`, `parse_unknown_attributes`,
   `parse_px_unit`, `skip_elements_crosslink`, `skip_paint_fallback` from `ParseOptions`.
 - `assert_eq_text` macro.
+- `Attributes::insert_from`. Use `Node::set_attribute` instead,
+- `Attributes::remove_impl`.
+- `Attributes::retain`.
+- `Node::has_attributes`.
 
 ## [0.13.0] - 2018-05-23
 ### Added

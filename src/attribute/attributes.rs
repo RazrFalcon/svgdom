@@ -10,10 +10,7 @@ use std::fmt;
 use std::str;
 use std::mem;
 use std::iter::FilterMap;
-use std::slice::{
-    Iter,
-    IterMut,
-};
+use std::slice::{Iter, IterMut};
 
 use {
     Attribute,
@@ -71,10 +68,8 @@ pub struct Attributes(Vec<Attribute>);
 
 impl Attributes {
     /// Constructs a new attribute.
-    ///
-    /// **Warning:** this method is for private use only. Never invoke it directly.
     #[inline]
-    pub fn new() -> Attributes {
+    pub(crate) fn new() -> Attributes {
         Attributes(Vec::new())
     }
 
@@ -146,41 +141,8 @@ impl Attributes {
         None
     }
 
-    /// Inserts a new attribute. Previous will be overwritten.
-    ///
-    /// # Panics
-    ///
-    /// During insert of a linked attribute. Use [`Node::set_attribute()`] instead.
-    ///
-    /// Will panic only in debug build.
-    ///
-    /// [`Node::set_attribute()`]: type.Node.html#method.set_attribute
-    pub fn insert(&mut self, attr: Attribute) {
-        if cfg!(debug_assertions) {
-            if attr.is_link_container() {
-                panic!("attribute with Link/FuncLink/Paint value must be set only via Node::set_attribute");
-            }
-        }
-
-        self.insert_impl(attr);
-    }
-
-    /// Creates a new attribute from name and value and inserts it. Previous will be overwritten.
-    ///
-    /// [`Node`] attribute value can be set only via [`Node::set_attribute()`] method.
-    ///
-    /// [`Node`]: type.Node.html
-    /// [`Node::set_attribute()`]: type.Node.html#method.set_attribute
-    pub fn insert_from<'a, N, T>(&mut self, name: N, value: T)
-        where AttributeQNameRef<'a>: From<N>, AttributeValue: From<T>
-    {
-        self.insert(Attribute::new(name, value));
-    }
-
     /// Inserts a new link attribute.
-    ///
-    /// **Warning:** this method is for private use only. Never invoke it directly.
-    pub fn insert_impl(&mut self, attr: Attribute) {
+    pub(crate) fn insert(&mut self, attr: Attribute) {
         // Increase capacity on first insert.
         if self.0.capacity() == 0 {
             self.0.reserve(16);
@@ -195,38 +157,7 @@ impl Attributes {
     }
 
     /// Removes an existing attribute.
-    ///
-    /// # Panics
-    ///
-    /// During remove of a linked attribute. Use [`Node::remove_attribute()`] instead.
-    ///
-    /// Will panic only in debug build.
-    ///
-    /// [`Node::remove_attribute()`]: type.Node.html#method.remove_attribute
-    pub fn remove<'a, N>(&mut self, name: N)
-        where AttributeQNameRef<'a>: From<N>, N: Copy
-    {
-        // Checks that removed attribute is not linked.
-        //
-        // Since this check is expensive - we do it only in debug build.
-        if cfg!(debug_assertions) {
-            let name = AttributeQNameRef::from(name);
-            let attr = self.0.iter().find(|x| x.name.as_ref() == name);
-            if let Some(attr) = attr {
-                if attr.is_link_container() {
-                    panic!("attribute with Link/FuncLink/Paint value must be removed \
-                            only via Node::remove_attribute");
-                }
-            }
-        }
-
-        self.remove_impl(name);
-    }
-
-    /// Removes an existing attribute.
-    ///
-    /// **Warning:** this method is for private use only. Never invoke it directly.
-    pub fn remove_impl<'a, N>(&mut self, name: N)
+    pub(crate) fn remove<'a, N>(&mut self, name: N)
         where AttributeQNameRef<'a>: From<N>
     {
         let name = AttributeQNameRef::from(name);
@@ -267,36 +198,6 @@ impl Attributes {
     #[inline]
     pub fn iter_mut(&mut self) -> IterMut<Attribute> {
         self.0.iter_mut()
-    }
-
-    /// Retains only elements specified by the predicate.
-    ///
-    /// # Panics
-    ///
-    /// During remove of a linked attribute. Use [`Node::remove_attribute()`] instead.
-    ///
-    /// Will panic only in debug build.
-    ///
-    /// [`Node::remove_attribute()`]: type.Node.html#method.remove_attribute
-    #[inline]
-    pub fn retain<F>(&mut self, mut f: F)
-        where F: FnMut(&Attribute) -> bool
-    {
-        // Checks that removed attribute is not linked.
-        //
-        // Since this check is expensive - we do it only in debug build.
-        if cfg!(debug_assertions) {
-            for attr in &self.0 {
-                if !f(attr) {
-                    if attr.is_link_container() {
-                        panic!("attribute with Link/FuncLink/Paint value must be removed \
-                                only via Node::remove_attribute");
-                    }
-                }
-            }
-        }
-
-        self.0.retain(f)
     }
 
     /// Clears the attributes list, removing all values.

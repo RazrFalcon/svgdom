@@ -418,52 +418,6 @@ fn set_attr_1() {
 }
 
 #[test]
-#[should_panic]
-#[cfg(debug_assertions)]
-fn set_attr_2() {
-    let mut doc = Document::new();
-    let mut rect = doc.create_element(EId::Rect);
-    let mut rect2 = doc.create_element(EId::Rect);
-    rect2.set_id("rect2");
-
-    rect.set_attribute((AId::Href, rect2.clone()));
-    let attr = rect.attributes().get(AId::Href).cloned().unwrap();
-
-    // must panic
-    rect.attributes_mut().insert(attr);
-}
-
-#[test]
-#[should_panic]
-#[cfg(debug_assertions)]
-fn remove_attr_1() {
-    let mut doc = Document::new();
-    let mut rect = doc.create_element(EId::Rect);
-    let mut rect2 = doc.create_element(EId::Rect);
-    rect2.set_id("rect2");
-
-    rect.set_attribute((AId::Href, rect2));
-
-    // must panic
-    rect.attributes_mut().remove(AId::Href);
-}
-
-#[test]
-#[should_panic]
-#[cfg(debug_assertions)]
-fn remove_attr_2() {
-    let mut doc = Document::new();
-    let mut rect = doc.create_element(EId::Rect);
-    let mut rect2 = doc.create_element(EId::Rect);
-    rect2.set_id("rect2");
-
-    rect.set_attribute((AId::Href, rect2));
-
-    // must panic
-    rect.attributes_mut().retain(|a| !a.has_id("", AId::Href));
-}
-
-#[test]
 fn query_attr_1() {
     let mut doc = Document::new();
     let mut rect = doc.create_element(EId::Rect);
