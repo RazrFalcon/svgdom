@@ -24,6 +24,7 @@ use {
     FilterSvg,
     FilterSvgAttrs,
     Node,
+    NodeData,
     NodeType,
     ParserError,
     QName,
@@ -31,9 +32,6 @@ use {
     TagNameRef,
     WriteBuffer,
     WriteOptions,
-};
-use super::{
-    NodeData,
 };
 
 /// Container of [`Node`]s.

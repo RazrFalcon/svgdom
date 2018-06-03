@@ -6,9 +6,11 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use std::iter::FilterMap;
 use std::cell::{Ref, RefMut};
 
 use {
+    tree,
     Attribute,
     AttributeId,
     AttributeQName,
@@ -17,16 +19,13 @@ use {
     AttributeValue,
     ElementId,
     Error,
+    NodeData,
     NodeType,
     PaintFallback,
     QName,
     QNameRef,
     TagName,
     TagNameRef,
-};
-use super::{
-    tree,
-    NodeData,
 };
 
 impl<'a, N, V> From<(N, V)> for Attribute
@@ -658,3 +657,23 @@ impl Node {
         self.linked_nodes().len()
     }
 }
+
+/// An iterator over SVG elements.
+pub trait FilterSvg: Iterator {
+    /// Filters SVG elements.
+    fn svg(self) -> FilterMap<Self, fn(Node) -> Option<(ElementId, Node)>>
+        where Self: Iterator<Item = Node> + Sized,
+    {
+        fn is_svg(node: Node) -> Option<(ElementId, Node)> {
+            if let QName::Id(_, id) = *node.tag_name() {
+                return Some((id, node.clone()));
+            }
+
+            None
+        }
+
+        self.filter_map(is_svg)
+    }
+}
+
+impl<'a, I: Iterator<Item = Node>> FilterSvg for I {}

@@ -47,6 +47,7 @@ At last, the `id` attribute is stored as a separate value and not as part of the
 
 #![doc(html_root_url = "https://docs.rs/svgdom/0.13.0")]
 
+#![forbid(unsafe_code)]
 #![warn(missing_docs)]
 
 #[macro_use] extern crate log;
@@ -56,19 +57,31 @@ extern crate svgtypes;
 
 
 mod attribute;
-mod dom;
+mod document;
+mod node;
+mod tree;
+mod element_type;
 mod error;
 mod name;
 mod parser;
 mod writer;
+mod attribute_type;
+mod attribute_value;
+mod attributes;
 
 
 pub use attribute::*;
-pub use dom::*;
+pub use attribute_type::AttributeType;
+pub use attribute_value::AttributeValue;
+pub use attributes::*;
+pub use document::Document;
+pub use element_type::ElementType;
 pub use error::*;
 pub use name::*;
-pub use writer::*;
+pub use node::*;
 pub use parser::ParseOptions;
+pub use tree::iterator::*;
+pub use writer::*;
 
 pub use svgtypes::{
     Align,
@@ -96,3 +109,48 @@ pub use svgtypes::{
     WriteBuffer as ValueWriteBuffer,
     WriteOptions as ValueWriteOptions,
 };
+
+
+/// Type alias for `QNameRef<ElementId>`.
+pub type TagNameRef<'a> = QNameRef<'a, ElementId>;
+/// Type alias for `QName<ElementId>`.
+pub type TagName = QName<ElementId>;
+
+/// Type alias for `QName<AttributeId>`.
+pub type AttributeQName = QName<AttributeId>;
+/// Type alias for `QNameRef<AttributeId>`.
+pub type AttributeQNameRef<'a> = QNameRef<'a, AttributeId>;
+
+
+/// List of supported node types.
+#[derive(Clone, Copy, PartialEq, Debug)]
+pub enum NodeType {
+    /// Root node of the `Document`.
+    ///
+    /// Constructed with `Document`. Unavailable to the user.
+    Root,
+    /// Element node.
+    ///
+    /// Only an element can have attributes, ID and tag name.
+    Element,
+    /// Declaration node.
+    Declaration,
+    /// Comment node.
+    Comment,
+    /// CDATA node.
+    Cdata,
+    /// Text node.
+    Text,
+}
+
+
+/// Node's data.
+pub struct NodeData {
+    storage_key: Option<usize>,
+    node_type: NodeType,
+    tag_name: TagName,
+    id: String,
+    attributes: Attributes,
+    linked_nodes: Vec<Node>,
+    text: String,
+}

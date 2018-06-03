@@ -7,8 +7,8 @@
 // except according to those terms.
 
 use {
-    ValueWriteOptions,
     ListSeparator,
+    ValueWriteOptions,
 };
 
 /// XML node indention

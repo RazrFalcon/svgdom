@@ -8,26 +8,15 @@
 
 use std::fmt;
 
-pub use self::attribute_type::*;
-pub use self::attribute_value::*;
-pub use self::attributes::*;
-
-mod attribute_type;
-mod attribute_value;
-mod attributes;
-
 use {
     AttributeId,
+    AttributeQName,
+    AttributeQNameRef,
+    AttributeValue,
     QName,
-    QNameRef,
     WriteBuffer,
     WriteOptions,
 };
-
-/// Type alias for `QName<AttributeId>`.
-pub type AttributeQName = QName<AttributeId>;
-/// Type alias for `QNameRef<AttributeId>`.
-pub type AttributeQNameRef<'a> = QNameRef<'a, AttributeId>;
 
 
 /// Representation of the SVG attribute object.
