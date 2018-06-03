@@ -41,7 +41,7 @@ pub enum QName<T: SvgId> {
 }
 
 impl<T: SvgId> QName<T> {
-    /// Returns `Name` as `NameRef`.
+    /// Returns `QName` as `QNameRef`.
     pub fn as_ref(&self) -> QNameRef<T> {
         match *self {
             QName::Id(ref prefix, id) => QNameRef::Id(prefix, id),

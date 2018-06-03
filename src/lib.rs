@@ -125,21 +125,21 @@ pub type AttributeQNameRef<'a> = QNameRef<'a, AttributeId>;
 /// List of supported node types.
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub enum NodeType {
-    /// Root node of the `Document`.
+    /// The root node of the `Document`.
     ///
     /// Constructed with `Document`. Unavailable to the user.
     Root,
-    /// Element node.
+    /// An element node.
     ///
     /// Only an element can have attributes, ID and tag name.
     Element,
-    /// Declaration node.
+    /// A declaration node.
     Declaration,
-    /// Comment node.
+    /// A comment node.
     Comment,
-    /// CDATA node.
+    /// A CDATA node.
     Cdata,
-    /// Text node.
+    /// A text node.
     Text,
 }
 

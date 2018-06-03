@@ -505,6 +505,7 @@ fn write_newline(indent: Indent, out: &mut Vec<u8>) {
     }
 }
 
+
 impl fmt::Debug for NodeData {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self.node_type {

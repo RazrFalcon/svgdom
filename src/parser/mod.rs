@@ -142,8 +142,8 @@ pub fn parse_svg(text: &str, opt: &ParseOptions) -> Result<Document> {
 
     // Resolve styles.
     for d in &mut post_data.style_attrs {
-        parse_style_attribute(&mut d.node, d.span, &mut post_data.links,
-                              &post_data.entities, opt)?;
+        parse_style_attribute(d.span, opt, &post_data.entities,
+                              &mut d.node, &mut post_data.links)?;
     }
 
     resolve_links(&mut post_data.links);
@@ -191,14 +191,14 @@ fn process_token<'a>(
             match AttributeId::from_str(local) {
                 Some(aid) => {
                     if node.is_svg_element() {
-                        parse_svg_attribute(node, prefix, aid, value, post_data, opt)?;
+                        parse_svg_attribute(prefix, aid, value, opt, node, post_data)?;
                     } else {
                         node.set_attribute(((prefix, aid.as_str()), value.to_str()));
                     }
                 }
                 None => {
                     if node.is_svg_element() {
-                        parse_non_svg_attribute(node, prefix, local, value, post_data);
+                        parse_non_svg_attribute(prefix, local, value, post_data, node);
                     } else {
                         node.set_attribute(((prefix, local), value.to_str()));
                     }
@@ -303,12 +303,12 @@ fn process_token<'a>(
 }
 
 fn parse_svg_attribute<'a>(
-    node: &mut Node,
     prefix: &'a str,
     id: AttributeId,
     value: StrSpan<'a>,
-    post_data: &mut PostData<'a>,
     opt: &ParseOptions,
+    node: &mut Node,
+    post_data: &mut PostData<'a>,
 ) -> Result<()> {
     match id {
         AttributeId::Id => {
@@ -342,8 +342,8 @@ fn parse_svg_attribute<'a>(
             }
         }
         _ => {
-            parse_svg_attribute_value(node, prefix, id, value, &mut post_data.links,
-                                      &post_data.entities, opt)?;
+            parse_svg_attribute_value(prefix, id, value, opt, node, &mut post_data.links,
+                                      &post_data.entities)?;
         }
     }
 
@@ -351,15 +351,15 @@ fn parse_svg_attribute<'a>(
 }
 
 pub fn parse_svg_attribute_value<'a>(
-    node: &mut Node,
     prefix: &'a str,
     id: AttributeId,
     value: StrSpan<'a>,
+    opt: &ParseOptions,
+    node: &mut Node,
     links: &mut Links<'a>,
     entities: &Entities<'a>,
-    opt: &ParseOptions,
 ) -> Result<()> {
-    let av = _parse_svg_attribute_value(node, prefix, id, value, links, entities, opt);
+    let av = _parse_svg_attribute_value(prefix, id, value, opt, entities, node, links);
 
     match av {
         Ok(av) => {
@@ -395,13 +395,13 @@ fn f64_bound(min: f64, val: f64, max: f64) -> f64 {
 }
 
 pub fn _parse_svg_attribute_value<'a>(
-    node: &mut Node,
     prefix: &'a str,
     aid: AttributeId,
     value: StrSpan<'a>,
-    links: &mut Links<'a>,
-    entities: &Entities<'a>,
     opt: &ParseOptions,
+    entities: &Entities<'a>,
+    node: &mut Node,
+    links: &mut Links<'a>,
 ) -> Result<Option<AttributeValue>> {
     use AttributeId as AId;
 
@@ -419,7 +419,8 @@ pub fn _parse_svg_attribute_value<'a>(
             if let Ok(Reference::EntityRef(link)) = r {
                 match entities.get(link.to_str()) {
                     Some(link_value) => {
-                        parse_svg_attribute_value(node, prefix, aid, *link_value, links, entities, opt)?;
+                        parse_svg_attribute_value(prefix, aid, *link_value, opt,
+                                                  node, links, entities)?;
                         return Ok(None);
                     }
                     None => {
@@ -706,11 +707,11 @@ pub fn _parse_svg_attribute_value<'a>(
 }
 
 fn parse_non_svg_attribute<'a>(
-    node: &mut Node,
     prefix: &str,
     name: &str,
     value: StrSpan<'a>,
     post_data: &PostData<'a>,
+    node: &mut Node,
 ) {
     let mut stream = Stream::from(value);
     let new_value = if stream.is_curr_byte_eq(b'&') {
@@ -735,18 +736,18 @@ fn parse_non_svg_attribute<'a>(
 }
 
 fn parse_style_attribute<'a>(
-    node: &mut Node,
-    span: StrSpan<'a>,
-    links: &mut Links<'a>,
-    entities: &Entities<'a>,
+    text: StrSpan<'a>,
     opt: &ParseOptions,
+    entities: &Entities<'a>,
+    node: &mut Node,
+    links: &mut Links<'a>,
 ) -> Result<()> {
-    for token in StyleParser::from(span) {
+    for token in StyleParser::from(text) {
         match token? {
             StyleToken::Attribute(name, value) => {
                 match AttributeId::from_str(name.to_str()) {
                     Some(aid) => {
-                        parse_svg_attribute_value(node, "", aid, value, links, entities, opt)?;
+                        parse_svg_attribute_value("", aid, value, opt, node, links, entities)?;
                     }
                     None => {
                         node.set_attribute((name.to_str(), value.to_str()));
@@ -755,7 +756,7 @@ fn parse_style_attribute<'a>(
             }
             StyleToken::EntityRef(name) => {
                 if let Some(value) = entities.get(name) {
-                    parse_style_attribute(node, *value, links, entities, opt)?;
+                    parse_style_attribute(*value, opt, entities, node, links)?;
                 }
             }
         }
@@ -780,7 +781,7 @@ fn resolve_links(links: &mut Links) {
                     Err(Error::ElementMustHaveAnId) => {
                         let attr = Attribute::from((name, node.clone()));
                         warn!("Element without an ID cannot be linked. \
-                                   Attribute {} ignored.", attr);
+                               Attribute {} ignored.", attr);
                     }
                     Err(Error::ElementCrosslink) => {
                         let attr = Attribute::from((name, node.clone()));
