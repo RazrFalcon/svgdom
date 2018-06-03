@@ -40,7 +40,7 @@ pub fn resolve_css<'a>(
 ) -> Result<(), ParserError> {
     use simplecss::Token as CssToken;
 
-    #[derive(Clone,Copy,Debug)]
+    #[derive(Clone, Copy, Debug)]
     enum CssSelector<'a> {
         Universal,
         Type(&'a str),

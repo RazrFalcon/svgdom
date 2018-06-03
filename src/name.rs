@@ -32,7 +32,7 @@ impl SvgId for ElementId {
 }
 
 /// Qualified name.
-#[derive(Clone,PartialEq,Debug)]
+#[derive(Clone, PartialEq, Debug)]
 pub enum QName<T: SvgId> {
     /// For an SVG name.
     Id(String, T),
@@ -87,7 +87,7 @@ impl<T: SvgId> fmt::Display for QName<T> {
 }
 
 /// Qualified name reference.
-#[derive(Clone,Copy,PartialEq,Debug)]
+#[derive(Clone, Copy, PartialEq, Debug)]
 pub enum QNameRef<'a, T: SvgId> {
     /// For an SVG name.
     Id(&'a str, T),

@@ -30,7 +30,7 @@ use {
 // TODO: custom debug
 
 /// Value of the SVG attribute.
-#[derive(Clone,PartialEq,Debug)]
+#[derive(Clone, PartialEq, Debug)]
 #[allow(missing_docs)]
 pub enum AttributeValue {
     None,

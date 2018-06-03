@@ -24,7 +24,7 @@ pub type AttributeQNameRef<'a> = QNameRef<'a, AttributeId>;
 
 
 /// Representation of the SVG attribute object.
-#[derive(PartialEq,Clone,Debug)]
+#[derive(Clone, PartialEq, Debug)]
 pub struct Attribute {
     /// Attribute name.
     pub name: AttributeQName,

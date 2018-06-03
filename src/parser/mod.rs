@@ -30,32 +30,7 @@ use svgtypes::xmlparser::{
     StrSpan,
 };
 
-use {
-    AspectRatio,
-    Attribute,
-    AttributeId,
-    AttributeValue,
-    Color,
-    Document,
-    ElementId,
-    ElementType,
-    Error,
-    FilterSvg,
-    FromSpan,
-    Length,
-    LengthList,
-    Node,
-    NodeType,
-    NumberList,
-    ParseOptions,
-    ParserError,
-    Path,
-    Points,
-    TagName,
-    TagNameRef,
-    Transform,
-    ViewBox,
-};
+use super::*;
 
 type Result<T> = ::std::result::Result<T, ParserError>;
 
@@ -114,11 +89,6 @@ pub struct PostData<'a> {
 }
 
 pub fn parse_svg(text: &str, opt: &ParseOptions) -> Result<Document> {
-    let mut doc = Document::new();
-    let mut root = doc.root();
-
-    let mut tokens = xmlparser::Tokenizer::from(text);
-
     // Since we not only parsing, but also converting an SVG structure,
     // we can't do everything in one take.
     // At first, we create nodes structure with attributes.
@@ -135,32 +105,29 @@ pub fn parse_svg(text: &str, opt: &ParseOptions) -> Result<Document> {
         style_attrs: Vec::new(),
     };
 
-    // process SVG tokens
-    let mut node: Option<Node> = None;
+    let mut doc = Document::new();
+    let root = doc.root();
 
+    // Process SVG tokens.
+    let mut tokens = xmlparser::Tokenizer::from(text);
+    let mut node = root.clone();
+    let mut parent = root.clone();
     while let Some(token) = tokens.next() {
-        process_token(&mut doc, token?,
-                      &mut node, &mut root,
-                      &mut post_data, opt)?
+        process_token(token?, opt, &mut doc, &mut node, &mut parent, &mut post_data)?;
     }
 
-    // document must contain any children
+    // Document must contain any nodes.
     if !root.has_children() {
         return Err(ParserError::EmptyDocument);
     }
 
-    // first element must be an 'svg'
-    match root.children().svg().nth(0) {
-        Some((id, _)) => {
-            if id != ElementId::Svg {
-                return Err(ParserError::NoSvgElement);
-            }
-        }
-        None => {
-            return Err(ParserError::NoSvgElement);
-        }
+    // First element must be an 'svg' element.
+    if doc.svg_element().is_none() {
+        return Err(ParserError::NoSvgElement);
     }
 
+    // Remove 'style' elements, because their content (CSS)
+    // is stored separately and will be processed later.
     doc.drain(root.clone(), |n| n.is_tag_name(ElementId::Style));
 
     resolve_entity_references(&mut doc, &mut post_data, opt)?;
@@ -173,7 +140,7 @@ pub fn parse_svg(text: &str, opt: &ParseOptions) -> Result<Document> {
         }
     }
 
-    // resolve styles
+    // Resolve styles.
     for d in &mut post_data.style_attrs {
         parse_style_attribute(&mut d.node, d.span, &mut post_data.links,
                               &post_data.entities, opt)?;
@@ -187,17 +154,17 @@ pub fn parse_svg(text: &str, opt: &ParseOptions) -> Result<Document> {
 }
 
 fn process_token<'a>(
-    doc: &mut Document,
     token: xmlparser::Token<'a>,
-    node: &mut Option<Node>,
+    opt: &ParseOptions,
+    doc: &mut Document,
+    node: &mut Node,
     parent: &mut Node,
     post_data: &mut PostData<'a>,
-    opt: &ParseOptions,
 ) -> Result<()> {
     macro_rules! create_node {
         ($nodetype:expr, $buf:expr) => {{
             let e = doc.create_node($nodetype, $buf);
-            *node = Some(e.clone());
+            *node = e.clone();
             parent.append(e.clone());
             e
         }}
@@ -214,24 +181,26 @@ fn process_token<'a>(
                 }
             };
 
-            *node = Some(curr_node.clone());
+            *node = curr_node.clone();
             parent.append(curr_node);
         }
         xmlparser::Token::Attribute((prefix, local), value) => {
-            let curr_node = node.as_mut().unwrap();
-            match AttributeId::from_str(local.to_str()) {
+            let prefix = prefix.to_str();
+            let local = local.to_str();
+
+            match AttributeId::from_str(local) {
                 Some(aid) => {
-                    if curr_node.is_svg_element() {
-                        parse_svg_attribute(curr_node, prefix.to_str(), aid, value, post_data, opt)?;
+                    if node.is_svg_element() {
+                        parse_svg_attribute(node, prefix, aid, value, post_data, opt)?;
                     } else {
-                        curr_node.set_attribute(((prefix.to_str(), aid.as_str()), value.to_str()));
+                        node.set_attribute(((prefix, aid.as_str()), value.to_str()));
                     }
                 }
                 None => {
-                    if curr_node.is_svg_element() {
-                        parse_non_svg_attribute(curr_node, prefix.to_str(), local.to_str(), value, post_data);
+                    if node.is_svg_element() {
+                        parse_non_svg_attribute(node, prefix, local, value, post_data);
                     } else {
-                        curr_node.set_attribute(((prefix.to_str(), local.to_str()), value.to_str()));
+                        node.set_attribute(((prefix, local), value.to_str()));
                     }
                 }
             }
@@ -243,22 +212,15 @@ fn process_token<'a>(
                     let prefix = prefix.to_str();
                     let local = local.to_str();
 
-                    if let Some(ref n) = *node {
-                        let is_ok = match ElementId::from_str(local) {
-                            Some(id) => parent.is_tag_name((prefix, id)),
-                            None => parent.is_tag_name((prefix, local)),
-                        };
+                    let is_ok = match ElementId::from_str(local) {
+                        Some(id) => parent.is_tag_name((prefix, id)),
+                        None => parent.is_tag_name((prefix, local)),
+                    };
 
-                        if !is_ok {
-                            // TODO: simplify
-                            let name1 = TagName::from(TagNameRef::from((prefix, local)));
-                            return Err(ParserError::UnexpectedCloseTag(n.tag_name().to_string(),
-                                                                       name1.to_string()));
-                        }
-                    } else {
+                    if !is_ok {
                         // TODO: simplify
                         let name1 = TagName::from(TagNameRef::from((prefix, local)));
-                        return Err(ParserError::UnexpectedCloseTag(parent.tag_name().to_string(),
+                        return Err(ParserError::UnexpectedCloseTag(node.tag_name().to_string(),
                                                                    name1.to_string()));
                     }
 
@@ -267,9 +229,7 @@ fn process_token<'a>(
                     }
                 }
                 xmlparser::ElementEnd::Open => {
-                    if let Some(ref n) = *node {
-                        *parent = n.clone();
-                    }
+                    *parent = node.clone();
                 }
             }
         }
@@ -316,27 +276,22 @@ fn process_token<'a>(
           xmlparser::Token::DtdStart(_, _)
         | xmlparser::Token::EmptyDtd(_, _)
         | xmlparser::Token::DtdEnd => {
-            // do nothing
+            // Do nothing.
         }
         xmlparser::Token::EntityDeclaration(name, value) => {
-            match value {
-                xmlparser::EntityDefinition::EntityValue(value) => {
-                    post_data.entities.insert(name.to_str(), value);
-                }
-                _ => {
-                    // do nothing
-                }
+            if let xmlparser::EntityDefinition::EntityValue(value) = value {
+                post_data.entities.insert(name.to_str(), value);
             }
         }
         xmlparser::Token::ProcessingInstruction(_, _) => {
-            // do nothing
+            // Do nothing.
         }
     }
 
-    // check for 'svg' element only when we parsing root nodes,
-    // which is faster
+    // Check that the first element of the doc is 'svg'.
+    //
+    // Check only when we parsing the root nodes, which is faster.
     if parent.is_root() {
-        // check that the first element of the doc is 'svg'
         if let Some((id, _)) = doc.root().children().svg().nth(0) {
             if id != ElementId::Svg {
                 return Err(ParserError::NoSvgElement);
@@ -361,16 +316,16 @@ fn parse_svg_attribute<'a>(
             post_data.links.elems_with_id.insert(value.to_str(), node.clone());
         }
         AttributeId::Style => {
-            // we store 'class' attributes for later use
+            // We store 'style' attributes for later use.
             post_data.style_attrs.push(NodeSpanData {
                 node: node.clone(),
                 span: value,
-            })
+            });
         }
         AttributeId::Class => {
             // TODO: to svgtypes
 
-            // we store 'class' attributes for later use
+            // We store 'class' attributes for later use.
 
             let mut s = Stream::from(value);
             while !s.at_end() {
@@ -408,20 +363,12 @@ pub fn parse_svg_attribute_value<'a>(
 
     match av {
         Ok(av) => {
-            if let Some(mut av) = av {
-                if let AttributeValue::NumberList(ref list) = av {
-                    if list.is_empty() {
-                        return Ok(());
-                    }
+            if let Some(av) = av {
+                match av {
+                    AttributeValue::NumberList(ref list) if list.is_empty() => {}
+                    AttributeValue::LengthList(ref list) if list.is_empty() => {}
+                    _ => node.set_attribute(((prefix, id), av)),
                 }
-
-                if let AttributeValue::LengthList(ref mut list) = av {
-                    if list.is_empty() {
-                        return Ok(());
-                    }
-                }
-
-                node.set_attribute(((prefix, id), av));
             }
         }
         Err(e) => {
@@ -460,7 +407,7 @@ pub fn _parse_svg_attribute_value<'a>(
 
     let eid = node.tag_id().unwrap();
 
-    // 'unicode' attribute can contain spaces
+    // 'unicode' attribute can contain spaces.
     let value = if aid != AId::Unicode { value.trim() } else { value };
 
     {
@@ -494,7 +441,7 @@ pub fn _parse_svg_attribute_value<'a>(
 
         match s.parse_iri() {
             Ok(link) => {
-                // collect links for later processing
+                // Collect links for later processing.
                 links.append(prefix, aid, link, None, node);
                 return Ok(None);
             }
@@ -511,7 +458,7 @@ pub fn _parse_svg_attribute_value<'a>(
     let av = match aid {
           AId::X  | AId::Y
         | AId::Dx | AId::Dy => {
-            // some attributes can contain different data based on the element type
+            // Some attributes can contain different data based on the element type.
             match eid {
                   ElementId::AltGlyph
                 | ElementId::Text
@@ -602,7 +549,7 @@ pub fn _parse_svg_attribute_value<'a>(
                 Paint::CurrentColor => AttributeValue::CurrentColor,
                 Paint::Color(color) => AttributeValue::Color(color),
                 Paint::FuncIRI(link, fallback) => {
-                    // collect links for later processing
+                    // Collect links for later processing.
                     links.append(prefix, aid, link, fallback, node);
                     return Ok(None);
                 }
@@ -872,12 +819,10 @@ fn is_inside_style_elem(node: &Node) -> bool {
         let attrs = node.attributes();
         let av = attrs.get_value(AttributeId::Type);
         if let Some(&AttributeValue::String(ref t)) = av {
-            if t != "text/css" {
-                return false;
+            if t == "text/css" {
+                return true;
             }
         }
-
-        return true;
     }
 
     false
@@ -925,13 +870,11 @@ fn resolve_entity_references<'a>(
 
     for &(ref text_node, ref entity) in &entities {
         let mut parent = text_node.parent().unwrap();
-        let mut node: Option<Node> = None;
+        let mut node = parent.clone();
         let mut tokens = xmlparser::Tokenizer::from(*entity);
         tokens.set_fragment_mode();
         while let Some(token) = tokens.next() {
-            process_token(doc, token?,
-                          &mut node, &mut parent,
-                          post_data, opt)?
+            process_token(token?, opt, doc, &mut node, &mut parent, post_data)?;
         }
     }
 

@@ -49,7 +49,7 @@ pub trait FilterSvg: Iterator {
 impl<'a, I: Iterator<Item = Node>> FilterSvg for I {}
 
 /// List of supported node types.
-#[derive(Clone,Copy,PartialEq,Debug)]
+#[derive(Clone, Copy, PartialEq, Debug)]
 pub enum NodeType {
     /// Root node of the `Document`.
     ///

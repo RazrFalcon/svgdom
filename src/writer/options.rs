@@ -12,7 +12,7 @@ use {
 };
 
 /// XML node indention
-#[derive(Clone,Copy,PartialEq)]
+#[derive(Clone, Copy, PartialEq)]
 pub enum Indent {
     /// Disable indention and new lines.
     None,
@@ -25,7 +25,7 @@ pub enum Indent {
 /// An attributes order.
 ///
 /// Note: the `id` attribute is always first.
-#[derive(Clone,Copy,PartialEq)]
+#[derive(Clone, Copy, PartialEq)]
 pub enum AttributesOrder {
     /// Attributes are stored in the `Vec` and with this option,
     /// they will be written in the same order an in the `Vec`.
