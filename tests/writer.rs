@@ -155,7 +155,7 @@ fn attributes_types_1() {
     svg.set_attribute((AId::Version, "1.0"));
     svg.set_attribute((AId::Width, 1.5));
     svg.set_attribute((AId::Height, Length::new(1.5, LengthUnit::Percent)));
-    svg.set_attribute((AId::Fill, Color::new(255, 255, 255)));
+    svg.set_attribute((AId::Fill, Color::white()));
     svg.set_attribute((AId::Transform, Transform::new(2.0, 0.0, 0.0, 3.0, 20.0, 30.0)));
     svg.set_attribute((AId::StdDeviation, NumberList(vec![1.5, 2.5])));
 

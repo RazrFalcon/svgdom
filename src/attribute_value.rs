@@ -208,7 +208,7 @@ impl AttributeValue {
 
               AttributeId::Fill
             | AttributeId::FloodColor
-            | AttributeId::StopColor => some!(Color::new(0, 0, 0)),
+            | AttributeId::StopColor => some!(Color::black()),
 
               AttributeId::FillOpacity
             | AttributeId::FloodOpacity
@@ -227,7 +227,7 @@ impl AttributeValue {
             AttributeId::EnableBackground =>            some!("accumulate"),
             AttributeId::FontSize =>                    some!("medium"),
             AttributeId::GlyphOrientationHorizontal =>  some!("0deg"),
-            AttributeId::LightingColor =>               some!(Color::new(255, 255, 255)),
+            AttributeId::LightingColor =>               some!(Color::white()),
             AttributeId::StrokeDashoffset =>            some!((0.0, LengthUnit::None)),
             AttributeId::StrokeLinecap =>               some!("butt"),
             AttributeId::StrokeLinejoin =>              some!("miter"),

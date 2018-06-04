@@ -18,7 +18,7 @@ log = "0.4"
 simplecss = "0.1.0"
 slab = "0.4.0"
 #svgtypes = "0.1.1"
-svgtypes = { git = "https://github.com/RazrFalcon/svgtypes", rev = "f471398" }
+svgtypes = { git = "https://github.com/RazrFalcon/svgtypes", rev = "a794d41" }
 
 [dev-dependencies]
 time = "0.1"
