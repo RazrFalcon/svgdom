@@ -331,26 +331,10 @@ test_resave!(parse_css_21,
 </svg>
 ");
 
-// space before closing tag
-test_resave!(parse_css_22,
-"<svg>
-<style type='text/css' >
-<![CDATA[
-rect {fill:red;}
-]]>
-</style>
-<rect/>
-</svg>
-",
-"<svg>
-    <rect fill='#ff0000'/>
-</svg>
-");
-
 // marker property
 test_resave!(parse_css_23,
 "<svg>
-    <style type='text/css' >
+    <style type='text/css'>
         rect { marker: url(#marker1); }
     </style>
     <marker id='marker1'/>
@@ -360,5 +344,20 @@ test_resave!(parse_css_23,
 "<svg>
     <marker id='marker1'/>
     <rect marker-end='url(#marker1)' marker-mid='url(#marker1)' marker-start='url(#marker1)'/>
+</svg>
+");
+
+// no `type`
+test_resave!(parse_css_24,
+"<svg>
+    <style>
+    <![CDATA[
+        .fil1 {fill:blue}
+    ]]>
+    </style>
+    <g class='fil1'/>
+</svg>",
+"<svg>
+    <g fill='#0000ff'/>
 </svg>
 ");

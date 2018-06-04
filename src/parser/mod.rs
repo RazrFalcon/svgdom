@@ -820,10 +820,12 @@ fn is_inside_style_elem(node: &Node) -> bool {
         let attrs = node.attributes();
         let av = attrs.get_value(AttributeId::Type);
         if let Some(&AttributeValue::String(ref t)) = av {
-            if t == "text/css" {
-                return true;
+            if t != "text/css" {
+                return false;
             }
         }
+
+        return true;
     }
 
     false
