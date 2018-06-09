@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 ### Added
 - Implemented `Display` for `Attributes` and `Node`.
+- Implemented `Debug` for `ParseOptions` and `WriteOptions`.
 
 ### Changed
 - Split `Error` into `Error` and `ParserError`.

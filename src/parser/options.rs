@@ -7,6 +7,7 @@
 // except according to those terms.
 
 /// Options that defines SVG parsing.
+#[derive(Debug)]
 pub struct ParseOptions {
     /// Skip unresolved references inside the `class` attribute.
     ///
