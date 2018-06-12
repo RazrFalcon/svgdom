@@ -19,6 +19,7 @@ simplecss = "0.1.0"
 slab = "0.4.0"
 #svgtypes = "0.1.1"
 svgtypes = { git = "https://github.com/RazrFalcon/svgtypes", rev = "4586622" }
+#svgtypes = { path = "../svgtypes" }
 
 [dev-dependencies]
 time = "0.1"
