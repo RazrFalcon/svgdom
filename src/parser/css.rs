@@ -49,7 +49,7 @@ pub fn resolve_css<'a>(
     }
 
     fn gen_err_pos(frame: StrSpan, pos: usize) -> ErrorPos {
-        let mut s = Stream::from(frame.full_str());
+        let s = Stream::from(frame.full_str());
         s.gen_error_pos_from(pos)
     }
 
