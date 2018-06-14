@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Split `Error` into `Error` and `ParserError`.
 - New `Debug` implementation for `Attributes` and `Node`.
 - `Attributes::new`, `Attributes::insert` and `Attributes::remove` are private now.
+- Rename `Attribute::default` into `new_default`.
 
 ### Removed
 - `failure` dependency.

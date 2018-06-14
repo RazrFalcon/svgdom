@@ -49,6 +49,14 @@ impl Attribute {
         }
     }
 
+    /// Constructs a new attribute with a default value, if it known.
+    pub fn new_default(id: AttributeId) -> Option<Attribute> {
+        match AttributeValue::default_value(id) {
+            Some(v) => Some(Attribute::new(id, v)),
+            None => None,
+        }
+    }
+
     /// Returns an SVG attribute ID.
     pub fn id(&self) -> Option<AttributeId> {
         match self.name {
@@ -67,14 +75,6 @@ impl Attribute {
         match self.name {
             QName::Id(_, _) => true,
             QName::Name(_, _) => false,
-        }
-    }
-
-    /// Constructs a new attribute with a default value, if it known.
-    pub fn default(id: AttributeId) -> Option<Attribute> {
-        match AttributeValue::default_value(id) {
-            Some(v) => Some(Attribute::new(id, v)),
-            None => None,
         }
     }
 
