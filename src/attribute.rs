@@ -112,19 +112,7 @@ impl Attribute {
 
 impl WriteBuffer for Attribute {
     fn write_buf_opt(&self, opt: &WriteOptions, buf: &mut Vec<u8>) {
-        match self.name {
-            QName::Id(ref prefix, _) | QName::Name(ref prefix, _) => {
-                if !prefix.is_empty() {
-                    buf.extend_from_slice(prefix.as_bytes());
-                    buf.push(b':');
-                }
-            }
-        }
-
-        match self.name {
-            QName::Id(_, id) => buf.extend_from_slice(id.as_str().as_bytes()),
-            QName::Name(_, ref name) => buf.extend_from_slice(name.as_bytes()),
-        }
+        self.name.write_buf_opt(opt, buf);
         buf.push(b'=');
         write_quote(opt, buf);
 
