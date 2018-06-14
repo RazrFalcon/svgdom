@@ -78,18 +78,6 @@ impl Attribute {
         }
     }
 
-    /// Returns `true` if the current attribute's value is equal to a default by the SVG spec.
-    pub fn check_is_default(&self) -> bool {
-        if let QName::Id(_, id) = self.name {
-            match AttributeValue::default_value(id) {
-                Some(v) => self.value == v,
-                None => false,
-            }
-        } else {
-            false
-        }
-    }
-
     impl_is_type!(is_none);
     impl_is_type!(is_inherit);
     impl_is_type!(is_current_color);

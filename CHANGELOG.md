@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - `Attributes::remove_impl`.
 - `Attributes::retain`.
 - `Node::has_attributes`.
+- `Attribute::check_is_default`.
 
 ## [0.13.0] - 2018-05-23
 ### Added
