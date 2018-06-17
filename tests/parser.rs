@@ -656,5 +656,25 @@ fn unbalanced_tree_4() {
                "unexpected token 'Element Close' at 1:1");
 }
 
+test_resave!(crosslink_1,
+"<svg>
+    <linearGradient id='lg1' xlink:href='#lg2'/>
+    <linearGradient id='lg2' xlink:href='#lg1'/>
+</svg>",
+"<svg>
+    <linearGradient id='lg1' xlink:href='#lg2'/>
+    <linearGradient id='lg2'/>
+</svg>
+");
+
+test_resave!(crosslink_2,
+"<svg>
+    <linearGradient id='lg1' xlink:href='#lg1'/>
+</svg>",
+"<svg>
+    <linearGradient id='lg1'/>
+</svg>
+");
+
 // TODO: this
 // p { font-family: "Font 1", "Font 2", Georgia, Times, serif; }

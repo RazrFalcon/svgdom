@@ -31,4 +31,5 @@ name = "parser"
 harness = false
 
 [lib]
+path = "src/lib.rs" # for cargo-readme
 doctest = true

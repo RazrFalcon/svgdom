@@ -121,6 +121,18 @@ fn text_content_4() {
     assert_eq!(text, "Text   Text  Text");
 }
 
+#[test]
+fn text_content_5() {
+    let doc = Document::from_str(
+"<svg>
+    <text>&#x20;&apos;Text&apos;&#x20;</text>
+</svg>
+").unwrap();
+
+    let text: String = doc.root().descendants().map(|n| n.text().to_owned()).collect();
+    assert_eq!(text, "'Text'");
+}
+
 // Manually created text.
 #[test]
 fn text_1() {
@@ -237,6 +249,26 @@ test_resave!(text_8,
 "<svg>
     <text>Text</text>
     <rect/>
+</svg>
+");
+
+test_resave!(text_9,
+"<svg>
+    <text>&#x20;&amp;Text&amp;&#x20;</text>
+</svg>
+",
+"<svg>
+    <text>&amp;Text&amp;</text>
+</svg>
+");
+
+test_resave!(text_10,
+"<svg>
+    <text>&#x20;&amp;&#64;&#x40;&amp;&#x20;</text>
+</svg>
+",
+"<svg>
+    <text>&amp;@@&amp;</text>
 </svg>
 ");
 

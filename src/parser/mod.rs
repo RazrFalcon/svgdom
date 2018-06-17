@@ -779,6 +779,7 @@ fn resolve_links(links: &mut Links) {
                 match res {
                     Ok(_) => {}
                     Err(Error::ElementMustHaveAnId) => {
+                        // TODO: unreachable?
                         let attr = Attribute::from((name, node.clone()));
                         warn!("Element without an ID cannot be linked. \
                                Attribute {} ignored.", attr);

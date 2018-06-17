@@ -7,41 +7,64 @@
 // except according to those terms.
 
 /*!
-This library is designed to represent SVG data as a tree structure.
 
-Here is simple overview of such structure:
+*svgdom* is an [SVG Full 1.1](https://www.w3.org/TR/SVG/) processing library,
+which allows you to parse, manipulate, generate and write an SVG content.
 
-- [`Document`]
-    - root [`Node`]
-        - user defined [`Node`]
-            - [`TagName`]
-            - [`Attributes`]
-            - unique id
-        - user defined [`Node`]
-        - ...
+**Note:** the library itself is pretty stable, but API is constantly changing.
 
-The [`Document`] itself is just a container of [`Node`]s.
-You can create new [`Node`]s only through the [`Document`]. Parsing and generating of the SVG data also
-done through it.
+## Purpose
 
-The [`Node`] represents any kind of an XML node.
-It can be an element, a comment, a text, etc. There are no different structs for each type.
+*svgdom* is designed to simplify generic SVG processing and manipulations.
+Unfortunately, an SVG is very complex format (PDF spec is 826 pages long),
+with lots of features and implementing all of them will lead to an enormous library.
 
-The [`TagName`] represents a tag name of the element node. It's an enum of
-[`ElementId`] and `String` types. The [`ElementId`] contains all possible
-SVG element names and `String` used for non-SVG elements. Such separation used for
-performance reasons.
+That's why *svgdom* supports only a static subset of an SVG. No scripts, external resources
+and complex CSS styling.
+Parser will convert as much as possible data to a simple doc->elements->attributes structure.
 
-The [`Attributes`] container wraps a `Vec` of [`Attribute`]'s.
+For example, the `fill` parameter of an element can be set: as an element's attribute,
+as part of a `style` attribute, inside a `style` element as CSS2, inside an `ENTITY`,
+using a JS code and probably with lots of other methods.
 
-At last, the `id` attribute is stored as a separate value and not as part of the [`Attributes`].
+Not to mention, that the `fill` attribute supports 4 different types of data.
 
-[`Attribute`]: struct.Attribute.html
-[`Attributes`]: struct.Attributes.html
-[`Document`]: struct.Document.html
-[`ElementId`]: enum.ElementId.html
-[`Node`]: type.Node.html
-[`TagName`]: type.TagName.html
+With `svgdom` you can just use `node.has_attribute(AttributeId::Fill)` and don't worry where this
+attribute was defined in the original file.
+
+Same goes for transforms, paths and other SVG types.
+
+The main downside of this approach is that you can't save an original formatting and some data.
+
+See the [preprocessor](https://github.com/RazrFalcon/svgdom/blob/master/docs/preprocessor.md)
+doc for details.
+
+## Benefits
+
+- The element link(IRI, FuncIRI) is not just a text, but an actual link to another node.
+- At any time you can check which elements linked to the specific element.
+  See `Node`'s doc for details.
+- Support for many SVG specific data types like paths, transforms, IRI's, styles, etc.
+  Thanks to [svgtypes](https://github.com/RazrFalcon/svgtypes).
+- A complete support of text nodes: XML escaping, `xml:space`.
+- Fine-grained control over the SVG output.
+
+## Limitations
+
+- Attribute values, CDATA with CSS, DOCTYPE, text data and whitespaces will not be preserved.
+- UTF-8 only.
+- Only most popular attributes are parsed, other stored as strings.
+- No compressed SVG (.svgz). You should decompress it by yourself.
+- CSS support is minimal.
+- XML namespaces support is minimal.
+- SVG 1.1 Full only (no 2.0 Draft, Basic, Type subsets).
+
+## Differences between svgdom and SVG spec
+
+- Library follows SVG spec in the data parsing, writing, but not in the tree structure.
+- Everything is a `Node`. There are no separated `ElementNode`, `TextNode`, etc.
+  You still have all the data, but not in the specific *struct's*.
+  You can check the node type via `Node::node_type()`.
 
 */
 
