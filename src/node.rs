@@ -143,15 +143,6 @@ impl Node {
         self.node_type() == NodeType::Element
     }
 
-    /// Returns `true` if current node is a Declaration node.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the node is currently mutably borrowed.
-    pub fn is_declaration(&self) -> bool {
-        self.node_type() == NodeType::Declaration
-    }
-
     /// Returns `true` if current node is a Comment node.
     ///
     /// # Panics
@@ -482,8 +473,7 @@ impl Node {
     }
 
     fn set_attribute_checked_impl(&mut self, attr: Attribute) -> Result<(), Error> {
-        debug_assert!(   self.node_type() == NodeType::Element
-                      || self.node_type() == NodeType::Declaration);
+        debug_assert!(self.node_type() == NodeType::Element);
 
         match attr.value {
               AttributeValue::Link(ref iri)

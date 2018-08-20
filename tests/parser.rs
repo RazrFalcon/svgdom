@@ -59,7 +59,7 @@ fn parse_empty_3() {
 #[test]
 fn parse_empty_4() {
     assert_eq!(Document::from_str("<?xml version='1.0'?>").err().unwrap().to_string(),
-        "the document does not have an SVG element");
+        "the document does not have any nodes");
 }
 
 #[test]
@@ -69,23 +69,6 @@ fn parse_single_node_1() {
     let child = doc.root().first_child().unwrap();
     assert_eq!(child.tag_name().as_ref(), TagNameRef::from(EId::Svg));
     assert_eq!(doc.root().children().count(), 1);
-}
-
-#[test]
-fn parse_declaration_1() {
-    let doc = Document::from_str(
-"<?xml version='1.0' encoding='UTF-8' standalone='yes'?>
-<svg/>"
-    ).unwrap();
-
-    let decl = doc.root().first_child().unwrap();
-    assert!(decl.is_declaration());
-
-    let attrs = decl.attributes();
-    assert_eq!(attrs.len(), 3);
-    assert_eq!(attrs.get_value(AId::Version), Some(&AttributeValue::String("1.0".to_string())));
-    assert_eq!(attrs.get_value(AId::Encoding), Some(&AttributeValue::String("UTF-8".to_string())));
-    assert_eq!(attrs.get_value(AId::Standalone), Some(&AttributeValue::String("yes".to_string())));
 }
 
 #[test]

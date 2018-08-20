@@ -261,19 +261,8 @@ fn process_token<'a>(
                 create_node!(NodeType::Cdata, s.to_str());
             }
         }
-        xmlparser::Token::Declaration(version, encoding, sa) => {
-            let mut n = create_node!(NodeType::Declaration, String::new());
-            n.set_attribute((AttributeId::Version, version.to_str()));
-
-            if let Some(encoding) = encoding {
-                n.set_attribute((AttributeId::Encoding, encoding.to_str()));
-            }
-
-            if let Some(sa) = sa {
-                n.set_attribute((AttributeId::Standalone, sa.to_str()));
-            }
-        }
-          xmlparser::Token::DtdStart(_, _)
+          xmlparser::Token::Declaration(_, _, _)
+        | xmlparser::Token::DtdStart(_, _)
         | xmlparser::Token::EmptyDtd(_, _)
         | xmlparser::Token::DtdEnd => {
             // Do nothing.

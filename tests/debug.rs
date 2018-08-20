@@ -75,25 +75,6 @@ fn root_1() {
 }
 
 #[test]
-fn declaration_1() {
-    let mut doc = Document::new();
-    let node = doc.create_node(NodeType::Declaration, "");
-
-    assert_eq!(format!("{:?}", node), "Declaration()");
-    assert_eq!(format!("{}", node), "<?xml?>");
-}
-
-#[test]
-fn declaration_2() {
-    let mut doc = Document::new();
-    let mut node = doc.create_node(NodeType::Declaration, "");
-    node.set_attribute((AId::Version, "1.0"));
-
-    assert_eq!(format!("{:?}", node), "Declaration(version=\"1.0\")");
-    assert_eq!(format!("{}", node), "<?xml version=\"1.0\"?>");
-}
-
-#[test]
 fn comment_1() {
     let mut doc = Document::new();
     let node = doc.create_node(NodeType::Comment, "comment");

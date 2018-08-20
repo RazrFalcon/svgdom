@@ -196,33 +196,6 @@ fn write_start_edge(
             write_non_element_node(node, out);
             write_newline(opt.indent, out);
         }
-        NodeType::Declaration => {
-            depth.write_indent(out);
-            out.extend_from_slice(b"<?xml");
-
-            // Write only possible attributes.
-
-            let attrs = node.attributes();
-
-            if let Some(attr) = attrs.get(AttributeId::Version) {
-                write_attribute(&attr, depth, attrs_depth, opt, out);
-            } else {
-                // The version must always be set.
-                let attr = Attribute::from((AttributeId::Version, "1.0"));
-                write_attribute(&attr, depth, attrs_depth, opt, out);
-            }
-
-            if let Some(attr) = attrs.get(AttributeId::Encoding) {
-                write_attribute(&attr, depth, attrs_depth, opt, out);
-            }
-
-            if let Some(attr) = attrs.get(AttributeId::Standalone) {
-                write_attribute(&attr, depth, attrs_depth, opt, out);
-            }
-
-            out.extend_from_slice(b"?>");
-            write_newline(opt.indent, out);
-        }
         NodeType::Comment => {
             depth.write_indent(out);
             write_non_element_node(node, out);
@@ -515,11 +488,6 @@ impl fmt::Debug for NodeData {
                 write_element_content(self, f, true, true)?;
                 write!(f, ")")
             }
-            NodeType::Declaration => {
-                write!(f, "Declaration(")?;
-                write_element_content(self, f, false, false)?;
-                write!(f, ")")
-            }
             NodeType::Comment => write!(f, "Comment({})", self.text),
             NodeType::Cdata => write!(f, "CDATA({})", self.text),
             NodeType::Text => write!(f, "Text({})", self.text),
@@ -535,11 +503,6 @@ impl fmt::Display for NodeData {
                 write!(f, "<{}", self.tag_name)?;
                 write_element_content(self, f, true, false)?;
                 write!(f, ">")
-            }
-            NodeType::Declaration => {
-                write!(f, "<?xml")?;
-                write_element_content(self, f, true, false)?;
-                write!(f, "?>")
             }
             NodeType::Comment => write!(f, "<!--{}-->", self.text),
             NodeType::Cdata => write!(f, "<![CDATA[{}]]>", self.text),

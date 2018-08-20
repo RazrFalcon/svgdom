@@ -156,8 +156,6 @@ pub enum NodeType {
     ///
     /// Only an element can have attributes, ID and tag name.
     Element,
-    /// A declaration node.
-    Declaration,
     /// A comment node.
     Comment,
     /// A CDATA node.

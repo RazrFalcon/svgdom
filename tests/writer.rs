@@ -177,13 +177,6 @@ fn attributes_types_1() {
          width='1.5'/>\n");
 }
 
-test_resave!(declaration_1,
-"<?xml version='1.0' encoding='UTF-8' standalone='yes'?><svg/>",
-"<?xml version='1.0' encoding='UTF-8' standalone='yes'?>
-<svg/>
-");
-
-
 #[test]
 fn comment_1() {
     let mut doc = Document::new();
