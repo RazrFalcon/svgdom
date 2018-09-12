@@ -17,8 +17,9 @@ travis-ci = { repository = "RazrFalcon/svgdom" }
 log = "0.4.5"
 simplecss = "0.1"
 slab = "0.4"
-#svgtypes = "0.1.1"
-svgtypes = { git = "https://github.com/RazrFalcon/svgtypes", rev = "47d16af" }
+svgtypes = "0.2"
+#svgtypes = { git = "https://github.com/RazrFalcon/svgtypes", rev = "a65ae1f" }
+#svgtypes = { path = "../svgtypes" }
 roxmltree = "0.1"
 
 [dev-dependencies]

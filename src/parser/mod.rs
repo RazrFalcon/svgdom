@@ -18,7 +18,6 @@ use svgtypes::{
     PaintFallback,
     StreamExt,
     StyleParser,
-    StyleToken,
 };
 
 use svgtypes::xmlparser::{
@@ -601,19 +600,13 @@ fn parse_style_attribute(
     links: &mut Links,
 ) -> Result<()> {
     for token in StyleParser::from(text) {
-        match token? {
-            StyleToken::Attribute(name, value) => {
-                match AttributeId::from_str(name.to_str()) {
-                    Some(aid) => {
-                        parse_svg_attribute_value(aid, value, opt, node, links)?;
-                    }
-                    None => {
-                        node.set_attribute((name.to_str(), value.to_str()));
-                    }
-                }
+        let (name, value) = token?;
+        match AttributeId::from_str(name.to_str()) {
+            Some(aid) => {
+                parse_svg_attribute_value(aid, value, opt, node, links)?;
             }
-            StyleToken::EntityRef(_) => {
-                unreachable!()
+            None => {
+                node.set_attribute((name.to_str(), value.to_str()));
             }
         }
     }
