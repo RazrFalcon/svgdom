@@ -70,7 +70,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-svgdom = "0.13"
+svgdom = "0.14"
 ```
 
 ### License

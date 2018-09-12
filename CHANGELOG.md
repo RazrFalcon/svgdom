@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+
+## [0.14.0] - 2018-09-12
 ### Added
 - Implemented `Display` for `Attributes` and `Node`.
 - Implemented `Debug` for `ParseOptions` and `WriteOptions`.
@@ -461,7 +463,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/RazrFalcon/svgdom/compare/v0.13.0...HEAD
+[Unreleased]: https://github.com/RazrFalcon/svgdom/compare/v0.14.0...HEAD
+[0.14.0]: https://github.com/RazrFalcon/svgdom/compare/v0.13.0...v0.14.0
 [0.13.0]: https://github.com/RazrFalcon/svgdom/compare/v0.12.0...v0.13.0
 [0.12.0]: https://github.com/RazrFalcon/svgdom/compare/v0.11.1...v0.12.0
 [0.11.1]: https://github.com/RazrFalcon/svgdom/compare/v0.11.0...v0.11.1
