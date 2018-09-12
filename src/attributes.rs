@@ -29,7 +29,7 @@ pub trait FilterSvgAttrs: Iterator {
         where Self: Iterator<Item = &'a Attribute> + Sized
     {
         fn is_svg(attr: &Attribute) -> Option<(AttributeId, &Attribute)> {
-            if let QName::Id(_, id) = attr.name {
+            if let QName::Id(id) = attr.name {
                 return Some((id, attr));
             }
 
@@ -50,7 +50,7 @@ pub trait FilterSvgAttrsMut: Iterator {
         where Self: Iterator<Item = &'a mut Attribute> + Sized
     {
         fn is_svg(attr: &mut Attribute) -> Option<(AttributeId, &mut Attribute)> {
-            if let QName::Id(_, id) = attr.name {
+            if let QName::Id(id) = attr.name {
                 return Some((id, attr));
             }
 

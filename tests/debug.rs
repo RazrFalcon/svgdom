@@ -84,15 +84,6 @@ fn comment_1() {
 }
 
 #[test]
-fn cdata_1() {
-    let mut doc = Document::new();
-    let node = doc.create_node(NodeType::Cdata, "data");
-
-    assert_eq!(format!("{:?}", node), "CDATA(data)");
-    assert_eq!(format!("{}", node), "<![CDATA[data]]>");
-}
-
-#[test]
 fn text_1() {
     let mut doc = Document::new();
     let node = doc.create_node(NodeType::Text, "text");

@@ -11,10 +11,12 @@ use std::fmt;
 
 use simplecss;
 
+use roxmltree;
+
 use svgtypes;
 use svgtypes::xmlparser::{
     self,
-    ErrorPos,
+    TextPos,
 };
 
 /// SVG DOM errors.
@@ -67,14 +69,11 @@ pub enum ParserError {
     /// Parsed document must have an `svg` element.
     NoSvgElement,
 
-    /// Parsed document must have at least one node.
-    EmptyDocument,
-
     /// *svgdom* didn't support most of the CSS2 spec.
-    UnsupportedCSS(ErrorPos),
+    UnsupportedCSS(TextPos),
 
     /// Error during parsing of the CSS2.
-    InvalidCSS(ErrorPos),
+    InvalidCSS(TextPos),
 
     /// Unexpected close tag.
     ///
@@ -96,6 +95,9 @@ pub enum ParserError {
     /// An XML stream error.
     XmlError(xmlparser::Error),
 
+    /// A `roxmltree` error.
+    RoXmlError(roxmltree::Error),
+
     /// simplecss errors.
     CssError(simplecss::Error),
 }
@@ -105,9 +107,6 @@ impl fmt::Display for ParserError {
         match *self {
             ParserError::NoSvgElement => {
                 write!(f, "the document does not have an SVG element")
-            }
-            ParserError::EmptyDocument => {
-                write!(f, "the document does not have any nodes")
             }
             ParserError::UnsupportedCSS(pos) => {
                 write!(f, "unsupported CSS at {}", pos)
@@ -125,6 +124,9 @@ impl fmt::Display for ParserError {
                 write!(f, "{}", e)
             }
             ParserError::XmlError(ref e) => {
+                write!(f, "{}", e)
+            }
+            ParserError::RoXmlError(ref e) => {
                 write!(f, "{}", e)
             }
             ParserError::CssError(ref e) => {
@@ -149,6 +151,12 @@ impl From<Error> for ParserError {
 impl From<xmlparser::Error> for ParserError {
     fn from(value: xmlparser::Error) -> Self {
         ParserError::XmlError(value)
+    }
+}
+
+impl From<roxmltree::Error> for ParserError {
+    fn from(value: roxmltree::Error) -> Self {
+        ParserError::RoXmlError(value)
     }
 }
 

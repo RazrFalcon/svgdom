@@ -111,15 +111,6 @@ impl Depth {
             buf.extend_from_slice(&self.block);
         }
     }
-
-    /// Writes a relative indent to the buffer.
-    #[inline]
-    fn write_indent_with_step(&self, step: i8, buf: &mut Vec<u8>) {
-        let v = (self.value as i32 + i32::from(step)) as u32;
-        for _ in 0..v {
-            buf.extend_from_slice(&self.block);
-        }
-    }
 }
 
 /// Writes a document into the buffer.
@@ -191,11 +182,6 @@ fn write_start_edge(
                 }
             }
         }
-        NodeType::Cdata => {
-            depth.write_indent_with_step(-1, out);
-            write_non_element_node(node, out);
-            write_newline(opt.indent, out);
-        }
         NodeType::Comment => {
             depth.write_indent(out);
             write_non_element_node(node, out);
@@ -214,9 +200,6 @@ fn write_non_element_node(node: &Node, out: &mut Vec<u8>) {
     match node.node_type() {
         NodeType::Comment => {
             write_node(b"<!--", &node.text(), b"-->", out);
-        }
-        NodeType::Cdata => {
-            write_node(b"<![CDATA[", &node.text(), b"]]>", out);
         }
         NodeType::Text => {
             write_escaped_text(node.text().as_ref(), out);
@@ -269,6 +252,20 @@ fn write_attributes(
     opt: &WriteOptions,
     out: &mut Vec<u8>
 ) {
+    // Write root SVG node attributes.
+    if node.is_tag_name(ElementId::Svg) {
+        if node.parent().map(|v| v.is_root()) == Some(true) {
+            let attr = Attribute::new("xmlns", "http://www.w3.org/2000/svg");
+            write_attribute(&attr, depth, attrs_depth, opt, out);
+
+            let xlink_needed = node.descendants().any(|n| n.has_attribute(AttributeId::Href));
+            if xlink_needed {
+                let attr = Attribute::new("xmlns:xlink", "http://www.w3.org/1999/xlink");
+                write_attribute(&attr, depth, attrs_depth, opt, out);
+            }
+        }
+    }
+
     // write 'id'
     if node.has_id() {
         let attr = Attribute::new(AttributeId::Id, node.id().clone());
@@ -296,7 +293,7 @@ fn write_attributes(
 
             // write non-SVG attributes
             for attr in attrs.iter() {
-                if let QName::Name(_, _) = attr.name {
+                if let QName::Name(_) = attr.name {
                     write_attribute(attr, depth, attrs_depth, opt, out);
                 }
             }
@@ -355,7 +352,7 @@ fn write_attributes(
 
             // write non-SVG attributes
             for attr in attrs.iter() {
-                if let QName::Name(_, _) = attr.name {
+                if let QName::Name(_) = attr.name {
                     write_attribute(attr, depth, attrs_depth, opt, out);
                 }
             }
@@ -432,10 +429,10 @@ fn _write_text_elem(
 fn write_escaped_text(text: &str, out: &mut Vec<u8>) {
     for c in text.as_bytes() {
         match *c {
-            b'&'  => out.extend_from_slice(b"&amp;"),
-            b'<'  => out.extend_from_slice(b"&lt;"),
-            b'>'  => out.extend_from_slice(b"&gt;"),
-            _     => out.push(*c),
+            b'&' => out.extend_from_slice(b"&amp;"),
+            b'<' => out.extend_from_slice(b"&lt;"),
+            b'>' => out.extend_from_slice(b"&gt;"),
+            _    => out.push(*c),
         }
     }
 }
@@ -489,7 +486,6 @@ impl fmt::Debug for NodeData {
                 write!(f, ")")
             }
             NodeType::Comment => write!(f, "Comment({})", self.text),
-            NodeType::Cdata => write!(f, "CDATA({})", self.text),
             NodeType::Text => write!(f, "Text({})", self.text),
         }
     }
@@ -505,7 +501,6 @@ impl fmt::Display for NodeData {
                 write!(f, ">")
             }
             NodeType::Comment => write!(f, "<!--{}-->", self.text),
-            NodeType::Cdata => write!(f, "<![CDATA[{}]]>", self.text),
             NodeType::Text => write!(f, "{}", self.text),
         }
     }

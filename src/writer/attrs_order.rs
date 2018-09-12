@@ -14,128 +14,128 @@ use {
 };
 
 static SVG_ATTRIBUTES: &'static [AttributeQNameRef<'static>] = &[
-    QNameRef::Id("", AttributeId::X),
-    QNameRef::Id("", AttributeId::Y),
-    QNameRef::Id("", AttributeId::Width),
-    QNameRef::Id("", AttributeId::Height),
-    QNameRef::Id("", AttributeId::ViewBox),
-    QNameRef::Id("", AttributeId::PreserveAspectRatio),
-    QNameRef::Id("", AttributeId::Version),
-    QNameRef::Id("", AttributeId::BaseProfile),
+    QNameRef::Id(AttributeId::X),
+    QNameRef::Id(AttributeId::Y),
+    QNameRef::Id(AttributeId::Width),
+    QNameRef::Id(AttributeId::Height),
+    QNameRef::Id(AttributeId::ViewBox),
+    QNameRef::Id(AttributeId::PreserveAspectRatio),
+    QNameRef::Id(AttributeId::Version),
+    QNameRef::Id(AttributeId::BaseProfile),
 ];
 
 static RECT_ATTRIBUTES: &'static [AttributeQNameRef<'static>] = &[
-    QNameRef::Id("", AttributeId::Transform),
-    QNameRef::Id("", AttributeId::X),
-    QNameRef::Id("", AttributeId::Y),
-    QNameRef::Id("", AttributeId::Width),
-    QNameRef::Id("", AttributeId::Height),
-    QNameRef::Id("", AttributeId::Rx),
-    QNameRef::Id("", AttributeId::Ry),
+    QNameRef::Id(AttributeId::Transform),
+    QNameRef::Id(AttributeId::X),
+    QNameRef::Id(AttributeId::Y),
+    QNameRef::Id(AttributeId::Width),
+    QNameRef::Id(AttributeId::Height),
+    QNameRef::Id(AttributeId::Rx),
+    QNameRef::Id(AttributeId::Ry),
 ];
 
 static CIRCLE_ATTRIBUTES: &'static [AttributeQNameRef<'static>] = &[
-    QNameRef::Id("", AttributeId::Transform),
-    QNameRef::Id("", AttributeId::Cx),
-    QNameRef::Id("", AttributeId::Cy),
-    QNameRef::Id("", AttributeId::R),
+    QNameRef::Id(AttributeId::Transform),
+    QNameRef::Id(AttributeId::Cx),
+    QNameRef::Id(AttributeId::Cy),
+    QNameRef::Id(AttributeId::R),
 ];
 
 static ELLIPSE_ATTRIBUTES: &'static [AttributeQNameRef<'static>] = &[
-    QNameRef::Id("", AttributeId::Transform),
-    QNameRef::Id("", AttributeId::Cx),
-    QNameRef::Id("", AttributeId::Cy),
-    QNameRef::Id("", AttributeId::Rx),
-    QNameRef::Id("", AttributeId::Ry),
+    QNameRef::Id(AttributeId::Transform),
+    QNameRef::Id(AttributeId::Cx),
+    QNameRef::Id(AttributeId::Cy),
+    QNameRef::Id(AttributeId::Rx),
+    QNameRef::Id(AttributeId::Ry),
 ];
 
 static LINE_ATTRIBUTES: &'static [AttributeQNameRef<'static>] = &[
-    QNameRef::Id("", AttributeId::Transform),
-    QNameRef::Id("", AttributeId::X1),
-    QNameRef::Id("", AttributeId::Y1),
-    QNameRef::Id("", AttributeId::X2),
-    QNameRef::Id("", AttributeId::Y2),
+    QNameRef::Id(AttributeId::Transform),
+    QNameRef::Id(AttributeId::X1),
+    QNameRef::Id(AttributeId::Y1),
+    QNameRef::Id(AttributeId::X2),
+    QNameRef::Id(AttributeId::Y2),
 ];
 
 static POLYLINE_ATTRIBUTES: &'static [AttributeQNameRef<'static>] = &[
-    QNameRef::Id("", AttributeId::Transform),
-    QNameRef::Id("", AttributeId::Points),
+    QNameRef::Id(AttributeId::Transform),
+    QNameRef::Id(AttributeId::Points),
 ];
 
 static PATH_ATTRIBUTES: &'static [AttributeQNameRef<'static>] = &[
-    QNameRef::Id("", AttributeId::Transform),
-    QNameRef::Id("", AttributeId::D),
+    QNameRef::Id(AttributeId::Transform),
+    QNameRef::Id(AttributeId::D),
 ];
 
 static USE_ATTRIBUTES: &'static [AttributeQNameRef<'static>] = &[
-    QNameRef::Id("", AttributeId::Transform),
-    QNameRef::Id("", AttributeId::X),
-    QNameRef::Id("", AttributeId::Y),
-    QNameRef::Id("", AttributeId::Width),
-    QNameRef::Id("", AttributeId::Height),
-    QNameRef::Id("xlink", AttributeId::Href),
+    QNameRef::Id(AttributeId::Transform),
+    QNameRef::Id(AttributeId::X),
+    QNameRef::Id(AttributeId::Y),
+    QNameRef::Id(AttributeId::Width),
+    QNameRef::Id(AttributeId::Height),
+    QNameRef::Id(AttributeId::Href),
 ];
 
 static IMAGE_ATTRIBUTES: &'static [AttributeQNameRef<'static>] = &[
-    QNameRef::Id("", AttributeId::PreserveAspectRatio),
-    QNameRef::Id("", AttributeId::Transform),
-    QNameRef::Id("", AttributeId::X),
-    QNameRef::Id("", AttributeId::Y),
-    QNameRef::Id("", AttributeId::Width),
-    QNameRef::Id("", AttributeId::Height),
-    QNameRef::Id("xlink", AttributeId::Href),
+    QNameRef::Id(AttributeId::PreserveAspectRatio),
+    QNameRef::Id(AttributeId::Transform),
+    QNameRef::Id(AttributeId::X),
+    QNameRef::Id(AttributeId::Y),
+    QNameRef::Id(AttributeId::Width),
+    QNameRef::Id(AttributeId::Height),
+    QNameRef::Id(AttributeId::Href),
 ];
 
 static TEXT_ATTRIBUTES: &'static [AttributeQNameRef<'static>] = &[
-    QNameRef::Id("", AttributeId::Transform),
-    QNameRef::Id    ("", AttributeId::X),
-    QNameRef::Id("", AttributeId::Y),
-    QNameRef::Id("", AttributeId::Dx),
-    QNameRef::Id("", AttributeId::Dy),
-    QNameRef::Id("", AttributeId::Rotate),
+    QNameRef::Id(AttributeId::Transform),
+    QNameRef::Id    (AttributeId::X),
+    QNameRef::Id(AttributeId::Y),
+    QNameRef::Id(AttributeId::Dx),
+    QNameRef::Id(AttributeId::Dy),
+    QNameRef::Id(AttributeId::Rotate),
 ];
 
 static TSPAN_ATTRIBUTES: &'static [AttributeQNameRef<'static>] = &[
-    QNameRef::Id("", AttributeId::X),
-    QNameRef::Id("", AttributeId::Y),
-    QNameRef::Id("", AttributeId::Dx),
-    QNameRef::Id("", AttributeId::Dy),
-    QNameRef::Id("", AttributeId::Rotate),
+    QNameRef::Id(AttributeId::X),
+    QNameRef::Id(AttributeId::Y),
+    QNameRef::Id(AttributeId::Dx),
+    QNameRef::Id(AttributeId::Dy),
+    QNameRef::Id(AttributeId::Rotate),
 ];
 
 static LINEAR_GRADIENT_ATTRIBUTES: &'static [AttributeQNameRef<'static>] = &[
-    QNameRef::Id("", AttributeId::X1),
-    QNameRef::Id("", AttributeId::Y1),
-    QNameRef::Id("", AttributeId::X2),
-    QNameRef::Id("", AttributeId::Y2),
-    QNameRef::Id("", AttributeId::GradientUnits),
-    QNameRef::Id("", AttributeId::GradientTransform),
-    QNameRef::Id("", AttributeId::SpreadMethod),
-    QNameRef::Id("xlink", AttributeId::Href),
+    QNameRef::Id(AttributeId::X1),
+    QNameRef::Id(AttributeId::Y1),
+    QNameRef::Id(AttributeId::X2),
+    QNameRef::Id(AttributeId::Y2),
+    QNameRef::Id(AttributeId::GradientUnits),
+    QNameRef::Id(AttributeId::GradientTransform),
+    QNameRef::Id(AttributeId::SpreadMethod),
+    QNameRef::Id(AttributeId::Href),
 ];
 
 static RADIAL_GRADIENT_ATTRIBUTES: &'static [AttributeQNameRef<'static>] = &[
-    QNameRef::Id("", AttributeId::Cx),
-    QNameRef::Id("", AttributeId::Cy),
-    QNameRef::Id("", AttributeId::R),
-    QNameRef::Id("", AttributeId::Fx),
-    QNameRef::Id("", AttributeId::Fy),
-    QNameRef::Id("", AttributeId::GradientUnits),
-    QNameRef::Id("", AttributeId::GradientTransform),
-    QNameRef::Id("", AttributeId::SpreadMethod),
-    QNameRef::Id("xlink", AttributeId::Href),
+    QNameRef::Id(AttributeId::Cx),
+    QNameRef::Id(AttributeId::Cy),
+    QNameRef::Id(AttributeId::R),
+    QNameRef::Id(AttributeId::Fx),
+    QNameRef::Id(AttributeId::Fy),
+    QNameRef::Id(AttributeId::GradientUnits),
+    QNameRef::Id(AttributeId::GradientTransform),
+    QNameRef::Id(AttributeId::SpreadMethod),
+    QNameRef::Id(AttributeId::Href),
 ];
 
 static PATTERN_ATTRIBUTES: &'static [AttributeQNameRef<'static>] = &[
-    QNameRef::Id("", AttributeId::ViewBox),
-    QNameRef::Id("", AttributeId::X),
-    QNameRef::Id("", AttributeId::Y),
-    QNameRef::Id("", AttributeId::Width),
-    QNameRef::Id("", AttributeId::Height),
-    QNameRef::Id("", AttributeId::PatternUnits),
-    QNameRef::Id("", AttributeId::PatternContentUnits),
-    QNameRef::Id("", AttributeId::PatternTransform),
-    QNameRef::Id("xlink", AttributeId::Href),
+    QNameRef::Id(AttributeId::ViewBox),
+    QNameRef::Id(AttributeId::X),
+    QNameRef::Id(AttributeId::Y),
+    QNameRef::Id(AttributeId::Width),
+    QNameRef::Id(AttributeId::Height),
+    QNameRef::Id(AttributeId::PatternUnits),
+    QNameRef::Id(AttributeId::PatternContentUnits),
+    QNameRef::Id(AttributeId::PatternTransform),
+    QNameRef::Id(AttributeId::Href),
 ];
 
 pub fn attrs_order_by_element(eid: ElementId) -> &'static [AttributeQNameRef<'static>] {

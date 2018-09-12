@@ -51,12 +51,12 @@ doc for details.
 
 ## Limitations
 
+- Only SVG elements and attributes will be parsed.
 - Attribute values, CDATA with CSS, DOCTYPE, text data and whitespaces will not be preserved.
 - UTF-8 only.
 - Only most popular attributes are parsed, other stored as strings.
 - No compressed SVG (.svgz). You should decompress it by yourself.
 - CSS support is minimal.
-- XML namespaces support is minimal.
 - SVG 1.1 Full only (no 2.0 Draft, Basic, Type subsets).
 
 ## Differences between svgdom and SVG spec
@@ -77,6 +77,7 @@ doc for details.
 extern crate simplecss;
 extern crate slab;
 extern crate svgtypes;
+extern crate roxmltree;
 
 
 mod attribute;
@@ -158,8 +159,6 @@ pub enum NodeType {
     Element,
     /// A comment node.
     Comment,
-    /// A CDATA node.
-    Cdata,
     /// A text node.
     Text,
 }

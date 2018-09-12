@@ -35,52 +35,68 @@ impl SvgId for ElementId {
 #[derive(Clone, PartialEq, Debug)]
 pub enum QName<T: SvgId> {
     /// For an SVG name.
-    Id(String, T),
+    Id(T),
     /// For an unknown name.
-    Name(String, String),
+    Name(String),
 }
 
 impl<T: SvgId> QName<T> {
     /// Returns `QName` as `QNameRef`.
     pub fn as_ref(&self) -> QNameRef<T> {
         match *self {
-            QName::Id(ref prefix, id) => QNameRef::Id(prefix, id),
-            QName::Name(ref prefix, ref name) => QNameRef::Name(prefix, name),
+            QName::Id(id) => QNameRef::Id(id),
+            QName::Name(ref name) => QNameRef::Name(name),
         }
     }
 
     /// Checks that this name has specified ID.
-    pub fn has_id(&self, prefix: &str, id: T) -> bool {
+    pub fn has_id(&self, id: T) -> bool {
         match *self {
-            QName::Id(ref prefix2, id2) => id == id2 && prefix == prefix2,
+            QName::Id(id2) => id == id2,
             _ => false,
         }
     }
 }
 
-impl<T: SvgId> WriteBuffer for QName<T> {
+impl WriteBuffer for QName<AttributeId> {
     fn write_buf_opt(&self, _opt: &WriteOptions, buf: &mut Vec<u8>) {
         match *self {
-            QName::Id(ref prefix, _) | QName::Name(ref prefix, _) => {
-                if !prefix.is_empty() {
-                    buf.extend_from_slice(prefix.as_bytes());
-                    buf.push(b':');
+            QName::Id(id) => {
+                if self.has_id(AttributeId::Href) {
+                    buf.extend_from_slice(b"xlink:");
+                } else if self.has_id(AttributeId::Space) {
+                    buf.extend_from_slice(b"xml:");
                 }
-            }
-        }
 
-        match *self {
-            QName::Id(_, id) => {
                 buf.extend_from_slice(id.name().as_bytes());
             }
-            QName::Name(_, ref name) => {
+            QName::Name(ref name) => {
                 buf.extend_from_slice(name.as_bytes());
             }
         }
     }
 }
 
-impl<T: SvgId> fmt::Display for QName<T> {
+impl WriteBuffer for QName<ElementId> {
+    fn write_buf_opt(&self, _opt: &WriteOptions, buf: &mut Vec<u8>) {
+        match *self {
+            QName::Id(id) => {
+                buf.extend_from_slice(id.name().as_bytes());
+            }
+            QName::Name(ref name) => {
+                buf.extend_from_slice(name.as_bytes());
+            }
+        }
+    }
+}
+
+impl fmt::Display for QName<AttributeId> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.with_write_opt(&WriteOptions::default()))
+    }
+}
+
+impl fmt::Display for QName<ElementId> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.with_write_opt(&WriteOptions::default()))
     }
@@ -90,16 +106,16 @@ impl<T: SvgId> fmt::Display for QName<T> {
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub enum QNameRef<'a, T: SvgId> {
     /// For an SVG name.
-    Id(&'a str, T),
+    Id(T),
     /// For an unknown name.
-    Name(&'a str, &'a str),
+    Name(&'a str),
 }
 
 impl<'a, T: SvgId> QNameRef<'a, T> {
     /// Checks that this name has specified ID.
-    pub fn has_id(&self, prefix: &str, id: T) -> bool {
+    pub fn has_id(&self, id: T) -> bool {
         match *self {
-            QNameRef::Id(ref prefix2, id2) => id == id2 && prefix == *prefix2,
+            QNameRef::Id(id2) => id == id2,
             _ => false,
         }
     }
@@ -107,33 +123,21 @@ impl<'a, T: SvgId> QNameRef<'a, T> {
 
 impl<'a, T: SvgId> From<T> for QNameRef<'a, T> {
     fn from(value: T) -> Self {
-        QNameRef::Id("", value.into())
+        QNameRef::Id(value.into())
     }
 }
 
 impl<'a, T: SvgId> From<&'a str> for QNameRef<'a, T> {
     fn from(value: &'a str) -> Self {
-        QNameRef::Name("", value.into())
-    }
-}
-
-impl<'a, T: SvgId> From<(&'a str, T)> for QNameRef<'a, T> {
-    fn from(value: (&'a str, T)) -> Self {
-        QNameRef::Id(value.0, value.1.into())
-    }
-}
-
-impl<'a, T: SvgId> From<(&'a str, &'a str)> for QNameRef<'a, T> {
-    fn from(value: (&'a str, &'a str)) -> Self {
-        QNameRef::Name(value.0, value.1.into())
+        QNameRef::Name(value.into())
     }
 }
 
 impl<'a, T: SvgId> From<QNameRef<'a, T>> for QName<T> {
     fn from(value: QNameRef<T>) -> Self {
         match value {
-            QNameRef::Id(prefix, id) => QName::Id(prefix.into(), id),
-            QNameRef::Name(prefix, name) => QName::Name(prefix.into(), name.into()),
+            QNameRef::Id(id) => QName::Id(id),
+            QNameRef::Name(name) => QName::Name(name.into()),
         }
     }
 }

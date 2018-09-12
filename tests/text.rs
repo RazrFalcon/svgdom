@@ -10,6 +10,8 @@
 
 extern crate svgdom;
 
+use std::fmt;
+
 use svgdom::{
     Document,
     ElementId as EId,
@@ -17,6 +19,15 @@ use svgdom::{
     WriteOptions,
     WriteBuffer,
 };
+
+#[derive(Clone, Copy, PartialEq)]
+struct TStr<'a>(pub &'a str);
+
+impl<'a> fmt::Debug for TStr<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
 
 macro_rules! test_resave {
     ($name:ident, $in_text:expr, $out_text:expr) => (
@@ -27,7 +38,7 @@ macro_rules! test_resave {
             let mut opt = WriteOptions::default();
             opt.use_single_quote = true;
 
-            assert_eq!(doc.with_write_opt(&opt).to_string(), $out_text);
+            assert_eq!(TStr($out_text), TStr(&doc.with_write_opt(&opt).to_string()));
         }
     )
 }
@@ -35,7 +46,7 @@ macro_rules! test_resave {
 #[test]
 fn text_content_1() {
     let doc = Document::from_str(
-"<svg>
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <text>
         A <tspan>
             <tspan>
@@ -54,7 +65,7 @@ fn text_content_1() {
 #[test]
 fn text_content_2() {
     let doc = Document::from_str(
-"<svg>
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <text>
         <tspan>Text1</tspan>
         <tspan>Text2</tspan>
@@ -70,7 +81,7 @@ fn text_content_2() {
 #[test]
 fn text_content_3() {
     let doc = Document::from_str(
-"<svg>
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <text>
       Not
 
@@ -108,7 +119,7 @@ fn text_content_3() {
 #[test]
 fn text_content_4() {
     let doc = Document::from_str(
-"<svg>
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <text>
         Text
         <tspan xml:space='preserve'>  Text  </tspan>
@@ -124,7 +135,7 @@ fn text_content_4() {
 #[test]
 fn text_content_5() {
     let doc = Document::from_str(
-"<svg>
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <text>&#x20;&apos;Text&apos;&#x20;</text>
 </svg>
 ").unwrap();
@@ -145,39 +156,26 @@ fn text_1() {
     svg.append(text.clone());
 
     assert_eq!(doc.to_string(),
-"<svg>text</svg>
+"<svg xmlns=\"http://www.w3.org/2000/svg\">text</svg>
 ");
 }
 
-// Text inside non-svg element.
-test_resave!(text_2,
-"<svg>
-    <p>
-        text
-    </p>
-</svg>
-",
-"<svg>
-    <p>text</p>
-</svg>
-");
-
 // Text inside svg element.
 test_resave!(text_3,
-"<svg>
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <text>
         text
     </text>
 </svg>
 ",
-"<svg>
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <text>text</text>
 </svg>
 ");
 
 // Multiline text.
 test_resave!(text_4,
-"<svg>
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <text>
         Line 1
         Line 2
@@ -185,14 +183,14 @@ test_resave!(text_4,
     </text>
 </svg>
 ",
-"<svg>
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <text>Line 1 Line 2 Line 3</text>
 </svg>
 ");
 
 // Multiline text with 'preserve'.
 test_resave!(text_5,
-"<svg>
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <text xml:space='preserve'>
         Line 1
         Line 2
@@ -200,7 +198,7 @@ test_resave!(text_5,
     </text>
 </svg>
 ",
-"<svg>
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <text xml:space='preserve'>         Line 1         Line 2         Line 3     </text>
 </svg>
 ");
@@ -208,7 +206,7 @@ test_resave!(text_5,
 // Test trimming.
 // Details: https://www.w3.org/TR/SVG11/text.html#WhiteSpace
 test_resave!(text_6,
-"<svg>
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <text></text>
     <text> </text>
     <text>  </text>
@@ -217,7 +215,7 @@ test_resave!(text_6,
     <text xml:space='preserve'> \t \n text \t  text  t \t \r\n\r\n</text>
 </svg>
 ",
-"<svg>
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <text/>
     <text/>
     <text/>
@@ -229,45 +227,43 @@ test_resave!(text_6,
 
 // Escape.
 test_resave!(text_7,
-"<svg>
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <text>&amp;&lt;&gt;</text>
-    <nontext>&amp;&lt;&gt;</nontext>
 </svg>
 ",
-"<svg>
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <text>&amp;&lt;&gt;</text>
-    <nontext>&amp;&lt;&gt;</nontext>
 </svg>
 ");
 
 test_resave!(text_8,
-"<svg>
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <text>Text</text>
     <rect/>
 </svg>
 ",
-"<svg>
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <text>Text</text>
     <rect/>
 </svg>
 ");
 
 test_resave!(text_9,
-"<svg>
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <text>&#x20;&amp;Text&amp;&#x20;</text>
 </svg>
 ",
-"<svg>
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <text>&amp;Text&amp;</text>
 </svg>
 ");
 
 test_resave!(text_10,
-"<svg>
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <text>&#x20;&amp;&#64;&#x40;&amp;&#x20;</text>
 </svg>
 ",
-"<svg>
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <text>&amp;@@&amp;</text>
 </svg>
 ");
@@ -275,31 +271,31 @@ test_resave!(text_10,
 // Text with children elements.
 // Spaces will be trimmed, but not all.
 test_resave!(text_tspan_1,
-"<svg>
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <text>
       Some \t <tspan>  complex  </tspan>  text \t
     </text>
 </svg>
 ",
-"<svg>
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <text>Some <tspan>complex</tspan> text</text>
 </svg>
 ");
 
 // Text with tspan but without spaces.
 test_resave!(text_tspan_2,
-"<svg>
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <text><tspan>Text</tspan></text>
 </svg>
 ",
-"<svg>
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <text><tspan>Text</tspan></text>
 </svg>
 ");
 
 // Text with tspan with new lines.
 test_resave!(text_tspan_3,
-"<svg>
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <text>
         <tspan>Text</tspan>
         <tspan>Text</tspan>
@@ -307,70 +303,70 @@ test_resave!(text_tspan_3,
     </text>
 </svg>
 ",
-"<svg>
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <text><tspan>Text</tspan> <tspan>Text</tspan> <tspan>Text</tspan></text>
 </svg>
 ");
 
 // Text with spaces inside a tspan.
 test_resave!(text_tspan_4,
-"<svg>
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <text>Some<tspan> long </tspan>text</text>
 </svg>
 ",
-"<svg>
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <text>Some<tspan> long </tspan>text</text>
 </svg>
 ");
 
 // Text with spaces outside a tspan.
 test_resave!(text_tspan_5,
-"<svg>
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <text>Some <tspan>long</tspan> text</text>
 </svg>
 ",
-"<svg>
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <text>Some <tspan>long</tspan> text</text>
 </svg>
 ");
 
 // Nested tspan.
 test_resave!(text_tspan_6,
-"<svg>
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <text>  Some  <tspan>  not  <tspan>  very  </tspan>  long  </tspan>  text  </text>
 </svg>
 ",
-"<svg>
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <text>Some <tspan>not <tspan>very</tspan> long</tspan> text</text>
 </svg>
 ");
 
 // Empty tspan.
 test_resave!(text_tspan_7,
-"<svg>
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <text><tspan><tspan></tspan></tspan></text>
     <text> <tspan> <tspan> </tspan> </tspan> </text>
 </svg>
 ",
-"<svg>
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <text><tspan><tspan/></tspan></text>
     <text><tspan><tspan/></tspan></text>
 </svg>
 ");
 
 test_resave!(text_tspan_8,
-"<svg>
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <text>
         <tspan>Te</tspan><tspan>x</tspan>t
     </text>
 </svg>",
-"<svg>
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <text><tspan>Te</tspan><tspan>x</tspan>t</text>
 </svg>
 ");
 
 test_resave!(text_tspan_9,
-"<svg>
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <text>
         text <tspan>
             <tspan>
@@ -379,13 +375,13 @@ test_resave!(text_tspan_9,
         </tspan>
     </text>
 </svg>",
-"<svg>
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <text>text <tspan><tspan>text</tspan> text</tspan></text>
 </svg>
 ");
 
 test_resave!(text_tspan_10,
-"<svg>
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <text>
       Not
 
@@ -414,7 +410,7 @@ test_resave!(text_tspan_10,
       rotation
     </text>
 </svg>",
-"<svg>
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <text>Not <tspan>all characters <tspan>in <tspan>the</tspan></tspan> <tspan>text</tspan> \
         have a</tspan> <tspan>specified</tspan> rotation</text>
 </svg>
@@ -422,41 +418,41 @@ test_resave!(text_tspan_10,
 
 // Test xml:space.
 test_resave!(text_space_preserve_1,
-"<svg>
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <text xml:space='preserve'> Text
     </text>
 </svg>
 ",
-"<svg>
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <text xml:space='preserve'> Text     </text>
 </svg>
 ");
 
 // Test xml:space inheritance.
 test_resave!(text_space_preserve_2,
-"<svg xml:space='preserve'>
+"<svg xmlns='http://www.w3.org/2000/svg' xml:space='preserve'>
     <text> Text
     </text>
 </svg>
 ",
-"<svg xml:space='preserve'>
+"<svg xmlns='http://www.w3.org/2000/svg' xml:space='preserve'>
     <text> Text     </text>
 </svg>
 ");
 
 // Test mixed xml:space.
 test_resave!(text_space_preserve_3,
-"<svg>
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <text xml:space='preserve'>  Text  <tspan xml:space='default'>  Text  </tspan>  Text  </text>
 </svg>
 ",
-"<svg>
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <text xml:space='preserve'>  Text  <tspan xml:space='default'>Text </tspan>  Text  </text>
 </svg>
 ");
 
 test_resave!(text_space_preserve_4,
-"<svg>
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <text>
         Text
         <tspan xml:space='preserve'>  Text  </tspan>
@@ -464,41 +460,41 @@ test_resave!(text_space_preserve_4,
     </text>
 </svg>
 ",
-"<svg>
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <text>Text <tspan xml:space='preserve'>  Text  </tspan>Text</text>
 </svg>
 ");
 
 test_resave!(text_space_preserve_5,
-"<svg>
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <text>
         Text<tspan xml:space='preserve'>  Text  </tspan>Text
     </text>
 </svg>
 ",
-"<svg>
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <text>Text<tspan xml:space='preserve'>  Text  </tspan>Text</text>
 </svg>
 ");
 
 test_resave!(text_space_preserve_6,
-"<svg>
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <text xml:space='preserve'><tspan>Text</tspan></text>
 </svg>
 ",
-"<svg>
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <text xml:space='preserve'><tspan>Text</tspan></text>
 </svg>
 ");
 
 // Test xml:space propagation
 test_resave!(text_space_preserve_7,
-"<svg>
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <text id='text1' xml:space='preserve'>  Text  </text>
     <text id='text2'>  Text  </text>
 </svg>
 ",
-"<svg>
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <text id='text1' xml:space='preserve'>  Text  </text>
     <text id='text2'>Text</text>
 </svg>

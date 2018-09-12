@@ -42,9 +42,9 @@ impl<'a, N> From<(N, Node)> for Attribute
     fn from(v: (N, Node)) -> Self {
         let n = AttributeQNameRef::from(v.0.clone());
 
-        if n.has_id("xlink", AttributeId::Href) {
+        if n.has_id(AttributeId::Href) {
             Attribute::new(v.0, AttributeValue::Link(v.1))
-        } else if n.has_id("", AttributeId::Fill) || n.has_id("", AttributeId::Stroke) {
+        } else if n.has_id(AttributeId::Fill) || n.has_id(AttributeId::Stroke) {
             Attribute::new(v.0, AttributeValue::Paint(v.1, None))
         } else {
             Attribute::new(v.0, AttributeValue::FuncLink(v.1))
@@ -98,7 +98,7 @@ impl Node {
     /// use svgdom::Document;
     ///
     /// let doc = Document::from_str(
-    /// "<svg>
+    /// "<svg xmlns='http://www.w3.org/2000/svg'>
     ///     <rect/>
     /// </svg>").unwrap();
     ///
@@ -150,15 +150,6 @@ impl Node {
     /// Panics if the node is currently mutably borrowed.
     pub fn is_comment(&self) -> bool {
         self.node_type() == NodeType::Comment
-    }
-
-    /// Returns `true` if current node is a CData node.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the node is currently mutably borrowed.
-    pub fn is_cdata(&self) -> bool {
-        self.node_type() == NodeType::Cdata
     }
 
     /// Returns `true` if current node is a Text node.
@@ -254,8 +245,8 @@ impl Node {
         }
 
         match self.borrow().tag_name {
-            QName::Id(_, _) => true,
-            QName::Name(_, _) => false,
+            QName::Id(_) => true,
+            QName::Name(_) => false,
         }
     }
 
@@ -275,8 +266,8 @@ impl Node {
     /// Panics if the node is currently mutably borrowed.
     pub fn tag_id(&self) -> Option<ElementId> {
         match self.borrow().tag_name {
-            QName::Id(_, ref id) => Some(*id),
-            QName::Name(_, _) => None,
+            QName::Id(id) => Some(id),
+            QName::Name(_) => None,
         }
     }
 
@@ -305,7 +296,7 @@ impl Node {
         debug_assert_eq!(self.node_type(), NodeType::Element);
 
         let tn = TagNameRef::from(tag_name);
-        if let QNameRef::Name(_, name) = tn {
+        if let QNameRef::Name(name) = tn {
             if name.is_empty() {
                 panic!("supplied tag name is empty");
             }
@@ -415,7 +406,7 @@ impl Node {
     /// svg.set_attribute(Attribute::new(AId::X, 1.0));
     /// svg.set_attribute(Attribute::new("non-svg-attr", 1.0));
     /// // Using an existing node as an attribute value.
-    /// svg.set_attribute((("xlink", AId::Href), rect));
+    /// svg.set_attribute((AId::Href, rect));
     /// ```
     ///
     /// Linked attributes:
@@ -527,9 +518,9 @@ impl Node {
         self.remove_attribute(name.as_ref());
 
         {
-            let a = if name.has_id("xlink", AttributeId::Href) {
+            let a = if name.has_id(AttributeId::Href) {
                 Attribute::new(name.as_ref(), AttributeValue::Link(node.clone()))
-            } else if name.has_id("", AttributeId::Fill) || name.has_id("", AttributeId::Stroke) {
+            } else if name.has_id(AttributeId::Fill) || name.has_id(AttributeId::Stroke) {
                 Attribute::new(name.as_ref(), AttributeValue::Paint(node.clone(), fallback))
             } else {
                 Attribute::new(name.as_ref(), AttributeValue::FuncLink(node.clone()))
@@ -655,7 +646,7 @@ pub trait FilterSvg: Iterator {
         where Self: Iterator<Item = Node> + Sized,
     {
         fn is_svg(node: Node) -> Option<(ElementId, Node)> {
-            if let QName::Id(_, id) = *node.tag_name() {
+            if let QName::Id(id) = *node.tag_name() {
                 return Some((id, node.clone()));
             }
 

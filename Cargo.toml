@@ -14,12 +14,12 @@ readme = "README.md"
 travis-ci = { repository = "RazrFalcon/svgdom" }
 
 [dependencies]
-log = "0.4"
-simplecss = "0.1.0"
-slab = "0.4.0"
+log = "0.4.5"
+simplecss = "0.1"
+slab = "0.4"
 #svgtypes = "0.1.1"
-svgtypes = { git = "https://github.com/RazrFalcon/svgtypes", rev = "a3e7e08" }
-#svgtypes = { path = "../svgtypes" }
+svgtypes = { git = "https://github.com/RazrFalcon/svgtypes", rev = "47d16af" }
+roxmltree = "0.1"
 
 [dev-dependencies]
 time = "0.1"

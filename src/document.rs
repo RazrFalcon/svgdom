@@ -81,7 +81,7 @@ impl Document {
         let mut root = Node::new(NodeData {
             storage_key: None,
             node_type: NodeType::Root,
-            tag_name: QName::Name(String::new(), String::new()),
+            tag_name: QName::Name(String::new()),
             id: String::new(),
             attributes: Attributes::new(),
             linked_nodes: Vec::new(),
@@ -100,6 +100,8 @@ impl Document {
     /// Constructs a new `Document` from the text using a default [`ParseOptions`].
     ///
     /// [`ParseOptions`]: struct.ParseOptions.html
+    ///
+    /// **Note:** only SVG elements and attributes will be parsed.
     pub fn from_str(text: &str) -> Result<Document, ParserError> {
         Document::from_str_with_opt(text, &ParseOptions::default())
     }
@@ -107,6 +109,8 @@ impl Document {
     /// Constructs a new `Document` from the text using a supplied [`ParseOptions`].
     ///
     /// [`ParseOptions`]: struct.ParseOptions.html
+    ///
+    /// **Note:** only SVG elements and attributes will be parsed.
     pub fn from_str_with_opt(text: &str, opt: &ParseOptions) -> Result<Document, ParserError> {
         parse_svg(text, opt)
     }
@@ -125,7 +129,7 @@ impl Document {
         where TagNameRef<'a>: From<T>, T: Copy
     {
         let tn = QNameRef::from(tag_name);
-        if let QNameRef::Name(_, name) = tn {
+        if let QNameRef::Name(name) = tn {
             if name.is_empty() {
                 panic!("supplied tag name is empty");
             }
@@ -163,7 +167,7 @@ impl Document {
         let mut node = Node::new(NodeData {
             storage_key: None,
             node_type,
-            tag_name: QName::Name(String::new(), String::new()),
+            tag_name: QName::Name(String::new()),
             id: String::new(),
             attributes: Attributes::new(),
             linked_nodes: Vec::new(),
@@ -196,7 +200,8 @@ impl Document {
     /// ```
     /// use svgdom::{Document, ElementId};
     ///
-    /// let doc = Document::from_str("<!--comment--><svg/>").unwrap();
+    /// let doc = Document::from_str(
+    ///     "<!--comment--><svg xmlns='http://www.w3.org/2000/svg'/>").unwrap();
     ///
     /// assert_eq!(doc.svg_element().unwrap().is_tag_name(ElementId::Svg), true);
     /// ```
@@ -225,7 +230,7 @@ impl Document {
     /// use svgdom::{Document, ElementId, AttributeId};
     ///
     /// let mut doc = Document::from_str(
-    /// "<svg>
+    /// "<svg xmlns='http://www.w3.org/2000/svg'>
     ///     <rect id='rect1'/>
     ///     <use xlink:href='#rect1'/>
     /// </svg>").unwrap();
@@ -233,14 +238,14 @@ impl Document {
     /// let mut rect_elem = doc.root().descendants().filter(|n| *n.id() == "rect1").next().unwrap();
     /// let use_elem = doc.root().descendants().filter(|n| n.is_tag_name(ElementId::Use)).next().unwrap();
     ///
-    /// assert_eq!(use_elem.has_attribute(("xlink", AttributeId::Href)), true);
+    /// assert_eq!(use_elem.has_attribute(AttributeId::Href), true);
     ///
     /// // The 'remove' method will remove 'rect' element and all it's children.
     /// // Also it will remove all links to this element and it's children,
     /// // so 'use' element will no longer have the 'xlink:href' attribute.
     /// doc.remove_node(rect_elem);
     ///
-    /// assert_eq!(use_elem.has_attribute(("xlink", AttributeId::Href)), false);
+    /// assert_eq!(use_elem.has_attribute(AttributeId::Href), false);
     /// ```
     pub fn remove_node(&mut self, node: Node) {
         let mut ids = Vec::with_capacity(16);

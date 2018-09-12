@@ -6,10 +6,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use svgtypes::xmlparser::{
-    TextUnescape,
-    XmlSpace,
-};
+use std::str;
 
 use {
     AttributeId,
@@ -33,6 +30,12 @@ impl StrTrim for String {
     }
 }
 
+#[derive(Clone, Copy, PartialEq, Debug)]
+enum XmlSpace {
+    Default,
+    Preserve,
+}
+
 // Prepare text nodes according to the spec: https://www.w3.org/TR/SVG11/text.html#WhiteSpace
 //
 // This function handles:
@@ -47,7 +50,7 @@ pub fn prepare_text(doc: &mut Document) {
 
     // Remove temporary 'xml:space' attributes created during the text processing.
     for mut node in nodes {
-        node.remove_attribute(("xml", AttributeId::Space));
+        node.remove_attribute(AttributeId::Space);
     }
 
     let root = doc.root().clone();
@@ -72,7 +75,7 @@ fn _prepare_text(parent: &Node, nodes: &mut Vec<Node>, parent_xmlspace: XmlSpace
 fn get_xmlspace(node: &mut Node, nodes: &mut Vec<Node>, default: XmlSpace) -> XmlSpace {
     {
         let attrs = node.attributes();
-        let v = attrs.get_value(("xml", AttributeId::Space));
+        let v = attrs.get_value(AttributeId::Space);
         if let Some(&AttributeValue::String(ref s)) = v {
             return if s == "preserve" { XmlSpace::Preserve } else { XmlSpace::Default };
         }
@@ -90,7 +93,7 @@ fn set_xmlspace(node: &mut Node, nodes: &mut Vec<Node>, xmlspace: XmlSpace) {
         XmlSpace::Preserve => "preserve",
     };
 
-    node.set_attribute((("xml", AttributeId::Space), xmlspace_str));
+    node.set_attribute((AttributeId::Space, xmlspace_str));
 
     nodes.push(node.clone());
 }
@@ -102,7 +105,7 @@ fn prepare_text_children(parent: &Node, marked_nodes: &mut Vec<Node>, xmlspace: 
             let child_xmlspace = get_xmlspace(&mut child.parent().unwrap(), marked_nodes, xmlspace);
             let new_text = {
                 let text = child.text();
-                TextUnescape::unescape(text.as_ref(), child_xmlspace)
+                trim(text.as_ref(), child_xmlspace)
             };
             child.set_text(&new_text);
         }
@@ -261,4 +264,31 @@ fn collect_text(parent: &Node, depth: usize, nodes: &mut Vec<(Node, usize)>) {
             collect_text(&child, depth + 1, nodes);
         }
     }
+}
+
+fn trim(text: &str, space: XmlSpace) -> String {
+    let mut s = String::with_capacity(text.len());
+
+    let mut prev = '0';
+    for c in text.chars() {
+        // Must be processed by the `roxmltree`.
+        debug_assert_ne!(c, '\r');
+
+        // \n and \t should be converted into spaces.
+        let c = match c {
+            '\n' | '\t' => ' ',
+            _ => c,
+        };
+
+        // Skip continuous spaces.
+        if space == XmlSpace::Default && c == ' ' && c == prev {
+            continue;
+        }
+
+        prev = c;
+
+        s.push(c);
+    }
+
+    s
 }

@@ -2,47 +2,15 @@
 
 Unlike the usual XML DOM implementations, `svgdom` will preprocess the document/tree a lot.
 
-## ENTITY references resolving
+## XML parsing
 
-`svgdom` does not preserve the DTD. Supported elements will be resolved, others will be ignored.
+`svgdom` uses [`roxmltree`](https://github.com/RazrFalcon/roxmltree) as an XML parser. 
+You can find its parsing details [here](https://github.com/RazrFalcon/roxmltree/blob/master/docs/parsing.md). 
 
-### Element references
+## Non-SVG elements and attributes
 
-From:
-
-```xml
-<!DOCTYPE svg [
-    <!ENTITY Rect1 "<rect width='10' height='20' fill='none'/>">
-]>
-<svg>&Rect1;</svg>
-```
-
-to:
-
-```xml
-<svg>
-    <rect width="10" height="20" fill="none"/>
-</svg>
-```
-
-### Attribute references
-
-From:
-
-```xml
-<!DOCTYPE svg [
-    <!ENTITY st1 "font-size:12;">
-]>
-<svg style="&st1;"/>
-```
-
-to:
-
-```xml
-<svg font-size="12"/>
-```
-
-You can't create the DTD manually either.
+Only SVG 1.1 elements and attributes will be parsed.
+But it's possible to write custom elements and attributes.
 
 ## `style` attributes splitting
 
@@ -238,3 +206,24 @@ More complex cases should be resolved manually. Like:
     </pattern>
 </svg>
 ```
+
+## Namespaces
+
+There is only one namespace: http://www.w3.org/2000/svg .
+All namespaces will be resolved and removed.
+
+So SVG like this:
+
+```xml
+<svg:svg svg:x='0' xmlns:svg='http://www.w3.org/2000/svg'/>
+```
+
+will became:
+
+```xml
+<svg xmlns='http://www.w3.org/2000/svg' x='0'/>
+```
+
+`xmlns` and `xmlns:xlink` attributes/namespaces will be added automatically.
+
+http://www.w3.org/1999/xlink is a special case and will be handled too.

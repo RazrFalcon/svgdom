@@ -203,7 +203,7 @@ fn attributes_exist_2() {
 
     n.set_attribute((AId::StrokeWidth, 1.0));
 
-    assert_eq!(n.attributes().iter().find(|ref attr| attr.has_id("", AId::StrokeWidth)).is_some(), true);
+    assert_eq!(n.attributes().iter().find(|ref attr| attr.has_id(AId::StrokeWidth)).is_some(), true);
 }
 
 #[test]
@@ -221,20 +221,23 @@ fn remove_attribute_1() {
 #[test]
 fn drain_1() {
     let mut doc = Document::from_str(
-"<svg>
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <rect/>
 </svg>").unwrap();
 
     let root = doc.root().clone();
     assert_eq!(doc.drain(root, |n| n.is_tag_name(EId::Rect)), 1);
 
-    assert_eq!(doc.to_string(), "<svg/>\n");
+    let mut opt = WriteOptions::default();
+    opt.use_single_quote = true;
+    assert_eq!(doc.with_write_opt(&opt).to_string(),
+               "<svg xmlns='http://www.w3.org/2000/svg'/>\n");
 }
 
 #[test]
 fn drain_2() {
     let mut doc = Document::from_str(
-"<svg>
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <rect/>
     <g>
         <path/>
@@ -245,8 +248,10 @@ fn drain_2() {
     let root = doc.root().clone();
     assert_eq!(doc.drain(root, |n| n.is_tag_name(EId::Path)), 1);
 
-    assert_eq!(doc.to_string(),
-"<svg>
+    let mut opt = WriteOptions::default();
+    opt.use_single_quote = true;
+    assert_eq!(doc.with_write_opt(&opt).to_string(),
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <rect/>
     <g/>
     <rect/>
@@ -257,7 +262,7 @@ fn drain_2() {
 #[test]
 fn drain_3() {
     let mut doc = Document::from_str(
-"<svg>
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <rect/>
     <g>
         <path/>
@@ -268,8 +273,10 @@ fn drain_3() {
     let root = doc.root().clone();
     assert_eq!(doc.drain(root, |n| n.is_tag_name(EId::G)), 1);
 
-    assert_eq!(doc.to_string(),
-"<svg>
+    let mut opt = WriteOptions::default();
+    opt.use_single_quote = true;
+    assert_eq!(doc.with_write_opt(&opt).to_string(),
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <rect/>
     <rect/>
 </svg>
@@ -279,7 +286,7 @@ fn drain_3() {
 #[test]
 fn drain_4() {
     let mut doc = Document::from_str(
-"<svg>
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <rect/>
     <g>
         <rect/>
@@ -290,8 +297,10 @@ fn drain_4() {
     let root = doc.root().clone();
     assert_eq!(doc.drain(root, |n| n.is_tag_name(EId::Rect)), 3);
 
-    assert_eq!(doc.to_string(),
-"<svg>
+    let mut opt = WriteOptions::default();
+    opt.use_single_quote = true;
+    assert_eq!(doc.with_write_opt(&opt).to_string(),
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <g/>
 </svg>
 ");
@@ -300,7 +309,7 @@ fn drain_4() {
 #[test]
 fn deep_copy_1() {
     let mut doc = Document::from_str(
-"<svg>
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <g id='g1'>
         <rect id='rect1'/>
     </g>
@@ -315,7 +324,7 @@ fn deep_copy_1() {
     let mut opt = WriteOptions::default();
     opt.use_single_quote = true;
     assert_eq!(doc.with_write_opt(&opt).to_string(),
-"<svg>
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <g id='g1'>
         <rect id='rect1'/>
     </g>
@@ -329,7 +338,7 @@ fn deep_copy_1() {
 #[test]
 fn deep_copy_2() {
     let mut doc = Document::from_str(
-"<svg>
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <g id='g1'>
         <rect id='rect1'/>
     </g>
@@ -346,7 +355,7 @@ fn deep_copy_2() {
     let mut opt = WriteOptions::default();
     opt.use_single_quote = true;
     assert_eq!(doc.with_write_opt(&opt).to_string(),
-"<svg>
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <g id='g1'>
         <rect id='rect1'/>
         <g>
@@ -366,7 +375,7 @@ fn deep_copy_2() {
 #[test]
 fn deep_copy_3() {
     let mut doc = Document::from_str(
-"<svg>
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <linearGradient id='lg1'/>
     <g id='g1' stroke-width='5'>
         <rect id='rect1' fill='url(#lg1)'/>
@@ -382,7 +391,7 @@ fn deep_copy_3() {
     let mut opt = WriteOptions::default();
     opt.use_single_quote = true;
     assert_eq!(doc.with_write_opt(&opt).to_string(),
-"<svg>
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <linearGradient id='lg1'/>
     <g id='g1' stroke-width='5'>
         <rect id='rect1' fill='url(#lg1)'/>
@@ -413,19 +422,6 @@ fn set_attr_1() {
     rect.set_attribute(attr);
     assert_eq!(rect.attributes().get(AId::Y).unwrap().to_string(), "y=\"1\"");
 
-    rect.set_attribute((("xlink", AId::Href), rect2));
-    assert_eq!(rect.attributes().get(("xlink", AId::Href)).unwrap().to_string(), "xlink:href=\"#rect2\"");
-}
-
-#[test]
-fn query_attr_1() {
-    let mut doc = Document::new();
-    let mut rect = doc.create_element(EId::Rect);
-    let mut rect2 = doc.create_element(EId::Rect);
-    rect2.set_id("rect2");
-
-    rect.set_attribute((("xlink", AId::Href), rect2));
-
-    assert_eq!(rect.has_attribute(AId::Href), false);
-    assert_eq!(rect.has_attribute(("xlink", AId::Href)), true);
+    rect.set_attribute((AId::Href, rect2));
+    assert_eq!(rect.attributes().get(AId::Href).unwrap().to_string(), "xlink:href=\"#rect2\"");
 }

@@ -60,21 +60,21 @@ impl Attribute {
     /// Returns an SVG attribute ID.
     pub fn id(&self) -> Option<AttributeId> {
         match self.name {
-            QName::Id(_, id) => Some(id),
-            QName::Name(_, _) => None,
+            QName::Id(id) => Some(id),
+            QName::Name(_) => None,
         }
     }
 
     /// Returns `true` if the attribute has the selected ID.
-    pub fn has_id(&self, prefix: &str, id: AttributeId) -> bool {
-        self.name.has_id(prefix, id)
+    pub fn has_id(&self, id: AttributeId) -> bool {
+        self.name.has_id(id)
     }
 
     /// Returns `true` if the attribute is an SVG attribute.
     pub fn is_svg(&self) -> bool {
         match self.name {
-            QName::Id(_, _) => true,
-            QName::Name(_, _) => false,
+            QName::Id(_) => true,
+            QName::Name(_) => false,
         }
     }
 
@@ -104,7 +104,7 @@ impl WriteBuffer for Attribute {
         buf.push(b'=');
         write_quote(opt, buf);
 
-        if self.has_id("", AttributeId::Unicode) {
+        if self.has_id(AttributeId::Unicode) {
             if let AttributeValue::String(ref s) = self.value {
                 write_escaped(s, buf);
             } else {

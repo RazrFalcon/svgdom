@@ -54,7 +54,7 @@ fn single_node_1() {
 
     doc.root().append(n.clone());
 
-    assert_eq!(doc.to_string(), "<svg/>\n");
+    assert_eq!(doc.to_string(), "<svg xmlns=\"http://www.w3.org/2000/svg\"/>\n");
 }
 
 #[test]
@@ -67,7 +67,7 @@ fn child_node_1() {
     svg.append(defs.clone());
 
     assert_eq!(doc.to_string(),
-"<svg>
+"<svg xmlns=\"http://www.w3.org/2000/svg\">
     <defs/>
 </svg>
 ");
@@ -89,7 +89,7 @@ fn child_nodes_1() {
     }
 
     assert_eq!(doc.to_string(),
-"<svg>
+"<svg xmlns=\"http://www.w3.org/2000/svg\">
     <rect id=\"1\">
         <rect id=\"2\">
             <rect id=\"3\">
@@ -112,10 +112,10 @@ fn links_1() {
     doc.root().append(svg_n.clone());
     svg_n.append(use_n.clone());
 
-    use_n.set_attribute((("xlink", AId::Href), svg_n));
+    use_n.set_attribute((AId::Href, svg_n));
 
     assert_eq!(doc.to_string(),
-"<svg id=\"svg1\">
+"<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" id=\"svg1\">
     <use xlink:href=\"#svg1\"/>
 </svg>
 ");
@@ -137,7 +137,7 @@ fn links_2() {
     rect_n.set_attribute((AId::Fill, lg_n));
 
     assert_eq!(doc.to_string(),
-"<svg>
+"<svg xmlns=\"http://www.w3.org/2000/svg\">
     <linearGradient id=\"lg1\"/>
     <rect fill=\"url(#lg1)\"/>
 </svg>
@@ -171,7 +171,7 @@ fn attributes_types_1() {
     opt.use_single_quote = true;
 
     assert_eq!(doc.with_write_opt(&opt).to_string(),
-        "<svg fill='#ffffff' height='1.5%' \
+        "<svg xmlns='http://www.w3.org/2000/svg' fill='#ffffff' height='1.5%' \
          stdDeviation='1.5 2.5' stroke-dasharray='1.5mm 2.5mm 3.5mm' \
          transform='matrix(2 0 0 3 20 30)' version='1.0' viewBox='10 20 30 40' \
          width='1.5'/>\n");
@@ -187,60 +187,48 @@ fn comment_1() {
     doc.root().append(comm);
     doc.root().append(svg);
 
-    assert_eq!(doc.to_string(), "<!--comment-->\n<svg/>\n");
+    assert_eq!(doc.to_string(), "<!--comment-->\n<svg xmlns=\"http://www.w3.org/2000/svg\"/>\n");
 }
 
 test_resave!(cdata_1,
-"<svg>
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <script><![CDATA[
-        js code
+        text
     ]]></script>
 </svg>
 ",
-"<svg>
-    <script>
-    <![CDATA[
-        js code
-    ]]>
-    </script>
+"<svg xmlns='http://www.w3.org/2000/svg'>
+    <script>text</script>
 </svg>
 ");
 
 test_resave!(cdata_2,
-"<svg>
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <script><![CDATA[]]></script>
 </svg>
 ",
-"<svg>
-    <script>
-    <![CDATA[]]>
-    </script>
+"<svg xmlns='http://www.w3.org/2000/svg'>
+    <script/>
 </svg>
 ");
 
 test_resave!(cdata_3,
-"<svg>
-    <script><![CDATA[qwe]]></script>
+"<svg xmlns='http://www.w3.org/2000/svg'>
+    <script><![CDATA[qwe]]>qwe<![CDATA[qwe]]></script>
 </svg>
 ",
-"<svg>
-    <script>
-    <![CDATA[qwe]]>
-    </script>
+"<svg xmlns='http://www.w3.org/2000/svg'>
+    <script>qweqweqwe</script>
 </svg>
 ");
 
 test_resave!(cdata_4,
-"<svg>
-    <script><![CDATA[qwe]]><![CDATA[qwe]]><![CDATA[qwe]]></script>
+"<svg xmlns='http://www.w3.org/2000/svg'>
+    <script><![CDATA[<text/>]]></script>
 </svg>
 ",
-"<svg>
-    <script>
-    <![CDATA[qwe]]>
-    <![CDATA[qwe]]>
-    <![CDATA[qwe]]>
-    </script>
+"<svg xmlns='http://www.w3.org/2000/svg'>
+    <script>&lt;text/&gt;</script>
 </svg>
 ");
 
@@ -249,7 +237,7 @@ fn indent_1() {
     // default indent is 4
 
     let doc = Document::from_str(
-"<svg>
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <g>
         <rect/>
     </g>
@@ -257,7 +245,7 @@ fn indent_1() {
 ").unwrap();
 
     assert_eq!(doc.to_string(),
-"<svg>
+"<svg xmlns=\"http://www.w3.org/2000/svg\">
     <g>
         <rect/>
     </g>
@@ -268,7 +256,7 @@ fn indent_1() {
 #[test]
 fn indent_2() {
     let doc = Document::from_str(
-"<svg>
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <g>
         <rect/>
     </g>
@@ -277,8 +265,9 @@ fn indent_2() {
 
     let mut opt = WriteOptions::default();
     opt.indent = Indent::Spaces(2);
+    opt.use_single_quote = true;
     assert_eq!(doc.with_write_opt(&opt).to_string(),
-"<svg>
+"<svg xmlns='http://www.w3.org/2000/svg'>
   <g>
     <rect/>
   </g>
@@ -289,7 +278,7 @@ fn indent_2() {
 #[test]
 fn indent_3() {
     let doc = Document::from_str(
-"<svg>
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <g>
         <rect/>
     </g>
@@ -298,8 +287,9 @@ fn indent_3() {
 
     let mut opt = WriteOptions::default();
     opt.indent = Indent::Spaces(0);
+    opt.use_single_quote = true;
     assert_eq!(doc.with_write_opt(&opt).to_string(),
-"<svg>
+"<svg xmlns='http://www.w3.org/2000/svg'>
 <g>
 <rect/>
 </g>
@@ -310,7 +300,7 @@ fn indent_3() {
 #[test]
 fn indent_4() {
     let doc = Document::from_str(
-"<svg>
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <g>
         <rect/>
     </g>
@@ -319,14 +309,15 @@ fn indent_4() {
 
     let mut opt = WriteOptions::default();
     opt.indent = Indent::None;
+    opt.use_single_quote = true;
     assert_eq!(doc.with_write_opt(&opt).to_string(),
-"<svg><g><rect/></g></svg>");
+"<svg xmlns='http://www.w3.org/2000/svg'><g><rect/></g></svg>");
 }
 
 #[test]
 fn indent_5() {
     let doc = Document::from_str(
-"<svg>
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <g>
         <rect/>
     </g>
@@ -335,8 +326,9 @@ fn indent_5() {
 
     let mut opt = WriteOptions::default();
     opt.indent = Indent::Tabs;
+    opt.use_single_quote = true;
     assert_eq!(doc.with_write_opt(&opt).to_string(),
-"<svg>
+"<svg xmlns='http://www.w3.org/2000/svg'>
 \t<g>
 \t\t<rect/>
 \t</g>
@@ -347,8 +339,8 @@ fn indent_5() {
 #[test]
 fn attrs_indent_1() {
     let doc = Document::from_str(
-"<svg id='svg1' width='100' height='100'>
-    <g fill='red' stroke='blue' custom='qwe'>
+"<svg xmlns='http://www.w3.org/2000/svg' id='svg1' width='100' height='100'>
+    <g fill='red' stroke='blue'>
         <rect id='rect1' stroke-width='2'/>
     </g>
 </svg>
@@ -359,13 +351,13 @@ fn attrs_indent_1() {
     opt.use_single_quote = true;
     assert_eq!(doc.with_write_opt(&opt).to_string(),
 "<svg
+   xmlns='http://www.w3.org/2000/svg'
    id='svg1'
    height='100'
    width='100'>
     <g
        fill='#ff0000'
-       stroke='#0000ff'
-       custom='qwe'>
+       stroke='#0000ff'>
         <rect
            id='rect1'
            stroke-width='2'/>
@@ -376,57 +368,64 @@ fn attrs_indent_1() {
 
 #[test]
 fn single_quote_1() {
-    let doc = Document::from_str("<svg id=\"svg1\"/>").unwrap();
+    let doc = Document::from_str("<svg xmlns='http://www.w3.org/2000/svg' id=\"svg1\"/>").unwrap();
 
     let mut opt = WriteOptions::default();
     opt.indent = Indent::None;
     opt.use_single_quote = true;
-    assert_eq!(doc.with_write_opt(&opt).to_string(), "<svg id='svg1'/>");
+    assert_eq!(doc.with_write_opt(&opt).to_string(),
+               "<svg xmlns='http://www.w3.org/2000/svg' id='svg1'/>");
 }
 
 test_resave!(escape_1,
-"<svg unicode='ffl'/>",
-"<svg unicode='&#x66;&#x66;&#x6c;'/>
+"<svg xmlns='http://www.w3.org/2000/svg' unicode='ffl'/>",
+"<svg xmlns='http://www.w3.org/2000/svg' unicode='&#x66;&#x66;&#x6c;'/>
 ");
 
 // Do not escape already escaped.
 test_resave!(escape_2,
-"<svg unicode='&#x66;&#x66;&#x6c;'/>",
-"<svg unicode='&#x66;&#x66;&#x6c;'/>
+"<svg xmlns='http://www.w3.org/2000/svg' unicode='&#x66;&#x66;&#x6c;'/>",
+"<svg xmlns='http://www.w3.org/2000/svg' unicode='&#x66;&#x66;&#x6c;'/>
 ");
 
 // Escape attribute values according to the current quote type.
 #[test]
 fn escape_3() {
-    let doc = Document::from_str("<svg font-family=\"'Noto Sans'\"/>").unwrap();
+    let doc = Document::from_str(
+        "<svg xmlns=\"http://www.w3.org/2000/svg\" font-family=\"'Noto Sans'\"/>").unwrap();
 
     let mut opt = WriteOptions::default();
     opt.indent = Indent::None;
 
-    assert_eq!(doc.with_write_opt(&opt).to_string(), "<svg font-family=\"'Noto Sans'\"/>");
+    assert_eq!(doc.with_write_opt(&opt).to_string(),
+               "<svg xmlns=\"http://www.w3.org/2000/svg\" font-family=\"'Noto Sans'\"/>");
 
     opt.use_single_quote = true;
-    assert_eq!(doc.with_write_opt(&opt).to_string(), "<svg font-family='&apos;Noto Sans&apos;'/>");
+    assert_eq!(doc.with_write_opt(&opt).to_string(),
+               "<svg xmlns='http://www.w3.org/2000/svg' font-family='&apos;Noto Sans&apos;'/>");
 }
 
 // Escape attribute values according to the current quote type.
 #[test]
 fn escape_4() {
-    let doc = Document::from_str("<svg font-family='\"Noto Sans\"'/>").unwrap();
+    let doc = Document::from_str(
+        "<svg xmlns=\"http://www.w3.org/2000/svg\" font-family='\"Noto Sans\"'/>").unwrap();
 
     let mut opt = WriteOptions::default();
     opt.indent = Indent::None;
 
-    assert_eq!(doc.with_write_opt(&opt).to_string(), "<svg font-family=\"&quot;Noto Sans&quot;\"/>");
+    assert_eq!(doc.with_write_opt(&opt).to_string(),
+               "<svg xmlns=\"http://www.w3.org/2000/svg\" font-family=\"&quot;Noto Sans&quot;\"/>");
 
     opt.use_single_quote = true;
-    assert_eq!(doc.with_write_opt(&opt).to_string(), "<svg font-family='\"Noto Sans\"'/>");
+    assert_eq!(doc.with_write_opt(&opt).to_string(),
+               "<svg xmlns='http://www.w3.org/2000/svg' font-family='\"Noto Sans\"'/>");
 }
 
 #[test]
 fn attrs_order_1() {
     let doc = Document::from_str(
-        "<svg id='svg1' custom='qwe' width='100' height='100' fill='#ff0000' stroke='#0000ff'/>").unwrap();
+        "<svg xmlns='http://www.w3.org/2000/svg' id='svg1' width='100' height='100' fill='#ff0000' stroke='#0000ff'/>").unwrap();
 
     let mut opt = WriteOptions::default();
     opt.indent = Indent::None;
@@ -434,20 +433,20 @@ fn attrs_order_1() {
 
     opt.attributes_order = AttributesOrder::AsIs;
     assert_eq!(doc.with_write_opt(&opt).to_string(),
-        "<svg id='svg1' custom='qwe' width='100' height='100' fill='#ff0000' stroke='#0000ff'/>");
+        "<svg xmlns='http://www.w3.org/2000/svg' id='svg1' width='100' height='100' fill='#ff0000' stroke='#0000ff'/>");
 
     opt.attributes_order = AttributesOrder::Alphabetical;
     assert_eq!(doc.with_write_opt(&opt).to_string(),
-        "<svg id='svg1' fill='#ff0000' height='100' stroke='#0000ff' width='100' custom='qwe'/>");
+        "<svg xmlns='http://www.w3.org/2000/svg' id='svg1' fill='#ff0000' height='100' stroke='#0000ff' width='100'/>");
 }
 
 #[test]
 fn attrs_order_2() {
     let doc = Document::from_str(
-"<svg>
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <linearGradient x1='1' gradientTransform='scale(2)' y1='1' gradientUnits='userSpaceOnUse' \
         spreadMethod='pad' x2='1' y2='1'/>
-    <rect non-svg='test' fill='#ff0000' height='5' y='5' x='5' width='5' stroke='#ff0000'/>
+    <rect fill='#ff0000' height='5' y='5' x='5' width='5' stroke='#ff0000'/>
 
 </svg>"
 ).unwrap();
@@ -456,65 +455,53 @@ fn attrs_order_2() {
     opt.use_single_quote = true;
     opt.attributes_order = AttributesOrder::Specification;
     assert_eq!(doc.with_write_opt(&opt).to_string(),
-"<svg>
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <linearGradient x1='1' y1='1' x2='1' y2='1' gradientUnits='userSpaceOnUse' \
         gradientTransform='matrix(2 0 0 2 0 0)' spreadMethod='pad'/>
-    <rect fill='#ff0000' stroke='#ff0000' x='5' y='5' width='5' height='5' non-svg='test'/>
+    <rect fill='#ff0000' stroke='#ff0000' x='5' y='5' width='5' height='5'/>
 </svg>
 "
 );
 }
 
+// attrs_order_3 with non-svg attr
+
 test_resave!(namespaces_1,
-"<svg:svg/>",
-"<svg:svg/>
+"<svg xmlns='http://www.w3.org/2000/svg'/>",
+"<svg xmlns='http://www.w3.org/2000/svg'/>
 ");
 
 test_resave!(namespaces_2,
-"<svg:svg svg:x='0'/>",
-"<svg:svg svg:x='0'/>
+"<svg:svg xmlns:svg='http://www.w3.org/2000/svg'/>",
+"<svg xmlns='http://www.w3.org/2000/svg'/>
 ");
 
 test_resave!(namespaces_3,
-"<svg:svg xmlns:svg='http://www.w3.org/2000/svg'/>",
-"<svg:svg xmlns:svg='http://www.w3.org/2000/svg'/>
-");
-
-test_resave!(namespaces_4,
-"<svg:svg svg:x='0'>Text</svg:svg>",
-"<svg:svg svg:x='0'>Text</svg:svg>
-");
-
-test_resave!(namespaces_5,
-"<svg>
-    <g id='g1'>
-        <rect/>
-    </g>
-    <use xlink:href='#g1'/>
-</svg>",
-"<svg>
-    <g id='g1'>
-        <rect/>
-    </g>
-    <use xlink:href='#g1'/>
-</svg>
+"<svg:svg svg:x='0' xmlns:svg='http://www.w3.org/2000/svg'/>",
+"<svg xmlns='http://www.w3.org/2000/svg' x='0'/>
 ");
 
 // Non-SVG element.
-test_resave!(namespaces_6,
-"<svg>
+test_resave!(namespaces_4,
+"<svg xmlns='http://www.w3.org/2000/svg'>
     <d:SVGTestCase xmlns:d='http://www.w3.org/2000/02/svg/testsuite/description/'>
         <rect/>
     </d:SVGTestCase>
 </svg>",
-"<svg>
-    <d:SVGTestCase xmlns:d='http://www.w3.org/2000/02/svg/testsuite/description/'>
-        <rect/>
-    </d:SVGTestCase>
-</svg>
+"<svg xmlns='http://www.w3.org/2000/svg'/>
 ");
 
 test_resave!(aspect_ratio_1,
-"<svg preserveAspectRatio='defer none slice'/>",
-"<svg preserveAspectRatio='defer none slice'/>
+"<svg xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='defer none slice'/>",
+"<svg xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='defer none slice'/>
+");
+
+test_resave!(non_svg_1,
+"<svg xmlns='http://www.w3.org/2000/svg'>
+    <rect my-attr='qwe'/>
+    <random/>
+</svg>",
+"<svg xmlns='http://www.w3.org/2000/svg'>
+    <rect/>
+</svg>
 ");

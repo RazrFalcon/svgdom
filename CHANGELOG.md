@@ -10,15 +10,18 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Implemented `Debug` for `ParseOptions` and `WriteOptions`.
 
 ### Changed
+- From now, only SVG elements and attributes will be parsed.
 - Split `Error` into `Error` and `ParserError`.
 - New `Debug` implementation for `Attributes` and `Node`.
 - `Attributes::new`, `Attributes::insert` and `Attributes::remove` are private now.
 - Rename `Attribute::default` into `new_default`.
 
 ### Removed
+- Namespace prefixes.
 - `failure` dependency.
 - Unused error types.
-- `NodeType::Declaration`, `Node::is_declaration`. 
+- `NodeType::Declaration`, `Node::is_declaration`.
+- `NodeType::Cdata`, `Node::is_cdata`.
 - `parse_comments`, `parse_declarations`, `parse_unknown_elements`, `parse_unknown_attributes`,
   `parse_px_unit`, `skip_elements_crosslink`, `skip_paint_fallback` from `ParseOptions`.
 - `assert_eq_text` macro.
