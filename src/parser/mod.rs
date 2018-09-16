@@ -144,7 +144,7 @@ fn process_node(
 ) -> Result<()> {
     match xml_node.node_type() {
         roxmltree::NodeType::Element => {
-            if xml_node.tag_name().namespace() != "http://www.w3.org/2000/svg" {
+            if xml_node.tag_name().namespace() != Some("http://www.w3.org/2000/svg") {
                 return Ok(());
             }
 
@@ -161,10 +161,10 @@ fn process_node(
 
             for attr in xml_node.attributes() {
                 match attr.namespace() {
-                    "" |
-                    "http://www.w3.org/2000/svg" |
-                    "http://www.w3.org/1999/xlink" |
-                    "http://www.w3.org/XML/1998/namespace" => {}
+                    None |
+                    Some("http://www.w3.org/2000/svg") |
+                    Some("http://www.w3.org/1999/xlink") |
+                    Some("http://www.w3.org/XML/1998/namespace") => {}
                     _ => continue,
                 }
 
