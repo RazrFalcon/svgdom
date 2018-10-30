@@ -5,6 +5,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Added
+- `ParserError::InvalidAttributeValue`.
+
+### Changed
+- New error messages.
+
+### Removed
+- `InvalidCSS`, `SvgTypesError`, `XmlError` and `CssError` from `ParserError`.
 
 ## [0.14.0] - 2018-09-12
 ### Added

@@ -6,16 +6,15 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use roxmltree;
+use roxmltree::{
+    self,
+    TextPos,
+};
 
 use simplecss;
 use simplecss::Token as CssToken;
 
-use svgtypes::xmlparser::{
-    Stream,
-    StrSpan,
-    TextPos,
-};
+use svgtypes::Stream;
 
 use {
     AttributeId,
@@ -59,13 +58,13 @@ pub fn resolve_css(
         }
 
         let style = match node.text() {
-            Some(s) => StrSpan::from(s),
+            Some(s) => s,
             None => continue,
         };
 
-        if let Err(_) = parse_style(style, doc, post_data, &mut resolved_classes, opt) {
+        if let Err(_) = parse_style(ro_doc, style, doc, post_data, &mut resolved_classes, opt) {
+            // If an error occurred then use the text node position.
             let text_node = node.first_child().unwrap();
-            // TODO: test
             let pos = ro_doc.text_pos_from(text_node.pos());
             return Err(ParserError::UnsupportedCSS(pos));
         }
@@ -77,7 +76,8 @@ pub fn resolve_css(
 }
 
 fn parse_style(
-    style: StrSpan,
+    ro_doc: &roxmltree::Document,
+    style: &str,
     doc: &Document,
     post_data: &mut PostData,
     resolved_classes: &mut Vec<String>,
@@ -86,6 +86,11 @@ fn parse_style(
     let mut selectors: Vec<CssSelector> = Vec::new();
     let mut values: Vec<(&str,&str)> = Vec::with_capacity(16);
 
+    // Position doesn't matter, because we ignore this errors anyway.
+    macro_rules! gen_err {
+        () => { ParserError::UnsupportedCSS(TextPos::new(1, 1)) };
+    }
+
     let mut tokenizer = {
         let mut s = Stream::from(style);
 
@@ -93,11 +98,11 @@ fn parse_style(
         s.skip_spaces();
         if s.at_end() {
             // ignore such CSS
-            return Ok(())
+            return Ok(());
         }
 
         // we use 'new_bound' method to get absolute error positions
-        simplecss::Tokenizer::new(style.to_str())
+        simplecss::Tokenizer::new(style)
     };
 
     'root: loop {
@@ -106,10 +111,7 @@ fn parse_style(
 
         // get list of selectors
         loop {
-            // remember position before next token
-            let last_pos = tokenizer.pos();
-
-            let token = tokenizer.parse_next()?;
+            let token = tokenizer.parse_next().map_err(|_| gen_err!())?;
 
             match token {
                 CssToken::EndOfStream => {
@@ -133,16 +135,7 @@ fn parse_style(
                 CssToken::TypeSelector(name)    => CssSelector::Type(name),
                 CssToken::IdSelector(name)      => CssSelector::Id(name),
                 CssToken::ClassSelector(name)   => CssSelector::Class(name),
-
-                  CssToken::AttributeSelector(_)
-                | CssToken::PseudoClass(_)
-                | CssToken::LangPseudoClass(_)
-                | CssToken::Combinator(_) => {
-                    return Err(ParserError::UnsupportedCSS(gen_err_pos(style, last_pos)));
-                }
-                _ => {
-                    return Err(ParserError::InvalidCSS(gen_err_pos(style, last_pos)));
-                }
+                _ => return Err(gen_err!()),
             };
 
             selectors.push(selector);
@@ -150,16 +143,11 @@ fn parse_style(
 
         // get list of declarations
         loop {
-            // remember position before next token
-            let last_pos = tokenizer.pos();
-
-            match tokenizer.parse_next()? {
+            match tokenizer.parse_next().map_err(|_| gen_err!())? {
                 CssToken::Declaration(name, value) => values.push((name, value)),
                 CssToken::BlockEnd => break,
                 CssToken::EndOfStream => break 'root,
-                _ => {
-                    return Err(ParserError::InvalidCSS(gen_err_pos(style, last_pos)));
-                }
+                _ => return Err(gen_err!()),
             }
         }
 
@@ -168,14 +156,16 @@ fn parse_style(
             match *selector {
                 CssSelector::Universal => {
                     for (_, mut node) in doc.root().descendants().svg() {
-                        apply_css_attributes(&values, &mut node, &mut post_data.links, opt)?;
+                        apply_css_attributes(ro_doc, &values, opt,
+                                             &mut node, &mut post_data.links)?;
                     }
                 }
                 CssSelector::Type(name) => {
                     if let Some(eid) = ElementId::from_str(name) {
                         for (id, mut node) in doc.root().descendants().svg() {
                             if id == eid {
-                                apply_css_attributes(&values, &mut node, &mut post_data.links, opt)?;
+                                apply_css_attributes(ro_doc, &values, opt,
+                                                     &mut node, &mut post_data.links)?;
                             }
                         }
                     } else {
@@ -184,13 +174,15 @@ fn parse_style(
                 }
                 CssSelector::Id(name) => {
                     if let Some(mut node) = doc.root().descendants().find(|n| *n.id() == name) {
-                        apply_css_attributes(&values, &mut node, &mut post_data.links, opt)?;
+                        apply_css_attributes(ro_doc, &values, opt,
+                                             &mut node, &mut post_data.links)?;
                     }
                 }
                 CssSelector::Class(name) => {
                     // we use already collected list of 'class' attributes
                     for d in post_data.class_attrs.iter_mut().filter(|n| n.text == name) {
-                        apply_css_attributes(&values, &mut d.node, &mut post_data.links, opt)?;
+                        apply_css_attributes(ro_doc, &values, opt,
+                                             &mut d.node, &mut post_data.links)?;
 
                         resolved_classes.push(name.to_string());
                     }
@@ -232,18 +224,18 @@ fn postprocess_class_selector<'a>(
 }
 
 fn apply_css_attributes<'a>(
+    ro_doc: &roxmltree::Document,
     values: &[(&str, &'a str)],
+    opt: &ParseOptions,
     node: &mut Node,
     links: &mut Links,
-    opt: &ParseOptions,
 ) -> Result<(), ParserError> {
     for &(aname, avalue) in values {
         match AttributeId::from_str(aname) {
             Some(aid) => {
                 let mut parse_attr = |aid: AttributeId| {
-                    // TODO: to a proper stream
                     super::parse_svg_attribute_value(
-                        aid, StrSpan::from(avalue), opt,
+                        ro_doc, aid, avalue, 0, opt,
                         node, links,
                     )
                 };
@@ -255,7 +247,7 @@ fn apply_css_attributes<'a>(
                     // Using the marker property from a style sheet
                     // is equivalent to using all three (start, mid, end).
                     // However, shorthand properties cannot be used as presentation attributes.
-                    // So we have to convert it to presentation attributes.
+                    // So we have to convert it into presentation attributes.
 
                     parse_attr(AttributeId::MarkerStart)?;
                     parse_attr(AttributeId::MarkerMid)?;
@@ -271,9 +263,4 @@ fn apply_css_attributes<'a>(
     }
 
     Ok(())
-}
-
-fn gen_err_pos(span: StrSpan, pos: usize) -> TextPos {
-    let s = Stream::from(span.full_str());
-    s.gen_error_pos_from(pos)
 }

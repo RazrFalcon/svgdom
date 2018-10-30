@@ -9,15 +9,7 @@
 use std::error;
 use std::fmt;
 
-use simplecss;
-
-use roxmltree;
-
-use svgtypes;
-use svgtypes::xmlparser::{
-    self,
-    TextPos,
-};
+use roxmltree::{self, TextPos};
 
 /// SVG DOM errors.
 #[derive(Debug)]
@@ -72,9 +64,6 @@ pub enum ParserError {
     /// *svgdom* didn't support most of the CSS2 spec.
     UnsupportedCSS(TextPos),
 
-    /// Error during parsing of the CSS2.
-    InvalidCSS(TextPos),
-
     /// Unexpected close tag.
     ///
     /// # Examples
@@ -89,17 +78,11 @@ pub enum ParserError {
     /// A DOM API error.
     DomError(Error),
 
-    /// Error during attribute value parsing.
-    SvgTypesError(svgtypes::Error),
-
-    /// An XML stream error.
-    XmlError(xmlparser::Error),
+    /// An invalid attribute value.
+    InvalidAttributeValue(TextPos),
 
     /// A `roxmltree` error.
     RoXmlError(roxmltree::Error),
-
-    /// simplecss errors.
-    CssError(simplecss::Error),
 }
 
 impl fmt::Display for ParserError {
@@ -111,26 +94,17 @@ impl fmt::Display for ParserError {
             ParserError::UnsupportedCSS(pos) => {
                 write!(f, "unsupported CSS at {}", pos)
             }
-            ParserError::InvalidCSS(pos) => {
-                write!(f, "invalid CSS at {}", pos)
-            }
             ParserError::UnexpectedCloseTag(ref first, ref second) => {
                 write!(f, "opening and ending tag mismatch '{}' and '{}'", first, second)
+            }
+            ParserError::InvalidAttributeValue(pos) => {
+                write!(f, "invalid attribute value at {}", pos)
             }
             ParserError::DomError(ref e) => {
                 write!(f, "{}", e)
             }
-            ParserError::SvgTypesError(ref e) => {
-                write!(f, "{}", e)
-            }
-            ParserError::XmlError(ref e) => {
-                write!(f, "{}", e)
-            }
             ParserError::RoXmlError(ref e) => {
                 write!(f, "{}", e)
-            }
-            ParserError::CssError(ref e) => {
-                write!(f, "{:?}", e) // TODO: impl Display for simplecss's Error
             }
         }
     }
@@ -148,26 +122,8 @@ impl From<Error> for ParserError {
     }
 }
 
-impl From<xmlparser::Error> for ParserError {
-    fn from(value: xmlparser::Error) -> Self {
-        ParserError::XmlError(value)
-    }
-}
-
 impl From<roxmltree::Error> for ParserError {
     fn from(value: roxmltree::Error) -> Self {
         ParserError::RoXmlError(value)
-    }
-}
-
-impl From<svgtypes::Error> for ParserError {
-    fn from(value: svgtypes::Error) -> Self {
-        ParserError::SvgTypesError(value)
-    }
-}
-
-impl From<simplecss::Error> for ParserError {
-    fn from(value: simplecss::Error) -> Self {
-        ParserError::CssError(value)
     }
 }

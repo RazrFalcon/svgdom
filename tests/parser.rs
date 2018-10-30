@@ -346,12 +346,6 @@ fn parse_func_iri_2() {
                &AttributeValue::String("url(#f)".to_string()));
 }
 
-// TODO: it's not a ref
-test_resave!(skip_unknown_refs_1,
-"<svg xmlns='http://www.w3.org/2000/svg' unicode='&#x3b2;'/>",
-"<svg xmlns='http://www.w3.org/2000/svg' unicode='&#x3b2;'/>
-");
-
 // ignore empty LengthList
 test_resave!(parse_empty_attribute_1,
 "<svg xmlns='http://www.w3.org/2000/svg'>
@@ -543,6 +537,28 @@ test_resave!(crosslink_2,
     <linearGradient id='lg1'/>
 </svg>
 ");
+
+#[test]
+fn attr_value_error_1() {
+    let doc = Document::from_str(
+"<svg xmlns='http://www.w3.org/2000/svg'>
+    <rect fill='qwe'/>
+</svg>");
+
+    assert_eq!(doc.err().unwrap().to_string(),
+               "invalid attribute value at 2:17");
+}
+
+#[test]
+fn attr_value_error_2() {
+    let doc = Document::from_str(
+"<svg xmlns='http://www.w3.org/2000/svg'>
+    <rect style='fill:qwe'/>
+</svg>");
+
+    assert_eq!(doc.err().unwrap().to_string(),
+               "invalid attribute value at 2:18");
+}
 
 // TODO: this
 // p { font-family: "Font 1", "Font 2", Georgia, Times, serif; }

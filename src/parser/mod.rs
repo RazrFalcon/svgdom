@@ -6,23 +6,21 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::str;
 use std::collections::HashMap;
+use std::str::{self, FromStr};
 
 pub use self::options::*;
 
-use roxmltree;
+use roxmltree::{
+    self,
+    TextPos,
+};
 
 use svgtypes::{
     Paint,
     PaintFallback,
-    StreamExt,
-    StyleParser,
-};
-
-use svgtypes::xmlparser::{
     Stream,
-    StrSpan,
+    StyleParser,
 };
 
 use super::*;
@@ -36,6 +34,7 @@ type Result<T> = ::std::result::Result<T, ParserError>;
 pub struct NodeStringData {
     pub node: Node,
     pub text: String,
+    pub value_pos: usize,
 }
 
 pub struct LinkData {
@@ -102,9 +101,8 @@ pub fn parse_svg(text: &str, opt: &ParseOptions) -> Result<Document> {
     let mut parent = root.clone();
 
     for child in ro_doc.root().children() {
-        process_node(child, opt, &mut post_data, &mut doc, &mut parent)?;
+        process_node(&ro_doc, child, opt, &mut post_data, &mut doc, &mut parent)?;
     }
-
 
     // First element must be an 'svg' element.
     if doc.svg_element().is_none() {
@@ -125,7 +123,8 @@ pub fn parse_svg(text: &str, opt: &ParseOptions) -> Result<Document> {
 
     // Resolve styles.
     for d in &mut post_data.style_attrs {
-        parse_style_attribute(&d.text, opt, &mut d.node, &mut post_data.links)?;
+        parse_style_attribute(&ro_doc, &d.text, d.value_pos, opt,
+                              &mut d.node, &mut post_data.links)?;
     }
 
     resolve_links(&mut post_data.links);
@@ -136,6 +135,7 @@ pub fn parse_svg(text: &str, opt: &ParseOptions) -> Result<Document> {
 }
 
 fn process_node(
+    ro_doc: &roxmltree::Document,
     xml_node: roxmltree::Node,
     opt: &ParseOptions,
     post_data: &mut PostData,
@@ -168,12 +168,10 @@ fn process_node(
                     _ => continue,
                 }
 
-                let local = attr.name();
-                let value = StrSpan::from(attr.value());
-
-                if let Some(aid) = AttributeId::from_str(local) {
+                if let Some(aid) = AttributeId::from_str(attr.name()) {
                     if e.is_svg_element() {
-                        parse_svg_attribute(aid, value, opt, &mut e, post_data)?;
+                        parse_svg_attribute(ro_doc, aid, attr.value(), attr.value_pos(), opt,
+                                            &mut e, post_data)?;
                     }
                 }
             }
@@ -182,7 +180,7 @@ fn process_node(
 
             if xml_node.is_element() && xml_node.has_children() {
                 for child in xml_node.children() {
-                    process_node(child, opt, post_data, doc, &mut e)?;
+                    process_node(ro_doc, child, opt, post_data, doc, &mut e)?;
                 }
             }
         }
@@ -228,22 +226,25 @@ fn process_node(
 }
 
 fn parse_svg_attribute<'a>(
+    ro_doc: &roxmltree::Document,
     id: AttributeId,
-    value: StrSpan<'a>,
+    value: &'a str,
+    value_pos: usize,
     opt: &ParseOptions,
     node: &mut Node,
     post_data: &mut PostData,
 ) -> Result<()> {
     match id {
         AttributeId::Id => {
-            node.set_id(value.to_str());
-            post_data.links.elems_with_id.insert(value.to_str().to_owned(), node.clone());
+            node.set_id(value);
+            post_data.links.elems_with_id.insert(value.to_owned(), node.clone());
         }
         AttributeId::Style => {
             // We store 'style' attributes for later use.
             post_data.style_attrs.push(NodeStringData {
                 node: node.clone(),
                 text: value.to_string(),
+                value_pos,
             });
         }
         AttributeId::Class => {
@@ -260,13 +261,15 @@ fn parse_svg_attribute<'a>(
                 post_data.class_attrs.push(NodeStringData {
                     node: node.clone(),
                     text: class.to_string(),
+                    value_pos,
                 });
 
                 s.skip_spaces();
             }
         }
         _ => {
-            parse_svg_attribute_value(id, value, opt, node, &mut post_data.links)?;
+            parse_svg_attribute_value(ro_doc, id, value, value_pos, opt,
+                                      node, &mut post_data.links)?;
         }
     }
 
@@ -274,8 +277,10 @@ fn parse_svg_attribute<'a>(
 }
 
 pub fn parse_svg_attribute_value<'a>(
+    ro_doc: &roxmltree::Document,
     id: AttributeId,
-    value: StrSpan<'a>,
+    value: &'a str,
+    value_pos: usize,
     opt: &ParseOptions,
     node: &mut Node,
     links: &mut Links,
@@ -292,11 +297,12 @@ pub fn parse_svg_attribute_value<'a>(
                 }
             }
         }
-        Err(e) => {
+        Err(_) => {
             if opt.skip_invalid_attributes {
-                warn!("Attribute '{}' has an invalid value: '{}'.", id, value.to_str());
+                warn!("Attribute '{}' has an invalid value: '{}'.", id, value);
             } else {
-                return Err(e.into());
+                let pos = ro_doc.text_pos_from(value_pos);
+                return Err(ParserError::InvalidAttributeValue(pos));
             }
         }
     }
@@ -317,10 +323,10 @@ fn f64_bound(min: f64, val: f64, max: f64) -> f64 {
 
 pub fn _parse_svg_attribute_value<'a>(
     aid: AttributeId,
-    value: StrSpan<'a>,
+    value: &'a str,
     node: &mut Node,
     links: &mut Links,
-) -> Result<Option<AttributeValue>> {
+) -> ::std::result::Result<Option<AttributeValue>, svgtypes::Error> {
     use AttributeId as AId;
 
     let eid = node.tag_id().unwrap();
@@ -338,7 +344,7 @@ pub fn _parse_svg_attribute_value<'a>(
                 return Ok(None);
             }
             Err(_) => {
-                return Ok(Some(AttributeValue::String(value.to_str().to_string())));
+                return Ok(Some(AttributeValue::String(value.to_string())));
             }
         }
     }
@@ -352,10 +358,10 @@ pub fn _parse_svg_attribute_value<'a>(
                 | ElementId::Text
                 | ElementId::Tref
                 | ElementId::Tspan => {
-                    AttributeValue::LengthList(LengthList::from_span(value)?)
+                    AttributeValue::LengthList(LengthList::from_str(value)?)
                 }
                 _ => {
-                    AttributeValue::Length(Length::from_span(value)?)
+                    AttributeValue::Length(Length::from_str(value)?)
                 }
             }
         }
@@ -368,15 +374,15 @@ pub fn _parse_svg_attribute_value<'a>(
         | AId::Fx | AId::Fy
         | AId::Offset
         | AId::Width | AId::Height => {
-              AttributeValue::Length(Length::from_span(value)?)
+              AttributeValue::Length(Length::from_str(value)?)
         }
 
           AId::StrokeDashoffset
         | AId::StrokeMiterlimit
         | AId::StrokeWidth => {
-              match value.to_str() {
+              match value {
                   "inherit" => AttributeValue::Inherit,
-                  _ => Length::from_span(value)?.into(),
+                  _ => Length::from_str(value)?.into(),
               }
         }
 
@@ -385,7 +391,7 @@ pub fn _parse_svg_attribute_value<'a>(
         | AId::FloodOpacity
         | AId::StrokeOpacity
         | AId::StopOpacity => {
-            match value.to_str() {
+            match value {
                 "inherit" => AttributeValue::Inherit,
                 _ => {
                     let mut s = Stream::from(value);
@@ -397,10 +403,10 @@ pub fn _parse_svg_attribute_value<'a>(
         }
 
         AId::StrokeDasharray => {
-            match value.to_str() {
+            match value {
                 "none" => AttributeValue::None,
                 "inherit" => AttributeValue::Inherit,
-                _ => AttributeValue::LengthList(LengthList::from_span(value)?),
+                _ => AttributeValue::LengthList(LengthList::from_str(value)?),
             }
         }
 
@@ -413,9 +419,9 @@ pub fn _parse_svg_attribute_value<'a>(
                 | ElementId::AnimateColor
                 | ElementId::AnimateMotion
                 | ElementId::AnimateTransform
-                => AttributeValue::String(value.to_str().to_string()),
+                => AttributeValue::String(value.to_string()),
                 _ => {
-                    match Paint::from_span(value)? {
+                    match Paint::from_str(value)? {
                         Paint::None => AttributeValue::None,
                         Paint::Inherit => AttributeValue::Inherit,
                         Paint::CurrentColor => AttributeValue::CurrentColor,
@@ -431,7 +437,7 @@ pub fn _parse_svg_attribute_value<'a>(
         }
 
         AId::Stroke => {
-            match Paint::from_span(value)? {
+            match Paint::from_str(value)? {
                 Paint::None => AttributeValue::None,
                 Paint::Inherit => AttributeValue::Inherit,
                 Paint::CurrentColor => AttributeValue::CurrentColor,
@@ -451,7 +457,7 @@ pub fn _parse_svg_attribute_value<'a>(
         | AId::MarkerMid
         | AId::MarkerStart
         | AId::Mask => {
-            match value.to_str() {
+            match value {
                 "none" => AttributeValue::None,
                 "inherit" => AttributeValue::Inherit,
                 _ => {
@@ -465,19 +471,19 @@ pub fn _parse_svg_attribute_value<'a>(
         }
 
         AId::Color => {
-            match value.to_str() {
+            match value {
                 "inherit" => AttributeValue::Inherit,
-                _ => AttributeValue::Color(Color::from_span(value)?),
+                _ => AttributeValue::Color(Color::from_str(value)?),
             }
         }
 
           AId::LightingColor
         | AId::FloodColor
         | AId::StopColor => {
-              match value.to_str() {
+              match value {
                   "inherit" => AttributeValue::Inherit,
                   "currentColor" => AttributeValue::CurrentColor,
-                  _ => AttributeValue::Color(Color::from_span(value)?),
+                  _ => AttributeValue::Color(Color::from_str(value)?),
               }
         }
 
@@ -485,23 +491,23 @@ pub fn _parse_svg_attribute_value<'a>(
         | AId::BaseFrequency
         | AId::Rotate => {
             // TODO: 'stdDeviation' can contain only one or two numbers
-            AttributeValue::NumberList(NumberList::from_span(value)?)
+            AttributeValue::NumberList(NumberList::from_str(value)?)
         }
 
         AId::Points => {
-            AttributeValue::Points(Points::from_span(value)?)
+            AttributeValue::Points(Points::from_str(value)?)
         }
 
         AId::D => {
-            AttributeValue::Path(Path::from_span(value)?)
+            AttributeValue::Path(Path::from_str(value)?)
         }
 
           AId::Transform
         | AId::GradientTransform
         | AId::PatternTransform => {
-            let ts = Transform::from_span(value)?;
+            let ts = Transform::from_str(value)?;
             if !ts.is_default() {
-                AttributeValue::Transform(Transform::from_span(value)?)
+                AttributeValue::Transform(Transform::from_str(value)?)
             } else {
                 return Ok(None);
             }
@@ -512,17 +518,17 @@ pub fn _parse_svg_attribute_value<'a>(
             match s.parse_length() {
                 Ok(l) => AttributeValue::Length(l),
                 Err(_) => {
-                    if value.to_str() == "inherit" {
+                    if value == "inherit" {
                         AttributeValue::Inherit
                     } else {
-                        AttributeValue::String(value.to_str().to_string())
+                        AttributeValue::String(value.to_string())
                     }
                 }
             }
         }
 
         AId::FontSizeAdjust => {
-            match value.to_str() {
+            match value {
                 "none" => AttributeValue::None,
                 "inherit" => AttributeValue::Inherit,
                 _ => {
@@ -535,10 +541,10 @@ pub fn _parse_svg_attribute_value<'a>(
           AId::Display
         | AId::PointerEvents
         | AId::TextDecoration => {
-            match value.to_str() {
+            match value {
                 "none" => AttributeValue::None,
                 "inherit" => AttributeValue::Inherit,
-                _ => AttributeValue::String(value.to_str().to_string()),
+                _ => AttributeValue::String(value.to_string()),
             }
         }
 
@@ -571,22 +577,22 @@ pub fn _parse_svg_attribute_value<'a>(
         | AId::Visibility
         | AId::WordSpacing
         | AId::WritingMode => {
-              match value.to_str() {
+              match value {
                   "inherit" => AttributeValue::Inherit,
-                  _ => AttributeValue::String(value.to_str().to_string()),
+                  _ => AttributeValue::String(value.to_string()),
               }
         }
 
         AId::ViewBox => {
-            AttributeValue::ViewBox(ViewBox::from_span(value)?)
+            AttributeValue::ViewBox(ViewBox::from_str(value)?)
         }
 
         AId::PreserveAspectRatio => {
-            AttributeValue::AspectRatio(AspectRatio::from_span(value)?)
+            AttributeValue::AspectRatio(AspectRatio::from_str(value)?)
         }
 
         _ => {
-            AttributeValue::String(value.to_str().to_string())
+            AttributeValue::String(value.to_string())
         }
     };
 
@@ -594,19 +600,29 @@ pub fn _parse_svg_attribute_value<'a>(
 }
 
 fn parse_style_attribute(
-    text: &str,
+    ro_doc: &roxmltree::Document,
+    value: &str,
+    value_pos: usize,
     opt: &ParseOptions,
     node: &mut Node,
     links: &mut Links,
 ) -> Result<()> {
-    for token in StyleParser::from(text) {
-        let (name, value) = token?;
-        match AttributeId::from_str(name.to_str()) {
+    for token in StyleParser::from(value) {
+        let (name, value) = match token {
+            Ok(v) => v,
+            Err(_) => {
+                // TODO: this
+                let pos = TextPos::new(0, 0);
+                return Err(ParserError::InvalidAttributeValue(pos));
+            }
+        };
+
+        match AttributeId::from_str(name) {
             Some(aid) => {
-                parse_svg_attribute_value(aid, value, opt, node, links)?;
+                parse_svg_attribute_value(ro_doc, aid, value, value_pos, opt, node, links)?;
             }
             None => {
-                node.set_attribute((name.to_str(), value.to_str()));
+                node.set_attribute((name, value));
             }
         }
     }
