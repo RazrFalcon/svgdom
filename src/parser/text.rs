@@ -271,12 +271,9 @@ fn trim(text: &str, space: XmlSpace) -> String {
 
     let mut prev = '0';
     for c in text.chars() {
-        // Must be processed by the `roxmltree`.
-        debug_assert_ne!(c, '\r');
-
-        // \n and \t should be converted into spaces.
+        // \r, \n and \t should be converted into spaces.
         let c = match c {
-            '\n' | '\t' => ' ',
+            '\r' | '\n' | '\t' => ' ',
             _ => c,
         };
 

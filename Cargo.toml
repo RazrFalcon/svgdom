@@ -20,8 +20,8 @@ slab = "0.4"
 #svgtypes = "0.2"
 svgtypes = { git = "https://github.com/RazrFalcon/svgtypes", rev = "2516d2a" }
 #svgtypes = { path = "../svgtypes" }
-roxmltree = "0.3"
-# roxmltree = { git = "https://github.com/RazrFalcon/roxmltree", rev = "a33c70a" }
+#roxmltree = "0.3"
+roxmltree = { git = "https://github.com/RazrFalcon/roxmltree", rev = "031e557" }
 
 [dev-dependencies]
 time = "0.1"
