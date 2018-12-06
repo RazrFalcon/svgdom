@@ -100,6 +100,16 @@ pub trait ElementType {
     ///
     /// [paint server]: <https://www.w3.org/TR/SVG11/pservers.html#Introduction>
     fn is_paint_server(&self) -> bool;
+
+    /// Returns true if the current node is a [filter primitive].
+    ///
+    /// List: `feBlend`, `feColorMatrix`, `feComponentTransfer`, `feComposite`,
+    /// `feConvolveMatrix`, `feDiffuseLighting`, `feDisplacementMap`, `feFlood`, `feGaussianBlur`,
+    /// `feImage`, `feMerge`, `feMorphology`, `feOffset`, `feSpecularLighting`,
+    /// `feTile` and `feTurbulence`.
+    ///
+    /// [filter primitive]: <https://www.w3.org/TR/SVG11/intro.html#TermFilterPrimitiveElement>
+    fn is_filter_primitive(&self) -> bool;
 }
 
 macro_rules! is_func {
@@ -193,4 +203,22 @@ impl ElementType for Node {
           ElementId::LinearGradient
         | ElementId::RadialGradient
         | ElementId::Pattern);
+
+    is_func!(is_filter_primitive,
+          ElementId::FeBlend
+        | ElementId::FeColorMatrix
+        | ElementId::FeComponentTransfer
+        | ElementId::FeComposite
+        | ElementId::FeConvolveMatrix
+        | ElementId::FeDiffuseLighting
+        | ElementId::FeDisplacementMap
+        | ElementId::FeFlood
+        | ElementId::FeGaussianBlur
+        | ElementId::FeImage
+        | ElementId::FeMerge
+        | ElementId::FeMorphology
+        | ElementId::FeOffset
+        | ElementId::FeSpecularLighting
+        | ElementId::FeTile
+        | ElementId::FeTurbulence);
 }
