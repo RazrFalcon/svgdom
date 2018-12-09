@@ -138,6 +138,15 @@ static PATTERN_ATTRIBUTES: &'static [AttributeQNameRef<'static>] = &[
     QNameRef::Id(AttributeId::Href),
 ];
 
+static FILTER_ATTRIBUTES: &'static [AttributeQNameRef<'static>] = &[
+    QNameRef::Id(AttributeId::X),
+    QNameRef::Id(AttributeId::Y),
+    QNameRef::Id(AttributeId::Width),
+    QNameRef::Id(AttributeId::Height),
+    QNameRef::Id(AttributeId::FilterUnits),
+    QNameRef::Id(AttributeId::PrimitiveUnits),
+];
+
 pub fn attrs_order_by_element(eid: ElementId) -> &'static [AttributeQNameRef<'static>] {
     match eid {
         ElementId::Svg => SVG_ATTRIBUTES,
@@ -154,6 +163,8 @@ pub fn attrs_order_by_element(eid: ElementId) -> &'static [AttributeQNameRef<'st
         ElementId::LinearGradient => LINEAR_GRADIENT_ATTRIBUTES,
         ElementId::RadialGradient => RADIAL_GRADIENT_ATTRIBUTES,
         ElementId::Pattern => PATTERN_ATTRIBUTES,
+        ElementId::Filter => FILTER_ATTRIBUTES,
+        ElementId::FeImage => IMAGE_ATTRIBUTES,
         _ => &[],
     }
 }
