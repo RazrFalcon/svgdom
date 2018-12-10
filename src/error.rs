@@ -64,17 +64,6 @@ pub enum ParserError {
     /// *svgdom* didn't support most of the CSS2 spec.
     UnsupportedCSS(TextPos),
 
-    /// Unexpected close tag.
-    ///
-    /// # Examples
-    ///
-    /// ```text
-    /// <svg>
-    ///     </rect>
-    /// </svg>
-    /// ```
-    UnexpectedCloseTag(String, String),
-
     /// A DOM API error.
     DomError(Error),
 
@@ -93,9 +82,6 @@ impl fmt::Display for ParserError {
             }
             ParserError::UnsupportedCSS(pos) => {
                 write!(f, "unsupported CSS at {}", pos)
-            }
-            ParserError::UnexpectedCloseTag(ref first, ref second) => {
-                write!(f, "opening and ending tag mismatch '{}' and '{}'", first, second)
             }
             ParserError::InvalidAttributeValue(pos) => {
                 write!(f, "invalid attribute value at {}", pos)

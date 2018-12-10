@@ -13,7 +13,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - New error messages.
 
 ### Removed
-- `InvalidCSS`, `SvgTypesError`, `XmlError` and `CssError` from `ParserError`.
+- `InvalidCSS`, `SvgTypesError`, `UnexpectedCloseTag`, `XmlError` and `CssError`
+  from `ParserError`.
 
 ## [0.14.0] - 2018-09-12
 ### Added
