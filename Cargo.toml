@@ -18,15 +18,16 @@ log = "0.4.5"
 simplecss = "0.1"
 slab = "0.4"
 #svgtypes = "0.2"
-svgtypes = { git = "https://github.com/RazrFalcon/svgtypes", rev = "2516d2a" }
+svgtypes = { git = "https://github.com/RazrFalcon/svgtypes", rev = "bd9f1e0" }
 #svgtypes = { path = "../svgtypes" }
 #roxmltree = "0.3"
-roxmltree = { git = "https://github.com/RazrFalcon/roxmltree", rev = "031e557" }
+roxmltree = { git = "https://github.com/RazrFalcon/roxmltree", rev = "d4b8589" }
 
 [dev-dependencies]
-time = "0.1"
 bencher = "0.1"
+fern = "0.5"
 pretty_assertions = "0.5.1"
+time = "0.1"
 
 [[bench]]
 name = "parser"

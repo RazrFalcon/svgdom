@@ -1,5 +1,6 @@
 extern crate svgdom;
 extern crate time;
+extern crate fern;
 
 use std::env;
 use std::io::{Read,Write};
@@ -8,6 +9,11 @@ use std::fs::File;
 use svgdom::{Document, WriteBuffer};
 
 fn main() {
+    fern::Dispatch::new()
+        .format(|out, message, record|
+            out.finish(format_args!("{}: {}", record.level(), message))
+        ).chain(std::io::stderr()).apply().unwrap();
+
     let start = time::precise_time_ns();
 
     let args: Vec<_> = env::args().collect();

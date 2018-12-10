@@ -284,6 +284,15 @@ test_resave!(parse_paint_7,
 </svg>
 ");
 
+test_resave!(parse_invalid_path,
+"<svg xmlns='http://www.w3.org/2000/svg'>
+    <path d='M 10 20 L 30 40 L 50'/>
+</svg>",
+"<svg xmlns='http://www.w3.org/2000/svg'>
+    <path d='M 10 20 L 30 40'/>
+</svg>
+");
+
 #[test]
 fn parse_iri_1() {
     let doc = Document::from_str(

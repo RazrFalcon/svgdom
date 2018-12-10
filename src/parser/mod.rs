@@ -19,6 +19,7 @@ use roxmltree::{
 use svgtypes::{
     Paint,
     PaintFallback,
+    PathParser,
     Stream,
     StyleParser,
 };
@@ -285,7 +286,7 @@ pub fn parse_svg_attribute_value<'a>(
     node: &mut Node,
     links: &mut Links,
 ) -> Result<()> {
-    let av = _parse_svg_attribute_value(id, value, node, links);
+    let av = _parse_svg_attribute_value(ro_doc, id, value, value_pos, node, links);
 
     match av {
         Ok(av) => {
@@ -293,6 +294,7 @@ pub fn parse_svg_attribute_value<'a>(
                 match av {
                     AttributeValue::NumberList(ref list) if list.is_empty() => {}
                     AttributeValue::LengthList(ref list) if list.is_empty() => {}
+                    AttributeValue::Path(ref path) if path.is_empty() => {}
                     _ => node.set_attribute((id, av)),
                 }
             }
@@ -322,8 +324,10 @@ fn f64_bound(min: f64, val: f64, max: f64) -> f64 {
 }
 
 pub fn _parse_svg_attribute_value<'a>(
+    ro_doc: &roxmltree::Document,
     aid: AttributeId,
     value: &'a str,
+    value_pos: usize,
     node: &mut Node,
     links: &mut Links,
 ) -> ::std::result::Result<Option<AttributeValue>, svgtypes::Error> {
@@ -499,7 +503,22 @@ pub fn _parse_svg_attribute_value<'a>(
         }
 
         AId::D => {
-            AttributeValue::Path(Path::from_str(value)?)
+            let mut data = Vec::new();
+            for token in PathParser::from(value) {
+                match token {
+                    Ok(token) => data.push(token),
+                    Err(_) => {
+                        // By the SVG spec, any invalid data inside the path data
+                        // should stop parsing of this path, but not the whole document.
+                        let pos = ro_doc.text_pos_from(value_pos);
+                        warn!("A path attribute at {} was parsed partially \
+                               due to an invalid data.", pos);
+                        break;
+                    }
+                }
+            }
+
+            AttributeValue::Path(Path(data))
         }
 
           AId::Transform
