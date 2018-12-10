@@ -114,13 +114,7 @@ pub fn parse_svg(text: &str, opt: &ParseOptions) -> Result<Document> {
     // is stored separately and will be processed later.
     doc.drain(root.clone(), |n| n.is_tag_name(ElementId::Style));
 
-    if let Err(e) = css::resolve_css(&ro_doc, &doc, &mut post_data, opt) {
-        if opt.skip_invalid_css {
-            warn!("{}.", e);
-        } else {
-            return Err(e.into());
-        }
-    }
+    css::resolve_css(&ro_doc, &doc, &mut post_data, opt)?;
 
     // Resolve styles.
     for d in &mut post_data.style_attrs {
@@ -680,14 +674,14 @@ fn resolve_links(links: &mut Links) {
                     Some(PaintFallback::Color(c)) => AttributeValue::Color(c),
                     None => {
                         if d.attr_id == AttributeId::Fill {
-                            warn!("Could not resolve the 'fill' IRI reference: {}. \
+                            warn!("Could not resolve a 'fill' IRI reference: {}. \
                                    Fallback to 'none'.", d.iri);
                             AttributeValue::None
                         } else if d.attr_id == AttributeId::Href {
-                            warn!("Could not resolve IRI reference: {}.", d.iri);
+                            warn!("Could not resolve an IRI reference: {}.", d.iri);
                             AttributeValue::String(format!("#{}", d.iri))
                         } else {
-                            warn!("Could not resolve FuncIRI reference: {}.", d.iri);
+                            warn!("Could not resolve a FuncIRI reference: {}.", d.iri);
                             AttributeValue::String(format!("url(#{})", d.iri))
                         }
                     }

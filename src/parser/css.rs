@@ -63,10 +63,14 @@ pub fn resolve_css(
         };
 
         if let Err(_) = parse_style(ro_doc, style, doc, post_data, &mut resolved_classes, opt) {
-            // If an error occurred then use the text node position.
-            let text_node = node.first_child().unwrap();
-            let pos = ro_doc.text_pos_from(text_node.pos());
-            return Err(ParserError::UnsupportedCSS(pos));
+            if opt.skip_invalid_css {
+                warn!("Document contains an unsupported CSS.");
+            } else {
+                // If an error occurred then use the text node position.
+                let text_node = node.first_child().unwrap();
+                let pos = ro_doc.text_pos_from(text_node.pos());
+                return Err(ParserError::UnsupportedCSS(pos));
+            }
         }
     }
 
