@@ -61,17 +61,9 @@ doc for details.
   You still have all the data, but not in the specific *struct's*.
   You can check the node type via `Node::node_type()`.
 
+### Dependency
 
-### Usage
-
-Dependency: [Rust](https://www.rust-lang.org/) >= 1.18
-
-Add this to your `Cargo.toml`:
-
-```toml
-[dependencies]
-svgdom = "0.14"
-```
+[Rust](https://www.rust-lang.org/) >= 1.18
 
 ### License
 

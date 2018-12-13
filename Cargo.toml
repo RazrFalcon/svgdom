@@ -1,7 +1,7 @@
 [package]
 name = "svgdom"
 # When updating version, also modify html_root_url in the lib.rs and in the README
-version = "0.14.0"
+version = "0.15.0"
 authors = ["Evgeniy Reizner <razrfalcon@gmail.com>"]
 keywords = ["svg", "dom"]
 license = "MIT/Apache-2.0"
@@ -15,13 +15,10 @@ travis-ci = { repository = "RazrFalcon/svgdom" }
 
 [dependencies]
 log = "0.4.5"
+roxmltree = "0.4"
 simplecss = "0.1"
 slab = "0.4"
-#svgtypes = "0.2"
-svgtypes = { git = "https://github.com/RazrFalcon/svgtypes", rev = "bd9f1e0" }
-#svgtypes = { path = "../svgtypes" }
-#roxmltree = "0.3"
-roxmltree = { git = "https://github.com/RazrFalcon/roxmltree", rev = "d4b8589" }
+svgtypes = "0.3"
 
 [dev-dependencies]
 bencher = "0.1"
