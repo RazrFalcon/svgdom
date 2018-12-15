@@ -370,17 +370,26 @@ pub fn _parse_svg_attribute_value<'a>(
         | AId::Rx | AId::Ry
         | AId::Cx | AId::Cy
         | AId::Fx | AId::Fy
-        | AId::Offset
         | AId::Width | AId::Height => {
-              AttributeValue::Length(Length::from_str(value)?)
+            AttributeValue::Length(Length::from_str(value)?)
+        }
+
+        AId::Offset => {
+            // offset = <number> | <percentage>
+            let l = Length::from_str(value)?;
+            if l.unit == LengthUnit::None || l.unit == LengthUnit::Percent {
+                AttributeValue::Length(l)
+            } else {
+                return Err(svgtypes::Error::InvalidValue);
+            }
         }
 
           AId::StrokeDashoffset
         | AId::StrokeWidth => {
-              match value {
-                  "inherit" => AttributeValue::Inherit,
-                  _ => Length::from_str(value)?.into(),
-              }
+            match value {
+                "inherit" => AttributeValue::Inherit,
+                _ => Length::from_str(value)?.into(),
+            }
         }
 
         AId::StrokeMiterlimit => {
@@ -498,11 +507,11 @@ pub fn _parse_svg_attribute_value<'a>(
           AId::LightingColor
         | AId::FloodColor
         | AId::StopColor => {
-              match value {
-                  "inherit" => AttributeValue::Inherit,
-                  "currentColor" => AttributeValue::CurrentColor,
-                  _ => AttributeValue::Color(Color::from_str(value)?),
-              }
+            match value {
+                "inherit" => AttributeValue::Inherit,
+                "currentColor" => AttributeValue::CurrentColor,
+                _ => AttributeValue::Color(Color::from_str(value)?),
+            }
         }
 
           AId::StdDeviation
@@ -616,10 +625,10 @@ pub fn _parse_svg_attribute_value<'a>(
         | AId::Visibility
         | AId::WordSpacing
         | AId::WritingMode => {
-              match value {
-                  "inherit" => AttributeValue::Inherit,
-                  _ => AttributeValue::String(value.to_string()),
-              }
+            match value {
+                "inherit" => AttributeValue::Inherit,
+                _ => AttributeValue::String(value.to_string()),
+            }
         }
 
         AId::ViewBox => {

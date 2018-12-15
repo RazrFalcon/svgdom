@@ -591,5 +591,17 @@ fn attr_value_error_4() {
                "invalid attribute value at 2:20");
 }
 
+#[test]
+fn attr_value_error_5() {
+    let doc = Document::from_str(
+"<svg xmlns='http://www.w3.org/2000/svg'>
+    <rect offset='5%'/> <!-- % is ok -->
+    <rect offset='5mm'/>
+</svg>");
+
+    assert_eq!(doc.err().unwrap().to_string(),
+               "invalid attribute value at 3:19");
+}
+
 // TODO: this
 // p { font-family: "Font 1", "Font 2", Georgia, Times, serif; }
