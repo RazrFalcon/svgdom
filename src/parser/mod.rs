@@ -376,12 +376,21 @@ pub fn _parse_svg_attribute_value<'a>(
         }
 
           AId::StrokeDashoffset
-        | AId::StrokeMiterlimit
         | AId::StrokeWidth => {
               match value {
                   "inherit" => AttributeValue::Inherit,
                   _ => Length::from_str(value)?.into(),
               }
+        }
+
+        AId::StrokeMiterlimit => {
+            match value {
+                "inherit" => AttributeValue::Inherit,
+                _ => {
+                    let mut s = Stream::from(value);
+                    AttributeValue::Number(s.parse_number()?)
+                }
+            }
         }
 
           AId::Opacity
