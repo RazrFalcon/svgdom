@@ -388,7 +388,13 @@ pub fn _parse_svg_attribute_value<'a>(
                 "inherit" => AttributeValue::Inherit,
                 _ => {
                     let mut s = Stream::from(value);
-                    AttributeValue::Number(s.parse_number()?)
+                    let n = s.parse_number()?;
+
+                    if !s.at_end() {
+                        return Err(svgtypes::Error::InvalidValue);
+                    }
+
+                    AttributeValue::Number(n)
                 }
             }
         }
@@ -402,8 +408,13 @@ pub fn _parse_svg_attribute_value<'a>(
                 "inherit" => AttributeValue::Inherit,
                 _ => {
                     let mut s = Stream::from(value);
-                    let mut n = s.parse_number()?;
-                    n = f64_bound(0.0, n, 1.0);
+                    let n = s.parse_number()?;
+
+                    if !s.at_end() {
+                        return Err(svgtypes::Error::InvalidValue);
+                    }
+
+                    let n = f64_bound(0.0, n, 1.0);
                     AttributeValue::Number(n)
                 }
             }
@@ -555,7 +566,13 @@ pub fn _parse_svg_attribute_value<'a>(
                 "inherit" => AttributeValue::Inherit,
                 _ => {
                     let mut s = Stream::from(value);
-                    AttributeValue::Number(s.parse_number()?)
+                    let n = s.parse_number()?;
+
+                    if !s.at_end() {
+                        return Err(svgtypes::Error::InvalidValue);
+                    }
+
+                    AttributeValue::Number(n)
                 }
             }
         }

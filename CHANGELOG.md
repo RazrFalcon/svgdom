@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 ### Fixed
 - `stroke-miterlimit` will be parsed as `Number` and not as a `Length` now.
+- `number` attribute type parsing.
 
 ## [0.15.0] - 2018-12-13
 ### Added

@@ -569,5 +569,27 @@ fn attr_value_error_2() {
                "invalid attribute value at 2:18");
 }
 
+#[test]
+fn attr_value_error_3() {
+    let doc = Document::from_str(
+"<svg xmlns='http://www.w3.org/2000/svg'>
+    <rect stroke-miterlimit='5mm'/>
+</svg>");
+
+    assert_eq!(doc.err().unwrap().to_string(),
+               "invalid attribute value at 2:30");
+}
+
+#[test]
+fn attr_value_error_4() {
+    let doc = Document::from_str(
+"<svg xmlns='http://www.w3.org/2000/svg'>
+    <rect opacity='5mm'/>
+</svg>");
+
+    assert_eq!(doc.err().unwrap().to_string(),
+               "invalid attribute value at 2:20");
+}
+
 // TODO: this
 // p { font-family: "Font 1", "Font 2", Georgia, Times, serif; }
