@@ -30,8 +30,6 @@ mod css;
 mod options;
 mod text;
 
-type Result<T> = ::std::result::Result<T, ParserError>;
-
 pub struct NodeStringData {
     pub node: Node,
     pub text: String,
@@ -80,7 +78,7 @@ pub struct PostData {
     pub style_attrs: Vec<NodeStringData>,
 }
 
-pub fn parse_svg(text: &str, opt: &ParseOptions) -> Result<Document> {
+pub fn parse_svg(text: &str, opt: &ParseOptions) -> Result<Document, ParserError> {
     let ro_doc = roxmltree::Document::parse(text)?;
 
     // Since we not only parsing, but also converting an SVG structure,
@@ -136,7 +134,7 @@ fn process_node(
     post_data: &mut PostData,
     doc: &mut Document,
     parent: &mut Node,
-) -> Result<()> {
+) -> Result<(), ParserError> {
     match xml_node.node_type() {
         roxmltree::NodeType::Element => {
             if xml_node.tag_name().namespace() != Some("http://www.w3.org/2000/svg") {
@@ -228,7 +226,7 @@ fn parse_svg_attribute<'a>(
     opt: &ParseOptions,
     node: &mut Node,
     post_data: &mut PostData,
-) -> Result<()> {
+) -> Result<(), ParserError> {
     match id {
         AttributeId::Id => {
             node.set_id(value);
@@ -279,7 +277,7 @@ pub fn parse_svg_attribute_value<'a>(
     opt: &ParseOptions,
     node: &mut Node,
     links: &mut Links,
-) -> Result<()> {
+) -> Result<(), ParserError> {
     let av = _parse_svg_attribute_value(ro_doc, id, value, value_pos, node, links);
 
     match av {
@@ -324,7 +322,7 @@ pub fn _parse_svg_attribute_value<'a>(
     value_pos: usize,
     node: &mut Node,
     links: &mut Links,
-) -> ::std::result::Result<Option<AttributeValue>, svgtypes::Error> {
+) -> Result<Option<AttributeValue>, svgtypes::Error> {
     use AttributeId as AId;
 
     let eid = node.tag_id().unwrap();
@@ -332,22 +330,20 @@ pub fn _parse_svg_attribute_value<'a>(
     // 'unicode' attribute can contain spaces.
     let value = if aid != AId::Unicode { value.trim() } else { value };
 
-    if aid == AId::Href {
-        let mut s = Stream::from(value);
-
-        match s.parse_iri() {
-            Ok(link) => {
-                // Collect links for later processing.
-                links.append(aid, link, None, node);
-                return Ok(None);
-            }
-            Err(_) => {
-                return Ok(Some(AttributeValue::String(value.to_string())));
+    let av = match aid {
+        AId::Href => {
+            match Stream::from(value).parse_iri() {
+                Ok(link) => {
+                    // Collect links for later processing.
+                    links.append(aid, link, None, node);
+                    return Ok(None);
+                }
+                Err(_) => {
+                    return Ok(Some(AttributeValue::String(value.to_string())));
+                }
             }
         }
-    }
 
-    let av = match aid {
           AId::X  | AId::Y
         | AId::Dx | AId::Dy => {
             // Some attributes can contain different data based on the element type.
@@ -395,16 +391,7 @@ pub fn _parse_svg_attribute_value<'a>(
         AId::StrokeMiterlimit => {
             match value {
                 "inherit" => AttributeValue::Inherit,
-                _ => {
-                    let mut s = Stream::from(value);
-                    let n = s.parse_number()?;
-
-                    if !s.at_end() {
-                        return Err(svgtypes::Error::InvalidValue);
-                    }
-
-                    AttributeValue::Number(n)
-                }
+                _ => parse_number(value)?.into(),
             }
         }
 
@@ -416,13 +403,7 @@ pub fn _parse_svg_attribute_value<'a>(
             match value {
                 "inherit" => AttributeValue::Inherit,
                 _ => {
-                    let mut s = Stream::from(value);
-                    let n = s.parse_number()?;
-
-                    if !s.at_end() {
-                        return Err(svgtypes::Error::InvalidValue);
-                    }
-
+                    let n = parse_number(value)?;
                     let n = f64_bound(0.0, n, 1.0);
                     AttributeValue::Number(n)
                 }
@@ -556,8 +537,7 @@ pub fn _parse_svg_attribute_value<'a>(
         }
 
         AId::FontSize => {
-            let mut s = Stream::from(value);
-            match s.parse_length() {
+            match Length::from_str(value) {
                 Ok(l) => AttributeValue::Length(l),
                 Err(_) => {
                     if value == "inherit" {
@@ -573,16 +553,7 @@ pub fn _parse_svg_attribute_value<'a>(
             match value {
                 "none" => AttributeValue::None,
                 "inherit" => AttributeValue::Inherit,
-                _ => {
-                    let mut s = Stream::from(value);
-                    let n = s.parse_number()?;
-
-                    if !s.at_end() {
-                        return Err(svgtypes::Error::InvalidValue);
-                    }
-
-                    AttributeValue::Number(n)
-                }
+                _ => parse_number(value)?.into(),
             }
         }
 
@@ -647,6 +618,17 @@ pub fn _parse_svg_attribute_value<'a>(
     Ok(Some(av))
 }
 
+fn parse_number(value: &str) -> Result<f64, svgtypes::Error> {
+    let mut s = Stream::from(value);
+    let n = s.parse_number()?;
+
+    if !s.at_end() {
+        return Err(svgtypes::Error::InvalidValue);
+    }
+
+    Ok(n)
+}
+
 fn parse_style_attribute(
     ro_doc: &roxmltree::Document,
     value: &str,
@@ -654,7 +636,7 @@ fn parse_style_attribute(
     opt: &ParseOptions,
     node: &mut Node,
     links: &mut Links,
-) -> Result<()> {
+) -> Result<(), ParserError> {
     for token in StyleParser::from(value) {
         let (name, value) = match token {
             Ok(v) => v,
