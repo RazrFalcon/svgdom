@@ -132,6 +132,22 @@ fn parse_text_2() {
     assert_eq!(text_data_node_3.node_type(), NodeType::Text);
 }
 
+test_resave!(parse_non_svg_1,
+"<svg xmlns='http://www.w3.org/2000/svg'>
+    <qwe/>
+</svg>",
+"<svg xmlns='http://www.w3.org/2000/svg'/>
+");
+
+test_resave!(parse_non_svg_2,
+"<svg xmlns='http://www.w3.org/2000/svg'>
+    <rect qwe='qwe'/>
+</svg>",
+"<svg xmlns='http://www.w3.org/2000/svg'>
+    <rect/>
+</svg>
+");
+
 // style must be ungroupped after presentation attributes
 test_resave!(parse_style_1,
 "<svg xmlns='http://www.w3.org/2000/svg'>
@@ -411,121 +427,6 @@ fn skip_unresolved_classes_1() {
 </svg>
 ");
 }
-
-test_resave!(elements_from_entity_1,
-"<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1 Basic//EN\" \"http://www.w3.org/\" [
-    <!ENTITY Rect1 \"<rect width='10' height='20' fill='none'/>\">
-]>
-<svg xmlns='http://www.w3.org/2000/svg'>&Rect1;</svg>",
-"<svg xmlns='http://www.w3.org/2000/svg'>
-    <rect fill='none' height='20' width='10'/>
-</svg>
-");
-
-test_resave!(elements_from_entity_2,
-"<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1 Basic//EN\" \"http://www.w3.org/\" [
-    <!ENTITY Rect1 \"<rect width='10' height='20' fill='none'/>\">
-]>
-<svg xmlns='http://www.w3.org/2000/svg'>&Rect1;&Rect1;&Rect1;</svg>",
-"<svg xmlns='http://www.w3.org/2000/svg'>
-    <rect fill='none' height='20' width='10'/>
-    <rect fill='none' height='20' width='10'/>
-    <rect fill='none' height='20' width='10'/>
-</svg>
-");
-
-test_resave!(elements_from_entity_3,
-"<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1 Basic//EN\" \"http://www.w3.org/\" [
-    <!ENTITY Rect1 \"<rect/>\">
-]>
-<svg xmlns='http://www.w3.org/2000/svg'>&Rect1; text &Rect1;</svg>",
-"<svg xmlns='http://www.w3.org/2000/svg'><rect/> text <rect/></svg>
-");
-
-test_resave!(elements_from_entity_6,
-"<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1 Basic//EN\" \"http://www.w3.org/\" [
-<!ENTITY Rect1 \"
-    <g>
-        <rect width='10' height='20' fill='none'/>
-    </g>
-\">
-]>
-<svg xmlns='http://www.w3.org/2000/svg'>
-    &Rect1;
-</svg>",
-"<svg xmlns='http://www.w3.org/2000/svg'>
-    <g>
-        <rect fill='none' height='20' width='10'/>
-    </g>
-</svg>
-");
-
-test_resave!(elements_from_entity_7,
-"<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1 Basic//EN\" \"http://www.w3.org/\" [
-    <!ENTITY Rect1 \"<rect>\">
-]>
-<svg xmlns='http://www.w3.org/2000/svg'>&Rect1;</svg>",
-"<svg xmlns='http://www.w3.org/2000/svg'>
-    <rect/>
-</svg>
-");
-
-#[test]
-fn elements_from_entity_8() {
-    let doc = Document::from_str(
-"<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1 Basic//EN\" \"http://www.w3.org/\" [
-    <!ENTITY Rect1 \"</rect>\">
-]>
-<svg xmlns='http://www.w3.org/2000/svg'>&Rect1;</svg>");
-
-    assert_eq!(doc.err().unwrap().to_string(),
-               "unexpected close tag at 2:21");
-}
-
-test_resave!(elements_from_entity_9,
-"<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1 Basic//EN\" \"http://www.w3.org/\" [
-    <!ENTITY Rect1 \"<rect/><rect/>\">
-]>
-<svg xmlns='http://www.w3.org/2000/svg'>&Rect1;</svg>",
-"<svg xmlns='http://www.w3.org/2000/svg'>
-    <rect/>
-    <rect/>
-</svg>
-");
-
-test_resave!(elements_from_entity_10,
-"<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1 Basic//EN\" \"http://www.w3.org/\" [
-    <!ENTITY Rect1 \"<rect width='10' height='20' fill='none'/>\">
-]>
-<svg xmlns='http://www.w3.org/2000/svg'>
-    <g>&Rect1;</g>
-    <g>&Rect1;</g>
-</svg>",
-"<svg xmlns='http://www.w3.org/2000/svg'>
-    <g>
-        <rect fill='none' height='20' width='10'/>
-    </g>
-    <g>
-        <rect fill='none' height='20' width='10'/>
-    </g>
-</svg>
-");
-
-test_resave!(elements_from_entity_11,
-"<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1 Basic//EN\" \"http://www.w3.org/\" [
-<!ENTITY Rect1 \"
-    <rect id='rect1' width='10' height='20' fill='none'/>
-    <use xlink:href='#rect1'/>
-\">
-]>
-<svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'>
-    &Rect1;
-</svg>",
-"<svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'>
-    <rect id='rect1' fill='none' height='20' width='10'/>
-    <use xlink:href='#rect1'/>
-</svg>
-");
 
 test_resave!(crosslink_1,
 "<svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'>

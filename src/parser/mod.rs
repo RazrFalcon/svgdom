@@ -435,7 +435,7 @@ pub fn _parse_svg_attribute_value<'a>(
                         Paint::CurrentColor => AttributeValue::CurrentColor,
                         Paint::Color(color) => AttributeValue::Color(color),
                         Paint::FuncIRI(link, fallback) => {
-                            // collect links for later processing
+                            // Collect links for later processing.
                             links.append(aid, link, fallback, node);
                             return Ok(None);
                         }
