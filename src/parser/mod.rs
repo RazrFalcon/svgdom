@@ -567,8 +567,7 @@ pub fn _parse_svg_attribute_value<'a>(
             }
         }
 
-          AId::BaselineShift
-        | AId::ClipRule
+          AId::ClipRule
         | AId::ColorInterpolation
         | AId::ColorInterpolationFilters
         | AId::ColorProfile
@@ -599,6 +598,14 @@ pub fn _parse_svg_attribute_value<'a>(
             match value {
                 "inherit" => AttributeValue::Inherit,
                 _ => AttributeValue::String(value.to_string()),
+            }
+        }
+
+        AId::BaselineShift => {
+            match value {
+                "inherit" => AttributeValue::Inherit,
+                "baseline" | "sub" | "super" => AttributeValue::String(value.to_string()),
+                _ => AttributeValue::Length(Length::from_str(value)?),
             }
         }
 

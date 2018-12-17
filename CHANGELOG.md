@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Added
+- A better `baseline-shift` attribute parsing.
+
 ### Fixed
 - `stroke-miterlimit` will be parsed as a `Number` and not as a `Length` now.
 - `length` and `number` attribute types parsing.
