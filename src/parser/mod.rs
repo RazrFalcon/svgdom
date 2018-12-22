@@ -584,7 +584,6 @@ pub fn _parse_svg_attribute_value<'a>(
         | AId::GlyphOrientationVertical
         | AId::ImageRendering
         | AId::Kerning
-        | AId::LetterSpacing
         | AId::Overflow
         | AId::ShapeRendering
         | AId::StrokeLinecap
@@ -593,12 +592,20 @@ pub fn _parse_svg_attribute_value<'a>(
         | AId::TextRendering
         | AId::UnicodeBidi
         | AId::Visibility
-        | AId::WordSpacing
         | AId::WritingMode => {
             match value {
                 "inherit" => AttributeValue::Inherit,
                 _ => AttributeValue::String(value.to_string()),
             }
+        }
+
+          AId::LetterSpacing
+        | AId::WordSpacing => {
+              match value {
+                  "inherit" => AttributeValue::Inherit,
+                  "normal" => AttributeValue::String(value.to_string()),
+                  _ => AttributeValue::Length(Length::from_str(value)?),
+              }
         }
 
         AId::BaselineShift => {

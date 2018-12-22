@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 ### Added
-- A better `baseline-shift` attribute parsing.
+- A better `baseline-shift`, `letter-spacing` and `word-spacing` attribute parsing.
 
 ### Fixed
 - `stroke-miterlimit` will be parsed as a `Number` and not as a `Length` now.
