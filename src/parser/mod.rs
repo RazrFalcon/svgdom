@@ -366,7 +366,9 @@ pub fn _parse_svg_attribute_value<'a>(
         | AId::Rx | AId::Ry
         | AId::Cx | AId::Cy
         | AId::Fx | AId::Fy
-        | AId::Width | AId::Height => {
+        | AId::RefX | AId::RefY
+        | AId::Width | AId::Height
+        | AId::MarkerWidth | AId::MarkerHeight => {
             AttributeValue::Length(Length::from_str(value)?)
         }
 
@@ -581,7 +583,6 @@ pub fn _parse_svg_attribute_value<'a>(
         | AId::FontStyle
         | AId::FontVariant
         | AId::FontWeight
-        | AId::GlyphOrientationVertical
         | AId::ImageRendering
         | AId::Kerning
         | AId::Overflow
@@ -613,6 +614,28 @@ pub fn _parse_svg_attribute_value<'a>(
                 "inherit" => AttributeValue::Inherit,
                 "baseline" | "sub" | "super" => AttributeValue::String(value.to_string()),
                 _ => AttributeValue::Length(Length::from_str(value)?),
+            }
+        }
+
+        AId::Orient => {
+            match value {
+                "auto" => AttributeValue::String(value.to_string()),
+                _ => AttributeValue::Angle(Angle::from_str(value)?),
+            }
+        }
+
+        AId::GlyphOrientationHorizontal => {
+            match value {
+                "inherit" => AttributeValue::Inherit,
+                _ => AttributeValue::Angle(Angle::from_str(value)?),
+            }
+        }
+
+        AId::GlyphOrientationVertical => {
+            match value {
+                "inherit" => AttributeValue::Inherit,
+                "auto" => AttributeValue::String(value.to_string()),
+                _ => AttributeValue::Angle(Angle::from_str(value)?),
             }
         }
 

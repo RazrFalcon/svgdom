@@ -6,7 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 ### Added
+- `AttributeValue::Angle`.
 - A better `baseline-shift`, `letter-spacing` and `word-spacing` attribute parsing.
+- `orient`, `glyph-orientation-horizontal`, `glyph-orientation-vertical`,
+  `refX`, `refY`, `markerWidth` and `markerHeight` attributes parsing.
 
 ### Fixed
 - `stroke-miterlimit` will be parsed as a `Number` and not as a `Length` now.

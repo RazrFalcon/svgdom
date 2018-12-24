@@ -18,7 +18,7 @@ log = "0.4.5"
 roxmltree = "0.4"
 simplecss = "0.1"
 slab = "0.4"
-svgtypes = { git = "https://github.com/RazrFalcon/svgtypes", rev = "3034692" }
+svgtypes = { git = "https://github.com/RazrFalcon/svgtypes", rev = "63fc6da" }
 
 [dev-dependencies]
 bencher = "0.1"

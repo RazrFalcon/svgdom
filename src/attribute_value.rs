@@ -9,6 +9,7 @@
 use std::fmt;
 
 use {
+    Angle,
     AspectRatio,
     AttributeId,
     Color,
@@ -43,6 +44,7 @@ pub enum AttributeValue {
     Paint(Node, Option<PaintFallback>),
     Length(Length),
     LengthList(LengthList),
+    Angle(Angle),
     /// IRI
     Link(Node),
     Number(f64),
@@ -68,6 +70,7 @@ impl_from!(AspectRatio, AspectRatio);
 impl_from!(Color, Color);
 impl_from!(Length, Length);
 impl_from!(LengthList, LengthList);
+impl_from!(Angle, Angle);
 impl_from!(f64, Number);
 impl_from!(NumberList, NumberList);
 impl_from!(Path, Path);
@@ -144,6 +147,7 @@ impl AttributeValue {
     impl_is_type!(is_color, Color);
     impl_is_type!(is_length, Length);
     impl_is_type!(is_length_list, LengthList);
+    impl_is_type!(is_angle, Angle);
     impl_is_type!(is_link, Link);
     impl_is_type!(is_func_link, FuncLink);
     impl_is_type!(is_paint, Paint);
@@ -273,6 +277,9 @@ impl WriteBuffer for AttributeValue {
             }
             AttributeValue::LengthList(ref list) => {
                 list.write_buf_opt(&opt.values, buf);
+            }
+            AttributeValue::Angle(ref a) => {
+                a.write_buf_opt(&opt.values, buf);
             }
             AttributeValue::Transform(ref t) => {
                 t.write_buf_opt(&opt.values, buf);

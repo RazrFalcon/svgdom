@@ -127,15 +127,26 @@ static RADIAL_GRADIENT_ATTRIBUTES: &'static [AttributeQNameRef<'static>] = &[
 ];
 
 static PATTERN_ATTRIBUTES: &'static [AttributeQNameRef<'static>] = &[
-    QNameRef::Id(AttributeId::ViewBox),
     QNameRef::Id(AttributeId::X),
     QNameRef::Id(AttributeId::Y),
     QNameRef::Id(AttributeId::Width),
     QNameRef::Id(AttributeId::Height),
+    QNameRef::Id(AttributeId::ViewBox),
+    QNameRef::Id(AttributeId::PreserveAspectRatio),
     QNameRef::Id(AttributeId::PatternUnits),
     QNameRef::Id(AttributeId::PatternContentUnits),
     QNameRef::Id(AttributeId::PatternTransform),
     QNameRef::Id(AttributeId::Href),
+];
+
+static MARKER_ATTRIBUTES: &'static [AttributeQNameRef<'static>] = &[
+    QNameRef::Id(AttributeId::RefX),
+    QNameRef::Id(AttributeId::RefY),
+    QNameRef::Id(AttributeId::MarkerWidth),
+    QNameRef::Id(AttributeId::MarkerHeight),
+    QNameRef::Id(AttributeId::ViewBox),
+    QNameRef::Id(AttributeId::PreserveAspectRatio),
+    QNameRef::Id(AttributeId::MarkerUnits),
 ];
 
 static FILTER_ATTRIBUTES: &'static [AttributeQNameRef<'static>] = &[
@@ -163,6 +174,7 @@ pub fn attrs_order_by_element(eid: ElementId) -> &'static [AttributeQNameRef<'st
         ElementId::LinearGradient => LINEAR_GRADIENT_ATTRIBUTES,
         ElementId::RadialGradient => RADIAL_GRADIENT_ATTRIBUTES,
         ElementId::Pattern => PATTERN_ATTRIBUTES,
+        ElementId::Marker => MARKER_ATTRIBUTES,
         ElementId::Filter => FILTER_ATTRIBUTES,
         ElementId::FeImage => IMAGE_ATTRIBUTES,
         _ => &[],

@@ -109,6 +109,8 @@ pub use writer::*;
 
 pub use svgtypes::{
     Align,
+    Angle,
+    AngleUnit,
     AspectRatio,
     AttributeId,
     Color,
