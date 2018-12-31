@@ -6,7 +6,6 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::collections::HashMap;
 use std::str::{self, FromStr};
 
 pub use self::options::*;
@@ -46,10 +45,6 @@ pub struct LinkData {
 pub struct Links {
     /// List of all parsed IRI and FuncIRI.
     pub list: Vec<LinkData>,
-    /// Store all nodes with id's.
-    ///
-    /// For performance reasons only.
-    pub elems_with_id: HashMap<String, Node>,
 }
 
 impl Links {
@@ -89,7 +84,6 @@ pub fn parse_svg(text: &str, opt: &ParseOptions) -> Result<Document, ParserError
     let mut post_data = PostData {
         links: Links {
             list: Vec::new(),
-            elems_with_id: HashMap::new(),
         },
         class_attrs: Vec::new(),
         style_attrs: Vec::new(),
@@ -120,7 +114,7 @@ pub fn parse_svg(text: &str, opt: &ParseOptions) -> Result<Document, ParserError
                               &mut d.node, &mut post_data.links)?;
     }
 
-    resolve_links(&mut post_data.links);
+    resolve_links(&doc, &mut post_data.links);
 
     text::prepare_text(&mut doc);
 
@@ -230,7 +224,6 @@ fn parse_svg_attribute<'a>(
     match id {
         AttributeId::Id => {
             node.set_id(value);
-            post_data.links.elems_with_id.insert(value.to_owned(), node.clone());
         }
         AttributeId::Style => {
             // We store 'style' attributes for later use.
@@ -697,9 +690,9 @@ fn parse_style_attribute(
     Ok(())
 }
 
-fn resolve_links(links: &mut Links) {
+fn resolve_links(doc: &Document, links: &mut Links) {
     for d in &mut links.list {
-        match links.elems_with_id.get(&d.iri) {
+        match doc.root().descendants().find(|n| *n.id() == d.iri) {
             Some(node) => {
                 let res = if d.attr_id == AttributeId::Fill || d.attr_id == AttributeId::Stroke {
                     d.node.set_attribute_checked((d.attr_id, (node.clone(), d.fallback)))

@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - `stroke-miterlimit` will be parsed as a `Number` and not as a `Length` now.
 - `length` and `number` attribute types parsing.
 - `offset` attribute parsing.
+- IRI resolving order when SVG has duplicated ID's.
 
 ## [0.15.0] - 2018-12-13
 ### Added
