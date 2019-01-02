@@ -52,7 +52,7 @@ doc for details.
 - Only most popular attributes are parsed, other stored as strings.
 - No compressed SVG (.svgz). You should decompress it by yourself.
 - CSS support is minimal.
-- SVG 1.1 Full only (no 2.0 Draft, Basic, Type subsets).
+- SVG 1.1 Full only (no 2.0 Draft, Basic, Tiny subsets).
 
 ### Differences between svgdom and SVG spec
 
