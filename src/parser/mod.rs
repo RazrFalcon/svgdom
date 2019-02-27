@@ -157,8 +157,8 @@ fn process_node(
 
                 if let Some(aid) = AttributeId::from_str(attr.name()) {
                     if e.is_svg_element() {
-                        parse_svg_attribute(ro_doc, aid, attr.value(), attr.value_pos(), opt,
-                                            &mut e, post_data)?;
+                        parse_svg_attribute(ro_doc, aid, attr.value(), attr.value_range().start,
+                                            opt, &mut e, post_data)?;
                     }
                 }
             }
@@ -288,7 +288,7 @@ pub fn parse_svg_attribute_value<'a>(
             if opt.skip_invalid_attributes {
                 warn!("Attribute '{}' has an invalid value: '{}'.", id, value);
             } else {
-                let pos = ro_doc.text_pos_from(value_pos);
+                let pos = ro_doc.text_pos_at(value_pos);
                 return Err(ParserError::InvalidAttributeValue(pos));
             }
         }
@@ -509,7 +509,7 @@ pub fn _parse_svg_attribute_value<'a>(
                     Err(_) => {
                         // By the SVG spec, any invalid data inside the path data
                         // should stop parsing of this path, but not the whole document.
-                        let pos = ro_doc.text_pos_from(value_pos);
+                        let pos = ro_doc.text_pos_at(value_pos);
                         warn!("A path attribute at {} was parsed partially \
                                due to an invalid data.", pos);
                         break;

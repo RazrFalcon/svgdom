@@ -192,7 +192,7 @@ fn parse_css_11() {
 </svg>");
 
     assert_eq!(res.err().unwrap().to_string(),
-               "unsupported CSS at 2:37");
+               "unsupported CSS at 2:28");
 }
 
 test_resave!(parse_css_12,
@@ -219,7 +219,7 @@ fn parse_css_13() {
 </svg>");
 
     assert_eq!(res.err().unwrap().to_string(),
-               "unsupported CSS at 2:37");
+               "unsupported CSS at 2:28");
 }
 
 test_resave!(parse_css_14,
@@ -252,7 +252,7 @@ fn parse_css_15() {
 </svg>");
 
     assert_eq!(res.err().unwrap().to_string(),
-               "unsupported CSS at 2:37");
+               "unsupported CSS at 2:28");
 }
 
 #[test]
@@ -266,7 +266,7 @@ fn parse_css_16() {
 </svg>");
 
     assert_eq!(res.err().unwrap().to_string(),
-               "unsupported CSS at 2:37");
+               "unsupported CSS at 2:28");
 }
 
 // empty style

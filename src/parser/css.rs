@@ -68,7 +68,7 @@ pub fn resolve_css(
             } else {
                 // If an error occurred then use the text node position.
                 let text_node = node.first_child().unwrap();
-                let pos = ro_doc.text_pos_from(text_node.pos());
+                let pos = ro_doc.text_pos_at(text_node.range().start);
                 return Err(ParserError::UnsupportedCSS(pos));
             }
         }
