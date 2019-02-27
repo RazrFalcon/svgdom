@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Changed
+- Print warning instead of panicking during removing an already removed node.
 
 ## [0.16.0] - 2018-01-02
 ### Added

@@ -301,8 +301,12 @@ impl Document {
 
         node.detach();
         let key = node.borrow_mut().storage_key.take();
-        assert!(key.is_some(), "node was already removed");
-        self.storage.remove(key.unwrap());
+
+        if let Some(key) = key {
+            self.storage.remove(key);
+        } else {
+            warn!("node was already removed")
+        }
     }
 
     // TODO: maybe rename to retain to match Attributes::retain
