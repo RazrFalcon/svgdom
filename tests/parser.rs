@@ -448,6 +448,20 @@ test_resave!(crosslink_2,
 </svg>
 ");
 
+/// Checks that deep recursion doesn't cause a memory leak.
+test_resave!(crosslink_3,
+"<svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'>
+    <linearGradient id='lg1' xlink:href='#lg2'/>
+    <linearGradient id='lg2' xlink:href='#lg3'/>
+    <linearGradient id='lg3' xlink:href='#lg1'/>
+</svg>",
+"<svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'>
+    <linearGradient id='lg1' xlink:href='#lg2'/>
+    <linearGradient id='lg2' xlink:href='#lg3'/>
+    <linearGradient id='lg3' xlink:href='#lg1'/>
+</svg>
+");
+
 #[test]
 fn attr_value_error_1() {
     let doc = Document::from_str(
