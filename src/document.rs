@@ -230,7 +230,7 @@ impl Document {
     /// use svgdom::{Document, ElementId, AttributeId};
     ///
     /// let mut doc = Document::from_str(
-    /// "<svg xmlns='http://www.w3.org/2000/svg'>
+    /// "<svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'>
     ///     <rect id='rect1'/>
     ///     <use xlink:href='#rect1'/>
     /// </svg>").unwrap();
