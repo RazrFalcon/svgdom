@@ -68,7 +68,7 @@ doc for details.
 
 */
 
-#![doc(html_root_url = "https://docs.rs/svgdom/0.16.0")]
+#![doc(html_root_url = "https://docs.rs/svgdom/0.16.1")]
 
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
