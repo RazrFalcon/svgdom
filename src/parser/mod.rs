@@ -405,6 +405,15 @@ pub fn _parse_svg_attribute_value<'a>(
             }
         }
 
+          AId::K1
+        | AId::K2
+        | AId::K3
+        | AId::K4 => {
+            let n = parse_number(value)?;
+            let n = f64_bound(0.0, n, 1.0);
+            AttributeValue::Number(n)
+        }
+
         AId::StrokeDasharray => {
             match value {
                 "none" => AttributeValue::None,

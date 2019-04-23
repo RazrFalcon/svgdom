@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Added
+- Parse feComposite's `k1`, `k2`, `k3` and `k4` attributes.
 
 ## [0.16.1] - 2019-03-15
 ### Changed
