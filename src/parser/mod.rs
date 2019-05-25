@@ -361,7 +361,8 @@ pub fn _parse_svg_attribute_value<'a>(
         | AId::Fx | AId::Fy
         | AId::RefX | AId::RefY
         | AId::Width | AId::Height
-        | AId::MarkerWidth | AId::MarkerHeight => {
+        | AId::MarkerWidth | AId::MarkerHeight
+        | AId::StartOffset => {
             AttributeValue::Length(Length::from_str(value)?)
         }
 
