@@ -8,6 +8,8 @@
 
 use std::str::{self, FromStr};
 
+use log::warn;
+
 pub use self::options::*;
 
 use roxmltree::{
@@ -316,7 +318,7 @@ pub fn _parse_svg_attribute_value<'a>(
     node: &mut Node,
     links: &mut Links,
 ) -> Result<Option<AttributeValue>, svgtypes::Error> {
-    use AttributeId as AId;
+    use crate::AttributeId as AId;
 
     let eid = node.tag_id().unwrap();
 

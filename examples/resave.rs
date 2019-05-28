@@ -1,42 +1,32 @@
-extern crate svgdom;
-extern crate time;
-extern crate fern;
-
 use std::env;
-use std::io::{Read,Write};
-use std::fs::File;
+use std::fs;
 
-use svgdom::{Document, WriteBuffer};
+use svgdom::WriteBuffer;
 
-fn main() {
+fn main() -> Result<(), Box<std::error::Error>> {
     fern::Dispatch::new()
         .format(|out, message, record|
             out.finish(format_args!("{}: {}", record.level(), message))
-        ).chain(std::io::stderr()).apply().unwrap();
+        ).chain(std::io::stderr()).apply()?;
 
     let start = time::precise_time_ns();
 
     let args: Vec<_> = env::args().collect();
-
     if args.len() != 3 {
         println!("Usage:\n\tresave in.svg out.svg");
-        return;
+        std::process::exit(1);
     }
 
-    let mut file = File::open(&args[1]).unwrap();
-    let length = file.metadata().unwrap().len() as usize;
-
-    let mut input_data = String::with_capacity(length + 1);
-    file.read_to_string(&mut input_data).unwrap();
-
-    let doc = Document::from_str(&input_data).unwrap();
+    let input_data = fs::read_to_string(&args[1])?;
+    let doc = svgdom::Document::from_str(&input_data)?;
 
     let mut output_data = Vec::new();
     doc.write_buf(&mut output_data);
 
-    let mut f = File::create(&args[2]).unwrap();
-    f.write_all(&output_data).unwrap();
+    fs::write(&args[2], &output_data)?;
 
     let end = time::precise_time_ns();
     println!("Elapsed: {:.4}ms", (end - start) as f64 / 1_000_000.0);
+
+    Ok(())
 }

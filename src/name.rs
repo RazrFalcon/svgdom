@@ -10,7 +10,7 @@
 
 use std::fmt;
 
-use {
+use crate::{
     AttributeId,
     ElementId,
     WriteBuffer,

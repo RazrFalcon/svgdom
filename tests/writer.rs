@@ -8,8 +8,6 @@
 
 #[macro_use] extern crate pretty_assertions;
 
-extern crate svgdom;
-
 use svgdom::{
     AttributeId as AId,
     AttributesOrder,

@@ -6,6 +6,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use log::warn;
+
 use roxmltree::{
     self,
     TextPos,
@@ -16,7 +18,7 @@ use simplecss::Token as CssToken;
 
 use svgtypes::Stream;
 
-use {
+use crate::{
     AttributeId,
     AttributeValue,
     Document,

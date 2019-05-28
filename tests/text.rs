@@ -8,10 +8,6 @@
 
 #[macro_use] extern crate pretty_assertions;
 
-extern crate svgdom;
-
-use std::fmt;
-
 use svgdom::{
     Document,
     ElementId as EId,
@@ -23,8 +19,8 @@ use svgdom::{
 #[derive(Clone, Copy, PartialEq)]
 struct TStr<'a>(pub &'a str);
 
-impl<'a> fmt::Debug for TStr<'a> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+impl<'a> std::fmt::Debug for TStr<'a> {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "{}", self.0)
     }
 }

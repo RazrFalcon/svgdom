@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Parse feComposite's `k1`, `k2`, `k3` and `k4` attributes.
 - Parse `startOffset` attribute.
 
+### Changed
+- Minimum Rust version is 1.32 now.
+
 ## [0.16.1] - 2019-03-15
 ### Changed
 - Print warning instead of panicking during removing an already removed node.

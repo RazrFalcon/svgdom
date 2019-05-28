@@ -7,7 +7,7 @@
 
 ### Dependency
 
-[Rust](https://www.rust-lang.org/) >= 1.18
+[Rust](https://www.rust-lang.org/) >= 1.32
 
 ### License
 

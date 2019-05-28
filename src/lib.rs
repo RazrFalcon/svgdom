@@ -73,12 +73,6 @@ doc for details.
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
 
-#[macro_use] extern crate log;
-extern crate simplecss;
-extern crate slab;
-extern crate svgtypes;
-extern crate roxmltree;
-
 
 mod attribute;
 mod document;
@@ -94,18 +88,18 @@ mod attribute_value;
 mod attributes;
 
 
-pub use attribute::*;
-pub use attribute_type::AttributeType;
-pub use attribute_value::AttributeValue;
-pub use attributes::*;
-pub use document::Document;
-pub use element_type::ElementType;
-pub use error::*;
-pub use name::*;
-pub use node::*;
-pub use parser::ParseOptions;
-pub use tree::iterator::*;
-pub use writer::*;
+pub use crate::attribute::*;
+pub use crate::attribute_type::AttributeType;
+pub use crate::attribute_value::AttributeValue;
+pub use crate::attributes::*;
+pub use crate::document::Document;
+pub use crate::element_type::ElementType;
+pub use crate::error::*;
+pub use crate::name::*;
+pub use crate::node::*;
+pub use crate::parser::ParseOptions;
+pub use crate::tree::iterator::*;
+pub use crate::writer::*;
 
 pub use svgtypes::{
     Align,

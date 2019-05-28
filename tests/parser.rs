@@ -8,8 +8,6 @@
 
 #[macro_use] extern crate pretty_assertions;
 
-extern crate svgdom;
-
 use std::fmt;
 
 use svgdom::{
@@ -448,7 +446,7 @@ test_resave!(crosslink_2,
 </svg>
 ");
 
-/// Checks that deep recursion doesn't cause a memory leak.
+// Checks that deep recursion doesn't cause a memory leak.
 test_resave!(crosslink_3,
 "<svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'>
     <linearGradient id='lg1' xlink:href='#lg2'/>

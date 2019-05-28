@@ -8,7 +8,9 @@
 
 use std::fmt;
 
-use {
+use log::warn;
+
+use crate::{
     AttributeId,
     AttributeQName,
     AttributeQNameRef,

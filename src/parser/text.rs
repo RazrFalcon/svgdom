@@ -8,7 +8,7 @@
 
 use std::str;
 
-use {
+use crate::{
     AttributeId,
     AttributeValue,
     Document,

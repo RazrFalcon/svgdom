@@ -8,13 +8,15 @@
 
 use std::fmt;
 
+use log::warn;
+
 mod attrs_order;
 mod options;
 
 pub use self::options::*;
 use self::attrs_order::attrs_order_by_element;
 
-use {
+use crate::{
     Attribute,
     AttributeId,
     AttributeType,

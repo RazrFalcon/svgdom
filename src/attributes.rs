@@ -12,7 +12,7 @@ use std::mem;
 use std::iter::FilterMap;
 use std::slice::{Iter, IterMut};
 
-use {
+use crate::{
     Attribute,
     AttributeId,
     AttributeQNameRef,

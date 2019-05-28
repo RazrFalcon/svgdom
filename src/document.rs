@@ -8,15 +8,16 @@
 
 use std::fmt;
 
+use log::warn;
 use slab::Slab;
 
-use parser::parse_svg;
-use {
+use crate::parser::parse_svg;
+use crate::{
     ParseOptions,
 };
 
-use writer;
-use {
+use crate::writer;
+use crate::{
     AttributeQName,
     Attributes,
     AttributeValue,
