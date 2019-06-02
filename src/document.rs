@@ -298,7 +298,7 @@ impl Document {
         if let Some(key) = key {
             self.storage.remove(key);
         } else {
-            warn!("node was already removed")
+            warn!("Node was already removed.")
         }
     }
 

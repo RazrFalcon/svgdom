@@ -412,7 +412,7 @@ fn _write_text_elem(
                 write_escaped_text(child.text().as_ref(), out);
             }
             _ => {
-                warn!("'text' element should contain only element and text nodes");
+                warn!("'text' element should contain only element and text nodes.");
             }
         }
     }
