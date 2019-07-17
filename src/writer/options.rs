@@ -14,26 +14,6 @@ pub enum Indent {
     Tabs,
 }
 
-/// An attributes order.
-///
-/// Note: the `id` attribute is always first.
-#[derive(Clone, Copy, PartialEq, Debug)]
-pub enum AttributesOrder {
-    /// Attributes are stored in the `Vec` and with this option,
-    /// they will be written in the same order an in the `Vec`.
-    AsIs,
-    /// Write attributes in the alphabetical order.
-    ///
-    /// Only SVG attributes will be sorted. Non-SVG attributes will be written as-is.
-    Alphabetical,
-    /// Write attributes in the same order as they listed in the SVG spec.
-    ///
-    /// The current set of rules is pretty limited and doesn't follow the spec strictly.
-    ///
-    /// Only SVG attributes will be sorted. Non-SVG attributes will be written as-is.
-    Specification,
-}
-
 /// Options that defines SVG writing.
 #[derive(Debug)]
 pub struct WriteOptions {
@@ -108,11 +88,6 @@ pub struct WriteOptions {
     /// Default: `None`
     pub attributes_indent: Indent,
 
-    /// Set attributes order.
-    ///
-    /// Default: `AttributesOrder::Alphabetical`
-    pub attributes_order: AttributesOrder,
-
     /// `svgtypes` options.
     pub values: ValueWriteOptions,
 }
@@ -123,7 +98,6 @@ impl Default for WriteOptions {
             indent: Indent::Spaces(4),
             attributes_indent: Indent::None,
             use_single_quote: false,
-            attributes_order: AttributesOrder::Alphabetical,
             values: ValueWriteOptions {
                 trim_hex_colors: false,
                 remove_leading_zero: false,

@@ -2,7 +2,6 @@
 
 use svgdom::{
     AttributeId as AId,
-    AttributesOrder,
     Color,
     Document,
     ElementId as EId,
@@ -411,50 +410,6 @@ fn escape_4() {
     assert_eq!(doc.with_write_opt(&opt).to_string(),
                "<svg xmlns='http://www.w3.org/2000/svg' font-family='\"Noto Sans\"'/>");
 }
-
-#[test]
-fn attrs_order_1() {
-    let doc = Document::from_str(
-        "<svg xmlns='http://www.w3.org/2000/svg' id='svg1' width='100' height='100' fill='#ff0000' stroke='#0000ff'/>").unwrap();
-
-    let mut opt = WriteOptions::default();
-    opt.indent = Indent::None;
-    opt.use_single_quote = true;
-
-    opt.attributes_order = AttributesOrder::AsIs;
-    assert_eq!(doc.with_write_opt(&opt).to_string(),
-        "<svg xmlns='http://www.w3.org/2000/svg' id='svg1' width='100' height='100' fill='#ff0000' stroke='#0000ff'/>");
-
-    opt.attributes_order = AttributesOrder::Alphabetical;
-    assert_eq!(doc.with_write_opt(&opt).to_string(),
-        "<svg xmlns='http://www.w3.org/2000/svg' id='svg1' fill='#ff0000' height='100' stroke='#0000ff' width='100'/>");
-}
-
-#[test]
-fn attrs_order_2() {
-    let doc = Document::from_str(
-"<svg xmlns='http://www.w3.org/2000/svg'>
-    <linearGradient x1='1' gradientTransform='scale(2)' y1='1' gradientUnits='userSpaceOnUse' \
-        spreadMethod='pad' x2='1' y2='1'/>
-    <rect fill='#ff0000' height='5' y='5' x='5' width='5' stroke='#ff0000'/>
-
-</svg>"
-).unwrap();
-
-    let mut opt = WriteOptions::default();
-    opt.use_single_quote = true;
-    opt.attributes_order = AttributesOrder::Specification;
-    assert_eq!(doc.with_write_opt(&opt).to_string(),
-"<svg xmlns='http://www.w3.org/2000/svg'>
-    <linearGradient x1='1' y1='1' x2='1' y2='1' gradientUnits='userSpaceOnUse' \
-        gradientTransform='matrix(2 0 0 2 0 0)' spreadMethod='pad'/>
-    <rect fill='#ff0000' stroke='#ff0000' x='5' y='5' width='5' height='5'/>
-</svg>
-"
-);
-}
-
-// attrs_order_3 with non-svg attr
 
 test_resave!(namespaces_1,
 "<svg xmlns='http://www.w3.org/2000/svg'/>",

@@ -2,16 +2,13 @@ use std::fmt;
 
 use log::warn;
 
-mod attrs_order;
 mod options;
 
 pub use self::options::*;
-use self::attrs_order::attrs_order_by_element;
 
 use crate::{
     Attribute,
     AttributeId,
-    AttributeType,
     Document,
     ElementId,
     FilterSvgAttrs,
@@ -268,88 +265,21 @@ fn write_attributes(
 
     let attrs = node.attributes();
 
-    match opt.attributes_order {
-        AttributesOrder::AsIs => {
-            for attr in attrs.iter() {
-                write_attribute(attr, depth, attrs_depth, opt, out);
-            }
-        }
-        AttributesOrder::Alphabetical => {
-            // sort attributes
-            let mut ids: Vec<_> = attrs.iter().svg().map(|(aid, attr)| (aid, attr.name.as_ref()))
-                                       .collect();
-            ids.sort_by_key(|&(x, _)| x as usize);
+    // sort attributes
+    let mut ids: Vec<_> = attrs.iter().svg()
+        .map(|(aid, attr)| (aid, attr.name.as_ref()))
+        .collect();
+    ids.sort_by_key(|&(x, _)| x as usize);
 
-            for &(_, name) in &ids {
-                let attr = attrs.get(name).unwrap();
-                write_attribute(attr, depth, attrs_depth, opt, out);
-            }
+    for &(_, name) in &ids {
+        let attr = attrs.get(name).unwrap();
+        write_attribute(attr, depth, attrs_depth, opt, out);
+    }
 
-            // write non-SVG attributes
-            for attr in attrs.iter() {
-                if let QName::Name(_) = attr.name {
-                    write_attribute(attr, depth, attrs_depth, opt, out);
-                }
-            }
-        }
-        AttributesOrder::Specification => {
-            // sort attributes
-            let mut ids: Vec<_> = attrs.iter().svg().map(|(aid, attr)| (aid, attr.name.as_ref()))
-                                       .collect();
-            ids.sort_by_key(|&(x, _)| x as usize);
-
-            let mut ids2 = Vec::with_capacity(ids.len());
-
-            // collect fill attributes
-            for &(aid, name) in &ids {
-                if aid.is_fill() {
-                    ids2.push((aid, name));
-                }
-            }
-
-            // collect stroke attributes
-            for &(aid, name) in &ids {
-                if aid.is_stroke() {
-                    ids2.push((aid, name));
-                }
-            }
-
-            // collect style attributes
-            for &(aid, name) in &ids {
-                if aid.is_presentation() && !aid.is_fill() && !aid.is_stroke() {
-                    ids2.push((aid, name));
-                }
-            }
-
-            // collect element-specific attributes
-            if let Some(eid) = node.tag_id() {
-                for name2 in attrs_order_by_element(eid) {
-                    if ids.iter().any(|&(_, name)| name == *name2) {
-                        ids2.push((AttributeId::X, *name2));
-                    }
-                }
-            }
-
-            // write sorted
-            for &(_, name) in &ids2 {
-                let attr = attrs.get(name).unwrap();
-                write_attribute(attr, depth, attrs_depth, opt, out);
-            }
-
-            // write what is left
-            for &(_, name) in &ids {
-                if !ids2.iter().any(|&(_, name2)| name == name2) {
-                    let attr = attrs.get(name).unwrap();
-                    write_attribute(attr, depth, attrs_depth, opt, out);
-                }
-            }
-
-            // write non-SVG attributes
-            for attr in attrs.iter() {
-                if let QName::Name(_) = attr.name {
-                    write_attribute(attr, depth, attrs_depth, opt, out);
-                }
-            }
+    // write non-SVG attributes
+    for attr in attrs.iter() {
+        if let QName::Name(_) = attr.name {
+            write_attribute(attr, depth, attrs_depth, opt, out);
         }
     }
 }
