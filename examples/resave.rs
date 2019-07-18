@@ -1,8 +1,6 @@
 use std::env;
 use std::fs;
 
-use svgdom::WriteBuffer;
-
 fn main() -> Result<(), Box<std::error::Error>> {
     fern::Dispatch::new()
         .format(|out, message, record|
@@ -20,10 +18,7 @@ fn main() -> Result<(), Box<std::error::Error>> {
     let input_data = fs::read_to_string(&args[1])?;
     let doc = svgdom::Document::from_str(&input_data)?;
 
-    let mut output_data = Vec::new();
-    doc.write_buf(&mut output_data);
-
-    fs::write(&args[2], &output_data)?;
+    fs::write(&args[2], doc.to_string().as_bytes())?;
 
     let end = time::precise_time_ns();
     println!("Elapsed: {:.4}ms", (end - start) as f64 / 1_000_000.0);

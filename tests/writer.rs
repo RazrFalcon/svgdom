@@ -12,7 +12,6 @@ use svgdom::{
     Transform,
     ViewBox,
     WriteOptions,
-    WriteBuffer,
     NumberList,
     LengthList,
 };
@@ -26,14 +25,14 @@ macro_rules! test_resave {
             let mut opt = WriteOptions::default();
             opt.use_single_quote = true;
 
-            assert_eq!(doc.with_write_opt(&opt).to_string(), $out_text);
+            assert_eq!(doc.to_string_with_opt(&opt), $out_text);
         }
     )
 }
 
 #[test]
 fn empty_doc_1() {
-    assert_eq!(Document::new().to_string(), String::new());
+    assert_eq!(Document::new().to_string(), "\n");
 }
 
 #[test]
@@ -159,7 +158,7 @@ fn attributes_types_1() {
     let mut opt = WriteOptions::default();
     opt.use_single_quote = true;
 
-    assert_eq!(doc.with_write_opt(&opt).to_string(),
+    assert_eq!(doc.to_string_with_opt(&opt),
         "<svg xmlns='http://www.w3.org/2000/svg' fill='#ffffff' height='1.5%' \
          stdDeviation='1.5 2.5' stroke-dasharray='1.5mm 2.5mm 3.5mm' \
          transform='matrix(2 0 0 3 20 30)' version='1.0' viewBox='10 20 30 40' \
@@ -187,7 +186,9 @@ test_resave!(cdata_1,
 </svg>
 ",
 "<svg xmlns='http://www.w3.org/2000/svg'>
-    <script>text</script>
+    <script>
+        text
+    </script>
 </svg>
 ");
 
@@ -207,7 +208,9 @@ test_resave!(cdata_3,
 </svg>
 ",
 "<svg xmlns='http://www.w3.org/2000/svg'>
-    <script>qweqweqwe</script>
+    <script>
+        qweqweqwe
+    </script>
 </svg>
 ");
 
@@ -217,7 +220,9 @@ test_resave!(cdata_4,
 </svg>
 ",
 "<svg xmlns='http://www.w3.org/2000/svg'>
-    <script>&lt;text/&gt;</script>
+    <script>
+        &lt;text/>
+    </script>
 </svg>
 ");
 
@@ -255,7 +260,7 @@ fn indent_2() {
     let mut opt = WriteOptions::default();
     opt.indent = Indent::Spaces(2);
     opt.use_single_quote = true;
-    assert_eq!(doc.with_write_opt(&opt).to_string(),
+    assert_eq!(doc.to_string_with_opt(&opt),
 "<svg xmlns='http://www.w3.org/2000/svg'>
   <g>
     <rect/>
@@ -277,7 +282,7 @@ fn indent_3() {
     let mut opt = WriteOptions::default();
     opt.indent = Indent::Spaces(0);
     opt.use_single_quote = true;
-    assert_eq!(doc.with_write_opt(&opt).to_string(),
+    assert_eq!(doc.to_string_with_opt(&opt),
 "<svg xmlns='http://www.w3.org/2000/svg'>
 <g>
 <rect/>
@@ -299,7 +304,7 @@ fn indent_4() {
     let mut opt = WriteOptions::default();
     opt.indent = Indent::None;
     opt.use_single_quote = true;
-    assert_eq!(doc.with_write_opt(&opt).to_string(),
+    assert_eq!(doc.to_string_with_opt(&opt),
 "<svg xmlns='http://www.w3.org/2000/svg'><g><rect/></g></svg>");
 }
 
@@ -316,7 +321,7 @@ fn indent_5() {
     let mut opt = WriteOptions::default();
     opt.indent = Indent::Tabs;
     opt.use_single_quote = true;
-    assert_eq!(doc.with_write_opt(&opt).to_string(),
+    assert_eq!(doc.to_string_with_opt(&opt),
 "<svg xmlns='http://www.w3.org/2000/svg'>
 \t<g>
 \t\t<rect/>
@@ -338,7 +343,7 @@ fn attrs_indent_1() {
     let mut opt = WriteOptions::default();
     opt.attributes_indent = Indent::Spaces(3);
     opt.use_single_quote = true;
-    assert_eq!(doc.with_write_opt(&opt).to_string(),
+    assert_eq!(doc.to_string_with_opt(&opt),
 "<svg
    xmlns='http://www.w3.org/2000/svg'
    id='svg1'
@@ -362,7 +367,7 @@ fn single_quote_1() {
     let mut opt = WriteOptions::default();
     opt.indent = Indent::None;
     opt.use_single_quote = true;
-    assert_eq!(doc.with_write_opt(&opt).to_string(),
+    assert_eq!(doc.to_string_with_opt(&opt),
                "<svg xmlns='http://www.w3.org/2000/svg' id='svg1'/>");
 }
 
@@ -386,11 +391,11 @@ fn escape_3() {
     let mut opt = WriteOptions::default();
     opt.indent = Indent::None;
 
-    assert_eq!(doc.with_write_opt(&opt).to_string(),
+    assert_eq!(doc.to_string_with_opt(&opt),
                "<svg xmlns=\"http://www.w3.org/2000/svg\" font-family=\"'Noto Sans'\"/>");
 
     opt.use_single_quote = true;
-    assert_eq!(doc.with_write_opt(&opt).to_string(),
+    assert_eq!(doc.to_string_with_opt(&opt),
                "<svg xmlns='http://www.w3.org/2000/svg' font-family='&apos;Noto Sans&apos;'/>");
 }
 
@@ -403,11 +408,11 @@ fn escape_4() {
     let mut opt = WriteOptions::default();
     opt.indent = Indent::None;
 
-    assert_eq!(doc.with_write_opt(&opt).to_string(),
+    assert_eq!(doc.to_string_with_opt(&opt),
                "<svg xmlns=\"http://www.w3.org/2000/svg\" font-family=\"&quot;Noto Sans&quot;\"/>");
 
     opt.use_single_quote = true;
-    assert_eq!(doc.with_write_opt(&opt).to_string(),
+    assert_eq!(doc.to_string_with_opt(&opt),
                "<svg xmlns='http://www.w3.org/2000/svg' font-family='\"Noto Sans\"'/>");
 }
 

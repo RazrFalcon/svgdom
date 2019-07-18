@@ -22,8 +22,8 @@ fn elem_2() {
     let mut svg_elem = doc.create_element(EId::Svg);
     svg_elem.set_attribute((AId::X, 1));
 
-    assert_eq!(format!("{:?}", svg_elem), "Element(svg x=\"1\")");
-    assert_eq!(format!("{}", svg_elem), "<svg x=\"1\">");
+    assert_eq!(format!("{:?}", svg_elem), "Element(svg x='1')");
+    assert_eq!(format!("{}", svg_elem), "<svg x='1'>");
 }
 
 #[test]
@@ -34,8 +34,8 @@ fn elem_3() {
     svg_elem.set_attribute((AId::X, 1));
     svg_elem.set_attribute((AId::Y, 2));
 
-    assert_eq!(format!("{:?}", svg_elem), "Element(svg id=\"svg1\" x=\"1\" y=\"2\")");
-    assert_eq!(format!("{}", svg_elem), "<svg id=\"svg1\" x=\"1\" y=\"2\">");
+    assert_eq!(format!("{:?}", svg_elem), "Element(svg id='svg1' x='1' y='2')");
+    assert_eq!(format!("{}", svg_elem), "<svg id='svg1' x='1' y='2'>");
 }
 
 #[test]
@@ -49,11 +49,11 @@ fn elem_4() {
     lg_elem.set_id("lg1");
     svg_elem.set_attribute((AId::Fill, lg_elem.clone()));
 
-    assert_eq!(format!("{:?}", svg_elem), "Element(svg id=\"svg1\" x=\"1\" fill=\"url(#lg1)\")");
-    assert_eq!(format!("{}", svg_elem), "<svg id=\"svg1\" x=\"1\" fill=\"url(#lg1)\">");
+    assert_eq!(format!("{:?}", svg_elem), "Element(svg id='svg1' x='1' fill='url(#lg1)')");
+    assert_eq!(format!("{}", svg_elem), "<svg id='svg1' x='1' fill='url(#lg1)'>");
 
-    assert_eq!(format!("{:?}", lg_elem), "Element(linearGradient id=\"lg1\"; linked-nodes: \"svg1\")");
-    assert_eq!(format!("{}", lg_elem), "<linearGradient id=\"lg1\">");
+    assert_eq!(format!("{:?}", lg_elem), "Element(linearGradient id='lg1'; linked-nodes: 'svg1')");
+    assert_eq!(format!("{}", lg_elem), "<linearGradient id='lg1'>");
 }
 
 #[test]
@@ -90,6 +90,6 @@ fn attributes_1() {
     svg_elem.set_attribute((AId::X, 1));
     svg_elem.set_attribute((AId::Y, 2));
 
-    assert_eq!(format!("{:?}", svg_elem.attributes()), "Attributes(x=\"1\" y=\"2\")");
-    assert_eq!(format!("{}", *svg_elem.attributes()), "x=\"1\" y=\"2\"");
+    assert_eq!(format!("{:?}", svg_elem.attributes()), "Attributes(x='1' y='2')");
+    assert_eq!(format!("{}", *svg_elem.attributes()), "x='1' y='2'");
 }

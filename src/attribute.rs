@@ -1,15 +1,11 @@
 use std::fmt;
 
-use log::warn;
-
 use crate::{
     AttributeId,
     AttributeQName,
     AttributeQNameRef,
     AttributeValue,
     QName,
-    WriteBuffer,
-    WriteOptions,
 };
 
 
@@ -92,46 +88,8 @@ impl Attribute {
     impl_is_type!(is_link_container);
 }
 
-impl WriteBuffer for Attribute {
-    fn write_buf_opt(&self, opt: &WriteOptions, buf: &mut Vec<u8>) {
-        self.name.write_buf_opt(opt, buf);
-        buf.push(b'=');
-        write_quote(opt, buf);
-
-        if self.has_id(AttributeId::Unicode) {
-            if let AttributeValue::String(ref s) = self.value {
-                write_escaped(s, buf);
-            } else {
-                warn!("An invalid 'unicode' attribute value: {:?}.", self.value);
-            }
-        } else {
-            self.value.write_buf_opt(opt, buf);
-        }
-
-        write_quote(opt, buf);
-    }
-}
-
-fn write_quote(opt: &WriteOptions, out: &mut Vec<u8>) {
-    out.push(if opt.use_single_quote { b'\'' } else { b'"' });
-}
-
-fn write_escaped(unicode: &str, out: &mut Vec<u8>) {
-    use std::io::Write;
-
-    if unicode.starts_with("&#") {
-        out.extend_from_slice(unicode.as_bytes());
-    } else {
-        for c in unicode.chars() {
-            out.extend_from_slice(b"&#x");
-            write!(out, "{:x}", c as u32).unwrap();
-            out.push(b';');
-        }
-    }
-}
-
 impl fmt::Display for Attribute {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.with_write_opt(&WriteOptions::default()))
+        write!(f, "{}='{}'", self.name, self.value)
     }
 }

@@ -21,6 +21,7 @@ roxmltree = "0.6"
 simplecss = "0.1"
 slab = "0.4"
 svgtypes = "0.4.4"
+xmlwriter = { git = "https://github.com/RazrFalcon/xmlwriter", rev = "dac292c" }
 
 [dev-dependencies]
 bencher = "0.1"

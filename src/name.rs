@@ -5,8 +5,6 @@ use std::fmt;
 use crate::{
     AttributeId,
     ElementId,
-    WriteBuffer,
-    WriteOptions,
 };
 
 /// A trait for SVG id's.
@@ -50,47 +48,23 @@ impl<T: SvgId> QName<T> {
     }
 }
 
-impl WriteBuffer for QName<AttributeId> {
-    fn write_buf_opt(&self, _opt: &WriteOptions, buf: &mut Vec<u8>) {
-        match *self {
-            QName::Id(id) => {
-                if self.has_id(AttributeId::Href) {
-                    buf.extend_from_slice(b"xlink:");
-                } else if self.has_id(AttributeId::Space) {
-                    buf.extend_from_slice(b"xml:");
-                }
-
-                buf.extend_from_slice(id.name().as_bytes());
-            }
-            QName::Name(ref name) => {
-                buf.extend_from_slice(name.as_bytes());
-            }
-        }
-    }
-}
-
-impl WriteBuffer for QName<ElementId> {
-    fn write_buf_opt(&self, _opt: &WriteOptions, buf: &mut Vec<u8>) {
-        match *self {
-            QName::Id(id) => {
-                buf.extend_from_slice(id.name().as_bytes());
-            }
-            QName::Name(ref name) => {
-                buf.extend_from_slice(name.as_bytes());
-            }
-        }
-    }
-}
-
 impl fmt::Display for QName<AttributeId> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.with_write_opt(&WriteOptions::default()))
+        match *self {
+            QName::Id(AttributeId::Href) => write!(f, "xlink:href"),
+            QName::Id(AttributeId::Space) => write!(f, "xml:space"),
+            QName::Id(id) => write!(f, "{}", id.name()),
+            QName::Name(ref name) => write!(f, "{}", name),
+        }
     }
 }
 
 impl fmt::Display for QName<ElementId> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.with_write_opt(&WriteOptions::default()))
+        match *self {
+            QName::Id(id) => write!(f, "{}", id.name()),
+            QName::Name(ref name) => write!(f, "{}", name),
+        }
     }
 }
 

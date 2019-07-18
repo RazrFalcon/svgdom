@@ -10,7 +10,6 @@ use svgdom::{
     TagNameRef,
     NodeType,
     ParseOptions,
-    WriteBuffer,
     WriteOptions,
 };
 
@@ -34,7 +33,7 @@ macro_rules! test_resave {
         #[test]
         fn $name() {
             let doc = Document::from_str($in_text).unwrap();
-            assert_eq!(TStr($out_text), TStr(doc.with_write_opt(&write_options()).to_string().as_str()));
+            assert_eq!(TStr($out_text), TStr(doc.to_string_with_opt(&write_options()).as_str()));
         }
     )
 }
@@ -410,7 +409,7 @@ fn skip_unresolved_classes_1() {
     <g class='fil1 fil4 str1 fil5'/>
 </svg>", &opt).unwrap();
 
-    assert_eq!(doc.with_write_opt(&write_options()).to_string(),
+    assert_eq!(doc.to_string_with_opt(&write_options()),
 "<svg xmlns='http://www.w3.org/2000/svg'>
     <g class='fil3' fill='#0000ff'/>
     <g class='fil4 fil5' fill='#0000ff' stroke='#0000ff'/>

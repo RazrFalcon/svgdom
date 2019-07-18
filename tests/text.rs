@@ -5,7 +5,6 @@ use svgdom::{
     ElementId as EId,
     NodeType,
     WriteOptions,
-    WriteBuffer,
 };
 
 #[derive(Clone, Copy, PartialEq)]
@@ -26,7 +25,7 @@ macro_rules! test_resave {
             let mut opt = WriteOptions::default();
             opt.use_single_quote = true;
 
-            assert_eq!(TStr($out_text), TStr(&doc.with_write_opt(&opt).to_string()));
+            assert_eq!(TStr($out_text), TStr(&doc.to_string_with_opt(&opt)));
         }
     )
 }
@@ -144,7 +143,9 @@ fn text_1() {
     svg.append(text.clone());
 
     assert_eq!(doc.to_string(),
-"<svg xmlns=\"http://www.w3.org/2000/svg\">text</svg>
+"<svg xmlns=\"http://www.w3.org/2000/svg\">
+    text
+</svg>
 ");
 }
 
@@ -220,7 +221,7 @@ test_resave!(text_7,
 </svg>
 ",
 "<svg xmlns='http://www.w3.org/2000/svg'>
-    <text>&amp;&lt;&gt;</text>
+    <text>&&lt;></text>
 </svg>
 ");
 
@@ -242,7 +243,7 @@ test_resave!(text_9,
 </svg>
 ",
 "<svg xmlns='http://www.w3.org/2000/svg'>
-    <text>&amp;Text&amp;</text>
+    <text>&Text&</text>
 </svg>
 ");
 
@@ -252,7 +253,7 @@ test_resave!(text_10,
 </svg>
 ",
 "<svg xmlns='http://www.w3.org/2000/svg'>
-    <text>&amp;@@&amp;</text>
+    <text>&@@&</text>
 </svg>
 ");
 

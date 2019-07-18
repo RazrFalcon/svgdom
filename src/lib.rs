@@ -116,7 +116,7 @@ pub use svgtypes::{
     Points,
     Transform,
     ViewBox,
-    WriteBuffer as ValueWriteBuffer,
+    WriteBuffer,
     WriteOptions as ValueWriteOptions,
 };
 

@@ -23,7 +23,6 @@ use crate::{
     QName,
     QNameRef,
     TagNameRef,
-    WriteBuffer,
     WriteOptions,
 };
 
@@ -106,6 +105,11 @@ impl Document {
     /// **Note:** only SVG elements and attributes will be parsed.
     pub fn from_str_with_opt(text: &str, opt: &ParseOptions) -> Result<Document, ParserError> {
         parse_svg(text, opt)
+    }
+
+    /// Writes a `Document` content to a string.
+    pub fn to_string_with_opt(&self, opt: &WriteOptions) -> String {
+        writer::write_dom(self, opt)
     }
 
     /// Constructs a new [`Node`] with [`NodeType`]::Element type.
@@ -376,12 +380,6 @@ impl Document {
     }
 }
 
-impl WriteBuffer for Document {
-    fn write_buf_opt(&self, opt: &WriteOptions, buf: &mut Vec<u8>) {
-        writer::write_dom(self, opt, buf);
-    }
-}
-
 impl Drop for Document {
     fn drop(&mut self) {
         for (_, node) in self.storage.iter_mut() {
@@ -394,6 +392,7 @@ impl Drop for Document {
 
 impl fmt::Display for Document {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.with_write_opt(&WriteOptions::default()))
+        let data = writer::write_dom(self, &WriteOptions::default());
+        write!(f, "{}", data)
     }
 }

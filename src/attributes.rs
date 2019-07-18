@@ -10,7 +10,6 @@ use crate::{
     AttributeQNameRef,
     AttributeValue,
     QName,
-    WriteBuffer,
 };
 
 
@@ -215,6 +214,8 @@ impl fmt::Debug for Attributes {
 
 impl fmt::Display for Attributes {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        use std::io::Write;
+
         if self.is_empty() {
             return Ok(());
         }
@@ -222,7 +223,7 @@ impl fmt::Display for Attributes {
         let mut out = Vec::with_capacity(256);
 
         for attr in self.iter() {
-            attr.write_buf(&mut out);
+            out.write_fmt(format_args!("{}", attr)).unwrap();
             out.push(b' ');
         }
         out.pop();

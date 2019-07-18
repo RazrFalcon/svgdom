@@ -5,9 +5,16 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+## Changed
+- `xmlwriter` is used for XML generation instead of a custom writer.
+- No need to reexport the `WriteBuffer` trait anymore.
+
 ## Removed
+- `DisplaySvg`.
+  Use `Document::to_string` and `Document::to_string_with_opt` instead.
 - `WriteOptions::attributes_order`.
 - `AttributesOrder`.
+- `ValueWriteBuffer`.
 
 ## [0.17.0] - 2019-06-12
 ### Added

@@ -6,7 +6,6 @@ use svgdom::{
     Document,
     ElementId as EId,
     WriteOptions,
-    WriteBuffer,
 };
 
 #[test]
@@ -220,7 +219,7 @@ fn drain_1() {
 
     let mut opt = WriteOptions::default();
     opt.use_single_quote = true;
-    assert_eq!(doc.with_write_opt(&opt).to_string(),
+    assert_eq!(doc.to_string_with_opt(&opt),
                "<svg xmlns='http://www.w3.org/2000/svg'/>\n");
 }
 
@@ -240,7 +239,7 @@ fn drain_2() {
 
     let mut opt = WriteOptions::default();
     opt.use_single_quote = true;
-    assert_eq!(doc.with_write_opt(&opt).to_string(),
+    assert_eq!(doc.to_string_with_opt(&opt),
 "<svg xmlns='http://www.w3.org/2000/svg'>
     <rect/>
     <g/>
@@ -265,7 +264,7 @@ fn drain_3() {
 
     let mut opt = WriteOptions::default();
     opt.use_single_quote = true;
-    assert_eq!(doc.with_write_opt(&opt).to_string(),
+    assert_eq!(doc.to_string_with_opt(&opt),
 "<svg xmlns='http://www.w3.org/2000/svg'>
     <rect/>
     <rect/>
@@ -289,7 +288,7 @@ fn drain_4() {
 
     let mut opt = WriteOptions::default();
     opt.use_single_quote = true;
-    assert_eq!(doc.with_write_opt(&opt).to_string(),
+    assert_eq!(doc.to_string_with_opt(&opt),
 "<svg xmlns='http://www.w3.org/2000/svg'>
     <g/>
 </svg>
@@ -313,7 +312,7 @@ fn deep_copy_1() {
 
     let mut opt = WriteOptions::default();
     opt.use_single_quote = true;
-    assert_eq!(doc.with_write_opt(&opt).to_string(),
+    assert_eq!(doc.to_string_with_opt(&opt),
 "<svg xmlns='http://www.w3.org/2000/svg'>
     <g id='g1'>
         <rect id='rect1'/>
@@ -344,7 +343,7 @@ fn deep_copy_2() {
 
     let mut opt = WriteOptions::default();
     opt.use_single_quote = true;
-    assert_eq!(doc.with_write_opt(&opt).to_string(),
+    assert_eq!(doc.to_string_with_opt(&opt),
 "<svg xmlns='http://www.w3.org/2000/svg'>
     <g id='g1'>
         <rect id='rect1'/>
@@ -380,7 +379,7 @@ fn deep_copy_3() {
 
     let mut opt = WriteOptions::default();
     opt.use_single_quote = true;
-    assert_eq!(doc.with_write_opt(&opt).to_string(),
+    assert_eq!(doc.to_string_with_opt(&opt),
 "<svg xmlns='http://www.w3.org/2000/svg'>
     <linearGradient id='lg1'/>
     <g id='g1' stroke-width='5'>
@@ -403,15 +402,15 @@ fn set_attr_1() {
     rect2.set_id("rect2");
 
     rect.set_attribute((AId::X, 1.0));
-    assert_eq!(rect.attributes().get(AId::X).unwrap().to_string(), "x=\"1\"");
+    assert_eq!(rect.attributes().get(AId::X).unwrap().to_string(), "x='1'");
 
     rect.set_attribute(("attr", 1.0));
-    assert_eq!(rect.attributes().get("attr").unwrap().to_string(), "attr=\"1\"");
+    assert_eq!(rect.attributes().get("attr").unwrap().to_string(), "attr='1'");
 
     let attr = Attribute::new(AId::Y, 1.0);
     rect.set_attribute(attr);
-    assert_eq!(rect.attributes().get(AId::Y).unwrap().to_string(), "y=\"1\"");
+    assert_eq!(rect.attributes().get(AId::Y).unwrap().to_string(), "y='1'");
 
     rect.set_attribute((AId::Href, rect2));
-    assert_eq!(rect.attributes().get(AId::Href).unwrap().to_string(), "xlink:href=\"#rect2\"");
+    assert_eq!(rect.attributes().get(AId::Href).unwrap().to_string(), "xlink:href='#rect2'");
 }

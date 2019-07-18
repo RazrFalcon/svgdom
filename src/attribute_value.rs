@@ -14,10 +14,9 @@ use crate::{
     Path,
     Points,
     Transform,
-    ValueWriteBuffer,
+    ValueWriteOptions,
     ViewBox,
     WriteBuffer,
-    WriteOptions,
 };
 
 // TODO: custom debug
@@ -238,7 +237,7 @@ impl AttributeValue {
 }
 
 impl WriteBuffer for AttributeValue {
-    fn write_buf_opt(&self, opt: &WriteOptions, buf: &mut Vec<u8>) {
+    fn write_buf_opt(&self, opt: &ValueWriteOptions, buf: &mut Vec<u8>) {
         match *self {
             AttributeValue::None => {
                 buf.extend_from_slice(b"none");
@@ -250,37 +249,31 @@ impl WriteBuffer for AttributeValue {
                 buf.extend_from_slice(b"currentColor");
             }
             AttributeValue::String(ref s) => {
-                for c in s.as_bytes() {
-                    match *c {
-                        b'"' if !opt.use_single_quote => buf.extend_from_slice(b"&quot;"),
-                        b'\'' if opt.use_single_quote => buf.extend_from_slice(b"&apos;"),
-                        _ => buf.push(*c),
-                    }
-                }
+                buf.extend_from_slice(s.as_bytes());
             }
             AttributeValue::Number(ref n) => {
-                n.write_buf_opt(&opt.values, buf);
+                n.write_buf_opt(opt, buf);
             }
             AttributeValue::NumberList(ref list) => {
-                list.write_buf_opt(&opt.values, buf);
+                list.write_buf_opt(opt, buf);
             }
             AttributeValue::Length(ref l) => {
-                l.write_buf_opt(&opt.values, buf);
+                l.write_buf_opt(opt, buf);
             }
             AttributeValue::LengthList(ref list) => {
-                list.write_buf_opt(&opt.values, buf);
+                list.write_buf_opt(opt, buf);
             }
             AttributeValue::Angle(ref a) => {
-                a.write_buf_opt(&opt.values, buf);
+                a.write_buf_opt(opt, buf);
             }
             AttributeValue::Transform(ref t) => {
-                t.write_buf_opt(&opt.values, buf);
+                t.write_buf_opt(opt, buf);
             }
             AttributeValue::Path(ref p) => {
-                p.write_buf_opt(&opt.values, buf);
+                p.write_buf_opt(opt, buf);
             }
             AttributeValue::Points(ref p) => {
-                p.write_buf_opt(&opt.values, buf);
+                p.write_buf_opt(opt, buf);
             }
             AttributeValue::Link(ref n) => {
                 buf.push(b'#');
@@ -301,18 +294,18 @@ impl WriteBuffer for AttributeValue {
                     match fallback {
                         PaintFallback::None => buf.extend_from_slice(b"none"),
                         PaintFallback::CurrentColor => buf.extend_from_slice(b"currentColor"),
-                        PaintFallback::Color(ref c) => c.write_buf_opt(&opt.values, buf),
+                        PaintFallback::Color(ref c) => c.write_buf_opt(opt, buf),
                     }
                 }
             }
             AttributeValue::Color(ref c) => {
-                c.write_buf_opt(&opt.values, buf);
+                c.write_buf_opt(opt, buf);
             }
             AttributeValue::ViewBox(vb) => {
-                vb.write_buf_opt(&opt.values, buf);
+                vb.write_buf_opt(opt, buf);
             }
             AttributeValue::AspectRatio(ratio) => {
-                ratio.write_buf_opt(&opt.values, buf);
+                ratio.write_buf_opt(opt, buf);
             }
         }
     }
@@ -320,6 +313,6 @@ impl WriteBuffer for AttributeValue {
 
 impl fmt::Display for AttributeValue {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.with_write_opt(&WriteOptions::default()))
+        write!(f, "{}", self.with_write_opt(&ValueWriteOptions::default()))
     }
 }
