@@ -35,7 +35,7 @@ enum XmlSpace {
 // - tabs and newlines removing/replacing
 // - spaces trimming
 pub fn prepare_text(doc: &mut Document) {
-    // Remember nodes that has 'xml:space' changed.
+    // Remember nodes that have 'xml:space' changed.
     let mut nodes = Vec::new();
 
     _prepare_text(&doc.root(), &mut nodes, XmlSpace::Default);
@@ -106,7 +106,7 @@ fn prepare_text_children(parent: &Node, marked_nodes: &mut Vec<Node>, xmlspace: 
     let mut nodes = Vec::new();
     collect_text(parent, 0, &mut nodes);
 
-    // 'trim_text' already collapsed all spaces into a single one,
+    // `trim` method has already collapsed all spaces into a single one,
     // so we have to check only for one leading or trailing space.
 
     if nodes.len() == 1 {

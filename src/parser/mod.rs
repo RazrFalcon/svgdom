@@ -65,7 +65,7 @@ pub fn parse_svg(text: &str) -> Result<Document, ParserError> {
 
     // Remove 'style' elements, because their content (CSS)
     // is stored separately and will be processed later.
-    doc.drain(root.clone(), |n| n.is_tag_name(ElementId::Style));
+    doc.drain(root.clone(), |n| n.has_tag_name(ElementId::Style));
 
     resolve_links(&doc, &mut links);
 
@@ -701,7 +701,7 @@ fn resolve_links(doc: &Document, links: &mut Links) {
     }
 }
 
-pub struct XmlNode<'a, 'input: 'a>(pub roxmltree::Node<'a, 'input>);
+struct XmlNode<'a, 'input: 'a>(pub roxmltree::Node<'a, 'input>);
 
 impl simplecss::Element for XmlNode<'_, '_> {
     fn parent_element(&self) -> Option<Self> {

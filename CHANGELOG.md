@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - A completely new CSS parser.
 - `xmlwriter` is used for XML generation instead of a custom writer.
 - No need to reexport the `WriteBuffer` trait anymore.
+- Rename `Node::is_tag_name` into `Node::has_tag_name`.
 
 ## Removed
 - `DisplaySvg`.

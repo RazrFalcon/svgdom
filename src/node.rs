@@ -268,7 +268,7 @@ impl Node {
     /// # Panics
     ///
     /// Panics if the node is currently mutably borrowed.
-    pub fn is_tag_name<'a, T>(&self, tag_name: T) -> bool
+    pub fn has_tag_name<'a, T>(&self, tag_name: T) -> bool
         where TagNameRef<'a>: From<T>
     {
         self.borrow().tag_name.as_ref() == TagNameRef::from(tag_name)

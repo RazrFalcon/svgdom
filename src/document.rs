@@ -188,7 +188,7 @@ impl Document {
     /// let doc = Document::from_str(
     ///     "<!--comment--><svg xmlns='http://www.w3.org/2000/svg'/>").unwrap();
     ///
-    /// assert_eq!(doc.svg_element().unwrap().is_tag_name(ElementId::Svg), true);
+    /// assert_eq!(doc.svg_element().unwrap().has_tag_name(ElementId::Svg), true);
     /// ```
     ///
     /// [`Node`]: type.Node.html
@@ -221,7 +221,7 @@ impl Document {
     /// </svg>").unwrap();
     ///
     /// let mut rect_elem = doc.root().descendants().filter(|n| *n.id() == "rect1").next().unwrap();
-    /// let use_elem = doc.root().descendants().filter(|n| n.is_tag_name(ElementId::Use)).next().unwrap();
+    /// let use_elem = doc.root().descendants().filter(|n| n.has_tag_name(ElementId::Use)).next().unwrap();
     ///
     /// assert_eq!(use_elem.has_attribute(AttributeId::Href), true);
     ///

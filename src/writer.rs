@@ -146,7 +146,7 @@ pub(crate) fn write_dom(doc: &Document, opt: &WriteOptions) -> String {
 
                         write_attributes(&node, opt, &mut xml);
 
-                        if node.is_tag_name(ElementId::Text) {
+                        if node.has_tag_name(ElementId::Text) {
                             xml.set_preserve_whitespaces(true);
                         }
                     }
@@ -163,7 +163,7 @@ pub(crate) fn write_dom(doc: &Document, opt: &WriteOptions) -> String {
                     xml.end_element();
                 }
 
-                if node.is_tag_name(ElementId::Text) {
+                if node.has_tag_name(ElementId::Text) {
                     xml.set_preserve_whitespaces(false);
                 }
             }
@@ -185,7 +185,7 @@ fn write_attributes(
     xml: &mut XmlWriter,
 ) {
     // Write root SVG node attributes.
-    if node.is_tag_name(ElementId::Svg) {
+    if node.has_tag_name(ElementId::Svg) {
         if node.parent().map(|v| v.is_root()) == Some(true) {
             xml.write_attribute("xmlns", "http://www.w3.org/2000/svg");
 

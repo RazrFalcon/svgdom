@@ -215,7 +215,7 @@ fn drain_1() {
 </svg>").unwrap();
 
     let root = doc.root().clone();
-    assert_eq!(doc.drain(root, |n| n.is_tag_name(EId::Rect)), 1);
+    assert_eq!(doc.drain(root, |n| n.has_tag_name(EId::Rect)), 1);
 
     let mut opt = WriteOptions::default();
     opt.use_single_quote = true;
@@ -235,7 +235,7 @@ fn drain_2() {
 </svg>").unwrap();
 
     let root = doc.root().clone();
-    assert_eq!(doc.drain(root, |n| n.is_tag_name(EId::Path)), 1);
+    assert_eq!(doc.drain(root, |n| n.has_tag_name(EId::Path)), 1);
 
     let mut opt = WriteOptions::default();
     opt.use_single_quote = true;
@@ -260,7 +260,7 @@ fn drain_3() {
 </svg>").unwrap();
 
     let root = doc.root().clone();
-    assert_eq!(doc.drain(root, |n| n.is_tag_name(EId::G)), 1);
+    assert_eq!(doc.drain(root, |n| n.has_tag_name(EId::G)), 1);
 
     let mut opt = WriteOptions::default();
     opt.use_single_quote = true;
@@ -284,7 +284,7 @@ fn drain_4() {
 </svg>").unwrap();
 
     let root = doc.root().clone();
-    assert_eq!(doc.drain(root, |n| n.is_tag_name(EId::Rect)), 3);
+    assert_eq!(doc.drain(root, |n| n.has_tag_name(EId::Rect)), 3);
 
     let mut opt = WriteOptions::default();
     opt.use_single_quote = true;
@@ -305,7 +305,7 @@ fn deep_copy_1() {
 </svg>").unwrap();
 
     let mut svg = doc.svg_element().unwrap();
-    let g = doc.root().descendants().find(|n| n.is_tag_name(EId::G)).unwrap();
+    let g = doc.root().descendants().find(|n| n.has_tag_name(EId::G)).unwrap();
 
     // simple copy
     svg.append(doc.copy_node_deep(g));
@@ -333,7 +333,7 @@ fn deep_copy_2() {
     </g>
 </svg>").unwrap();
 
-    let mut g = doc.root().descendants().find(|n| n.is_tag_name(EId::G)).unwrap();
+    let mut g = doc.root().descendants().find(|n| n.has_tag_name(EId::G)).unwrap();
 
     // copy itself
     let g1 = doc.copy_node_deep(g.clone());
@@ -372,7 +372,7 @@ fn deep_copy_3() {
 </svg>").unwrap();
 
     let mut svg = doc.svg_element().unwrap();
-    let g = doc.root().descendants().find(|n| n.is_tag_name(EId::G)).unwrap();
+    let g = doc.root().descendants().find(|n| n.has_tag_name(EId::G)).unwrap();
 
     // test attributes copying
     svg.append(doc.copy_node_deep(g));
