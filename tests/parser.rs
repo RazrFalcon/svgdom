@@ -9,7 +9,6 @@ use svgdom::{
     ElementId as EId,
     TagNameRef,
     NodeType,
-    ParseOptions,
     WriteOptions,
 };
 
@@ -166,7 +165,7 @@ test_resave!(parse_style_3,
 </svg>
 ",
 "<svg xmlns='http://www.w3.org/2000/svg'>
-    <text font-family='Arial Bold' font-size='24px' font-stretch='normal' \
+    <text font-family='&apos;Arial Bold&apos;' font-size='24px' font-stretch='normal' \
                    font-style='normal' font-variant='normal' font-weight='normal' \
                    line-height='125%' text-anchor='middle' \
                    writing-mode='lr-tb'/>
@@ -195,14 +194,23 @@ test_resave!(parse_style_5,
 </svg>
 ");
 
-// keep unknown attributes
 test_resave!(parse_style_6,
 "<svg xmlns='http://www.w3.org/2000/svg'>
     <g style='qwe:none; color:cyan;'/>
 </svg>
 ",
 "<svg xmlns='http://www.w3.org/2000/svg'>
-    <g color='#00ffff' qwe='none'/>
+    <g color='#00ffff'/>
+</svg>
+");
+
+test_resave!(parse_style_7,
+"<svg xmlns='http://www.w3.org/2000/svg'>
+    <g style='-vendor:red'/>
+</svg>
+",
+"<svg xmlns='http://www.w3.org/2000/svg'>
+    <g/>
 </svg>
 ");
 
@@ -395,28 +403,6 @@ test_resave!(parse_viewbox_1,
 "<svg xmlns='http://www.w3.org/2000/svg' viewBox='10 20 30 40'/>
 ");
 
-#[test]
-fn skip_unresolved_classes_1() {
-    let mut opt = ParseOptions::default();
-    opt.skip_unresolved_classes = false;
-    let doc = Document::from_str_with_opt(
-"<svg xmlns='http://www.w3.org/2000/svg'>
-    <style type='text/css'>
-        .fil1 {fill:blue}
-        .str1 {stroke:blue}
-    </style>
-    <g class='fil1 fil3'/>
-    <g class='fil1 fil4 str1 fil5'/>
-</svg>", &opt).unwrap();
-
-    assert_eq!(doc.to_string_with_opt(&write_options()),
-"<svg xmlns='http://www.w3.org/2000/svg'>
-    <g class='fil3' fill='#0000ff'/>
-    <g class='fil4 fil5' fill='#0000ff' stroke='#0000ff'/>
-</svg>
-");
-}
-
 test_resave!(crosslink_1,
 "<svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'>
     <linearGradient id='lg1' xlink:href='#lg2'/>
@@ -450,73 +436,3 @@ test_resave!(crosslink_3,
     <linearGradient id='lg3' xlink:href='#lg1'/>
 </svg>
 ");
-
-#[test]
-fn attr_value_error_1() {
-    let doc = Document::from_str(
-"<svg xmlns='http://www.w3.org/2000/svg'>
-    <rect fill='qwe'/>
-</svg>");
-
-    assert_eq!(doc.err().unwrap().to_string(),
-               "invalid attribute value at 2:17");
-}
-
-#[test]
-fn attr_value_error_2() {
-    let doc = Document::from_str(
-"<svg xmlns='http://www.w3.org/2000/svg'>
-    <rect style='fill:qwe'/>
-</svg>");
-
-    assert_eq!(doc.err().unwrap().to_string(),
-               "invalid attribute value at 2:18");
-}
-
-#[test]
-fn attr_value_error_3() {
-    let doc = Document::from_str(
-"<svg xmlns='http://www.w3.org/2000/svg'>
-    <rect stroke-miterlimit='5mm'/>
-</svg>");
-
-    assert_eq!(doc.err().unwrap().to_string(),
-               "invalid attribute value at 2:30");
-}
-
-#[test]
-fn attr_value_error_4() {
-    let doc = Document::from_str(
-"<svg xmlns='http://www.w3.org/2000/svg'>
-    <rect opacity='5mm'/>
-</svg>");
-
-    assert_eq!(doc.err().unwrap().to_string(),
-               "invalid attribute value at 2:20");
-}
-
-#[test]
-fn attr_value_error_5() {
-    let doc = Document::from_str(
-"<svg xmlns='http://www.w3.org/2000/svg'>
-    <rect offset='5%'/> <!-- % is ok -->
-    <rect offset='5mm'/>
-</svg>");
-
-    assert_eq!(doc.err().unwrap().to_string(),
-               "invalid attribute value at 3:19");
-}
-
-#[test]
-fn attr_value_error_6() {
-    let doc = Document::from_str(
-"<svg xmlns='http://www.w3.org/2000/svg'>
-    <rect width='5mmx'/>
-</svg>");
-
-    assert_eq!(doc.err().unwrap().to_string(),
-               "invalid attribute value at 2:18");
-}
-
-// TODO: this
-// p { font-family: "Font 1", "Font 2", Georgia, Times, serif; }

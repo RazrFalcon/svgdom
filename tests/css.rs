@@ -169,20 +169,14 @@ test_resave!(parse_css_10,
 </svg>
 ");
 
-#[test]
-fn parse_css_11() {
-    let res = Document::from_str(
-        "\
-<svg xmlns='http://www.w3.org/2000/svg'>
-    <style type='text/css'><![CDATA[
+test_resave!(parse_css_11,
+"<svg xmlns='http://www.w3.org/2000/svg'>
+    <style type='text/css'>
         @import url('../some.css');
-        ]]>
     </style>
-</svg>");
-
-    assert_eq!(res.err().unwrap().to_string(),
-               "unsupported CSS at 2:28");
-}
+</svg>",
+"<svg xmlns='http://www.w3.org/2000/svg'/>
+");
 
 test_resave!(parse_css_12,
 "<svg xmlns='http://www.w3.org/2000/svg'>
@@ -196,20 +190,6 @@ test_resave!(parse_css_12,
     <g id='c' fill='#ff0000'/>
 </svg>
 ");
-
-#[test]
-fn parse_css_13() {
-    let res = Document::from_str(
-"<svg xmlns='http://www.w3.org/2000/svg'>
-    <style type='text/css'><![CDATA[
-        :lang(en) { fill: green}
-        ]]>
-    </style>
-</svg>");
-
-    assert_eq!(res.err().unwrap().to_string(),
-               "unsupported CSS at 2:28");
-}
 
 test_resave!(parse_css_14,
 "<svg xmlns='http://www.w3.org/2000/svg'>
@@ -230,33 +210,39 @@ test_resave!(parse_css_14,
 </svg>
 ");
 
-#[test]
-fn parse_css_15() {
-    let res = Document::from_str(
+test_resave!(parse_css_15,
 "<svg xmlns='http://www.w3.org/2000/svg'>
     <style type='text/css'><![CDATA[
-        a > b { fill: green}
+        g > rect { fill: green}
         ]]>
     </style>
-</svg>");
+    <g>
+        <rect/>
+    </g>
+</svg>",
+"<svg xmlns='http://www.w3.org/2000/svg'>
+    <g>
+        <rect fill='#008000'/>
+    </g>
+</svg>
+");
 
-    assert_eq!(res.err().unwrap().to_string(),
-               "unsupported CSS at 2:28");
-}
-
-#[test]
-fn parse_css_16() {
-    let res = Document::from_str(
+test_resave!(parse_css_16,
 "<svg xmlns='http://www.w3.org/2000/svg'>
     <style type='text/css'><![CDATA[
-        g rect { fill: green }
+        g rect { fill: green}
         ]]>
     </style>
-</svg>");
-
-    assert_eq!(res.err().unwrap().to_string(),
-               "unsupported CSS at 2:28");
-}
+    <g>
+        <rect/>
+    </g>
+</svg>",
+"<svg xmlns='http://www.w3.org/2000/svg'>
+    <g>
+        <rect fill='#008000'/>
+    </g>
+</svg>
+");
 
 // empty style
 test_resave!(parse_css_17,

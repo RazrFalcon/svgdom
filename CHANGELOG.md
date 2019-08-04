@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 ## Changed
+- A completely new CSS parser.
 - `xmlwriter` is used for XML generation instead of a custom writer.
 - No need to reexport the `WriteBuffer` trait anymore.
 
@@ -15,6 +16,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - `WriteOptions::attributes_order`.
 - `AttributesOrder`.
 - `ValueWriteBuffer`.
+- `Document::from_str_with_opt`.
+- `ParseOptions`.
 
 ## [0.17.0] - 2019-06-12
 ### Added

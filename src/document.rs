@@ -4,9 +4,6 @@ use log::warn;
 use slab::Slab;
 
 use crate::parser::parse_svg;
-use crate::{
-    ParseOptions,
-};
 
 use crate::writer;
 use crate::{
@@ -89,22 +86,13 @@ impl Document {
         }
     }
 
-    /// Constructs a new `Document` from the text using a default [`ParseOptions`].
+    /// Constructs a new `Document` from the text.
     ///
     /// [`ParseOptions`]: struct.ParseOptions.html
     ///
     /// **Note:** only SVG elements and attributes will be parsed.
     pub fn from_str(text: &str) -> Result<Document, ParserError> {
-        Document::from_str_with_opt(text, &ParseOptions::default())
-    }
-
-    /// Constructs a new `Document` from the text using a supplied [`ParseOptions`].
-    ///
-    /// [`ParseOptions`]: struct.ParseOptions.html
-    ///
-    /// **Note:** only SVG elements and attributes will be parsed.
-    pub fn from_str_with_opt(text: &str, opt: &ParseOptions) -> Result<Document, ParserError> {
-        parse_svg(text, opt)
+        parse_svg(text)
     }
 
     /// Writes a `Document` content to a string.

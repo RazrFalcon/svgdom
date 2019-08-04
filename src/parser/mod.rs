@@ -2,43 +2,28 @@ use std::str::{self, FromStr};
 
 use log::warn;
 
-pub use self::options::*;
-
-use roxmltree::{
-    self,
-    TextPos,
-};
-
 use svgtypes::{
     Paint,
     PaintFallback,
     PathParser,
     Stream,
-    StyleParser,
 };
 
 use super::*;
 
-mod css;
-mod options;
 mod text;
 
-pub struct NodeStringData {
-    pub node: Node,
-    pub text: String,
-    pub value_pos: usize,
-}
 
-pub struct LinkData {
+struct Link {
     attr_id: AttributeId,
     iri: String,
     fallback: Option<PaintFallback>,
     node: Node,
 }
 
-pub struct Links {
-    /// List of all parsed IRI and FuncIRI.
-    pub list: Vec<LinkData>,
+/// List of all parsed IRI and FuncIRI.
+struct Links {
+    list: Vec<Link>,
 }
 
 impl Links {
@@ -49,7 +34,7 @@ impl Links {
         fallback: Option<PaintFallback>,
         node: &Node,
     ) {
-        self.list.push(LinkData {
+        self.list.push(Link {
             attr_id: id,
             iri: iri.to_string(),
             fallback,
@@ -58,37 +43,19 @@ impl Links {
     }
 }
 
-pub struct PostData {
-    pub links: Links,
-    // List of element with 'class' attribute.
-    // We can't process it inplace, because styles can be set after usage.
-    pub class_attrs: Vec<NodeStringData>,
-    // List of style attributes.
-    pub style_attrs: Vec<NodeStringData>,
-}
-
-pub fn parse_svg(text: &str, opt: &ParseOptions) -> Result<Document, ParserError> {
+pub fn parse_svg(text: &str) -> Result<Document, ParserError> {
     let ro_doc = roxmltree::Document::parse(text)?;
 
-    // Since we not only parsing, but also converting an SVG structure,
-    // we can't do everything in one take.
-    // At first, we create nodes structure with attributes.
-    // Than apply CSS. And then ungroup style attributes.
-    // Order is important, otherwise we get rendering error.
-    let mut post_data = PostData {
-        links: Links {
-            list: Vec::new(),
-        },
-        class_attrs: Vec::new(),
-        style_attrs: Vec::new(),
-    };
+    let mut links = Links { list: Vec::new() };
 
     let mut doc = Document::new();
     let root = doc.root();
     let mut parent = root.clone();
 
+    let style_sheet = resolve_css(&ro_doc);
+
     for child in ro_doc.root().children() {
-        process_node(&ro_doc, child, opt, &mut post_data, &mut doc, &mut parent)?;
+        process_node(&ro_doc, child, &style_sheet, &mut links, &mut doc, &mut parent)?;
     }
 
     // First element must be an 'svg' element.
@@ -100,15 +67,7 @@ pub fn parse_svg(text: &str, opt: &ParseOptions) -> Result<Document, ParserError
     // is stored separately and will be processed later.
     doc.drain(root.clone(), |n| n.is_tag_name(ElementId::Style));
 
-    css::resolve_css(&ro_doc, &doc, &mut post_data, opt)?;
-
-    // Resolve styles.
-    for d in &mut post_data.style_attrs {
-        parse_style_attribute(&ro_doc, &d.text, d.value_pos, opt,
-                              &mut d.node, &mut post_data.links)?;
-    }
-
-    resolve_links(&doc, &mut post_data.links);
+    resolve_links(&doc, &mut links);
 
     text::prepare_text(&mut doc);
 
@@ -118,8 +77,8 @@ pub fn parse_svg(text: &str, opt: &ParseOptions) -> Result<Document, ParserError
 fn process_node(
     ro_doc: &roxmltree::Document,
     xml_node: roxmltree::Node,
-    opt: &ParseOptions,
-    post_data: &mut PostData,
+    style_sheet: &simplecss::StyleSheet,
+    links: &mut Links,
     doc: &mut Document,
     parent: &mut Node,
 ) -> Result<(), ParserError> {
@@ -150,18 +109,31 @@ fn process_node(
                 }
 
                 if let Some(aid) = AttributeId::from_str(attr.name()) {
-                    if e.is_svg_element() {
-                        parse_svg_attribute(ro_doc, aid, attr.value(), attr.value_range().start,
-                                            opt, &mut e, post_data)?;
+                    parse_svg_attribute(ro_doc, aid, attr.value(), attr.value_range().start,
+                                        &mut e, links)?;
+                }
+            }
+
+            for rule in &style_sheet.rules {
+                if rule.selector.matches(&XmlNode(xml_node)) {
+                    for declaration in &rule.declarations {
+                        parse_css_attribute_value(
+                            ro_doc, declaration.name, declaration.value, &mut e, links,
+                        )?;
                     }
                 }
+            }
+
+            if let Some(attr) = xml_node.attribute_node("style") {
+                parse_style_attribute(&ro_doc, attr.value(), attr.value_range().start,
+                                      &mut e, links)?;
             }
 
             parent.append(e.clone());
 
             if xml_node.is_element() && xml_node.has_children() {
                 for child in xml_node.children() {
-                    process_node(ro_doc, child, opt, post_data, doc, &mut e)?;
+                    process_node(ro_doc, child, style_sheet, links, doc, &mut e)?;
                 }
             }
         }
@@ -211,57 +183,29 @@ fn parse_svg_attribute<'a>(
     id: AttributeId,
     value: &'a str,
     value_pos: usize,
-    opt: &ParseOptions,
     node: &mut Node,
-    post_data: &mut PostData,
+    links: &mut Links,
 ) -> Result<(), ParserError> {
     match id {
         AttributeId::Id => {
             node.set_id(value);
         }
-        AttributeId::Style => {
-            // We store 'style' attributes for later use.
-            post_data.style_attrs.push(NodeStringData {
-                node: node.clone(),
-                text: value.to_string(),
-                value_pos,
-            });
-        }
-        AttributeId::Class => {
-            // TODO: to svgtypes
-
-            // We store 'class' attributes for later use.
-
-            let mut s = Stream::from(value);
-            while !s.at_end() {
-                s.skip_spaces();
-
-                let class = s.consume_bytes(|s2, _| !s2.starts_with_space());
-
-                post_data.class_attrs.push(NodeStringData {
-                    node: node.clone(),
-                    text: class.to_string(),
-                    value_pos,
-                });
-
-                s.skip_spaces();
-            }
+        AttributeId::Style | AttributeId::Class => {
+            // Ignore these attributes.
         }
         _ => {
-            parse_svg_attribute_value(ro_doc, id, value, value_pos, opt,
-                                      node, &mut post_data.links)?;
+            parse_svg_attribute_value(ro_doc, id, value, value_pos, node, links)?;
         }
     }
 
     Ok(())
 }
 
-pub fn parse_svg_attribute_value<'a>(
+fn parse_svg_attribute_value<'a>(
     ro_doc: &roxmltree::Document,
     id: AttributeId,
     value: &'a str,
     value_pos: usize,
-    opt: &ParseOptions,
     node: &mut Node,
     links: &mut Links,
 ) -> Result<(), ParserError> {
@@ -279,17 +223,45 @@ pub fn parse_svg_attribute_value<'a>(
             }
         }
         Err(_) => {
-            if opt.skip_invalid_attributes {
-                warn!("Attribute '{}' has an invalid value: '{}'.", id, value);
-            } else {
-                let pos = ro_doc.text_pos_at(value_pos);
-                return Err(ParserError::InvalidAttributeValue(pos));
-            }
+            warn!("Attribute '{}' has an invalid value: '{}'.", id, value);
         }
     }
 
     Ok(())
 }
+
+fn parse_css_attribute_value<'a>(
+    ro_doc: &roxmltree::Document,
+    name: &str,
+    value: &str,
+    node: &mut Node,
+    links: &mut Links,
+) -> Result<(), ParserError> {
+    if let Some(id) = AttributeId::from_str(name) {
+        let mut parse_attr = |aid| {
+            parse_svg_attribute_value(ro_doc, aid, value, 0, node, links)
+        };
+
+        if id == AttributeId::Marker {
+            // The SVG specification defines three properties to reference markers:
+            // `marker-start`, `marker-mid`, `marker-end`.
+            // It also provides a shorthand property, marker.
+            // Using the marker property from a style sheet
+            // is equivalent to using all three (start, mid, end).
+            // However, a shorthand property cannot be used as a presentation attribute.
+            // So we have to convert it into presentation attributes.
+
+            parse_attr(AttributeId::MarkerStart)?;
+            parse_attr(AttributeId::MarkerMid)?;
+            parse_attr(AttributeId::MarkerEnd)?;
+        } else {
+            parse_attr(id)?;
+        }
+    }
+
+    Ok(())
+}
+
 
 #[inline]
 fn f64_bound(min: f64, val: f64, max: f64) -> f64 {
@@ -302,7 +274,7 @@ fn f64_bound(min: f64, val: f64, max: f64) -> f64 {
     val
 }
 
-pub fn _parse_svg_attribute_value<'a>(
+fn _parse_svg_attribute_value<'a>(
     ro_doc: &roxmltree::Document,
     aid: AttributeId,
     value: &'a str,
@@ -667,27 +639,12 @@ fn parse_style_attribute(
     ro_doc: &roxmltree::Document,
     value: &str,
     value_pos: usize,
-    opt: &ParseOptions,
     node: &mut Node,
     links: &mut Links,
 ) -> Result<(), ParserError> {
-    for token in StyleParser::from(value) {
-        let (name, value) = match token {
-            Ok(v) => v,
-            Err(_) => {
-                // TODO: this
-                let pos = TextPos::new(0, 0);
-                return Err(ParserError::InvalidAttributeValue(pos));
-            }
-        };
-
-        match AttributeId::from_str(name) {
-            Some(aid) => {
-                parse_svg_attribute_value(ro_doc, aid, value, value_pos, opt, node, links)?;
-            }
-            None => {
-                node.set_attribute((name, value));
-            }
+    for declaration in simplecss::DeclarationTokenizer::from(value) {
+        if let Some(id) = AttributeId::from_str(declaration.name) {
+            parse_svg_attribute_value(ro_doc, id, declaration.value, value_pos, node, links)?;
         }
     }
 
@@ -742,4 +699,55 @@ fn resolve_links(doc: &Document, links: &mut Links) {
             }
         }
     }
+}
+
+pub struct XmlNode<'a, 'input: 'a>(pub roxmltree::Node<'a, 'input>);
+
+impl simplecss::Element for XmlNode<'_, '_> {
+    fn parent_element(&self) -> Option<Self> {
+        self.0.parent_element().map(XmlNode)
+    }
+
+    fn prev_sibling_element(&self) -> Option<Self> {
+        self.0.prev_siblings().filter(|n| n.is_element()).nth(0).map(XmlNode)
+    }
+
+    fn has_local_name(&self, local_name: &str) -> bool {
+        self.0.tag_name().name() == local_name
+    }
+
+    fn attribute_matches(&self, local_name: &str, operator: simplecss::AttributeOperator) -> bool {
+        match self.0.attribute(local_name) {
+            Some(value) => operator.matches(value),
+            None => false,
+        }
+    }
+
+    fn pseudo_class_matches(&self, class: simplecss::PseudoClass) -> bool {
+        match class {
+            simplecss::PseudoClass::FirstChild => self.prev_sibling_element().is_none(),
+            _ => false, // Since we are querying a static XML we can ignore other pseudo-classes.
+        }
+    }
+}
+
+fn resolve_css<'a>(ro_doc: &'a roxmltree::Document<'a>) -> simplecss::StyleSheet<'a> {
+    let mut sheet = simplecss::StyleSheet::new();
+
+    for node in ro_doc.descendants().filter(|n| n.has_tag_name("style")) {
+        match node.attribute("type") {
+            Some("text/css") => {}
+            Some(_) => continue,
+            None => {}
+        }
+
+        let style = match node.text() {
+            Some(s) => s,
+            None => continue,
+        };
+
+        sheet.parse_more(style);
+    }
+
+    sheet
 }

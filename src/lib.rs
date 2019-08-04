@@ -89,7 +89,6 @@ pub use crate::element_type::ElementType;
 pub use crate::error::*;
 pub use crate::name::*;
 pub use crate::node::*;
-pub use crate::parser::ParseOptions;
 pub use crate::tree::iterator::*;
 pub use crate::writer::*;
 
