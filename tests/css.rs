@@ -337,3 +337,16 @@ test_resave!(parse_css_24,
     <g fill='#0000ff'/>
 </svg>
 ");
+
+// Skip non-presentation attributes, but keep transform.
+test_resave!(parse_css_25,
+"<svg xmlns='http://www.w3.org/2000/svg'>
+    <style>
+        #g1 { height:100; transform:scale(2) }
+    </style>
+    <g id='g1'/>
+</svg>",
+"<svg xmlns='http://www.w3.org/2000/svg'>
+    <g id='g1' transform='matrix(2 0 0 2 0 0)'/>
+</svg>
+");

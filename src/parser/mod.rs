@@ -238,6 +238,12 @@ fn parse_css_attribute_value<'a>(
     links: &mut Links,
 ) -> Result<(), ParserError> {
     if let Some(id) = AttributeId::from_str(name) {
+        // Parse only the presentation attributes.
+        // `transform` isn't a presentation attribute, but should be parsed anyway.
+        if !id.is_presentation() && id != AttributeId::Transform {
+            return Ok(());
+        }
+
         let mut parse_attr = |aid| {
             parse_svg_attribute_value(ro_doc, aid, value, 0, node, links)
         };
@@ -644,7 +650,11 @@ fn parse_style_attribute(
 ) -> Result<(), ParserError> {
     for declaration in simplecss::DeclarationTokenizer::from(value) {
         if let Some(id) = AttributeId::from_str(declaration.name) {
-            parse_svg_attribute_value(ro_doc, id, declaration.value, value_pos, node, links)?;
+            // Parse only the presentation attributes.
+            // `transform` isn't a presentation attribute, but should be parsed anyway.
+            if id.is_presentation() || id == AttributeId::Transform {
+                parse_svg_attribute_value(ro_doc, id, declaration.value, value_pos, node, links)?;
+            }
         }
     }
 

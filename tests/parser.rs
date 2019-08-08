@@ -160,15 +160,14 @@ test_resave!(parse_style_2,
 test_resave!(parse_style_3,
 "<svg xmlns='http://www.w3.org/2000/svg'>
     <text style=\"font-size:24px;font-style:normal;font-variant:normal;font-weight:normal;\
-                  font-stretch:normal;line-height:125%;writing-mode:lr-tb;\
+                  font-stretch:normal;writing-mode:lr-tb;\
                   text-anchor:middle;font-family:'Arial Bold'\"/>
 </svg>
 ",
 "<svg xmlns='http://www.w3.org/2000/svg'>
     <text font-family='&apos;Arial Bold&apos;' font-size='24px' font-stretch='normal' \
                    font-style='normal' font-variant='normal' font-weight='normal' \
-                   line-height='125%' text-anchor='middle' \
-                   writing-mode='lr-tb'/>
+                   text-anchor='middle' writing-mode='lr-tb'/>
 </svg>
 ");
 
@@ -211,6 +210,17 @@ test_resave!(parse_style_7,
 ",
 "<svg xmlns='http://www.w3.org/2000/svg'>
     <g/>
+</svg>
+");
+
+// Skip non-presentation attributes, but keep transform.
+test_resave!(parse_style_8,
+"<svg xmlns='http://www.w3.org/2000/svg'>
+    <g style='height:100;transform:scale(2)'/>
+</svg>
+",
+"<svg xmlns='http://www.w3.org/2000/svg'>
+    <g transform='matrix(2 0 0 2 0 0)'/>
 </svg>
 ");
 

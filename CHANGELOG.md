@@ -19,6 +19,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - `ValueWriteBuffer`.
 - `Document::from_str_with_opt`.
 - `ParseOptions`.
+- `PathBuilder`.
+
+## Fixed
+- Parse only presentation attributes from the `style` element and attribute.
 
 ## [0.17.0] - 2019-06-12
 ### Added
