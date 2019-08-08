@@ -73,6 +73,7 @@ mod tree;
 mod element_type;
 mod error;
 mod name;
+mod names;
 mod parser;
 mod writer;
 mod attribute_type;
@@ -88,6 +89,7 @@ pub use crate::document::Document;
 pub use crate::element_type::ElementType;
 pub use crate::error::*;
 pub use crate::name::*;
+pub use crate::names::*;
 pub use crate::node::*;
 pub use crate::tree::iterator::*;
 pub use crate::writer::*;
@@ -97,9 +99,7 @@ pub use svgtypes::{
     Angle,
     AngleUnit,
     AspectRatio,
-    AttributeId,
     Color,
-    ElementId,
     FuzzyEq,
     FuzzyZero,
     Length,
@@ -109,7 +109,6 @@ pub use svgtypes::{
     NumberList,
     PaintFallback,
     Path,
-    PathBuilder,
     PathCommand,
     PathSegment,
     Points,
