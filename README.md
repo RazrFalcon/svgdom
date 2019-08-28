@@ -3,10 +3,41 @@
 [![Crates.io](https://img.shields.io/crates/v/svgdom.svg)](https://crates.io/crates/svgdom)
 [![Documentation](https://docs.rs/svgdom/badge.svg)](https://docs.rs/svgdom)
 
+
 *svgdom* is an [SVG Full 1.1](https://www.w3.org/TR/SVG/) processing library,
 which allows you to parse, manipulate, generate and write an SVG content.
 
-**Note:** the library itself is pretty stable, but API is constantly changing.
+### Deprecation
+
+This library was an attempt to create a generic SVG DOM which can be used by various applications.
+But it the end it turned out that it's easier and faster to use
+[roxmltree](https://github.com/RazrFalcon/roxmltree) + [svgtypes](https://github.com/RazrFalcon/svgtypes)
+to extract only the data you need.
+
+There are two main problems with `svgdom`:
+
+1. You can't make a nice API with a Vec-based tree and you can't have a safe API
+   with an Rc-tree.
+
+   The current implementation uses so-called Rc-tree, which provides a nice API,
+   but all the checks are done in the runtime, so you can get a panic quite easily.
+   It's also hard/verbose to make immutable nodes. You essentially need two types of nodes:
+   one for immutable and one for mutable "references".
+   A Vec-based tree would not have such problems, but you can't implement the simplest
+   operations with it, like copying an attribute from one node to another
+   since you have to have a mutable and an immutable references for this.
+   And Rust forbids this. So you need some sort of generational indexes and so on.
+   This solution is complicated in its own way.
+   Performance is also in question, since inserting/removing an object in the middle of a Vec is expensive.
+2. The SVG parsing itself is pretty complex too. There are a lot of ways you can implement it.
+
+   `svgdom` creates a custom Rc-tree where all the attributes are stored as owned data.
+   This requires a lot of allocations (usually unnecessary).
+   The parsing/preprocessing algorithm itself can be found in [docs/preprocessor.md](docs/preprocessor.md)
+   The problem with it is that you can't tweak it. And in many cases, it produces results
+   that you do not need or do not expect.
+   `svgdom` was originally used by [svgcleaner](https://github.com/RazrFalcon/svgcleaner)
+   and [resvg](https://github.com/RazrFalcon/resvg) and both of these projects are no longer using it.
 
 ### Purpose
 
@@ -60,6 +91,7 @@ doc for details.
 - Everything is a `Node`. There are no separated `ElementNode`, `TextNode`, etc.
   You still have all the data, but not in the specific *struct's*.
   You can check the node type via `Node::node_type()`.
+
 
 ### Dependency
 
