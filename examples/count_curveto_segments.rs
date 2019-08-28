@@ -3,7 +3,7 @@ use std::fs;
 
 use svgdom::{AttributeId, AttributeValue, Document, ElementId, FilterSvg, PathCommand};
 
-fn main() -> Result<(), Box<std::error::Error>> {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<_> = env::args().collect();
     if args.len() != 2 {
         println!("Usage:\n\tcount_curveto_segments in.svg");
